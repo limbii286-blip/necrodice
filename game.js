@@ -18,7 +18,7 @@ function deal(S){
   S.pl=[0,1].map(()=>({open:[S.deck.pop()],closed:[S.deck.pop()]}));
   S.eff=[];S.jUsed=[0,0];S.noJ=[false,false];S.acted=false;S.turns=0;
   S.turn=S.pl[0].open[0].n<S.pl[1].open[0].n?0:1;
-  S.log.push(`— Tur ${S.rounds+1} — ${S.turn?'Rakip':'Sen'} başlıyor (küçük açık kart)`);
+  S.wait=false;S.log.push({p:-1,t:`— Tur ${S.rounds+1} —`},{p:S.turn,t:'başlıyor (küçük açık kart)'});
 }
 const act=(S,id)=>S.eff.some(e=>e.id==id&&!e.neg);
 function total(S,p,wc=true){
@@ -87,8 +87,8 @@ function bot(){
     });
     if(best&&n++<8){
       S.acted=true;
-      if(best.t=='d'){const c=S.deck.pop();S.pl[1].open.push(c);S.log.push(`Rakip kart çekti (${c.n})`);R();setTimeout(step,900)}
-      else{play(S,1,best.id,best.pk);S.log.push(`Rakip joker oynadı: ${J[best.id]}`);R();jokerNote(1,best.id,()=>{R();setTimeout(step,400)})}
+      if(best.t=='d'){const c=S.deck.pop();S.pl[1].open.push(c);S.log.push({p:1,t:`kart çekti (${c.n})`});R();setTimeout(step,900)}
+      else{play(S,1,best.id,best.pk);S.log.push({p:1,t:`joker oynadı: ${J[best.id]}`});R();note(1,best.id,()=>{R();setTimeout(step,400)})}
     }else pass();
   };
   setTimeout(step,900);
@@ -96,32 +96,33 @@ function bot(){
 
 /* ---------- AKIŞ ---------- */
 function pass(){
-  const S=G;S.log.push(`${S.turn?'Rakip':'Sen'} pas dedi`);
+  const S=G;S.log.push({p:S.turn,t:'pas dedi'});
   if(S.turns>0&&!S.acted)return endRound();
   S.turns++;S.acted=false;S.turn=1-S.turn;R();next();
 }
-function next(){if(G.turn==1&&!lock&&!G.over)bot()}
-function M(html,btn,cb){lock=true;$('#mb').innerHTML=html+`<br><br><button id="mo">${btn}</button>`;$('#m').hidden=false;
-  $('#mo').onclick=()=>{$('#m').hidden=true;lock=false;cb()}}
+function next(){if(MODE=='bot'&&G.turn==1&&!lock&&!G.over)bot()}
+function M(html,btn,cb){lock=true;$('#mb').innerHTML=html+(btn?`<br><br><button id="mo">${btn}</button>`:'<br><i>Host devam ettirecek…</i>');$('#m').hidden=false;
+  if(btn)$('#mo').onclick=()=>{$('#m').hidden=true;lock=false;cb()}}
+function MM(fn,btn,cb){if(MODE=='host'&&conn&&conn.open)conn.send({k:'m',html:fn(1)});M(fn(0),btn,cb)}
 function endRound(){
-  const S=G,a=total(S,0),b=total(S,1),T=tg(S),r=outc(S,0);
-  S.pts[0]+=r>0?1:r==0?.5:0;S.pts[1]+=r<0?1:r==0?.5:0;S.rounds++;
-  let msg=`Kapalı kartlar açıldı.<br>Sen: ${a} · Rakip: ${b} · Hedef: ${T}${act(S,19)?' (en az kazanır)':''}<br><b>${r>0?'Turu sen kazandın':r<0?'Turu rakip kazandı':'Tur berabere'}</b>`;
+  const S=G,a=[total(S,0),total(S,1)],T=tg(S),r=outc(S,0);
+  S.pts[0]+=r>0?1:r==0?.5:0;S.pts[1]+=r<0?1:r==0?.5:0;S.rounds++;S.wait=true;
+  const pre=v=>{const w=v?-r:r;return `Kapalı kartlar açıldı.<br>Sen: ${a[v]} · Rakip: ${a[1-v]} · Hedef: ${T}${act(S,19)?' (en az kazanır)':''}<br><b>${w>0?'Turu sen kazandın':w<0?'Turu rakip kazandı':'Tur berabere'}</b>`};
   R();
   if(!(S.pts.some(x=>x>=2)||S.rounds>=3)){
     if(r==0)[0,1].forEach(p=>S.jdeck.length&&S.hand[p].push(S.jdeck.pop()));
-    return M(msg+(r==0?'<br>Beraberlik: ikiniz de birer joker çektiniz.':''),'Sonraki tur',()=>{deal(S);R();next()});
+    return MM(v=>pre(v)+(r==0?'<br>Beraberlik: ikiniz de birer joker çektiniz.':''),'Sonraki tur',()=>{deal(S);R();next()});
   }
-  let L=S.pts[0]<S.pts[1]?0:S.pts[1]<S.pts[0]?1:-1,how='';
+  let L=S.pts[0]<S.pts[1]?0:S.pts[1]<S.pts[0]?1:-1,hx=null,how='';
   if(L<0){
     const j=S.hand.map(h=>h.length);
-    if(j[0]!=j[1]){L=j[0]<j[1]?0:1;how=' (joker sayısı)'}
-    else{let x,y;do{x=d6()+d6();y=d6()+d6()}while(x==y);L=x<y?0:1;how=` (zar ${x}–${y})`}
+    if(j[0]!=j[1]){L=j[0]<j[1]?0:1;how='joker'}
+    else{let x,y;do{x=d6()+d6();y=d6()+d6()}while(x==y);L=x<y?0:1;hx=[x,y];how='zar'}
   }
-  const th=TH[Math.min(S.bo,3)],roll=d6()+d6(),who=L==0?'Sen':'Rakip';
-  msg+=`<hr>BO3'ü ${L==0?'rakip kazandı':'sen kazandın'}${how}.<br>${who} ölüm zarlarını attı: <b>${roll}</b> (${th}'ten büyük olmalı)`;
-  if(roll>th)M(msg+`<br>${who} hayatta kaldı.`,'Yeni BO3',()=>{S.bo++;newBO3(S);deal(S);R();next()});
-  else{S.over=true;M(msg+`<br><b>${who} öldü. ${L==0?'Rakip oyunu kazandı.':'Sen oyunu kazandın!'}</b>`,'Yeniden oyna',start)}
+  const th=TH[Math.min(S.bo,3)],roll=d6()+d6(),surv=roll>th;
+  const full=v=>pre(v)+`<hr>BO3'ü ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısı)':how=='zar'?` (zar ${hx[v]}–${hx[1-v]})`:''}.<br>${L==v?'Sen':'Rakip'} ölüm zarlarını attı: <b>${roll}</b> (${th}'ten büyük olmalı)<br>`+(surv?`${L==v?'Sen':'Rakip'} hayatta kaldı.`:`<b>${L==v?'Sen öldün. Rakip oyunu kazandı.':'Rakip öldü. Sen oyunu kazandın!'}</b>`);
+  if(surv)MM(full,'Yeni BO3',()=>{S.bo++;newBO3(S);deal(S);R();next()});
+  else{S.over=true;MM(full,'Yeniden oyna',start)}
 }
 function start(){G={u:0,bo:0,log:[],over:false,used:[]};newBO3(G);deal(G);R();next()}
 
@@ -134,13 +135,14 @@ function R(){
   $('#opp').innerHTML=`<div class="lbl">Rakip · jokerler: <span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}">`).join('')}</span> · bu tur oynadığı: ${S.jUsed[1]}/2 · açık toplam: ${total(S,1,false)}</div>`+S.pl[1].open.map(c=>cd(c)).join('')+S.pl[1].closed.map(c=>cd(c,1)).join('');
   $('#me').innerHTML=`<div class="lbl">Sen · bu tur oynadığın joker: ${S.jUsed[0]}/2 · toplamın: <b>${total(S,0)}</b></div>`+S.pl[0].open.map(c=>cd(c)).join('')+S.pl[0].closed.map(c=>cd(c)).join('')+'<div class="lbl">(sağdaki kart kapalı kartın)</div>';
   $('#fx').innerHTML=S.eff.map(e=>`<img class="e${e.neg?' neg':''}${e.o==0?' mine':''}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}" src="${IMG.j[e.id]}" title="${J[e.id]}${e.id==22?(e.s>0?' (+)':' (−)'):''}">`).join('');
-  $('#log').innerHTML=S.log.slice(-4).join('<br>');
-  const my=S.turn==0&&!lock;
+  $('#log').innerHTML=S.log.slice(-4).map(l=>l.p<0?l.t:`${l.p?'Rakip':'Sen'}: ${l.t}`).join('<br>');
+  const my=S.turn==0&&!lock&&!S.wait;
   $('#draw').disabled=!(my&&!P&&canDraw(S,0));$('#pass').disabled=!(my&&!P);
   $('#hand').innerHTML=S.hand[0].map(id=>`<img class="j${my&&!P&&playable(S,0,id)?'':' dim'}" data-j="${id}" src="${IMG.j[id]}" title="${J[id]}">`).join('');
   $('#prompt').innerHTML=P?`${J[P.id]}: ${KTXT[k]} ${k=='sign'?'<button data-s="1">Ekle</button> <button data-s="-1">Çıkar</button>':''} <button data-x="1">İptal</button>`:(S.turn==0?'Sıra sende':'Rakip düşünüyor…');
+  if(MODE=='host'&&conn&&conn.open)conn.send({k:'s',v:view(G)});
 }
-function doPlay(id,pk){const S=G;P=null;play(S,0,id,pk);S.acted=true;S.log.push(`Sen joker oynadın: ${J[id]}`);R();jokerNote(0,id,R)}
+function doPlay(id,pk){const S=G;P=null;if(MODE=='guest'){conn.send({k:'play',id,pk});return R()}play(S,0,id,pk);S.acted=true;S.log.push({p:0,t:`joker oynadı: ${J[id]}`});R();note(0,id,R)}
 function jokerNote(p,id,cb){M(`<b>${p?'RAKİP':'SEN'} JOKER OYNADI</b><br><img class="big" src="${IMG.j[id]}"><br>${J[id]}`,'Kapat',cb)}
 function pick(v){P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
 document.addEventListener('click',e=>{
@@ -156,6 +158,47 @@ document.addEventListener('click',e=>{
   if(S.turn!=0)return;
   if(t.dataset.j){const id=+t.dataset.j;if(!playable(S,0,id))return;const ks=NEED[id]||[];if(ks.length){P={id,ks,pk:[]};R()}else doPlay(id,[])}
 });
-$('#draw').onclick=()=>{const S=G;if(S.turn||lock||P||!canDraw(S,0))return;const c=S.deck.pop();S.pl[0].open.push(c);S.acted=true;S.log.push(`Sen kart çektin (${c.n})`);R()};
-$('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P)pass()};
-start();
+$('#draw').onclick=()=>{const S=G;if(S.turn||lock||P||!canDraw(S,0))return;if(MODE=='guest')return conn.send({k:'draw'});const c=S.deck.pop();S.pl[0].open.push(c);S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R()};
+$('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE=='guest')conn.send({k:'pass'});else pass()}};
+
+/* ---------- ONLINE (PeerJS) ---------- */
+let MODE='bot',peer,conn,waitM=false;
+function view(S){ // rakibe gidecek, gizli bilgisi temizlenmiş ve aynalanmış durum
+  const f=a=>[a[1],a[0]];
+  return {bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:1-S.turn,pts:f(S.pts),jUsed:f(S.jUsed),noJ:f(S.noJ),
+    hand:[S.hand[1],S.hand[0].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
+    pl:[S.pl[1],{open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:0}))}],
+    eff:S.eff.map(e=>({...e,o:1-e.o})),log:S.log.slice(-6).map(l=>({...l,p:l.p<0?-1:1-l.p}))};
+}
+function note(p,id,cb){if(MODE=='host'&&conn&&conn.open)conn.send({k:'j',p:1-p,id});jokerNote(p,id,cb)}
+function onGuest(m){ // host: misafirin hamle istekleri (doğrulanır)
+  const S=G;if(!S||S.over||S.wait||S.turn!=1)return;
+  if(m.k=='draw'){if(!canDraw(S,1))return;const c=S.deck.pop();S.pl[1].open.push(c);S.acted=true;S.log.push({p:1,t:`kart çekti (${c.n})`});R()}
+  else if(m.k=='pass')pass();
+  else if(m.k=='play'){
+    const id=m.id,ks=NEED[id]||[],pk=m.pk||[];
+    if(!playable(S,1,id)||pk.length!=ks.length||!ks.every((k,i)=>opts(S,1,k).includes(pk[i])))return;
+    play(S,1,id,pk);S.acted=true;S.log.push({p:1,t:`joker oynadı: ${J[id]}`});R();note(1,id,R);
+  }
+}
+function onHost(m){ // misafir: host'tan gelen durum/bildirimler
+  if(m.k=='s'){G=m.v;if(waitM){$('#m').hidden=true;lock=false;waitM=false}if(G.turn!=0||G.wait)P=null;$('#menu').hidden=true;R()}
+  else if(m.k=='m'){waitM=true;M(m.html,null)}
+  else if(m.k=='j')jokerNote(m.p,m.id,R);
+}
+const st=t=>$('#st').textContent=t;
+function hostRoom(){
+  MODE='host';const code=Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random()*32|0]).join('');
+  peer=new Peer('necrodice-'+code);
+  peer.on('open',()=>st('Oda kodu: '+code+' — rakip bekleniyor…'));
+  peer.on('error',e=>{if(e.type=='unavailable-id'){peer.destroy();hostRoom()}else st('Hata: '+e.type)});
+  peer.on('connection',c=>{if(conn)return;conn=c;c.on('open',()=>{$('#menu').hidden=true;start()});c.on('data',onGuest);c.on('close',()=>M('Rakip ayrıldı.','Tamam',()=>location.reload()))});
+}
+function joinRoom(){
+  const code=$('#code').value.trim().toUpperCase();if(!code)return st('Oda kodunu yaz');
+  MODE='guest';st('Bağlanılıyor…');peer=new Peer();
+  peer.on('open',()=>{conn=peer.connect('necrodice-'+code,{reliable:true});conn.on('data',onHost);conn.on('open',()=>st('Bağlandı, oyun başlıyor…'));conn.on('close',()=>M('Bağlantı koptu.','Tamam',()=>location.reload()))});
+  peer.on('error',e=>st(e.type=='peer-unavailable'?'Oda bulunamadı':'Hata: '+e.type));
+}
+$('#b1').onclick=()=>{MODE='bot';$('#menu').hidden=true;start()};
+$('#b2').onclick=hostRoom;$('#b3').onclick=joinRoom;

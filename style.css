@@ -26,8 +26,9 @@ button{background:var(--red);color:#fff;border:0;border-radius:6px;padding:10px 
 button:disabled{opacity:.35;cursor:default}
 #hand{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
 .j{width:84px;border-radius:6px;cursor:pointer;border:2px solid var(--sand)}.j.dim{opacity:.35;cursor:default}
-#m{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;z-index:9}
-#m[hidden]{display:none}
-#mb{text-align:center;background:#1d1d2e;border:2px solid var(--red);border-radius:12px;padding:22px;max-width:min(90vw,380px);line-height:1.6}
+#menu,#m{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;z-index:9}
+#menu[hidden],#m[hidden]{display:none}
+#mb,#mb2{text-align:center;background:#1d1d2e;border:2px solid var(--red);border-radius:12px;padding:22px;max-width:min(90vw,380px);line-height:1.6}
 .big{width:220px;max-width:65vw;border-radius:10px;border:2px solid var(--sand);margin:8px 0}
 #mb b{color:gold;letter-spacing:1px}
+#menu h2{margin:0 0 14px;color:var(--red);letter-spacing:3px}#code{font-size:18px;padding:9px;text-transform:uppercase;border-radius:6px;border:0;text-align:center}#st{min-height:20px;color:gold}
