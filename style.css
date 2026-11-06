@@ -10,7 +10,7 @@ section{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap
 .c{width:64px;height:96px;border-radius:7px;background:var(--card);color:var(--ink);display:flex;align-items:center;justify-content:center;font:400 40px 'Permanent Marker',Impact,sans-serif;position:relative;border:2px solid var(--sand)}
 .c::before,.c::after{content:"";position:absolute;left:8px;right:8px;height:2px;background:#fff8;border-radius:2px}
 .c::before{top:5px}.c::after{bottom:5px}
-.c.bk{background:url(assets/back_number.png) center/cover;color:transparent;border-color:#d9553a}
+.c.bk{background:var(--bn) center/cover;color:transparent;border-color:#d9553a}
 .c.bk::before,.c.bk::after{display:none}
 .jb{height:52px;border-radius:4px;margin-left:-14px}.jb:first-child{margin-left:0}
 .jbs{display:inline-flex;vertical-align:middle;margin-left:6px;padding-left:14px}

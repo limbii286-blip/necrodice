@@ -131,14 +131,14 @@ const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
 function R(){
   const S=G,low=act(S,19),cn=cand(),k=P&&P.ks[P.pk.length];
   $('#hdr').innerHTML=`BO3 #${S.bo+1} · Tur ${Math.min(S.rounds+1,3)}/3 · Puan: Sen ${S.pts[0]} – ${S.pts[1]} Rakip · Ölüm eşiği >${TH[Math.min(S.bo,3)]} · Hedef <b>${low?'en az':tg(S)}</b>`;
-  const cd=(c,back)=>!back&&c.o==null?`<img class="c n${cn.includes(c.id)?' hl':''}" data-c="${c.id}" src="assets/numbers/${c.n}.png">`:`<div class="c${back?' bk':''}${cn.includes(c.id)?' hl':''}" data-c="${c.id}">${back?'':`${c.o??c.n}${c.o!=null?'<i>↺</i>':''}`}</div>`;
-  $('#opp').innerHTML=`<div class="lbl">Rakip · jokerler: <span class="jbs">${S.hand[1].map(()=>'<img class="jb" src="assets/back_joker.png">').join('')}</span> · bu tur oynadığı: ${S.jUsed[1]}/2 · açık toplam: ${total(S,1,false)}</div>`+S.pl[1].open.map(c=>cd(c)).join('')+S.pl[1].closed.map(c=>cd(c,1)).join('');
+  const cd=(c,back)=>!back&&c.o==null?`<img class="c n${cn.includes(c.id)?' hl':''}" data-c="${c.id}" src="${IMG.n[c.n]}">`:`<div class="c${back?' bk':''}${cn.includes(c.id)?' hl':''}" data-c="${c.id}">${back?'':`${c.o??c.n}${c.o!=null?'<i>↺</i>':''}`}</div>`;
+  $('#opp').innerHTML=`<div class="lbl">Rakip · jokerler: <span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}">`).join('')}</span> · bu tur oynadığı: ${S.jUsed[1]}/2 · açık toplam: ${total(S,1,false)}</div>`+S.pl[1].open.map(c=>cd(c)).join('')+S.pl[1].closed.map(c=>cd(c,1)).join('');
   $('#me').innerHTML=`<div class="lbl">Sen · bu tur oynadığın joker: ${S.jUsed[0]}/2 · toplamın: <b>${total(S,0)}</b></div>`+S.pl[0].open.map(c=>cd(c)).join('')+S.pl[0].closed.map(c=>cd(c)).join('')+'<div class="lbl">(sağdaki kart kapalı kartın)</div>';
-  $('#fx').innerHTML=S.eff.map(e=>`<img class="e${e.neg?' neg':''}${e.o==0?' mine':''}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}" src="assets/jokers/${e.id}.png" title="${J[e.id]}${e.id==22?(e.s>0?' (+)':' (−)'):''}">`).join('');
+  $('#fx').innerHTML=S.eff.map(e=>`<img class="e${e.neg?' neg':''}${e.o==0?' mine':''}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}" src="${IMG.j[e.id]}" title="${J[e.id]}${e.id==22?(e.s>0?' (+)':' (−)'):''}">`).join('');
   $('#log').innerHTML=S.log.slice(-4).join('<br>');
   const my=S.turn==0&&!lock;
   $('#draw').disabled=!(my&&!P&&canDraw(S,0));$('#pass').disabled=!(my&&!P);
-  $('#hand').innerHTML=S.hand[0].map(id=>`<img class="j${my&&!P&&playable(S,0,id)?'':' dim'}" data-j="${id}" src="assets/jokers/${id}.png" title="${J[id]}">`).join('');
+  $('#hand').innerHTML=S.hand[0].map(id=>`<img class="j${my&&!P&&playable(S,0,id)?'':' dim'}" data-j="${id}" src="${IMG.j[id]}" title="${J[id]}">`).join('');
   $('#prompt').innerHTML=P?`${J[P.id]}: ${KTXT[k]} ${k=='sign'?'<button data-s="1">Ekle</button> <button data-s="-1">Çıkar</button>':''} <button data-x="1">İptal</button>`:(S.turn==0?'Sıra sende':'Rakip düşünüyor…');
 }
 function doPlay(id,pk){const S=G;P=null;play(S,0,id,pk);S.acted=true;S.log.push(`Sen joker oynadın: ${J[id]}`);R()}
