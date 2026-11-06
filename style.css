@@ -1,0 +1,25 @@
+:root{--bg:#14141f;--red:#8b1e1e;--card:#7f92e6;--ink:#6b0f0f;--sand:#e8d3a1;--txt:#e9e3d8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;text-align:center}
+main{max-width:760px;margin:auto;padding:10px}
+h1{margin:4px;color:var(--red);font:900 38px Impact,'Arial Black',sans-serif;letter-spacing:4px}
+#hdr{font-size:14px;margin-bottom:6px}
+section{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;min-height:110px;padding:6px;background:#1d1d2e;border-radius:10px;margin:6px 0}
+.lbl{width:100%;font-size:13px;opacity:.85}
+.c{width:58px;height:86px;border-radius:7px;background:var(--card);color:var(--ink);display:flex;align-items:center;justify-content:center;font:900 36px Impact,'Arial Black',sans-serif;position:relative;border:2px solid var(--sand)}
+.c.bk{background:var(--sand);color:var(--red)}
+.c i{position:absolute;right:3px;bottom:0;font-size:12px}
+.hl{outline:3px solid gold;cursor:pointer;animation:p 1s infinite}
+@keyframes p{50%{outline-color:transparent}}
+#fx{min-height:46px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;align-items:center}
+.e{height:46px;border-radius:4px;border:2px solid #555}.e.mine{border-color:gold}.e.neg{filter:grayscale(1);opacity:.35}
+#log{font-size:12px;opacity:.8;min-height:62px;text-align:left;padding:4px 10px}
+#prompt{min-height:26px;color:gold}
+#btns{display:flex;gap:10px;justify-content:center;margin:6px}
+button{background:var(--red);color:#fff;border:0;border-radius:6px;padding:10px 20px;font-size:16px;cursor:pointer}
+button:disabled{opacity:.35;cursor:default}
+#hand{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.j{width:84px;border-radius:6px;cursor:pointer;border:2px solid var(--sand)}.j.dim{opacity:.35;cursor:default}
+#m{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;z-index:9}
+#m[hidden]{display:none}
+#mb{background:#1d1d2e;border:2px solid var(--red);border-radius:12px;padding:22px;max-width:380px;line-height:1.6}
