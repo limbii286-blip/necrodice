@@ -87,9 +87,8 @@ function bot(){
     });
     if(best&&n++<8){
       S.acted=true;
-      if(best.t=='d'){const c=S.deck.pop();S.pl[1].open.push(c);S.log.push(`Rakip kart çekti (${c.n})`)}
-      else{play(S,1,best.id,best.pk);S.log.push(`Rakip joker oynadı: ${J[best.id]}`)}
-      R();setTimeout(step,900);
+      if(best.t=='d'){const c=S.deck.pop();S.pl[1].open.push(c);S.log.push(`Rakip kart çekti (${c.n})`);R();setTimeout(step,900)}
+      else{play(S,1,best.id,best.pk);S.log.push(`Rakip joker oynadı: ${J[best.id]}`);R();jokerNote(1,best.id,()=>{R();setTimeout(step,400)})}
     }else pass();
   };
   setTimeout(step,900);
@@ -141,7 +140,8 @@ function R(){
   $('#hand').innerHTML=S.hand[0].map(id=>`<img class="j${my&&!P&&playable(S,0,id)?'':' dim'}" data-j="${id}" src="${IMG.j[id]}" title="${J[id]}">`).join('');
   $('#prompt').innerHTML=P?`${J[P.id]}: ${KTXT[k]} ${k=='sign'?'<button data-s="1">Ekle</button> <button data-s="-1">Çıkar</button>':''} <button data-x="1">İptal</button>`:(S.turn==0?'Sıra sende':'Rakip düşünüyor…');
 }
-function doPlay(id,pk){const S=G;P=null;play(S,0,id,pk);S.acted=true;S.log.push(`Sen joker oynadın: ${J[id]}`);R()}
+function doPlay(id,pk){const S=G;P=null;play(S,0,id,pk);S.acted=true;S.log.push(`Sen joker oynadın: ${J[id]}`);R();jokerNote(0,id,R)}
+function jokerNote(p,id,cb){M(`<b>${p?'RAKİP':'SEN'} JOKER OYNADI</b><br><img class="big" src="${IMG.j[id]}"><br>${J[id]}`,'Kapat',cb)}
 function pick(v){P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
 document.addEventListener('click',e=>{
   const S=G,t=e.target;if(lock||!S||S.over)return;
