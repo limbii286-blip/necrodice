@@ -181,7 +181,7 @@ function start(){G={u:0,bo:0,log:[],over:false,used:[]};newBO3(G);deal(G);R();ne
 
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
-let prevT=false,lastLk='';
+let prevT=false,lastLk='',flipId=null;const peek=new Set();
 function fly(){ // yeni kartlar desteden uçarak gelir
   const d=$('#deck');if(!d||!d.getBoundingClientRect)return;const dr=d.getBoundingClientRect();let i=0;
   document.querySelectorAll('.fresh').forEach(el=>{const r=el.getBoundingClientRect();el.style.setProperty('--dx',(dr.left-r.left+(dr.width-r.width)/2)+'px');el.style.setProperty('--dy',(dr.top-r.top+(dr.height-r.height)/2)+'px');el.style.animationDelay=(i++*.13)+'s'});
@@ -190,17 +190,17 @@ const seen=new Set(),DN={easy:'Kolay',med:'Orta',hard:'Zor'};
 function R(){
   const S=G,low=act(S,19),cn=cand(),k=P&&P.ks[P.pk.length],bi=Math.min(S.bo,3),T=tg(S),res=S.res||[];
   let fresh=0;
-  const cd=(c,back,fl)=>{const nf=!seen.has(c.id);if(nf)fresh++;const f=(nf?' fresh':'')+(fl?' flip':'');seen.add(c.id);const h=cn.includes(c.id)?' hl':'';
-    return !back&&c.o==null?`<img class="c n${f}${h}" data-c="${c.id}" src="${IMG.n[c.n]}" alt="${c.n}">`:`<div class="c${back?' bk':''}${f}${h}" data-c="${c.id}">${back?'':`${c.o??c.n}${c.o!=null?'<i>↺</i>':''}`}</div>`};
+  const cd=(c,back,fl,pk)=>{const nf=!seen.has(c.id);if(nf)fresh++;const f=(nf?' fresh':'')+(fl?' flip':'')+(cn.includes(c.id)?' hl':'')+(pk?' mc':'');seen.add(c.id);const a=`data-c="${c.id}"${pk?' data-pk="1"':''}`;
+    return !back&&c.o==null?`<img class="c n${f}" ${a} src="${IMG.n[c.n]}" alt="${c.n}">`:`<div class="c${back?' bk':''}${f}" ${a}>${back?'':`${c.o??c.n}${c.o!=null?'<i>↺</i>':''}`}</div>`};
   const pips=[0,1,2].map(i=>`<span class="pip ${res[i]==null?(i==S.rounds?'now':''):res[i]>0?'w':res[i]<0?'l':'d'}"></span>`).join('');
   const sk=TH.map((t,i)=>`<span class="sk${i<bi?' past':i==bi?' cur':''}" title="Ölüm eşiği: ${t}'ten büyük atmalısın">☠<small>${t}</small></span>`).join('');
   $('#hdr').innerHTML=`<div class="hb"><span class="lab">Düello ${S.bo+1}</span><span class="pips">${pips}</span></div><div class="sc"><b>${S.pts[0]}</b><i>Sen</i><i>Rakip</i><b>${S.pts[1]}</b></div><div class="hb sks">${sk}</div>`;
   const my=S.turn==0&&!lock&&!S.wait,mt=total(S,0),bust=!low&&mt>T;
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'');
   $('#opp').innerHTML=`<div class="who"><img class="av" src="${IMG.bj}" alt=""><div class="nm"><b>${MODE=='bot'?'Ölümün Efendisi':'Rakip'}</b><small>${MODE=='bot'?'Zorluk: '+DN[DIFF]:'Online düello'}</small><small>Joker hakkı ${2-S.jUsed[1]}/2</small></div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot"><small>Açık toplam</small><b>${total(S,1,false)}</b></div></div><div class="cards">${S.pl[1].open.map(c=>cd(c)).join('')}${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>`;
-  $('#fx').innerHTML=`<div id="deck" class="deck" title="Deste"><b>${S.deck.length}</b></div><div class="seal${T!=21||low?' alt':''}"><small>Hedef</small><b>${low?'En az':T}</b></div><div class="chips">${S.eff.map(e=>`<img class="e${e.neg?' neg':''}${e.o==0?' mine':''}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}" src="${IMG.j[e.id]}" title="${J[e.id]}${e.id==22?(e.s>0?' (+)':' (−)'):''}" alt="${J[e.id]}">`).join('')||'<span class="none">Masada etkili joker yok</span>'}</div>`;
+  $('#fx').innerHTML=`<div id="deck" class="deck" title="Deste"><b>${S.deck.length}</b></div><div class="seal${T!=21||low?' alt':''}"><small>Hedef</small><b>${low?'En az':T}</b></div><div class="chips">${S.eff.map(e=>`<img class="e${e.neg?' neg':''}${e.o==0?' mine':''}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}" src="${IMG.j[e.id]}" title="${J[e.id]}${e.id==22?(e.s>0?' (+)':' (−)'):''}" alt="${J[e.id]}">`).join('')||''}</div>`;
   $('#me').className='zone'+(my?' act':'');
-  $('#me').innerHTML=`<div class="who"><img class="av" src="${IMG.bn}" alt=""><div class="nm"><b>Sen</b><small>Joker hakkı ${2-S.jUsed[0]}/2</small></div><div class="tot${bust?' bust':''}"><small>${bust?'Battın':'Toplamın'}</small><b>${mt}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,0,S.rev)).join('')}</div><small class="cap">Sağdaki kart, yalnızca senin gördüğün kapalı kartın</small>`;
+  $('#me').innerHTML=`<div class="who"><img class="av" src="${IMG.bn}" alt=""><div class="nm"><b>Sen</b><small>Joker hakkı ${2-S.jUsed[0]}/2</small></div><div class="tot${bust?' bust':''}"><small>${bust?'Battın':'Toplamın'}</small><b>${mt}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`;
   $('#log').innerHTML=S.log.slice(-5).map(l=>l.p<0?l.t:`${l.p?'Rakip':'Sen'}: ${l.t}`).join('<br>');
   $('#prompt').className=P?'ask':my?'go':'wait';
   $('#prompt').innerHTML=P?`${J[P.id]}: ${KTXT[k]} ${k=='sign'?'<button class="btn sm" data-s="1">Ekle</button><button class="btn sm" data-s="-1">Çıkar</button>':''}<button class="btn sm alt" data-x="1">Vazgeç</button>`:(S.turn==0?'Senin sıran':MODE=='bot'?'Ölümün Efendisi düşünüyor…':'Rakibin sırası');
@@ -210,24 +210,34 @@ function R(){
   if(fresh)snd('draw');
   const mt0=S.turn==0&&!S.wait;if(mt0&&!prevT)snd('turn');prevT=mt0;
   const last=S.log[S.log.length-1],lk=S.log.length+JSON.stringify(last);if(lk!=lastLk){lastLk=lk;if(last&&last.t=='pas dedi')snd('pass')}
-  fly();
+  fly();flipId=null;
   if(MODE=='host'&&conn&&conn.open)conn.send({k:'s',v:view(G)});
 }
-function doPlay(id,pk){const S=G;P=null;if(MODE=='guest'){conn.send({k:'play',id,pk});return R()}play(S,0,id,pk);S.acted=true;S.log.push({p:0,t:`joker oynadı: ${J[id]}`});R();note(0,id,R)}
+function doPlay(id,pk){const S=G;P=null;if(MODE=='guest'){conn.send({k:'play',id,pk});return R()}play(S,0,id,pk);S.acted=true;S.log.push({p:0,t:`joker oynadı: ${J[id]}`});R();note(0,id)}
 function jokerNote(p,id,cb){snd('play');M(`<b>${p?'RAKİP':'SEN'} JOKER OYNADI</b><br><img class="big" src="${IMG.j[id]}"><br>${J[id]}`,'Kapat',cb)}
 function pick(v){P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
+function startJoker(id){const ks=NEED[id]||[];if(ks.length){P={id,ks,pk:[]};R()}else doPlay(id,[])}
+function preview(id,use,note){ // jokeri büyük göster: Kullan / Kapat
+  lock=true;
+  $('#mb').innerHTML=`<img class="big" src="${IMG.j[id]}" alt="${J[id]}">${note?`<div class="pn">${note}</div>`:''}<div class="row">${use?'<button id="pu" class="btn">Kullan</button>':''}<button id="pc" class="btn alt">Kapat</button></div>`;
+  $('#m').hidden=false;
+  $('#pc').onclick=()=>{$('#m').hidden=true;lock=false;R()};
+  if(use)$('#pu').onclick=()=>{$('#m').hidden=true;lock=false;startJoker(id)};
+}
 document.addEventListener('click',e=>{
-  const S=G,t=e.target;if(lock||!S||S.over)return;
+  const S=G,t=e.target.closest&&e.target.closest('[data-c],[data-e],[data-j],[data-s],[data-x]');
+  if(lock||!S||S.over||!t)return;
+  const k=P&&P.ks[P.pk.length],c=+t.dataset.c,u=+t.dataset.e;
   if(t.dataset.x){P=null;return R()}
   if(t.dataset.s)return pick(+t.dataset.s);
-  if(P){
-    const k=P.ks[P.pk.length];
-    if(t.dataset.c&&k!='eff'&&opts(S,0,k).includes(+t.dataset.c))pick(+t.dataset.c);
-    if(t.dataset.e&&k=='eff'&&opts(S,0,k).includes(+t.dataset.e))pick(+t.dataset.e);
+  if(P){ // hedef seçimi
+    if(t.dataset.c&&k!='eff'&&opts(S,0,k).includes(c))pick(c);
+    else if(t.dataset.e&&k=='eff'&&opts(S,0,k).includes(u))pick(u);
     return;
   }
-  if(S.turn!=0)return;
-  if(t.dataset.j){const id=+t.dataset.j;if(!playable(S,0,id))return;const ks=NEED[id]||[];if(ks.length){P={id,ks,pk:[]};R()}else doPlay(id,[])}
+  if(t.dataset.pk){flipId=c;peek.has(c)?peek.delete(c):peek.add(c);return R()} // kapalı kartı çevir
+  if(t.dataset.e){const x=S.eff.find(y=>y.uid==u);if(x)preview(x.id,false,`${x.o==0?'Senin jokerin':'Rakibin jokeri'}${x.neg?' (etkisiz kılındı)':''}${x.id==22?(x.s>0?' (ekler)':' (çıkarır)'):''}`);return}
+  if(t.dataset.j){const id=+t.dataset.j;preview(id,S.turn==0&&!S.wait&&playable(S,0,id))}
 });
 $('#draw').onclick=()=>{const S=G;if(S.turn||lock||P||!canDraw(S,0))return;if(MODE=='guest')return conn.send({k:'draw'});const c=S.deck.pop();S.pl[0].open.push(c);S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R()};
 $('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE=='guest')conn.send({k:'pass'});else pass()}};
@@ -241,7 +251,7 @@ function view(S){ // rakibe gidecek, gizli bilgisi temizlenmiş ve aynalanmış 
     pl:[S.pl[1],{open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:S.rev?c.o:undefined}))}],
     eff:S.eff.map(e=>({...e,o:1-e.o})),log:S.log.slice(-6).map(l=>({...l,p:l.p<0?-1:1-l.p}))};
 }
-function note(p,id,cb){if(MODE=='host'&&conn&&conn.open)conn.send({k:'j',p:1-p,id});jokerNote(p,id,cb)}
+function note(p,id,cb){if(MODE=='host'&&conn&&conn.open)conn.send({k:'j',p:1-p,id});if(cb)jokerNote(p,id,cb);else snd('play')}
 function onGuest(m){ // host: misafirin hamle istekleri (doğrulanır)
   const S=G;if(!S||S.over||S.wait||S.turn!=1)return;
   if(m.k=='draw'){if(!canDraw(S,1))return;const c=S.deck.pop();S.pl[1].open.push(c);S.acted=true;S.log.push({p:1,t:`kart çekti (${c.n})`});R()}
@@ -255,7 +265,7 @@ function onGuest(m){ // host: misafirin hamle istekleri (doğrulanır)
 function onHost(m){ // misafir: host'tan gelen durum/bildirimler
   if(m.k=='s'){G=m.v;if(waitM){$('#m').hidden=true;lock=false;waitM=false}if(G.turn!=0||G.wait)P=null;$('#menu').hidden=true;R()}
   else if(m.k=='m'){waitM=true;M(m.html,null);snd(m.sd)}
-  else if(m.k=='j')jokerNote(m.p,m.id,R);
+  else if(m.k=='j'){if(m.p==0)snd('play');else jokerNote(m.p,m.id,R)}
 }
 const st=t=>$('#st').textContent=t;
 function hostRoom(){
@@ -272,7 +282,6 @@ function joinRoom(){
   peer.on('error',e=>st(e.type=='peer-unavailable'?'Oda bulunamadı':'Hata: '+e.type));
 }
 document.querySelectorAll('.d').forEach(b=>b.onclick=()=>{DIFF=b.dataset.d;MODE='bot';$('#menu').hidden=true;start()});
-$('#mimg').src=IMG.bj;
 $('#mute').textContent=muted?'🔇':'🔊';
 $('#mute').onclick=()=>{muted=!muted;try{localStorage.setItem('nd_mute',muted?'1':'0')}catch(e){}$('#mute').textContent=muted?'🔇':'🔊'};
 $('#b2').onclick=hostRoom;$('#b3').onclick=joinRoom;
