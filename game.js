@@ -11,14 +11,42 @@ const clone=o=>JSON.parse(JSON.stringify(o));
 const d6=()=>1+Math.random()*6|0;
 let G,P=null,lock=false;
 
+/* ---------- SES (Web Audio, dosya gerekmez) ---------- */
+let AC,muted=false;try{muted=localStorage.getItem('nd_mute')=='1'}catch(e){}
+const ac=()=>{if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state=='suspended')AC.resume();return AC};
+function tone(f,d,ty='sine',v=.12,w=0,sl=0){const a=ac(),t=a.currentTime+w,o=a.createOscillator(),g=a.createGain();o.type=ty;o.frequency.setValueAtTime(f,t);if(sl)o.frequency.linearRampToValueAtTime(Math.max(30,f+sl),t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(a.destination);o.start(t);o.stop(t+d)}
+function noise(d,v=.2,hp=2500,w=0){const a=ac(),t=a.currentTime+w,n=a.sampleRate*d|0,b=a.createBuffer(1,n,a.sampleRate),x=b.getChannelData(0);for(let i=0;i<n;i++)x[i]=Math.random()*2-1;const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=b;f.type='highpass';f.frequency.value=hp;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);s.connect(f).connect(g).connect(a.destination);s.start(t)}
+const SND={
+  draw(){noise(.14,.22,2500);tone(300,.06,'triangle',.05)},
+  flip(){noise(.07,.3,4500);tone(1100,.04,'square',.04)},
+  play(){tone(200,.5,'sawtooth',.09,0,-120);tone(660,.3,'triangle',.08,.1);tone(880,.4,'sine',.06,.18)},
+  pass(){tone(130,.15,'sine',.2);tone(90,.2,'sine',.15,.05)},
+  turn(){tone(740,.1,'sine',.07);tone(988,.14,'sine',.06,.09)},
+  dice(){for(let i=0;i<10;i++){noise(.035,.28,1200+Math.random()*2500,i*.1);tone(180+Math.random()*120,.05,'square',.04,i*.1)}},
+  win(){[523,659,784,1047].forEach((f,i)=>tone(f,.4,'triangle',.12,i*.11))},
+  lose(){[330,277,233,185].forEach((f,i)=>tone(f,.45,'sawtooth',.07,i*.14))},
+  ok(){[440,554,659].forEach((f,i)=>tone(f,.35,'sine',.1,i*.09))},
+  death(){tone(80,1.6,'sawtooth',.2,0,-45);tone(55,1.8,'sine',.25);noise(.9,.18,150,.1)}
+};
+function snd(n){if(muted||!n)return;try{SND[n]()}catch(e){}}
+document.addEventListener('pointerdown',()=>{try{ac()}catch(e){}});
+const PIP={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+const die=n=>`<i class="die">${[...Array(9)].map((_,i)=>`<b${PIP[n].includes(i)?' class="p"':''}></b>`).join('')}</i>`;
+function anim(){ // ölüm zarı animasyonu
+  const d=document.querySelector('#mb .dice');if(!d)return;
+  const a=+d.dataset.a,b=+d.dataset.b,r=()=>1+Math.random()*6|0;let n=0;
+  d.classList.add('roll');d.innerHTML=die(r())+die(r());snd('dice');
+  const iv=setInterval(()=>{if(++n>=14){clearInterval(iv);d.innerHTML=die(a)+die(b);d.classList.remove('roll');d.classList.add('fin');snd(d.dataset.s)}else d.innerHTML=die(r())+die(r())},90);
+}
+
 /* ---------- MOTOR ---------- */
-function newBO3(S){S.jdeck=shuf(range(24));S.hand=[S.jdeck.splice(0,4),S.jdeck.splice(0,4)];S.pts=[0,0];S.rounds=0}
+function newBO3(S){S.jdeck=shuf(range(24));S.hand=[S.jdeck.splice(0,4),S.jdeck.splice(0,4)];S.pts=[0,0];S.rounds=0;S.res=[]}
 function deal(S){
   S.deck=shuf(range(11).map(n=>({id:++S.u,n})));
   S.pl=[0,1].map(()=>({open:[S.deck.pop()],closed:[S.deck.pop()]}));
   S.eff=[];S.jUsed=[0,0];S.noJ=[false,false];S.acted=false;S.turns=0;
   S.turn=S.pl[0].open[0].n<S.pl[1].open[0].n?0:1;
-  S.wait=false;S.log.push({p:-1,t:`— Tur ${S.rounds+1} —`},{p:S.turn,t:'başlıyor (küçük açık kart)'});
+  S.wait=false;S.rev=false;S.dead=[];S.pa=[0,0];S.log.push({p:-1,t:`— Tur ${S.rounds+1} —`},{p:S.turn,t:'başlıyor (küçük açık kart)'});
 }
 const act=(S,id)=>S.eff.some(e=>e.id==id&&!e.neg);
 function total(S,p,wc=true){
@@ -51,7 +79,7 @@ function play(S,p,id,pk){
   if(id==5)S.pl[q].open.push(S.deck.pop());
   if(id==6||id==7){const[a,i]=find(pk[0]);a[i].o=id==6?0:12}
   if(id==12)S.eff.find(e=>e.uid==pk[0]).neg=true;
-  if(id==13||id==14)take(pk[0]);
+  if(id==13||id==14)(S.dead=S.dead||[]).push(take(pk[0]));
   if(id==15){const[a,i]=find(pk[0]),[b,k]=find(pk[1]);[a[i],b[k]]=[b[k],a[i]]}
   if(id==16)[S.pl[0].closed,S.pl[1].closed]=[S.pl[1].closed,S.pl[0].closed];
   if(id==17)S.pl[p].open.push(take(pk[0]));
@@ -60,36 +88,58 @@ function play(S,p,id,pk){
 }
 
 /* ---------- BOT ---------- */
-function evalS(S,p){ // kapalı kartlar şimdi açılsa beklenen sonuç
+// Zorluk ayarları: zor seviye bot-vs-bot oyunlarıyla (self-play) ayarlandı
+const PR={
+  easy:{rand:.25,noise:.35,jc:.45,jp:.4,dm:.05,depth:0},
+  med:{rand:.04,noise:.12,jc:.2,jp:1,dm:.03,depth:0},
+  hard:{rand:0,noise:0,jc:.5,jl:.25,jp:1,dm:.02,depth:2,beta:0,gap:6}
+};
+let DIFF='med';
+const unk=(S,p)=>{const seen=new Set([...S.pl[p].open,...S.pl[p].closed,...S.pl[1-p].open,...(S.dead||[])].map(c=>c.n));return range(11).filter(n=>!seen.has(n))};
+let CUR=PR.med;
+function evalS(S,p){ // rakibin kapalı kartı bilinmiyor: olasılıklar üzerinden beklenen sonuç
   const q=1-p,cl=S.pl[q].closed[0];
   if(cl.o!=null)return outc(S,p);
-  const seen=new Set([...S.pl[p].open,...S.pl[p].closed,...S.pl[q].open].map(c=>c.n));
-  const pool=range(11).filter(n=>!seen.has(n));if(!pool.length)return outc(S,p);
-  let s=0;pool.forEach(n=>{cl.n=n;s+=outc(S,p)});return s/pool.length;
+  const pool=unk(S,p);if(!pool.length)return outc(S,p);
+  const use=CUR.beta&&S.pa&&S.pa[q]>0; // rakip pas geçtiyse toplamının hedefe yakın olma ihtimali artar
+  let s=0,w=0;
+  pool.forEach(n=>{cl.n=n;let wt=1;if(use){const t=total(S,q),Tg=tg(S);if(t<=Tg&&t>=Tg-CUR.gap)wt=1+CUR.beta}s+=wt*outc(S,p);w+=wt});
+  return s/w;
+}
+function look(S,p,d){ // d adım ileriye bakarak: pas mı, çekip tekrar karar vermek mi daha iyi
+  const b=evalS(S,p);if(d<=0||!canDraw(S,p))return b;
+  const pool=unk(S,p);if(!pool.length)return b;
+  let v=0;pool.forEach(x=>{const T=clone(S);T.deck.pop();T.pl[p].open.push({id:++T.u,n:x});v+=look(T,p,d-1)});
+  return Math.max(b,v/pool.length);
 }
 const combos=l=>l.reduce((r,o)=>r.flatMap(x=>o.map(y=>[...x,y])),[[]]);
+function decide(S,p,prm){ // en iyi hamleyi seç; null = pas
+  CUR=prm;const d=prm.depth||0,nz=()=>prm.noise?(Math.random()+Math.random()-1)*prm.noise:0;
+  if(Math.random()<prm.rand)return canDraw(S,p)&&Math.random()<.5?{t:'d'}:null;
+  const pool=unk(S,p);let best=null,bs=evalS(clone(S),p)+prm.dm;
+  if(canDraw(S,p)&&pool.length){
+    let v=0;pool.forEach(x=>{const T=clone(S);T.deck.pop();T.pl[p].open.push({id:++T.u,n:x});v+=look(T,p,d)});
+    v=v/pool.length+nz();if(v>bs){bs=v;best={t:'d'}}
+  }
+  if(S.jUsed[p]<2&&!S.noJ[p])new Set(S.hand[p]).forEach(id=>{
+    if(id==16||!playable(S,p,id)||Math.random()>prm.jp)return;
+    combos((NEED[id]||[]).map(k=>opts(S,p,k))).forEach(pk=>{
+      if(id==15&&pk[0]==pk[1])return;
+      const T=clone(S);T.deck=shuf(pool.map(n=>({id:++T.u,n}))).slice(0,S.deck.length);play(T,p,id,pk);
+      const v=look(T,p,d)-(S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc)+nz();if(v>bs){bs=v;best={t:'j',id,pk}}
+    });
+  });
+  return best;
+}
 function bot(){
-  const S=G;let n=0;
+  const S=G,prm=PR[DIFF];let n=0;
   const step=()=>{
     if(S.turn!=1||S.over)return;
-    const base=evalS(clone(S),1);let best=null,bs=base+.03;
-    if(canDraw(S,1)){
-      let v=0;S.deck.forEach((c,i)=>{const T=clone(S);T.pl[1].open.push(T.deck.splice(i,1)[0]);v+=evalS(T,1)});v/=S.deck.length;
-      if(v>bs){bs=v;best={t:'d'}}
-    }
-    if(S.jUsed[1]<2&&!S.noJ[1])new Set(S.hand[1]).forEach(id=>{
-      if(id==16||!playable(S,1,id))return;
-      combos((NEED[id]||[]).map(k=>opts(S,1,k))).forEach(pk=>{
-        if(id==15&&pk[0]==pk[1])return;
-        const T=clone(S);T.deck=shuf(T.deck);play(T,1,id,pk);const v=evalS(T,1)-.2;
-        if(v>bs){bs=v;best={t:'j',id,pk}}
-      });
-    });
-    if(best&&n++<8){
-      S.acted=true;
-      if(best.t=='d'){const c=S.deck.pop();S.pl[1].open.push(c);S.log.push({p:1,t:`kart çekti (${c.n})`});R();setTimeout(step,900)}
-      else{play(S,1,best.id,best.pk);S.log.push({p:1,t:`joker oynadı: ${J[best.id]}`});R();note(1,best.id,()=>{R();setTimeout(step,400)})}
-    }else pass();
+    const a=n++<8?decide(S,1,prm):null;
+    if(!a)return pass();
+    S.acted=true;
+    if(a.t=='d'){const c=S.deck.pop();S.pl[1].open.push(c);S.log.push({p:1,t:`kart çekti (${c.n})`});R();setTimeout(step,900)}
+    else{play(S,1,a.id,a.pk);S.log.push({p:1,t:`joker oynadı: ${J[a.id]}`});R();note(1,a.id,()=>{R();setTimeout(step,400)})}
   };
   setTimeout(step,900);
 }
@@ -98,52 +148,73 @@ function bot(){
 function pass(){
   const S=G;S.log.push({p:S.turn,t:'pas dedi'});
   if(S.turns>0&&!S.acted)return endRound();
-  S.turns++;S.acted=false;S.turn=1-S.turn;R();next();
+  (S.pa=S.pa||[0,0])[S.turn]++;S.turns++;S.acted=false;S.turn=1-S.turn;R();next();
 }
 function next(){if(MODE=='bot'&&G.turn==1&&!lock&&!G.over)bot()}
-function M(html,btn,cb){lock=true;$('#mb').innerHTML=html+(btn?`<br><br><button id="mo">${btn}</button>`:'<br><i>Host devam ettirecek…</i>');$('#m').hidden=false;
+function M(html,btn,cb){lock=true;$('#mb').innerHTML=html+(btn?`<br><br><button id="mo" class="btn">${btn}</button>`:'<br><i>Host devam ettirecek…</i>');$('#m').hidden=false;anim();
   if(btn)$('#mo').onclick=()=>{$('#m').hidden=true;lock=false;cb()}}
-function MM(fn,btn,cb){if(MODE=='host'&&conn&&conn.open)conn.send({k:'m',html:fn(1)});M(fn(0),btn,cb)}
+function MM(fn,btn,cb,sd){if(MODE=='host'&&conn&&conn.open)conn.send({k:'m',html:fn(1),sd:sd&&sd(1)});M(fn(0),btn,cb);snd(sd&&sd(0))}
 function endRound(){
   const S=G,a=[total(S,0),total(S,1)],T=tg(S),r=outc(S,0);
-  S.pts[0]+=r>0?1:r==0?.5:0;S.pts[1]+=r<0?1:r==0?.5:0;S.rounds++;S.wait=true;
+  S.pts[0]+=r>0?1:r==0?.5:0;S.pts[1]+=r<0?1:r==0?.5:0;S.rounds++;S.res.push(r);S.wait=true;S.rev=true;
   const pre=v=>{const w=v?-r:r;return `Kapalı kartlar açıldı.<br>Sen: ${a[v]} · Rakip: ${a[1-v]} · Hedef: ${T}${act(S,19)?' (en az kazanır)':''}<br><b>${w>0?'Turu sen kazandın':w<0?'Turu rakip kazandı':'Tur berabere'}</b>`};
-  R();
-  if(!(S.pts.some(x=>x>=2)||S.rounds>=3)){
-    if(r==0)[0,1].forEach(p=>S.jdeck.length&&S.hand[p].push(S.jdeck.pop()));
-    return MM(v=>pre(v)+(r==0?'<br>Beraberlik: ikiniz de birer joker çektiniz.':''),'Sonraki tur',()=>{deal(S);R();next()});
+  R();snd('flip');lock=true; // kapalı kartlar çevrilir, sonra sonuç penceresi açılır
+  setTimeout(()=>{lock=false;fin()},1700);
+  function fin(){
+    if(!(S.pts.some(x=>x>=2)||S.rounds>=3)){
+      if(r==0)[0,1].forEach(p=>S.jdeck.length&&S.hand[p].push(S.jdeck.pop()));
+      return MM(v=>pre(v)+(r==0?'<br>Beraberlik: ikiniz de birer joker çektiniz.':''),'Sonraki tur',()=>{deal(S);R();next()},v=>{const w=v?-r:r;return w>0?'win':w<0?'lose':'ok'});
+    }
+    let L=S.pts[0]<S.pts[1]?0:S.pts[1]<S.pts[0]?1:-1,hx=null,how='';
+    if(L<0){
+      const j=S.hand.map(h=>h.length);
+      if(j[0]!=j[1]){L=j[0]<j[1]?0:1;how='joker'}
+      else{let x,y;do{x=d6()+d6();y=d6()+d6()}while(x==y);L=x<y?0:1;hx=[x,y];how='zar'}
+    }
+    const th=TH[Math.min(S.bo,3)],d1=d6(),d2=d6(),roll=d1+d2,surv=roll>th;
+    const full=v=>pre(v)+`<hr>BO3'ü ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısı)':how=='zar'?` (zar ${hx[v]}–${hx[1-v]})`:''}.<br>${L==v?'Sen':'Rakip'} ölüm zarlarını atıyor (${th}'ten büyük olmalı)<div class="dice" data-a="${d1}" data-b="${d2}" data-s="${surv?'ok':L==v?'death':'win'}"></div><div class="after"><b>Toplam: ${roll}</b><br>`+(surv?`${L==v?'Sen':'Rakip'} hayatta kaldı.`:`<b>${L==v?'Sen öldün. Rakip oyunu kazandı.':'Rakip öldü. Sen oyunu kazandın!'}</b>`)+'</div>';
+    if(surv)MM(full,'Yeni BO3',()=>{S.bo++;newBO3(S);deal(S);R();next()});
+    else{S.over=true;MM(full,'Yeniden oyna',start)}
   }
-  let L=S.pts[0]<S.pts[1]?0:S.pts[1]<S.pts[0]?1:-1,hx=null,how='';
-  if(L<0){
-    const j=S.hand.map(h=>h.length);
-    if(j[0]!=j[1]){L=j[0]<j[1]?0:1;how='joker'}
-    else{let x,y;do{x=d6()+d6();y=d6()+d6()}while(x==y);L=x<y?0:1;hx=[x,y];how='zar'}
-  }
-  const th=TH[Math.min(S.bo,3)],roll=d6()+d6(),surv=roll>th;
-  const full=v=>pre(v)+`<hr>BO3'ü ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısı)':how=='zar'?` (zar ${hx[v]}–${hx[1-v]})`:''}.<br>${L==v?'Sen':'Rakip'} ölüm zarlarını attı: <b>${roll}</b> (${th}'ten büyük olmalı)<br>`+(surv?`${L==v?'Sen':'Rakip'} hayatta kaldı.`:`<b>${L==v?'Sen öldün. Rakip oyunu kazandı.':'Rakip öldü. Sen oyunu kazandın!'}</b>`);
-  if(surv)MM(full,'Yeni BO3',()=>{S.bo++;newBO3(S);deal(S);R();next()});
-  else{S.over=true;MM(full,'Yeniden oyna',start)}
 }
 function start(){G={u:0,bo:0,log:[],over:false,used:[]};newBO3(G);deal(G);R();next()}
 
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
+let prevT=false,lastLk='';
+function fly(){ // yeni kartlar desteden uçarak gelir
+  const d=$('#deck');if(!d||!d.getBoundingClientRect)return;const dr=d.getBoundingClientRect();let i=0;
+  document.querySelectorAll('.fresh').forEach(el=>{const r=el.getBoundingClientRect();el.style.setProperty('--dx',(dr.left-r.left+(dr.width-r.width)/2)+'px');el.style.setProperty('--dy',(dr.top-r.top+(dr.height-r.height)/2)+'px');el.style.animationDelay=(i++*.13)+'s'});
+}
+const seen=new Set(),DN={easy:'Kolay',med:'Orta',hard:'Zor'};
 function R(){
-  const S=G,low=act(S,19),cn=cand(),k=P&&P.ks[P.pk.length];
-  $('#hdr').innerHTML=`BO3 #${S.bo+1} · Tur ${Math.min(S.rounds+1,3)}/3 · Puan: Sen ${S.pts[0]} – ${S.pts[1]} Rakip · Ölüm eşiği >${TH[Math.min(S.bo,3)]} · Hedef <b>${low?'en az':tg(S)}</b>`;
-  const cd=(c,back)=>!back&&c.o==null?`<img class="c n${cn.includes(c.id)?' hl':''}" data-c="${c.id}" src="${IMG.n[c.n]}">`:`<div class="c${back?' bk':''}${cn.includes(c.id)?' hl':''}" data-c="${c.id}">${back?'':`${c.o??c.n}${c.o!=null?'<i>↺</i>':''}`}</div>`;
-  $('#opp').innerHTML=`<div class="lbl">Rakip · jokerler: <span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}">`).join('')}</span> · bu tur oynadığı: ${S.jUsed[1]}/2 · açık toplam: ${total(S,1,false)}</div>`+S.pl[1].open.map(c=>cd(c)).join('')+S.pl[1].closed.map(c=>cd(c,1)).join('');
-  $('#me').innerHTML=`<div class="lbl">Sen · bu tur oynadığın joker: ${S.jUsed[0]}/2 · toplamın: <b>${total(S,0)}</b></div>`+S.pl[0].open.map(c=>cd(c)).join('')+S.pl[0].closed.map(c=>cd(c)).join('')+'<div class="lbl">(sağdaki kart kapalı kartın)</div>';
-  $('#fx').innerHTML=S.eff.map(e=>`<img class="e${e.neg?' neg':''}${e.o==0?' mine':''}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}" src="${IMG.j[e.id]}" title="${J[e.id]}${e.id==22?(e.s>0?' (+)':' (−)'):''}">`).join('');
-  $('#log').innerHTML=S.log.slice(-4).map(l=>l.p<0?l.t:`${l.p?'Rakip':'Sen'}: ${l.t}`).join('<br>');
-  const my=S.turn==0&&!lock&&!S.wait;
+  const S=G,low=act(S,19),cn=cand(),k=P&&P.ks[P.pk.length],bi=Math.min(S.bo,3),T=tg(S),res=S.res||[];
+  let fresh=0;
+  const cd=(c,back,fl)=>{const nf=!seen.has(c.id);if(nf)fresh++;const f=(nf?' fresh':'')+(fl?' flip':'');seen.add(c.id);const h=cn.includes(c.id)?' hl':'';
+    return !back&&c.o==null?`<img class="c n${f}${h}" data-c="${c.id}" src="${IMG.n[c.n]}" alt="${c.n}">`:`<div class="c${back?' bk':''}${f}${h}" data-c="${c.id}">${back?'':`${c.o??c.n}${c.o!=null?'<i>↺</i>':''}`}</div>`};
+  const pips=[0,1,2].map(i=>`<span class="pip ${res[i]==null?(i==S.rounds?'now':''):res[i]>0?'w':res[i]<0?'l':'d'}"></span>`).join('');
+  const sk=TH.map((t,i)=>`<span class="sk${i<bi?' past':i==bi?' cur':''}" title="Ölüm eşiği: ${t}'ten büyük atmalısın">☠<small>${t}</small></span>`).join('');
+  $('#hdr').innerHTML=`<div class="hb"><span class="lab">Düello ${S.bo+1}</span><span class="pips">${pips}</span></div><div class="sc"><b>${S.pts[0]}</b><i>Sen</i><i>Rakip</i><b>${S.pts[1]}</b></div><div class="hb sks">${sk}</div>`;
+  const my=S.turn==0&&!lock&&!S.wait,mt=total(S,0),bust=!low&&mt>T;
+  $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'');
+  $('#opp').innerHTML=`<div class="who"><img class="av" src="${IMG.bj}" alt=""><div class="nm"><b>${MODE=='bot'?'Ölümün Efendisi':'Rakip'}</b><small>${MODE=='bot'?'Zorluk: '+DN[DIFF]:'Online düello'}</small><small>Joker hakkı ${2-S.jUsed[1]}/2</small></div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot"><small>Açık toplam</small><b>${total(S,1,false)}</b></div></div><div class="cards">${S.pl[1].open.map(c=>cd(c)).join('')}${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>`;
+  $('#fx').innerHTML=`<div id="deck" class="deck" title="Deste"><b>${S.deck.length}</b></div><div class="seal${T!=21||low?' alt':''}"><small>Hedef</small><b>${low?'En az':T}</b></div><div class="chips">${S.eff.map(e=>`<img class="e${e.neg?' neg':''}${e.o==0?' mine':''}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}" src="${IMG.j[e.id]}" title="${J[e.id]}${e.id==22?(e.s>0?' (+)':' (−)'):''}" alt="${J[e.id]}">`).join('')||'<span class="none">Masada etkili joker yok</span>'}</div>`;
+  $('#me').className='zone'+(my?' act':'');
+  $('#me').innerHTML=`<div class="who"><img class="av" src="${IMG.bn}" alt=""><div class="nm"><b>Sen</b><small>Joker hakkı ${2-S.jUsed[0]}/2</small></div><div class="tot${bust?' bust':''}"><small>${bust?'Battın':'Toplamın'}</small><b>${mt}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,0,S.rev)).join('')}</div><small class="cap">Sağdaki kart, yalnızca senin gördüğün kapalı kartın</small>`;
+  $('#log').innerHTML=S.log.slice(-5).map(l=>l.p<0?l.t:`${l.p?'Rakip':'Sen'}: ${l.t}`).join('<br>');
+  $('#prompt').className=P?'ask':my?'go':'wait';
+  $('#prompt').innerHTML=P?`${J[P.id]}: ${KTXT[k]} ${k=='sign'?'<button class="btn sm" data-s="1">Ekle</button><button class="btn sm" data-s="-1">Çıkar</button>':''}<button class="btn sm alt" data-x="1">Vazgeç</button>`:(S.turn==0?'Senin sıran':MODE=='bot'?'Ölümün Efendisi düşünüyor…':'Rakibin sırası');
   $('#draw').disabled=!(my&&!P&&canDraw(S,0));$('#pass').disabled=!(my&&!P);
-  $('#hand').innerHTML=S.hand[0].map(id=>`<img class="j${my&&!P&&playable(S,0,id)?'':' dim'}" data-j="${id}" src="${IMG.j[id]}" title="${J[id]}">`).join('');
-  $('#prompt').innerHTML=P?`${J[P.id]}: ${KTXT[k]} ${k=='sign'?'<button data-s="1">Ekle</button> <button data-s="-1">Çıkar</button>':''} <button data-x="1">İptal</button>`:(S.turn==0?'Sıra sende':'Rakip düşünüyor…');
+  const n=S.hand[0].length;
+  $('#hand').innerHTML=S.hand[0].map((id,i)=>`<img class="j${my&&!P&&playable(S,0,id)?'':' dim'}" style="--r:${((i-(n-1)/2)*5).toFixed(1)}deg" data-j="${id}" src="${IMG.j[id]}" alt="${J[id]}" title="${J[id]}">`).join('');
+  if(fresh)snd('draw');
+  const mt0=S.turn==0&&!S.wait;if(mt0&&!prevT)snd('turn');prevT=mt0;
+  const last=S.log[S.log.length-1],lk=S.log.length+JSON.stringify(last);if(lk!=lastLk){lastLk=lk;if(last&&last.t=='pas dedi')snd('pass')}
+  fly();
   if(MODE=='host'&&conn&&conn.open)conn.send({k:'s',v:view(G)});
 }
 function doPlay(id,pk){const S=G;P=null;if(MODE=='guest'){conn.send({k:'play',id,pk});return R()}play(S,0,id,pk);S.acted=true;S.log.push({p:0,t:`joker oynadı: ${J[id]}`});R();note(0,id,R)}
-function jokerNote(p,id,cb){M(`<b>${p?'RAKİP':'SEN'} JOKER OYNADI</b><br><img class="big" src="${IMG.j[id]}"><br>${J[id]}`,'Kapat',cb)}
+function jokerNote(p,id,cb){snd('play');M(`<b>${p?'RAKİP':'SEN'} JOKER OYNADI</b><br><img class="big" src="${IMG.j[id]}"><br>${J[id]}`,'Kapat',cb)}
 function pick(v){P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
 document.addEventListener('click',e=>{
   const S=G,t=e.target;if(lock||!S||S.over)return;
@@ -165,9 +236,9 @@ $('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE=='guest')conn.send({k:'
 let MODE='bot',peer,conn,waitM=false;
 function view(S){ // rakibe gidecek, gizli bilgisi temizlenmiş ve aynalanmış durum
   const f=a=>[a[1],a[0]];
-  return {bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:1-S.turn,pts:f(S.pts),jUsed:f(S.jUsed),noJ:f(S.noJ),
+  return {bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:1-S.turn,pts:f(S.pts),rev:S.rev,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),noJ:f(S.noJ),
     hand:[S.hand[1],S.hand[0].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
-    pl:[S.pl[1],{open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:0}))}],
+    pl:[S.pl[1],{open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:S.rev?c.o:undefined}))}],
     eff:S.eff.map(e=>({...e,o:1-e.o})),log:S.log.slice(-6).map(l=>({...l,p:l.p<0?-1:1-l.p}))};
 }
 function note(p,id,cb){if(MODE=='host'&&conn&&conn.open)conn.send({k:'j',p:1-p,id});jokerNote(p,id,cb)}
@@ -183,7 +254,7 @@ function onGuest(m){ // host: misafirin hamle istekleri (doğrulanır)
 }
 function onHost(m){ // misafir: host'tan gelen durum/bildirimler
   if(m.k=='s'){G=m.v;if(waitM){$('#m').hidden=true;lock=false;waitM=false}if(G.turn!=0||G.wait)P=null;$('#menu').hidden=true;R()}
-  else if(m.k=='m'){waitM=true;M(m.html,null)}
+  else if(m.k=='m'){waitM=true;M(m.html,null);snd(m.sd)}
   else if(m.k=='j')jokerNote(m.p,m.id,R);
 }
 const st=t=>$('#st').textContent=t;
@@ -200,5 +271,8 @@ function joinRoom(){
   peer.on('open',()=>{conn=peer.connect('necrodice-'+code,{reliable:true});conn.on('data',onHost);conn.on('open',()=>st('Bağlandı, oyun başlıyor…'));conn.on('close',()=>M('Bağlantı koptu.','Tamam',()=>location.reload()))});
   peer.on('error',e=>st(e.type=='peer-unavailable'?'Oda bulunamadı':'Hata: '+e.type));
 }
-$('#b1').onclick=()=>{MODE='bot';$('#menu').hidden=true;start()};
+document.querySelectorAll('.d').forEach(b=>b.onclick=()=>{DIFF=b.dataset.d;MODE='bot';$('#menu').hidden=true;start()});
+$('#mimg').src=IMG.bj;
+$('#mute').textContent=muted?'🔇':'🔊';
+$('#mute').onclick=()=>{muted=!muted;try{localStorage.setItem('nd_mute',muted?'1':'0')}catch(e){}$('#mute').textContent=muted?'🔇':'🔊'};
 $('#b2').onclick=hostRoom;$('#b3').onclick=joinRoom;

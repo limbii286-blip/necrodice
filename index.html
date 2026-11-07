@@ -2,27 +2,32 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Necrodice</title>
-<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English&family=Permanent+Marker&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <main>
-  <h1>NECRODICE</h1>
   <div id="hdr"></div>
-  <section id="opp"></section>
+  <section id="opp" class="zone"></section>
   <div id="fx"></div>
-  <div id="log"></div>
-  <section id="me"></section>
+  <section id="me" class="zone"></section>
   <div id="prompt"></div>
-  <div id="btns">
-    <button id="draw">Kart çek</button>
-    <button id="pass">Pas</button>
-  </div>
+  <div id="btns"><button id="draw" class="btn">Kart çek</button><button id="pass" class="btn alt">Pas</button></div>
   <div id="hand"></div>
+  <details id="lw"><summary>Olay günlüğü</summary><div id="log"></div></details>
 </main>
-<div id="menu"><div id="mb2"><h2>NECRODICE</h2><button id="b1">Bilgisayara karşı</button><br><br><button id="b2">Oda aç (online)</button><br><br><input id="code" placeholder="Oda kodu" maxlength="4" size="6"> <button id="b3">Odaya katıl</button><p id="st"></p></div></div>
+<div id="menu"><div id="mb2">
+  <img id="mimg" alt="">
+  <h1>Necrodice</h1>
+  <p class="tag">Zarlar atıldığında kaderin mühürlenir.</p>
+  <div class="grp"><span>Bilgisayara karşı</span><div class="row"><button class="d btn" data-d="easy">Kolay</button><button class="d btn" data-d="med">Orta</button><button class="d btn" data-d="hard">Zor</button></div></div>
+  <div class="grp"><span>Online düello</span><div class="row"><button id="b2" class="btn alt">Oda aç</button></div><div class="row"><input id="code" placeholder="Kod" maxlength="4"><button id="b3" class="btn alt">Odaya katıl</button></div></div>
+  <p id="st"></p>
+</div></div>
+<button id="mute" aria-label="Ses">🔊</button>
 <div id="m" hidden><div id="mb"></div></div>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="images.js"></script>
