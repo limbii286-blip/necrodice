@@ -24,12 +24,53 @@ const FILE=location.protocol=='file:'; // çift tıkla açılınca Web Audio dos
 const AUD={mus:'?',sfx:'?',hd:'?'},MISS=[];const miss=u=>{try{u=new URL(u,location.href).href}catch(e){}if(!MISS.includes(u))MISS.push(u)}; // ayarlarda gösterilen dosya durumu
 const MU={menu:['menu.m4a'],game:['game1.m4a','game2.m4a']};
 let curM='menu',mel=null,gi=Math.random()*2|0;
+
+/* Yerleşik müzik: audio/*.m4a bulunamazsa Web Audio ile üretilen karanlık ambiyans çalar (dosya gerekmez) */
+let syn=null,NOF=false;
+function synthM(m){
+  const a=AC,out=a.createGain(),t0=a.currentTime,game=m=='game';
+  out.gain.setValueAtTime(0,t0);out.gain.linearRampToValueAtTime(1,t0+2);out.connect(MG);
+  const dl=a.createDelay(1),fb=a.createGain(),wet=a.createGain();
+  dl.delayTime.value=game?.28:.42;fb.gain.value=.38;wet.gain.value=.4;dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(out);
+  const lp=a.createBiquadFilter(),dg=a.createGain();lp.type='lowpass';lp.frequency.value=360;dg.gain.value=game?.2:.15;lp.connect(dg);dg.connect(out);
+  const lfo=a.createOscillator(),lg=a.createGain();lfo.frequency.value=.07;lg.gain.value=150;lfo.connect(lg);lg.connect(lp.frequency);
+  const oscs=[lfo];
+  [55,55.35,82.4].forEach(f=>{const o=a.createOscillator();o.type='sawtooth';o.frequency.value=f;o.connect(lp);oscs.push(o)});
+  oscs.forEach(o=>o.start());
+  const hz=n=>440*Math.pow(2,(n-69)/12);
+  const CH=[[57,60,64,69],[53,57,60,65],[50,53,57,62],[52,56,59,64]]; // Am F Dm E
+  const PAT=game?[0,2,1,3,2,3,1,2]:[0,1,2,3,2,1,2,3];
+  const dur=game?.36:.55;let step=0,next=a.currentTime+.15;
+  function pluck(f,t,v){
+    const o=a.createOscillator(),g=a.createGain(),fl=a.createBiquadFilter();
+    o.type='square';o.frequency.value=f;fl.type='lowpass';fl.frequency.value=1800;
+    g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+dur*1.8);
+    o.connect(fl);fl.connect(g);g.connect(out);g.connect(dl);o.start(t);o.stop(t+dur*1.9);
+  }
+  function thump(t){
+    const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.setValueAtTime(70,t);o.frequency.exponentialRampToValueAtTime(38,t+.25);
+    g.gain.setValueAtTime(.35,t);g.gain.exponentialRampToValueAtTime(.001,t+.3);o.connect(g);g.connect(out);o.start(t);o.stop(t+.32);
+  }
+  function sched(t){
+    const ch=CH[(step>>3)%4],i=step%8,n=ch[PAT[i]]+(i%4==3&&Math.random()<.4?12:0);
+    if(Math.random()<.88)pluck(hz(n+12),t,game?.045:.04);
+    if(i==0)pluck(hz(ch[0]-12),t,.08);
+    if(game&&i%4==0)thump(t);
+    step++;
+  }
+  const timer=setInterval(()=>{while(next<a.currentTime+.4){sched(next);next+=dur}},120);
+  return{m,stop(){clearInterval(timer);const t=a.currentTime;out.gain.cancelScheduledValues(t);out.gain.setValueAtTime(out.gain.value,t);out.gain.linearRampToValueAtTime(0,t+1.2);
+    setTimeout(()=>{oscs.forEach(o=>{try{o.stop()}catch(e){}});try{out.disconnect()}catch(e){}},1400)}};
+}
+function startSyn(){if(!AC||!curM||(syn&&syn.m==curM))return;if(syn)syn.stop();syn=synthM(curM)}
 function playM(){
+  if(syn&&syn.m!=curM){syn.stop();syn=null}
   if(!AC||!curM||(mel&&mel._m==curM))return;
+  if(NOF){if(mel){mel.onerror=null;mel.pause();mel=null}startSyn();return}
   const old=mel,list=MU[curM],el=new Audio(),g=AC.createGain(),t=AC.currentTime;
   el._m=curM;el._g=g;el.preload='auto';el.loop=curM=='menu';
   const fn=curM=='game'?list[gi++%list.length]:list[0];el.src='audio/'+fn;
-  const cs=['audio/'+fn,fn,'/audio/'+fn,'../audio/'+fn];el._i=0;el.onerror=()=>{if(++el._i<cs.length){el.src=cs[el._i];el.play().catch(()=>{})}else{AUD.mus='bad';miss(cs[0])}};el.onplaying=()=>{AUD.mus='ok'};
+  const cs=['audio/'+fn,fn,'/audio/'+fn,'../audio/'+fn];el._i=0;el.onerror=()=>{if(++el._i<cs.length){el.src=cs[el._i];el.play().catch(()=>{})}else{AUD.mus='bad';NOF=true;el.onerror=null;if(mel===el){mel=null}startSyn()}};el.onplaying=()=>{AUD.mus='ok'};
   el.onended=()=>{if(mel===el&&el._m=='game'){mel=null;playM()}}; // sıradaki parça
   if(FILE)el.volume=Math.min(1,VM*.8);
   else{try{AC.createMediaElementSource(el).connect(g)}catch(e){console.warn('müzik bağlanamadı',e);return}
@@ -39,7 +80,7 @@ function playM(){
   else if(old){const gt=AC.currentTime;old._g.gain.cancelScheduledValues(gt);old._g.gain.setValueAtTime(old._g.gain.value,gt);old._g.gain.linearRampToValueAtTime(0,gt+1.2);setTimeout(()=>{old.onerror=null;old.pause();old.src=''},1300)}
 }
 function setMusic(m){curM=m;playM()}
-document.addEventListener('visibilitychange',()=>{if(!mel)return;if(document.hidden)mel.pause();else mel.play().catch(()=>{})});
+document.addEventListener('visibilitychange',()=>{if(syn&&AC){document.hidden?AC.suspend():AC.resume();return}if(!mel)return;if(document.hidden)mel.pause();else mel.play().catch(()=>{})});
 /* Ses efektleri (wav): bir kez çözülüp bellekte tutulur */
 const BUF={};
 const getA=f=>{const k=f.replace('.wav',''),ok=r=>{if(!r.ok)throw 0;return r.arrayBuffer()};
@@ -338,12 +379,10 @@ function guide(){box(`<h3>Nasıl oynanır</h3>
 <p class="gd">Oynandığı anda etki eder, masada kalmaz ve etkisiz kılınamaz: rakibe kart çektirme, kartı 0 ya da 12 yapma, kart imha etme, açık ya da kapalı kart takası, kart çalma, kart hediye etme, rakibin joker kullanmasını engelleme ve Joker etkisiz'in kendisi.</p>
 <p class="gd">Hepsini Joker Kodeksi'nde görebilirsin.</p>`)}
 function settings(){
-  box(`<h3>Ayarlar</h3><label>Müzik<input type="range" id="sm" min="0" max="1" step=".05" value="${VM}"></label><label>Efektler<input type="range" id="ss" min="0" max="1" step=".05" value="${VS}"></label><label class="chk"><input type="checkbox" id="sr" ${RM?'checked':''}> Hareketi azalt</label><label class="chk"><input type="checkbox" id="sc" ${CRT?'checked':''}> CRT efekti (tarama çizgileri)</label><label class="chk"><input type="checkbox" id="sv" ${VB?'checked':''}> Titreşim</label><p class="gd" id="fs"></p><div class="row"><button class="btn alt sm" id="sk">Joker Kodeksi</button><button class="btn alt sm" id="sg">Nasıl oynanır</button></div>`);
-  const T={ok:'✓',bad:'✗',file:'✓','?':'…',fb:'✓ (yedek)'};$('#fs').innerHTML=`Dosya durumu<br>Müzik: ${T[AUD.mus]} · Efektler: ${T[AUD.sfx]=='✗'?'✓ (gömülü)':T[AUD.sfx]} · Joker HD: ${T[AUD.hd]}${AUD.mus=='bad'?`<br><small>Müzik dosyası yok: ${MISS.filter(u=>/m4a/.test(u))[0]||'audio/'}</small>`:''}`;
+  box(`<h3>Ayarlar</h3><label>Müzik<input type="range" id="sm" min="0" max="1" step=".05" value="${VM}"></label><label>Efektler<input type="range" id="ss" min="0" max="1" step=".05" value="${VS}"></label><label class="chk"><input type="checkbox" id="sr" ${RM?'checked':''}> Hareketi azalt</label><label class="chk"><input type="checkbox" id="sv" ${VB?'checked':''}> Titreşim</label><div class="row"><button class="btn alt sm" id="sk">Joker Kodeksi</button><button class="btn alt sm" id="sg">Nasıl oynanır</button></div>`);
   $('#sm').oninput=e=>{VM=+e.target.value;LS('vm',VM);ac();MG.gain.value=VM*.8;if(FILE&&mel)mel.volume=Math.min(1,VM*.8)};
   $('#ss').oninput=e=>{VS=+e.target.value;LS('vs',VS);ac();SG.gain.value=VS};$('#ss').onchange=()=>snd('draw');
   $('#sr').onchange=e=>{RM=e.target.checked;LS('rm',RM?1:0);document.body.classList.toggle('rm',RM)};
-  $('#sc').onchange=e=>{CRT=e.target.checked;LS('crt',CRT?1:0);document.documentElement.classList.toggle('nocrt',!CRT)};
   $('#sv').onchange=e=>{VB=e.target.checked;LS('vb',VB?1:0)};
   $('#sk').onclick=codex;$('#sg').onclick=guide;
 }

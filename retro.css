@@ -236,3 +236,66 @@ body.rm::before,body.rm::after{animation:none!important}
 .rm #fx .seal.stamp{animation:none}
 /* joker bildirimi: yalnızca kart */
 #cast{cursor:pointer}
+
+/* ============================================================
+   PİKSEL / BALATRO GÖRÜNÜMÜ (tarama çizgileri ve çizgili desenler kaldırıldı)
+   Kartlar ve joker görselleri olduğu gibi net (HD) kalır.
+   ============================================================ */
+:root{--hf:'Pixelify Sans','Pirata One',Georgia,serif}
+
+/* Göz yoran katmanlar: tarama çizgisi + film grenleri kapalı, sadece çok hafif vinyet */
+html::before{display:none}
+html::after{background:radial-gradient(ellipse at center,transparent 65%,#00000055 100%)}
+
+/* Masa: keçe yeşili + 4px'lik piksel dither (çizgi yok) */
+body{text-shadow:none;
+  background:conic-gradient(#0000 25%,#ffffff08 0 50%,#0000 0 75%,#ffffff08 0) 0 0/8px 8px,
+             radial-gradient(120% 80% at 50% -10%,#14402a 0,#0a2418 55%,#04100a 100%) fixed}
+html{background:#04100a}
+
+/* Paneller: kalın kenar, sert alt gölge, hafif köşe yuvarlaması */
+#hdr,.zone{border:3px solid #2f5238;border-radius:6px;background:#0b150f;
+  box-shadow:0 5px 0 #000,inset 0 0 0 2px #00000066}
+.zone{outline:none}
+.zone.act{border-color:var(--lime);box-shadow:0 5px 0 #000,0 0 14px #7dff8a33,inset 0 0 0 2px #00000066}
+.grp{border:2px solid #2f5238;border-radius:6px;background:#07100a;box-shadow:0 4px 0 #000}
+#mb hr{border-top:2px solid #1d3324}
+.hl{outline:3px solid var(--blood2);outline-offset:3px}
+
+/* Masa ortası: çapraz çizgi yerine düz renk + dither */
+#fx{border:3px solid #3a2a2c;border-radius:6px;background:#050806;box-shadow:0 5px 0 #000}
+#fx::before{background:conic-gradient(#0000 25%,#ffffff0a 0 50%,#0000 0 75%,#ffffff0a 0) 0 0/8px 8px,#2a0a10}
+#fx::after{background:conic-gradient(#0000 25%,#ffffff0a 0 50%,#0000 0 75%,#ffffff0a 0) 0 0/8px 8px,#0b2d16;border-left:2px solid #1d3324}
+
+/* Düğmeler: Balatro tarzı kalın, alt kenarı "basamaklı" */
+.btn{font-family:var(--hf);font-weight:600;font-size:22px;letter-spacing:0;border-width:3px;border-radius:6px;
+  background:#a3141f;color:#fff;text-shadow:0 2px 0 #00000088;
+  box-shadow:0 5px 0 #000,inset 0 -5px 0 #00000044,inset 0 3px 0 #ffffff26}
+.btn:hover:not(:disabled){background:#bd1a27;transform:translateY(-1px)}
+.btn:active:not(:disabled){transform:translateY(4px);box-shadow:0 1px 0 #000,inset 0 -3px 0 #00000044,inset 0 3px 0 #ffffff26}
+.btn.alt{background:#1f6b36;border-color:#8de6a3;color:#effff2;
+  box-shadow:0 5px 0 #000,inset 0 -5px 0 #00000044,inset 0 3px 0 #ffffff26}
+.btn.alt:hover:not(:disabled){background:#27833f}
+.btn.sm{font-size:17px;padding:6px 12px 5px}
+#fx .btn{font-size:clamp(15px,4.6vw,21px);padding:13px 12px 10px}
+@media(max-width:400px){#fx .btn{font-size:clamp(13px,3.9vw,16px);padding:14px 6px 11px}}
+
+/* Başlıklar / isimler piksel fontta */
+#mb h3{font-size:28px;font-weight:600}
+.nm b{font-size:24px;font-weight:600;text-shadow:none}
+.grp>span{font-size:20px;font-weight:600;letter-spacing:1px}
+.grp>span::before{content:"";}
+#cast b{font-size:30px;text-shadow:0 3px 0 #000}
+#hdr .lab{font-size:20px}
+#mb::before{border-radius:0}
+#prompt{font-size:30px}
+
+/* Hedef mührü: düz, piksel hissi */
+.seal{border:3px solid #ffd2c4;box-shadow:0 4px 0 #000,inset 0 -5px 0 #00000055}
+
+/* Kartlar: HD kalsın; sadece sert alt gölge */
+.c{box-shadow:0 4px 0 #000}
+.c.n{box-shadow:0 4px 0 #000}
+.c.bk{box-shadow:0 4px 0 #000,0 0 10px #ff2d3d44}
+.c.mc{box-shadow:0 0 0 3px #e2b84a77,0 4px 0 #000}
+.j,.big,#cast img,.cdx img{image-rendering:auto}
