@@ -20,7 +20,7 @@ const ac=()=>{
 };
 /* Müzik: menüde menu.m4a, oyunda game1/game2 sırayla. Web Audio'ya bağlı olduğu için ses ayarı iOS'ta da çalışır. */
 const FILE=location.protocol=='file:'; // çift tıkla açılınca Web Audio dosyaya erişemez: doğrudan <audio> kullan
-const AUD={mus:'?',sfx:'?',hd:'?'}; // ayarlarda gösterilen dosya durumu
+const AUD={mus:'?',sfx:'?',hd:'?'},MISS=[];const miss=u=>{try{u=new URL(u,location.href).href}catch(e){}if(!MISS.includes(u))MISS.push(u)}; // ayarlarda gösterilen dosya durumu
 const MU={menu:['menu.m4a'],game:['game1.m4a','game2.m4a']};
 let curM='menu',mel=null,gi=Math.random()*2|0;
 function playM(){
@@ -28,7 +28,7 @@ function playM(){
   const old=mel,list=MU[curM],el=new Audio(),g=AC.createGain(),t=AC.currentTime;
   el._m=curM;el._g=g;el.preload='auto';el.loop=curM=='menu';
   const fn=curM=='game'?list[gi++%list.length]:list[0];el.src='audio/'+fn;
-  el.onerror=()=>{if(!el._r){el._r=1;el.src=fn;el.play().catch(()=>{})}else AUD.mus='bad'};el.onplaying=()=>{AUD.mus='ok'};
+  el.onerror=()=>{if(!el._r){el._r=1;el.src=fn;el.play().catch(()=>{})}else{AUD.mus='bad';miss('audio/'+fn)}};el.onplaying=()=>{AUD.mus='ok'};
   el.onended=()=>{if(mel===el&&el._m=='game'){mel=null;playM()}}; // sıradaki parça
   if(FILE)el.volume=Math.min(1,VM*.8);
   else{try{AC.createMediaElementSource(el).connect(g)}catch(e){console.warn('müzik bağlanamadı',e);return}
@@ -43,12 +43,12 @@ document.addEventListener('visibilitychange',()=>{if(!mel)return;if(document.hid
 const BUF={};
 const getA=f=>fetch('audio/'+f).then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}).catch(()=>fetch(f).then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}));
 function loadSfx(){if(FILE){BUF.draw='kart_cekme';BUF.play='joker_oynama';BUF.info='joker_bilgi';AUD.sfx='file';return}
-  [['draw','kart_cekme'],['play','joker_oynama'],['info','joker_bilgi']].forEach(([k,f])=>getA(f+'.wav').then(b=>AC.decodeAudioData(b)).then(d=>{BUF[k]=d;AUD.sfx=AUD.sfx=='bad'?'bad':'ok'}).catch(e=>{AUD.sfx='bad';console.warn('efekt yüklenemedi: '+f+'.wav',e)}))}
+  [['draw','kart_cekme'],['play','joker_oynama'],['info','joker_bilgi']].forEach(([k,f])=>getA(f+'.wav').then(b=>AC.decodeAudioData(b)).then(d=>{BUF[k]=d;AUD.sfx=AUD.sfx=='bad'?'bad':'ok'}).catch(e=>{AUD.sfx='bad';miss('audio/'+f+'.wav');console.warn('efekt yüklenemedi: '+f+'.wav',e)}))}
 function sfx(k,v=1){if(typeof BUF[k]=='string'){const a=new Audio('audio/'+BUF[k]+'.wav');a.onerror=()=>{a.onerror=null;a.src=BUF[k]+'.wav';a.play().catch(()=>{})};a.volume=Math.min(1,VS*v);a.play().catch(()=>{});return}
   const s=AC.createBufferSource(),g=AC.createGain();s.buffer=BUF[k];g.gain.value=v;s.connect(g);g.connect(SG);s.start()}
 /* Joker büyük görünümü: önce gömülü küçük görsel, yüksek çözünürlüklü img/j/ID.webp yüklenince değişir */
 const HC={};
-function hiLoad(id,cb){let i=HC[id];if(!i){i=HC[id]=new Image();i.onload=()=>{AUD.hd='ok'};i.onerror=()=>{if(!i._r){i._r=1;i.src='j'+id+'.webp'}else AUD.hd=AUD.hd=='ok'?'ok':'bad'};i.src='img/j/'+id+'.webp'}if(cb){if(i.complete&&i.naturalWidth)cb(i.src);else i.addEventListener('load',()=>cb(i.src),{once:true})}}
+function hiLoad(id,cb){let i=HC[id];if(!i){i=HC[id]=new Image();i.onload=()=>{AUD.hd='ok'};i.onerror=()=>{if(!i._r){i._r=1;i.src='j'+id+'.webp'}else{AUD.hd=AUD.hd=='ok'?'ok':'bad';miss('img/j/'+id+'.webp')}};i.src='img/j/'+id+'.webp'}if(cb){if(i.complete&&i.naturalWidth)cb(i.src);else i.addEventListener('load',()=>cb(i.src),{once:true})}}
 function hi(el,id){if(el)hiLoad(id,u=>{if(el.isConnected)el.src=u})}
 function tone(f,d,ty='sine',v=.12,w=0,sl=0){const a=ac(),t=a.currentTime+w,o=a.createOscillator(),g=a.createGain();o.type=ty;o.frequency.setValueAtTime(f,t);if(sl)o.frequency.linearRampToValueAtTime(Math.max(30,f+sl),t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(SG);o.start(t);o.stop(t+d)}
 function noise(d,v=.2,hp=2500,w=0){const a=ac(),t=a.currentTime+w,n=a.sampleRate*d|0,b=a.createBuffer(1,n,a.sampleRate),x=b.getChannelData(0);for(let i=0;i<n;i++)x[i]=Math.random()*2-1;const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=b;f.type='highpass';f.frequency.value=hp;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);s.connect(f);f.connect(g);g.connect(SG);s.start(t)}
@@ -220,18 +220,23 @@ function endRound(){
     }
     const th=TH[Math.min(S.bo,3)],d1=d6(),d2=d6(),roll=d1+d2,surv=roll>th;
     const full=v=>pre(v)+`<hr>BO3'ü ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısı)':how=='zar'?` (zar ${hx[v]}–${hx[1-v]})`:''}.<br>${L==v?'Sen':'Rakip'} ölüm zarlarını atıyor (${th}'ten büyük olmalı)<div class="dice" data-a="${d1}" data-b="${d2}" data-s="${surv?'ok':L==v?'death':'win'}"></div><div class="after"><b>Toplam: ${roll}</b><br>`+(surv?`${L==v?'Sen':'Rakip'} hayatta kaldı.`:`<b>${L==v?'Sen öldün. Rakip oyunu kazandı.':'Rakip öldü. Sen oyunu kazandın!'}</b>`)+'</div>';
-    if(surv)MM(full,'Yeni BO3',()=>{S.bo++;newBO3(S);deal(S);R();next()});
+    if(surv){const n=S.bo+2,ek=['a','e','ye','e','e','e','ya','ye','e','a'][n%10];
+      MM(full,`Düello ${n}'${ek} geç`,()=>{S.bo++;(S.mast=S.mast||[0,0])[L]=1;newBO3(S);deal(S);R();next()})}
     else{S.over=true;MM(full,'Yeniden oyna',start)}
   }
 }
 let entering=false;
 function veil(ms=2000){const v=document.createElement('div');v.className='veil';v.style.animationDuration=ms+'ms';v.style.setProperty('--ms',ms*.9+'ms');v.innerHTML=`<img alt="" src="${IMG.logo}"><b>limbi games</b><span class="ldb"><i></i></span>`;document.body.appendChild(v);setTimeout(()=>v.remove(),ms+100)}
 function enter(fn){if(entering)return;entering=true;veil();setMusic('game');setTimeout(()=>{$('#menu').hidden=true;entering=false;fn()},1700)}
-function start(){setMusic('game');try{document.body.classList.remove('dead')}catch(e){}G={u:0,bo:0,log:[],over:false,used:[]};newBO3(G);deal(G);R();next()}
+function start(){setMusic('game');try{document.body.classList.remove('dead')}catch(e){}G={u:0,bo:0,log:[],over:false,used:[],av:Math.random()<.5?['t','c']:['c','t'],mast:[0,0]};prevAv[0]=prevAv[1]=undefined;newBO3(G);deal(G);R();next()}
 
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
 let prevT=false,lastLk='',flipId=null,lastTot=[0,0],lastBust=false,prevSeal='',sayT='';
+const NAMES={t:'Tüccar',c:'Yozlaşmış Tüccar',m:'Ölümün Efendisi'};
+const avKey=(S,p)=>MODE=='bot'?(p==1?{easy:'t',med:'c',hard:'m'}[DIFF]:null):(S.mast&&S.mast[p]?'m':(S.av&&S.av[p])||'t');
+const avSrc=k=>k?AV[k]:IMG.bn,oppName=()=>NAMES[avKey(G,1)]||'Rakip';
+const prevAv=[undefined,undefined],morphT=[0,0];
 const peek=new Set(),seen=new Set(),seenE=new Set(),DN={easy:1,med:2,hard:3},DES=new Set([13,14,17]);
 const IC={
   skull:'<svg viewBox="0 0 24 24" class="ic"><path d="M12 2C7 2 4 5.5 4 10c0 3 1.5 4.5 3 5.5V20h10v-4.5c1.5-1 3-2.5 3-5.5 0-4.5-3-8-8-8z" fill="currentColor"/><circle cx="9" cy="11" r="2" fill="#091217"/><circle cx="15" cy="11" r="2" fill="#091217"/><path d="M10 20v-3m4 3v-3" stroke="#091217" stroke-width="1.5"/></svg>',
@@ -240,8 +245,10 @@ const IC={
 const SAY={joker:['Cesaretin takdire şayan.','Kartlarım seni izliyor.','Henüz bitmedi.','Ruhun titriyor.'],win:['Ruhun benimdir.','Ölüm sabırlıdır.','Zarlar bana gülüyor.'],lose:['Bu kez şanslıydın.','Sıra yine bende.','Gülümse, fazla sürmez.']};
 function say(t){sayT=t;R();setTimeout(()=>{if(sayT==t){sayT='';R()}},2800)}
 function cast(p,id,cb){ // joker sahnede büyür ve Kapat'a basılana kadar kalır
-  snd('play');lock=true;
-  const who=p==0?'Sen oynadın':(MODE=='bot'?'Ölümün Efendisi oynadı':'Rakip oynadı');
+  snd('play');
+  if(p==0){if(DES.has(id)){shake();snd('stamp');vib(60)}cb&&cb();return} // kendi jokerimizin bildirimi yok, yalnızca rakibinki
+  lock=true;
+  const who=(MODE=='bot'?oppName():'Rakip')+' oynadı';
   const el=document.createElement('div');el.id='cast';el.className='from'+p;
   el.innerHTML=`<small class="cw">${who}</small><img src="${IMG.j[id]}" alt=""><b>${J[id]}</b><button class="btn">Kapat</button>`;
   document.body.appendChild(el);hi(el.querySelector('img'),id);
@@ -263,8 +270,11 @@ function R(){
   $('#hdr').innerHTML=`<div class="hs sks">${sk}</div><div class="hc"><span class="lab">Düello ${S.bo+1}</span><span class="pips">${pips}</span></div><div class="hg"><button class="gear" data-g="1" aria-label="Ayarlar">${IC.gear}<span>MENÜ</span></button></div>`;
   const my=S.turn==0&&!lock&&!S.wait,mt=total(S,0),ot=total(S,1,false),bust=!low&&mt>T,seal=T+(low?'L':'');
   const jp=n=>`<span class="jpips" title="Joker hakkı ${n}/2">${[0,1].map(i=>`<i${i<n?' class="on"':''}></i>`).join('')}</span>`;
+  const avh=p=>{const k=avKey(S,p),now=performance.now();if(prevAv[p]!==undefined&&prevAv[p]!==k)morphT[p]=now;prevAv[p]=k;
+    const el=(now-morphT[p])/1000,mo=morphT[p]&&el<1.1;return `<img class="av${p==1?' breathe':''}${mo?' morph':''}"${mo?` style="animation-delay:-${el.toFixed(2)}s"`:''} src="${avSrc(k)}" alt="">`};
+  const av0=avh(0),av1=avh(1);
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'');
-  $('#opp').innerHTML=`<div class="who"><img class="av breathe" src="${IMG.bj}" alt=""><div class="nm"><b>${MODE=='bot'?'Ölümün Efendisi':'Rakip'}</b><span class="meta">${MODE=='bot'?IC.skull.repeat(DN[DIFF]):'Online'}${jp(2-S.jUsed[1])}</span>${sayT?`<small class="say">${sayT}</small>`:''}</div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot"><small>Açık toplam</small><b>${lastTot[1]}</b></div></div><div class="cards">${S.pl[1].open.map(c=>cd(c)).join('')}${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>`;
+  $('#opp').innerHTML=`<div class="who">${av1}<div class="nm"><b>${MODE=='bot'||S.av?oppName():'Rakip'}</b><span class="meta">${MODE=='bot'?IC.skull.repeat(DN[DIFF]):'Online'}${jp(2-S.jUsed[1])}</span>${sayT?`<small class="say">${sayT}</small>`:''}</div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot"><small>Açık toplam</small><b>${lastTot[1]}</b></div></div><div class="cards">${S.pl[1].open.map(c=>cd(c)).join('')}${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>`;
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<img class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}" src="${IMG.j[e.id]}" title="${J[e.id]}${e.id==22?(e.s>0?' (+)':' (−)'):''}" alt="${J[e.id]}">`};
   $('#deck b').textContent=S.deck.length;
   $('#jo').innerHTML=(S.pj||[]).filter(x=>x.o==1).map(chip).join('');
@@ -274,7 +284,7 @@ function R(){
   if(prevSeal&&prevSeal!=seal){void sl.offsetWidth;sl.classList.add('stamp')}
   $('#arr').className='arr '+(S.wait||S.over?'off':S.turn==0?'me':'op');
   $('#me').className='zone'+(my?' act':'');
-  $('#me').innerHTML=`<div class="who"><img class="av" src="${IMG.bn}" alt=""><div class="nm"><b>Sen</b><span class="meta">${jp(2-S.jUsed[0])}</span></div><div class="tot${bust?' bust':''}"><small>${bust?'Battın':'Toplamın'}</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`;
+  $('#me').innerHTML=`<div class="who">${av0}<div class="nm"><b>Sen</b><span class="meta">${jp(2-S.jUsed[0])}</span></div><div class="tot${bust?' bust':''}"><small>${bust?'Battın':'Toplamın'}</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`;
   $('#prompt').className=P?'ask':'';
   $('#prompt').innerHTML=P?`${J[P.id]}: ${KTXT[k]} ${k=='sign'?'<button class="btn sm" data-s="1">Ekle</button><button class="btn sm" data-s="-1">Çıkar</button>':''}<button class="btn sm alt" data-x="1">Vazgeç</button>`:'';
   const ends=S.turns>0&&!S.acted; // şimdi pas dersem tur biter
@@ -323,7 +333,7 @@ function guide(){box(`<h3>Nasıl oynanır</h3>
 <p class="gd">Hepsini Joker Kodeksi'nde görebilirsin.</p>`)}
 function settings(){
   box(`<h3>Ayarlar</h3><label>Müzik<input type="range" id="sm" min="0" max="1" step=".05" value="${VM}"></label><label>Efektler<input type="range" id="ss" min="0" max="1" step=".05" value="${VS}"></label><label class="chk"><input type="checkbox" id="sr" ${RM?'checked':''}> Hareketi azalt</label><label class="chk"><input type="checkbox" id="sc" ${CRT?'checked':''}> CRT efekti (tarama çizgileri)</label><label class="chk"><input type="checkbox" id="sv" ${VB?'checked':''}> Titreşim</label><p class="gd" id="fs"></p><div class="row"><button class="btn alt sm" id="sk">Joker Kodeksi</button><button class="btn alt sm" id="sg">Nasıl oynanır</button></div>`);
-  const T={ok:'✓',bad:'✗ dosya bulunamadı',file:'✓ (dosya modu)','?':'…'};$('#fs').innerHTML=`Dosya durumu<br>Müzik: ${T[AUD.mus]} · Efektler: ${T[AUD.sfx]} · Joker HD: ${T[AUD.hd]}`;
+  const T={ok:'✓',bad:'✗ dosya bulunamadı',file:'✓ (dosya modu)','?':'…'};$('#fs').innerHTML=`Dosya durumu<br>Müzik: ${T[AUD.mus]} · Efektler: ${T[AUD.sfx]} · Joker HD: ${T[AUD.hd]}${MISS.length?`<br><small>Bulunamayan: ${MISS.slice(0,2).join('<br>')}<br>audio/ ve img/j/ klasörleri index.html ile aynı yerde olmalı.</small>`:''}`;
   $('#sm').oninput=e=>{VM=+e.target.value;LS('vm',VM);ac();MG.gain.value=VM*.8;if(FILE&&mel)mel.volume=Math.min(1,VM*.8)};
   $('#ss').oninput=e=>{VS=+e.target.value;LS('vs',VS);ac();SG.gain.value=VS};$('#ss').onchange=()=>snd('draw');
   $('#sr').onchange=e=>{RM=e.target.checked;LS('rm',RM?1:0);document.body.classList.toggle('rm',RM)};
@@ -355,7 +365,7 @@ $('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE=='guest')conn.send({k:'
 let MODE='bot',peer,conn,waitM=false;
 function view(S){ // rakibe gidecek, gizli bilgisi temizlenmiş ve aynalanmış durum
   const f=a=>[a[1],a[0]];
-  return {turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:1-S.turn,pts:f(S.pts),rev:S.rev,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),noJ:f(S.noJ),
+  return {av:[S.av[1],S.av[0]],mast:[S.mast[1],S.mast[0]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:1-S.turn,pts:f(S.pts),rev:S.rev,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),noJ:f(S.noJ),
     hand:[S.hand[1],S.hand[0].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
     pl:[S.pl[1],{open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:S.rev?c.o:undefined}))}],
     eff:S.eff.map(e=>({...e,o:1-e.o})),pj:(S.pj||[]).map(e=>({...e,o:1-e.o})),log:S.log.slice(-6).map(l=>({...l,p:l.p<0?-1:1-l.p}))};
