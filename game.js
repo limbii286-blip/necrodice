@@ -136,7 +136,7 @@ function deal(S){
   S.pl=[0,1].map(()=>({open:[S.deck.pop()],closed:[S.deck.pop()]}));
   S.eff=[];S.pj=[];S.jUsed=[0,0];S.noJ=[false,false];S.acted=false;S.turns=0;
   S.turn=S.pl[0].open[0].n<S.pl[1].open[0].n?0:1;
-  S.wait=false;S.rev=false;S.dead=[];S.pa=[0,0];S.log.push({p:-1,t:`— Tur ${S.rounds+1} —`},{p:S.turn,t:'başlıyor (küçük açık kart)'});
+  S.wait=false;S.rev=false;S.dead=[];S.pa=[0,0];S.st={pb:0,ob:0,px:0};S.log.push({p:-1,t:`— Tur ${S.rounds+1} —`},{p:S.turn,t:'başlıyor (küçük açık kart)'});
 }
 const act=(S,id)=>S.eff.some(e=>e.id==id&&!e.neg);
 function total(S,p,wc=true){
@@ -183,7 +183,7 @@ function play(S,p,id,pk){
 const PR={
   easy:{rand:.25,noise:.35,jc:.45,jp:.4,dm:.05,depth:0},
   med:{rand:.01,noise:.06,jc:.2,jp:1,dm:.03,depth:0},
-  hard:{rand:0,noise:0,jc:.2,jl:.08,jp:1,dm:.02,depth:2,beta:0,gap:6,mc:1,K:50,ms:220,top:4,rjp:.5}
+  hard:{rand:0,noise:0,jc:.2,jl:.08,jp:1,dm:.02,depth:2,beta:0,gap:6,mc:1,K:120,ms:700,top:4,rjp:.5}
 };
 let DIFF='med';
 const unk=(S,p)=>{const seen=new Set([...S.pl[p].open,...S.pl[p].closed,...S.pl[1-p].open,...(S.dead||[])].map(c=>c.n));return range(11).filter(n=>!seen.has(n))};
@@ -280,22 +280,29 @@ function decideH(S,p,prm){
   let bi=0;sc.forEach((s,i)=>{if(s>sc[bi]+1e-9)bi=i});
   return top[bi].a;
 }
+/* Bot zamanlaması: her hamleden önce düşünme süresi; jokerler ve çekmeler peş peşe gelmez */
+const THINK={easy:[3000,4300],med:[3500,5200],hard:[4300,6500]},AFTER={easy:[3000,3800],med:[3300,4400],hard:[3600,5000]};
+const rnd=r=>r[0]+Math.random()*(r[1]-r[0]);
+let botGen=0,thinkOn=false;
 function bot(){
-  const S=G,prm=PR[DIFF];let n=0;
+  const S=G,prm=PR[DIFF],gen=++botGen;let n=0;
+  const think=r=>{thinkOn=true;R();talk('think',1,.55);R();setTimeout(step,rnd(r))};
   const step=()=>{
-    if(S.turn!=1||S.over)return;
+    if(gen!=botGen||S!=G)return;
+    if(S.turn!=1||S.over){thinkOn=false;return}
+    thinkOn=false;
     const a=n++<8?(prm.mc?decideH:decide)(S,1,prm):null;
-    if(!a){if(Math.random()<.35)setSay('pass');return pass()}
+    if(!a){R();return pass()}
     S.acted=true;
-    if(a.t=='d'){const c=S.deck.pop();S.pl[1].open.push(c);S.log.push({p:1,t:`kart çekti (${c.n})`});if(Math.random()<.4)setSay('draw');R();setTimeout(step,900)}
-    else{play(S,1,a.id,a.pk);S.log.push({p:1,t:`joker oynadı: ${J[a.id]}`});note(1,a.id,()=>{R();setTimeout(step,400)})}
+    if(a.t=='d'){const c=S.deck.pop();S.pl[1].open.push(c);S.log.push({p:1,t:`kart çekti (${c.n})`});R();talk('draw',0,.3);think(AFTER[DIFF])}
+    else{play(S,1,a.id,a.pk);S.log.push({p:1,t:`joker oynadı: ${J[a.id]}`});note(1,a.id,()=>{R();think(AFTER[DIFF])})}
   };
-  setTimeout(step,900);
+  think(THINK[DIFF]);
 }
 
 /* ---------- AKIŞ ---------- */
 function pass(){
-  const S=G;S.log.push({p:S.turn,t:'pas dedi'});
+  const S=G;S.log.push({p:S.turn,t:'pas dedi'});if(S.turn==1)talk('pass',0,.35);
   if(S.turns>0&&!S.acted)return endRound();
   (S.pa=S.pa||[0,0])[S.turn]++;S.turns++;S.acted=false;S.turn=1-S.turn;R();next();
 }
@@ -308,9 +315,9 @@ function endRound(){
   S.pts[0]+=r>0?1:r==0?.5:0;S.pts[1]+=r<0?1:r==0?.5:0;S.rounds++;S.res.push(r);S.wait=true;S.rev=true;
   const pre=v=>{const w=v?-r:r;return `Kapalı kartlar açıldı.<br>Sen: ${a[v]} · Rakip: ${a[1-v]} · Hedef: ${T}${act(S,19)?' (en düşük kazanır)':''}<br><b>${w>0?'Turu sen kazandın':w<0?'Turu rakip kazandı':'Tur berabere'}</b>`};
   R();snd('flip');lock=true; // kapalı kartlar çevrilir, sonra sonuç penceresi açılır
-  setTimeout(()=>{lock=false;fin()},1700);
+  setTimeout(()=>{if(S!==G)return;lock=false;fin()},1700);
   function fin(){
-    if(MODE=='bot'){const Tg=tg(S);say(pickSay(r==0?'tie':r<0?'win':(a[1]>Tg?'bust':'lose')))}
+    if(MODE=='bot'){const Tg=tg(S);talk(r==0?'tie':r<0?'win':(a[1]>Tg&&!act(S,19)?'bust':'lose'),2);R()}
     if(!(S.pts.some(x=>x>=2)||S.rounds>=3)){
       if(r==0)[0,1].forEach(p=>S.jdeck.length&&S.hand[p].push(S.jdeck.pop()));
       return MM(v=>pre(v)+(r==0?'<br>Tur berabere bitti, ikiniz de birer joker çektiniz.':''),'Sonraki tur',()=>{deal(S);R();next()},v=>{const w=v?-r:r;return w>0?'win':w<0?'lose':'ok'});
@@ -324,14 +331,14 @@ function endRound(){
     const th=TH[Math.min(S.bo,3)],d1=d6(),d2=d6(),roll=d1+d2,surv=roll>th;
     const full=v=>pre(v)+`<hr>Düelloyu ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısına göre)':how=='zar'?` (beraberlik zarı: ${hx[v]}–${hx[1-v]})`:''}.<br>Ölüm zarlarını ${L==v?'sen atıyorsun':'rakip atıyor'}: hayatta kalmak için ${th}'${EK[th]} büyük gelmeli.<div class="dice" data-a="${d1}" data-b="${d2}" data-s="${surv?'ok':L==v?'death':'win'}"></div><div class="after"><b>Toplam: ${roll}</b><br>`+(surv?(L==v?'Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>';
     if(surv){const n=S.bo+2,ek=['a','e','ye','e','e','e','ya','ye','e','a'][n%10];
-      MM(full,`Düello ${n}'${ek} geç`,()=>{S.bo++;(S.mast=S.mast||[0,0])[L]=1;newBO3(S);deal(S);setSay(L==0?'surv0':'surv1');R();next()})}
+      MM(full,`Düello ${n}'${ek} geç`,()=>{S.bo++;(S.mast=S.mast||[0,0])[L]=1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()})}
     else{S.over=true;MM(full,'Yeniden oyna',start)}
   }
 }
 let entering=false;
-function veil(ms=2000){const v=document.createElement('div');v.className='veil';v.style.animationDuration=ms+'ms';v.style.setProperty('--ms',ms*.9+'ms');v.innerHTML=`<img alt="" src="${IMG.logo}"><b>limbi games</b><span class="ldb"><i></i></span>`;document.body.appendChild(v);setTimeout(()=>v.remove(),ms+100)}
+function veil(ms=2000){const v=document.createElement('div');v.className='veil';v.style.animationDuration=ms+'ms';v.style.setProperty('--ms',ms*.9+'ms');v.innerHTML=`<img alt="" src="${IMG.logo}"><b>limbigames</b><span class="ldb"><i></i></span>`;document.body.appendChild(v);setTimeout(()=>v.remove(),ms+100)}
 function enter(fn){if(entering)return;entering=true;veil();setMusic('game');setTimeout(()=>{$('#menu').hidden=true;entering=false;fn()},1700)}
-function start(){setMusic('game');try{document.body.classList.remove('dead')}catch(e){}G={u:0,bo:0,log:[],over:false,used:[],av:Math.random()<.5?['t','c']:['c','t'],mast:[0,0]};prevAv[0]=prevAv[1]=undefined;newBO3(G);deal(G);sayT='';setSay('hello');R();next()}
+function start(){setMusic('game');try{document.body.classList.remove('dead')}catch(e){}G={u:0,bo:0,log:[],over:false,used:[],av:Math.random()<.5?['t','c']:['c','t'],mast:[0,0]};prevAv[0]=prevAv[1]=undefined;newBO3(G);deal(G);sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
 
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
@@ -345,49 +352,91 @@ const IC={
   skull:'<svg viewBox="0 0 24 24" class="ic"><path d="M12 2C7 2 4 5.5 4 10c0 3 1.5 4.5 3 5.5V20h10v-4.5c1.5-1 3-2.5 3-5.5 0-4.5-3-8-8-8z" fill="currentColor"/><circle cx="9" cy="11" r="2" fill="#091217"/><circle cx="15" cy="11" r="2" fill="#091217"/><path d="M10 20v-3m4 3v-3" stroke="#091217" stroke-width="1.5"/></svg>',
   gear:'<svg viewBox="0 0 24 24" class="ic"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M4 12h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="7" r="2.2" fill="currentColor"/><circle cx="8" cy="17" r="2.2" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg>'
 };
-/* Bot konuşmaları: zorluğa (karaktere) ve duruma göre değişir, yenisi gelene kadar ekranda kalır */
+/* Bot konuşmaları: karaktere (zorluğa) ve duruma göre.
+   {t}=hedef, {o}=oyuncunun açık toplamı, {b}=botun açık toplamı, {k}=oyuncunun hedefe uzaklığı, {j}=oyuncunun joker sayısı */
 const SAYS={
-easy:{hello:['Hoş geldin dostum, zar atalım mı?','Pazarlık yok, sadece zarlar var.','Kartlarım temiz, vicdanım değil.'],
- win:['Kazanç kazançtır, dostum.','Bu tur benim, kusura bakma.','Kesem doldu, keyfim yerinde.','Şans bana güldü, ne yapayım?'],
- lose:['Haa, bu tur senindi.','Bir tur sana olsun, cömertim.','Kazanan sensin, şimdilik.','Eyvah, kesem hafifledi.'],
- tie:['Berabere mi? Pazarlık gibi.','İkimiz de aynı yerdeyiz.','Kimse kazanamadı, tuhaf.'],
- bust:['Aman, fazla çekmişim!','Tamah beni yaktı...','Bir kart fazla, bir ruh eksik.'],
- joker:['Küçük bir hile, kimse görmedi.','Satıcının cebinde hep bir şey vardır.','Bunu sana indirimle sunuyorum.','Joker mi? Tabii ki var.'],
- react:['Bak sen, cebinde de varmış.','Hımm, bunu beklemiyordum.','Joker mi? Çok pahalı.'],
- draw:['Bir tane daha, fiyatı sonra.','Hadi bakalım, kart gel.','Şans getir, küçük kart.'],
- pass:['Ben buradayım, sıra sende.','Acele etmem, sen düşün.','Bu kadarı bana yeter.'],
- pbust:['Ah, ne yazık, fazla çektin.','Hedefi aştın dostum!','Açgözlülük pahalıya patlar.'],
- surv0:['Zardan kurtuldun, tebrikler.','Şanslısın, bir sonrakinde de mi?'],
- surv1:['Zarlardan sıyrıldım, şükür!','Ölüm bu sefer beni kaçırdı.']},
-med:{hello:['Ruhunun fiyatını biliyorum.','Oyna ve öde.','Yine bir müşteri, ne güzel.'],
- win:['Ruhundan bir parça benim.','Cebim doluyor, sen eksiliyorsun.','Her tur biraz daha borçlusun.','Bu tur benim, faiziyle.'],
- lose:['Kazandın, borcun silinmedi.','Bunun bedelini ödeyeceksin.','Şanslı bir tur, o kadar.','Gülümse, çok sürmez.'],
- tie:['Berabere. Sinirlerim bozuldu.','Eşitlik... can sıkıcı.','Kimse kazanmadı, kan kazandı.'],
- bust:['Hata benim, ruhum yanıyor!','Fazla çektim... lanet olsun.','Açgözlülüğümün bedeli bu.'],
- joker:['Hile değil, ticaret.','Kuralları ben yazıyorum.','Cebimde daha çok var.','Bunun bedeli sana ait.'],
- react:['Cesur hamle, aptalca ama cesur.','Joker mi? Beni güldürdün.','Etkilendim, neredeyse.'],
- draw:['Bir kart daha, bir ruh daha.','Gel bana, küçük kart.','Kader kartı çekiyorum.'],
- pass:['Sıra sende, çok düşünme.','Bekliyorum, sabrım var.','Karar senin, sonuç benim.'],
- pbust:['Battın! Ruhun bana ait.','Çok çektin, çok yandın.','Hedefi aştın, zavallı.'],
- surv0:['Kurtuldun... bu sefer.','Zar sana güldü, bana değil.'],
- surv1:['Ölüm beni geri çevirdi.','Zar benden yana, ruh benden yana.']},
-hard:{hello:['Zarlar atıldı. Kader mühürlendi.','Ölüm masaya oturdu.','Son nefesini bana ver.'],
- win:['Ruhun benimdir.','Ölüm sabırlıdır.','Zarlar bana gülüyor.','Bir adım daha yaklaştın.'],
- lose:['Bu kez şanslıydın.','Sıra yine bende.','Gülümse, fazla sürmez.','Ölümü kandıramazsın.'],
- tie:['Eşitlik... Ölüm eşitler.','Berabere. Sabrım tükenmedi.','Kimse kazanmadı. Henüz.'],
- bust:['İmkânsız... Hesap yanlıştı.','Ölüm de hata yapar.','Bu, planımın dışındaydı.'],
- joker:['Cesaretin takdire şayan.','Kartlarım seni izliyor.','Henüz bitmedi.','Ruhun titriyor.'],
- react:['Bu kozunu bekliyordum.','Hamleni okudum.','Bir joker seni kurtarmaz.'],
- draw:['Kader kartı bana geliyor.','Çekiyorum. Sen titriyorsun.','Her kart bir adım.'],
- pass:['Sıra sende. Geç kalma.','Hamleni yap. Bekliyorum.','Ben hazırım. Ya sen?'],
- pbust:['Battın. Ölüm bunu sever.','Çok açgözlüydün.','Hedefi aştın. Sonun geldi.'],
- surv0:['Zardan kaçtın. Ölüm unutmaz.','Bir sonrakinde kaçamazsın.'],
- surv1:['Bana zar atmak boşuna.','Ölüm ölmez.']}
+easy:{hello:['Hoş geldin dostum, zar atalım mı?','Pazarlık yok, sadece zarlar var.','Kartlarım temiz, vicdanım değil.','Gel, otur. Tezgâh açık, kesem boş.','Mal bende, şans sende. Hadi bakalım.','Bu pazarda herkes bir şey satar, ben de kartları.'],
+ win:['Kazanç kazançtır, dostum.','Bu tur benim, kusura bakma.','Kesem doldu, keyfim yerinde.','Şans bana güldü, ne yapayım?','Tezgâha bir tur daha yazdım.','Al sana ders, bedava. Tur ise benim.'],
+ lose:['Haa, bu tur senindi.','Bir tur sana olsun, cömertim.','Kazanan sensin, şimdilik.','Eyvah, kesem hafifledi.','Helal olsun, bu sefer zarar bende.','Zarar ettim ama müşteriyi kaybetmedim.'],
+ tie:['Berabere mi? Pazarlık gibi.','İkimiz de aynı yerdeyiz.','Kimse kazanamadı, tuhaf.','Yarı yarıya, adil ticaret.','Kâr yok zarar yok, boşuna terledim.'],
+ bust:['Aman, fazla çekmişim!','Tamah beni yaktı...','Bir kart fazla, bir ruh eksik.','Hesabı şaşırdım, pardon.','Kantar ayarım bozukmuş!'],
+ joker:['Küçük bir hile, kimse görmedi.','Satıcının cebinde hep bir şey vardır.','Bunu sana indirimle sunuyorum.','Joker mi? Tabii ki var.','Tezgâhın altından çıktı, ben de şaşırdım.'],
+ jt:['Hedefi biraz oynattım, fiyat değişti.','Rakamlar da pazarlıkla düşer, dostum.','Yeni fiyat listesi: hedef değişti!','Kantarın ayarıyla oynadım, kusura bakma.'],
+ jd:['Kart yoksa hesap da yok.','Şu kartı çöpe attım, ziyan olmasın.','Mal bozulmuştu, imha ettim.','Temizlik zamanı, tezgâh dağınıktı.'],
+ js:['Mal değişimi, ticaretin kuralı.','Şunu bana verir misin? Teşekkürler.','Tezgâhlar karıştı, kimin ne olduğu belli değil.','Takas dedim, soygun demedim.'],
+ jb:['Şimdi sakin ol, bir süre dükkân kapalı.','Bu tezgâhta bazı şeyler yasak.','Kapıyı kapattım, içeri girme.'],
+ jn:['Jokerin geçersiz, fiş kesilmemiş.','Senin jokerin bozuktu, iade ettim.','Etkisiz dedim, itiraz kabul etmem.'],
+ react:['Bak sen, cebinde de varmış.','Hımm, bunu beklemiyordum.','Joker mi? Çok pahalı.','Ooo, sen de mi tezgâhın altına baktın?','Pazarlıkta hile yapılmaz, ama tamam.'],
+ draw:['Bir tane daha, fiyatı sonra.','Hadi bakalım, kart gel.','Şans getir, küçük kart.','Bir dilim daha, doymadım.'],
+ pass:['Ben buradayım, sıra sende.','Acele etmem, sen düşün.','Bu kadarı bana yeter.','Elim doldu, sıra sende.','Çay koyayım, sen düşün.'],
+ think:['Hımm, hesap yapıyorum…','Bir saniye, abaküsü getireyim.','Düşünüyorum, acele yok.','Hesap kitap, hesap kitap…'],
+ pbust:['Açıkta {o} var, hedef {t}. Aman dikkat!','Hedefi aştın dostum!','Açgözlülük pahalıya patlar.','Hedef {t}, sende {o}. Yandın galiba!','Tamah seni de yakmış, dostum.'],
+ obust:['Açığım {b} oldu, hedef {t}. Tüh!','Hay aksi, hedefi geçtim.','Bu kart yanlış tezgâha düştü.','Şimdi bir jokere ihtiyacım var.'],
+ pexact:['Açıkta tam {t}! Kapalı kartın var, dikkat et.','Hedefe tam oturmuşsun, kapalı kart işleri bozar.','Tam {t}, ama kapalı kart henüz konuşmadı.'],
+ surv0:['Zardan kurtuldun, tebrikler.','Şanslısın, bir sonrakinde de mi?','Yırttın, helal olsun.'],
+ surv1:['Zarlardan sıyrıldım, şükür!','Ölüm bu sefer beni kaçırdı.','Kıl payı, ter döktüm!']},
+med:{hello:['Ruhunun fiyatını biliyorum.','Oyna ve öde.','Yine bir müşteri, ne güzel.','Sözleşmeyi okumadan imzaladın, değil mi?','Hoş geldin. Hesap hep benden yana.','Cüzdanını bırak, ruhunu da. İkisi de lazım olacak.'],
+ win:['Ruhundan bir parça benim.','Cebim doluyor, sen eksiliyorsun.','Her tur biraz daha borçlusun.','Bu tur benim, faiziyle.','Makbuzunu kestim, imza gerekmez.','Kâr marjım seni aşıyor.'],
+ lose:['Kazandın, borcun silinmedi.','Bunun bedelini ödeyeceksin.','Şanslı bir tur, o kadar.','Gülümse, çok sürmez.','Bir tur ver, faizini katlarım.','Ucuz kurtuldun, fatura sonra gelir.'],
+ tie:['Berabere. Sinirlerim bozuldu.','Eşitlik... can sıkıcı.','Kimse kazanmadı, kan kazandı.','Eşitlikten kâr çıkmaz, rahatsızım.','Boş tur, boşa giden zaman.'],
+ bust:['Hata benim, ruhum yanıyor!','Fazla çektim... lanet olsun.','Açgözlülüğümün bedeli bu.','Kendi tuzağıma düştüm, ayıp.','Aşırı kâr peşinde yandım.'],
+ joker:['Hile değil, ticaret.','Kuralları ben yazıyorum.','Cebimde daha çok var.','Bunun bedeli sana ait.','Hile mi? Ben buna "sözleşme maddesi" derim.','İnce yazıyı okumamışsın.'],
+ jt:['Hedefi değiştirdim. Kuralları ben yazıyorum.','Yeni hedef, yeni fiyat. İtiraz yok.','Hedef benim işime gelecek yerde olmalı.','Sözleşmeyi güncelledim, haberin yoktu.'],
+ jd:['Bir kart eksildi, bir borç arttı.','Kart yırtıldı. Zararı senden alırım.','İmha ettim. Delil kalmadı.','Şu kart artık kayıtlarda yok.'],
+ js:['Kartlar el değiştirdi. Kâr bana.','Takas dedim, ama kazanç hep benden yana.','Cebinden çıktı, cebime girdi.','Bunu ödünç aldım. Geri vermem.'],
+ jb:['Şimdi sus ve izle.','Bu tezgâhta yasak ilan ettim.','Eller bağlı, ağız açık. Bekle.'],
+ jn:['Jokerin iptal. Makbuz kesildi.','Senin jokerini çöpe attım, teşekkür etme.','Etkisiz. Faizi de ben alıyorum.'],
+ react:['Cesur hamle, aptalca ama cesur.','Joker mi? Beni güldürdün.','Etkilendim, neredeyse.','Bu jokerin faturası bana mı kesilecek?','Cebini karıştırmışsın, görüyorum.','Borç yerine joker mi ödüyorsun?'],
+ draw:['Bir kart daha, bir ruh daha.','Gel bana, küçük kart.','Kader kartı çekiyorum.','Her kart bir yatırım.','Kâr artıyor, kart artıyor.'],
+ pass:['Sıra sende, çok düşünme.','Bekliyorum, sabrım var.','Karar senin, sonuç benim.','Acele etme, faiz işliyor.','Ben tamam. Sen yanabilirsin.'],
+ think:['Hesap yapıyorum, faiziyle.','Bir saniye, defteri açayım.','Fiyatını biçiyorum…','Kartlarına bakıyorum. Zayıf.','Bu hamleyi pahalıya satacağım.'],
+ pbust:['Açıkta {o}, hedef {t}. Battın, borçlusun.','Hedefi aştın, zavallı.','Çok çektin, çok yandın.','{o} mı? Hedef {t}. Hesabı bilmiyorsun.','Ne açgözlü! Hedef {t}, sende {o}.'],
+ obust:['Açıkta {b}, hedef {t}. Küçük bir aksilik, o kadar.','Bu kart yanlış geldi, faturayı keserim.','Hedefi geçtim ama pes etmem.','Hata. Kimseye söyleme.'],
+ pexact:['Açıkta tam {t}. Kapalı kartın seni yakar.','Tam hedefe oturmuşsun. Bir de kapalı kart var, değil mi?','{t} yapmışsın, ne kadar zarif. Ne kadar kısa sürecek.'],
+ surv0:['Kurtuldun... bu sefer.','Zar sana güldü, bana değil.','Borcun ertelendi, silinmedi.'],
+ surv1:['Ölüm beni geri çevirdi.','Zar benden yana, ruh benden yana.','Bu ölüm de bana kâr yazdı.']},
+hard:{hello:['Zarlar atıldı. Kader mühürlendi.','Ölüm masaya oturdu.','Son nefesini bana ver.','Seni uzun zamandır bekliyordum.','Oyun başlıyor. Çıkış yok.','Hoş geldin. Kapı arkandan kapandı.'],
+ win:['Ruhun benimdir.','Ölüm sabırlıdır.','Zarlar bana gülüyor.','Bir adım daha yaklaştın.','Kayıt defterine bir isim daha yazıldı.','Her kayıp, mezara bir kürek toprak.'],
+ lose:['Bu kez şanslıydın.','Sıra yine bende.','Gülümse, fazla sürmez.','Ölümü kandıramazsın.','Bir tur ödünç verdim. Faizi canındır.','Kazandığını sanıyorsun. Güzel.'],
+ tie:['Eşitlik... Ölüm eşitler.','Berabere. Sabrım tükenmedi.','Kimse kazanmadı. Henüz.','Terazi dengede. Ama kefenim hazır.','Ölüm kimseyi kayırmaz. Bu tur.'],
+ bust:['İmkânsız... Hesap yanlıştı.','Ölüm de hata yapar.','Bu, planımın dışındaydı.','Bir kez... yalnızca bir kez.','Şanssızlık. Bunu unutmayacağım.'],
+ joker:['Cesaretin takdire şayan.','Kartlarım seni izliyor.','Henüz bitmedi.','Ruhun titriyor.','Bu hamle kaderde yazılıydı.','Sen oynadığını sanıyorsun.'],
+ jt:['Hedef, benim istediğim yerde duracak.','Ölçüyü değiştirdim. Artık kaçamazsın.','Kader eşiği yer değiştirdi.','Sınırı kaydırdım. Ayakların kayıyor.'],
+ jd:['Bir kart toza döndü.','Bu kartın ömrü bitti.','Yok oldu. Tıpkı umutların gibi.','Küle çevirdim. Sıradaki sen olabilirsin.'],
+ js:['Elindeki artık benim.','Kartların el değiştirdi. Kaderin de.','Aldım. Teşekkür etme.','Takas yok, tahsilat var.'],
+ jb:['Sessizlik. Hamle hakkın kilitlendi.','Elini kolunu bağladım.','Şimdi sadece izleyeceksin.'],
+ jn:['Jokerin ölü doğdu.','Hamleni sildim.','Etkisiz. Tıpkı sen gibi.'],
+ react:['Bu kozunu bekliyordum.','Hamleni okudum.','Bir joker seni kurtarmaz.','Son çaren bu muydu?','Bunu hesaba kattım. Hep katarım.','Jokerlerin tükeniyor. Sabrım değil.'],
+ draw:['Kader kartı bana geliyor.','Çekiyorum. Sen titriyorsun.','Her kart bir adım.','Desteden fısıltılar geliyor.','Kartı ben seçmem, kart beni seçer.'],
+ pass:['Sıra sende. Geç kalma.','Hamleni yap. Bekliyorum.','Ben hazırım. Ya sen?','Bitirdim. Şimdi sen yan.','Sessizlik. Sıra sende.'],
+ think:['Açık toplamın {o}. Hedef {t}. Olasılıklar dönüyor.','Kapalı kartın... tahmin ediyorum.','Destede kalan kartlar kafamda.','Elinde {j} joker var. Biliyorum.','Her ihtimali yakıyorum.','Hamleni değil, korkunu okuyorum.'],
+ pbust:['Açıkta {o}. Hedef {t}. Hesap kesildi.','Battın. Ölüm bunu sever.','Çok açgözlüydün.','Hedefi aştın. Sonun geldi.','Saymayı bilmiyorsun. Ya da ölmeyi seviyorsun.'],
+ obust:['Açığım {b}, hedef {t}. Hesaplı bir risk.','Hedefi geçtim. Plan hâlâ işliyor.','Ölüm bile bir kez sendeler.','Bir hata. Yalnızca bir.'],
+ pexact:['{t}. Mükemmel. Kapalı kartın sonu getirecek.','Tam hedefe oturdun. Ne kadar kırılgan.','Açıkta {t}. Bir kart daha ve çökersin.'],
+ surv0:['Zardan kaçtın. Ölüm unutmaz.','Bir sonrakinde kaçamazsın.','Bu kez kaçtın. Gölgem seninle.'],
+ surv1:['Bana zar atmak boşuna.','Ölüm ölmez.','Beni ölüm bile reddetti.']}
 };
 const lastSay={};
-function pickSay(cat){const L=(SAYS[DIFF]||SAYS.med)[cat]||[];if(!L.length)return '';let i,n=0;do{i=Math.random()*L.length|0}while(L.length>1&&i==lastSay[cat]&&n++<9);lastSay[cat]=i;return L[i]}
-const setSay=cat=>{if(MODE=='bot')sayT=pickSay(cat)}; // ekranı yenilemeden sadece sözü değiştirir
-function say(t){sayT=t;R()}
+function pickSay(cat){const L=(SAYS[DIFF]||SAYS.med)[cat]||SAYS[DIFF||'med'].joker||[];if(!L.length)return '';let i,n=0;do{i=Math.random()*L.length|0}while(L.length>1&&i==lastSay[DIFF+cat]&&n++<9);lastSay[DIFF+cat]=i;return L[i]}
+const jCat=id=>[8,9,10,11,19].includes(id)?'jt':[13,14].includes(id)?'jd':[15,16,17,18].includes(id)?'js':[23,24].includes(id)?'jb':id==12?'jn':'joker';
+/* Konuşma yöneticisi: öncelik 2 = sonuç (her zaman söylenir), 1 = durum/joker (en az 3.5 sn ara), 0 = gevezelik (en az 8 sn ara).
+   Eski söz, yenisi gelene kadar ekranda kalır; böylece yazı saniyede birkaç kez değişmez. */
+let sayAt=0;const GAP=[8000,3500];
+function fillSay(s){const S=G,t=tg(S),o=total(S,0,false),b=total(S,1,false);return s.replace(/\{t\}/g,t).replace(/\{o\}/g,o).replace(/\{b\}/g,b).replace(/\{k\}/g,Math.abs(t-o)).replace(/\{j\}/g,S.hand[0].length)}
+function talk(cat,pri=0,prob=1){
+  if(MODE!='bot'||!G)return false;
+  const now=performance.now();
+  if(pri<2&&(now-sayAt<GAP[pri]||Math.random()>prob))return false;
+  const s=pickSay(cat);if(!s)return false;
+  sayT=fillSay(s);sayAt=now;return true;
+}
+function watch(){ // açık kartlar hedefi geçtiyse ya da tam hedefteyse bot yorum yapar (kapalı kart hesaba katılmaz)
+  const S=G;if(MODE!='bot'||!S||!S.pl||S.over||S.wait||S.rev||!S.st||act(S,19))return;
+  const T=tg(S),o=total(S,0,false),b=total(S,1,false),st=S.st;
+  if(o<=T)st.pb=0;else if(!st.pb&&talk('pbust',1))st.pb=1;
+  if(b<=T)st.ob=0;else if(!st.ob&&talk('obust',1))st.ob=1;
+  if(o!=T)st.px=0;else if(!st.px&&talk('pexact',1,.8))st.px=1;
+}
 function cast(p,id,cb){ // joker sahnede büyür ve Kapat'a basılana kadar kalır
   snd('play');
   if(p==0){if(DES.has(id)){shake();snd('stamp');vib(60)}cb&&cb();return} // kendi jokerimizin bildirimi yok, yalnızca rakibinki
@@ -396,7 +445,7 @@ function cast(p,id,cb){ // joker sahnede büyür ve Kapat'a basılana kadar kal�
   const el=document.createElement('div');el.id='cast';el.className='from'+p;
   el.innerHTML=`<img src="${IMG.j[id]}" alt=""><button class="btn">Kapat</button>`;
   document.body.appendChild(el);hi(el.querySelector('img'),id);
-  el.onclick=()=>{if(!el.isConnected)return;el.remove();lock=false;if(DES.has(id)){shake();snd('stamp');vib(60)}if(MODE=='bot'){if(p==1)say(pickSay('joker'));else if(Math.random()<.6)say(pickSay('react'))}cb&&cb()};
+  el.onclick=()=>{if(!el.isConnected)return;el.remove();lock=false;if(DES.has(id)){shake();snd('stamp');vib(60)}if(MODE=='bot'&&p==1){talk(jCat(id),1,.85);R()}cb&&cb()};
 }
 function count(el,a,b){if(!el)return;if(a==b||RM||typeof requestAnimationFrame=='undefined'){el.textContent=b;return}const t0=performance.now(),f=n=>{const x=Math.min(1,(n-t0)/450);el.textContent=Math.round(a+(b-a)*x*(2-x));if(x<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
 function fly(){ // yeni kartlar desteden uçarak gelir
@@ -404,6 +453,8 @@ function fly(){ // yeni kartlar desteden uçarak gelir
   document.querySelectorAll('.fresh').forEach(el=>{const r=el.getBoundingClientRect();el.style.setProperty('--dx',(dr.left-r.left+(dr.width-r.width)/2)+'px');el.style.setProperty('--dy',(dr.top-r.top+(dr.height-r.height)/2)+'px');el.style.animationDelay=(i++*.13)+'s'});
 }
 function R(){
+  if(!G)return;
+  watch();
   const S=G,low=act(S,19),cn=cand(),k=P&&P.ks[P.pk.length],bi=Math.min(S.bo,3),T=tg(S),res=S.res||[];
   let fresh=0;
   const cd=(c,back,fl,pk)=>{const nf=!seen.has(c.id);if(nf)fresh++;seen.add(c.id);
@@ -418,7 +469,7 @@ function R(){
     const el=(now-morphT[p])/1000,mo=morphT[p]&&el<1.1;return `<img class="av${mo?' morph':''}"${mo?` style="animation-delay:-${el.toFixed(2)}s"`:''} src="${avSrc(k)}" alt="">`};
   const av0=avh(0),av1=avh(1);
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'');
-  setH('#opp',`<div class="who">${av1}<div class="nm"><b>${MODE=='bot'||S.av?oppName():'Rakip'}</b><span class="meta">${MODE=='bot'?IC.skull.repeat(DN[DIFF]):'Online'}${jp(2-S.jUsed[1])}</span>${sayT?`<small class="say">${sayT}</small>`:''}</div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot"><small>Açık toplam</small><b>${lastTot[1]}</b></div></div><div class="cards">${S.pl[1].open.map(c=>cd(c)).join('')}${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>`);
+  setH('#opp',`<div class="who">${av1}<div class="nm"><b>${MODE=='bot'||S.av?oppName():'Rakip'}</b><span class="meta">${MODE=='bot'?IC.skull.repeat(DN[DIFF]):'Online'}${jp(2-S.jUsed[1])}</span>${sayT?`<small class="say">${sayT}</small>`:''}${thinkOn&&MODE=='bot'&&S.turn==1&&!S.wait&&!S.over?'<small class="think">düşünüyor<i>.</i><i>.</i><i>.</i></small>':''}</div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot"><small>Açık toplam</small><b>${lastTot[1]}</b></div></div><div class="cards">${S.pl[1].open.map(c=>cd(c)).join('')}${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>`);
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<img class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}" src="${IMG.j[e.id]}" alt="">`};
   $('#deck b').textContent=S.deck.length;
   setH('#jo',(S.pj||[]).filter(x=>x.o==1).map(chip).join(''));
@@ -448,7 +499,7 @@ function R(){
   fly();flipId=null;
   if(MODE=='host'&&conn&&conn.open)conn.send({k:'s',v:view(G)});
 }
-function doPlay(id,pk){const S=G;P=null;if(MODE=='guest'){conn.send({k:'play',id,pk});return R()}play(S,0,id,pk);S.acted=true;S.log.push({p:0,t:`joker oynadı: ${J[id]}`});note(0,id,R)}
+function doPlay(id,pk){const S=G;P=null;if(MODE=='guest'){conn.send({k:'play',id,pk});return R()}play(S,0,id,pk);S.acted=true;S.log.push({p:0,t:`joker oynadı: ${J[id]}`});note(0,id,()=>{if(MODE=='bot')talk('react',1,.5);R()})}
 function pick(v){P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
 function startJoker(id){const ks=NEED[id]||[];if(ks.length){P={id,ks,pk:[]};R()}else doPlay(id,[])}
 function box(html,close=true){lock=true;$('#mb').innerHTML=html+(close?'<div class="row"><button id="pc" class="btn">Kapat</button></div>':'');$('#m').hidden=false;if(close)$('#pc').onclick=()=>{$('#m').hidden=true;lock=false;if(G)R()}}
@@ -478,12 +529,27 @@ function guide(){box(`<h3>Nasıl oynanır</h3>
 <p class="gd">Oynandığı anda etki eder, masada kalmaz ve etkisiz kılınamaz: rakibe kart çektirme, kartı 0 ya da 12 yapma, kart imha etme, açık ya da kapalı kart takası, kart çalma, kart hediye etme, rakibin joker kullanmasını engelleme ve Joker etkisiz'in kendisi.</p>
 <p class="gd">Hepsini Joker Kodeksi'nde görebilirsin.</p>`)}
 function settings(){
-  box(`<h3>Ayarlar</h3><label>Müzik<input type="range" id="sm" min="0" max="1" step=".05" value="${VM}"></label><label>Efektler<input type="range" id="ss" min="0" max="1" step=".05" value="${VS}"></label><label class="chk"><input type="checkbox" id="sr" ${RM?'checked':''}> Hareketi azalt</label><label class="chk"><input type="checkbox" id="sv" ${VB?'checked':''}> Titreşim</label><div class="row"><button class="btn alt sm" id="sk">Joker Kodeksi</button><button class="btn alt sm" id="sg">Nasıl oynanır</button></div>`);
+  const inGame=$('#menu').hidden&&!!G;
+  box(`<h3>Ayarlar</h3><label>Müzik<input type="range" id="sm" min="0" max="1" step=".05" value="${VM}"></label><label>Efektler<input type="range" id="ss" min="0" max="1" step=".05" value="${VS}"></label><label class="chk"><input type="checkbox" id="sr" ${RM?'checked':''}> Hareketi azalt</label><label class="chk"><input type="checkbox" id="sv" ${VB?'checked':''}> Titreşim</label><div class="row"><button class="btn alt sm" id="sk">Joker Kodeksi</button><button class="btn alt sm" id="sg">Nasıl oynanır</button></div>${inGame?`<div class="row">${MODE=='bot'?'<button class="btn alt sm" id="sa">Tekrar oyna</button>':''}</div><div class="row"><button class="btn sm" id="sx">Oyundan çık</button></div>`:''}`);
   $('#sm').oninput=e=>{VM=+e.target.value;LS('vm',VM);ac();MG.gain.value=VM*.8;if(FILE&&mel)mel.volume=Math.min(1,VM*.8)};
   $('#ss').oninput=e=>{VS=+e.target.value;LS('vs',VS);ac();SG.gain.value=VS};$('#ss').onchange=()=>snd('draw');
   $('#sr').onchange=e=>{RM=e.target.checked;LS('rm',RM?1:0);document.body.classList.toggle('rm',RM)};
   $('#sv').onchange=e=>{VB=e.target.checked;LS('vb',VB?1:0)};
   $('#sk').onclick=codex;$('#sg').onclick=guide;
+  if($('#sa'))$('#sa').onclick=()=>{ // aynı botla baştan başla, mevcut oyun iptal
+    botGen++;thinkOn=false;const c=$('#cast');if(c)c.remove();$('#m').hidden=true;lock=false;P=null;
+    G.over=true;start()};
+  if($('#sx'))$('#sx').onclick=exitGame;
+}
+function exitGame(){ // limbigames perdesi, sonra ilk ekrana dön
+  if(entering)return;entering=true;botGen++;thinkOn=false;
+  const c=$('#cast');if(c)c.remove();$('#m').hidden=true;lock=true;P=null;
+  veil();
+  setTimeout(()=>{
+    try{if(conn)conn.close()}catch(e){}try{if(peer)peer.destroy()}catch(e){}conn=null;peer=null;waitM=false;
+    if(G)G.over=true;G=null;MODE='bot';sayT='';try{document.body.classList.remove('dead')}catch(e){}
+    st('');$('#menu').hidden=false;lock=false;entering=false;setMusic('menu');
+  },1700);
 }
 document.addEventListener('click',e=>{
   const S=G,t=e.target.closest&&e.target.closest('[data-c],[data-e],[data-j],[data-s],[data-x],[data-g]');
@@ -502,7 +568,7 @@ document.addEventListener('click',e=>{
   if(t.dataset.e){const x=S.eff.find(y=>y.uid==u)||(S.pj||[]).find(y=>y.uid==u);if(x)preview(x.id,false,`${x.o==0?'Senin jokerin':'Rakibin jokeri'}${x.neg?' (etkisiz kılındı)':''}${BLOCK.has(x.id)?'':' (anlık etki, kullanıldı)'}${x.id==22?(x.s>0?' (ekler)':' (çıkarır)'):''}`);return}
   if(t.dataset.j){const id=+t.dataset.j;preview(id,S.turn==0&&!S.wait&&playable(S,0,id))}
 });
-$('#draw').onclick=()=>{const S=G;if(S.turn||lock||P||!canDraw(S,0))return;if(MODE=='guest')return conn.send({k:'draw'});const c=S.deck.pop();S.pl[0].open.push(c);S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});if(MODE=='bot'&&total(S,0)>tg(S)&&Math.random()<.8)setSay('pbust');R()};
+$('#draw').onclick=()=>{const S=G;if(S.turn||lock||P||!canDraw(S,0))return;if(MODE=='guest')return conn.send({k:'draw'});const c=S.deck.pop();S.pl[0].open.push(c);S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R()};
 $('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE=='guest')conn.send({k:'pass'});else pass()}};
 
 /* ---------- ONLINE (PeerJS) ---------- */

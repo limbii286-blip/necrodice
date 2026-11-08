@@ -302,3 +302,9 @@ html{background:#04100a}
 
 /* Bot sözleri: yenisi gelene kadar ekranda kalır, uzun cümleler alt satıra iner */
 .say{display:block;margin-top:3px;font-size:18px;line-height:1.1;overflow-wrap:anywhere;max-width:100%}
+
+/* botun "düşünüyor" göstergesi */
+.think{display:block;margin-top:2px;font-size:16px;color:var(--lime);opacity:.85}
+.think i{font-style:normal;animation:blink 1.2s steps(1) infinite}
+.think i:nth-of-type(2){animation-delay:.2s}.think i:nth-of-type(3){animation-delay:.4s}
+.rm .think i{animation:none!important}
