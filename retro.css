@@ -118,7 +118,7 @@ body.rm::before,body.rm::after{animation:none!important}
 .gd{font-size:21px}
 .pn{font-size:21px;color:var(--gold)}
 .big{border-radius:2px;border:2px solid var(--bone);box-shadow:0 0 28px #ff2d3d66,6px 6px 0 #000}
-#cast img{border-radius:2px;border:2px solid var(--bone);box-shadow:0 0 60px #ff2d3dcc,0 0 0 100vmax #020302b3}
+#cast img{border-radius:2px;border:2px solid var(--bone);box-shadow:0 0 50px #ec4452aa}
 #cast b{font:400 38px/1 var(--hf);color:var(--blood2);text-shadow:0 0 12px #ff2d3d,0 3px 0 #000;letter-spacing:1px}
 .cdx img{border-radius:2px;border:1px solid var(--bone)}
 .die{border-radius:6px;background:#d9d2b4;box-shadow:inset 0 -4px 0 #a89f7c,0 0 0 1px #000,5px 6px 0 #000}
@@ -161,3 +161,65 @@ body.rm::before,body.rm::after{animation:none!important}
   .sc{gap:3px;font-size:15px}.sc b{font-size:34px}.sk{font-size:14px}.sk small{font-size:10px}.sks{gap:2px}
   .gear{padding:3px 6px 1px;margin-left:3px;font-size:17px;gap:3px}}
 @media(max-width:350px){.sc i{display:none}}
+
+/* --- Joker sahnesi: Kapat'a basılana kadar kalır --- */
+#cast{pointer-events:auto;background:#020302c7;gap:12px;z-index:20}
+#cast img{box-shadow:0 0 50px #ec4452aa;animation:castIn .5s cubic-bezier(.2,.9,.25,1) both}
+@keyframes castIn{from{opacity:0;transform:translateY(var(--sy)) scale(.3) rotate(-12deg)}to{opacity:1;transform:none}}
+#cast b{animation:fade .5s both;text-align:center;padding:0 12px}
+#cast .cw{font:400 24px/1 var(--mf);letter-spacing:2px;text-transform:uppercase;color:var(--lime)}
+#cast .btn{margin-top:6px}
+.e.used{border-style:dashed}
+
+/* ============================================================
+   DÜZEN: üst bilgi, orta kutu (butonlar + hedef + ok + jokerler)
+   ============================================================ */
+#hdr{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px}
+#hdr .hs{display:flex;align-items:flex-start;gap:4px;justify-self:start}#hdr .hg{justify-self:end}
+#hdr .hc{display:flex;align-items:center;justify-content:center;gap:10px}
+#hdr .lab{display:inline;font-size:24px;line-height:1;color:var(--bone);opacity:1;white-space:nowrap}
+#hdr .pip{width:16px;height:16px}
+@media(max-width:430px){#hdr .lab{font-size:21px}#hdr .pip{width:14px;height:14px}}
+
+#prompt:empty{display:none}
+
+#fx{position:relative;isolation:isolate;display:grid;grid-template-columns:100%;justify-content:stretch;align-items:stretch;
+  gap:8px;margin:12px 0;padding:10px 10px 12px;border:2px solid #3a2a2c;border-radius:2px;background:#050806;
+  box-shadow:0 0 0 1px #000,6px 6px 0 #000}
+#fx::before,#fx::after{content:"";position:absolute;top:0;bottom:0;width:50%;z-index:-1}
+#fx::before{left:0;background:repeating-linear-gradient(45deg,#2c070d 0 10px,#1b0509 10px 20px)}
+#fx::after{right:0;background:repeating-linear-gradient(45deg,#0b2d16 0 10px,#061a0c 10px 20px);border-left:1px dashed #5a7a60}
+#fx .ctl{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#fx .cl{display:flex;align-items:center;gap:8px}
+#fx .btn{white-space:nowrap;letter-spacing:0;font-size:19px;padding:7px 10px 5px}
+#fx .deck{width:calc(var(--cw)*.62);height:calc(var(--ch)*.62);margin:0 6px 12px 0}
+#fx .jk{display:grid;grid-template-columns:1fr 1fr;min-height:calc(var(--ch)*.82)}
+#fx .jh{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0}
+#fx .jh.o{padding-right:50px}#fx .jh.m{padding-left:50px}
+.e.opp{border-color:var(--blood2);box-shadow:0 0 12px #ec445288,3px 3px 0 #000}
+.e.mine{border-color:var(--lime);box-shadow:0 0 12px #7dff8a77,3px 3px 0 #000}
+
+/* hedef yuvarlağı: kutunun tam ortası */
+#fx .seal{position:absolute;inset:0;margin:auto;width:78px;height:78px;z-index:3;white-space:nowrap}
+#fx .seal small{font-size:15px;line-height:1}
+#fx .seal b{font-size:44px;line-height:.9}
+#fx .seal.low small{font-size:13px}
+#fx .seal.low b{font-size:22px;letter-spacing:0;line-height:1;margin-top:2px}
+
+/* ok: yuvarlaktan çıkar, sırası kimdeyse onu gösterir (üst = rakip, alt = sen) */
+.arr{position:absolute;left:50%;width:28px;height:84px;margin-left:-14px;z-index:2}
+.arr i{display:block;width:100%;height:100%;animation:arrow .8s steps(2) infinite;
+  clip-path:polygon(10px 0,18px 0,18px 6px,22px 6px,22px 12px,28px 12px,28px 20px,20px 20px,20px 84px,8px 84px,8px 20px,0 20px,0 12px,6px 12px,6px 6px,10px 6px)}
+.arr.op{bottom:50%;filter:drop-shadow(0 0 5px var(--blood2))}.arr.op i{background:var(--blood2)}
+.arr.me{top:50%;transform:scaleY(-1);filter:drop-shadow(0 0 5px var(--lime))}.arr.me i{background:var(--lime)}
+.arr.off{display:none}
+@keyframes arrow{50%{transform:translateY(-5px)}}
+.rm .arr i{animation:none!important}
+
+@media(max-width:400px){
+  #fx{padding:8px 8px 10px}
+  #fx .btn{font-size:15px;padding:5px 6px 3px}
+  #fx .cl{gap:5px}#fx .deck{width:calc(var(--cw)*.55);height:calc(var(--ch)*.55);margin-right:3px}
+  #fx .jh.o{padding-right:42px}#fx .jh.m{padding-left:42px}
+  #fx .seal{width:64px;height:64px;border-width:2px}#fx .seal b{font-size:36px}#fx .seal small{font-size:12px}#fx .seal.low b{font-size:19px}#fx .seal.low small{font-size:11px}
+}
