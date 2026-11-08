@@ -19,6 +19,7 @@ const ac=()=>{
   if(AC.state=='suspended')AC.resume();return AC;
 };
 /* Müzik: menüde menu.m4a, oyunda game1/game2 sırayla. Web Audio'ya bağlı olduğu için ses ayarı iOS'ta da çalışır. */
+const FILE=location.protocol=='file:'; // çift tıkla açılınca Web Audio dosyaya erişemez: doğrudan <audio> kullan
 const MU={menu:['audio/menu.m4a'],game:['audio/game1.m4a','audio/game2.m4a']};
 let curM='menu',mel=null,gi=Math.random()*2|0;
 function playM(){
@@ -27,17 +28,21 @@ function playM(){
   el._m=curM;el._g=g;el.preload='auto';el.loop=curM=='menu';
   el.src=curM=='game'?list[gi++%list.length]:list[0];
   el.onended=()=>{if(mel===el&&el._m=='game'){mel=null;playM()}}; // sıradaki parça
-  try{AC.createMediaElementSource(el).connect(g)}catch(e){return}
-  g.connect(MG);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(1,t+1.5);
-  mel=el;el.play().catch(()=>{});
-  if(old){const gt=AC.currentTime;old._g.gain.cancelScheduledValues(gt);old._g.gain.setValueAtTime(old._g.gain.value,gt);old._g.gain.linearRampToValueAtTime(0,gt+1.2);setTimeout(()=>{old.pause();old.src=''},1300)}
+  if(FILE)el.volume=Math.min(1,VM*.8);
+  else{try{AC.createMediaElementSource(el).connect(g)}catch(e){console.warn('müzik bağlanamadı',e);return}
+    g.connect(MG);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(1,t+1.5)}
+  mel=el;el.play().catch(e=>console.warn('müzik çalınamadı',e));
+  if(old&&FILE){old.pause();old.src=''}
+  else if(old){const gt=AC.currentTime;old._g.gain.cancelScheduledValues(gt);old._g.gain.setValueAtTime(old._g.gain.value,gt);old._g.gain.linearRampToValueAtTime(0,gt+1.2);setTimeout(()=>{old.pause();old.src=''},1300)}
 }
 function setMusic(m){curM=m;playM()}
 document.addEventListener('visibilitychange',()=>{if(!mel)return;if(document.hidden)mel.pause();else mel.play().catch(()=>{})});
 /* Ses efektleri (wav): bir kez çözülüp bellekte tutulur */
 const BUF={};
-function loadSfx(){[['draw','kart_cekme'],['play','joker_oynama'],['info','joker_bilgi']].forEach(([k,f])=>fetch('audio/'+f+'.wav').then(r=>r.arrayBuffer()).then(b=>AC.decodeAudioData(b)).then(d=>{BUF[k]=d}).catch(()=>{}))}
-function sfx(k,v=1){const s=AC.createBufferSource(),g=AC.createGain();s.buffer=BUF[k];g.gain.value=v;s.connect(g);g.connect(SG);s.start()}
+function loadSfx(){if(FILE){BUF.draw='kart_cekme';BUF.play='joker_oynama';BUF.info='joker_bilgi';return}
+  [['draw','kart_cekme'],['play','joker_oynama'],['info','joker_bilgi']].forEach(([k,f])=>fetch('audio/'+f+'.wav').then(r=>r.arrayBuffer()).then(b=>AC.decodeAudioData(b)).then(d=>{BUF[k]=d}).catch(e=>console.warn('efekt yüklenemedi: audio/'+f+'.wav',e)))}
+function sfx(k,v=1){if(typeof BUF[k]=='string'){const a=new Audio('audio/'+BUF[k]+'.wav');a.volume=Math.min(1,VS*v);a.play().catch(()=>{});return}
+  const s=AC.createBufferSource(),g=AC.createGain();s.buffer=BUF[k];g.gain.value=v;s.connect(g);g.connect(SG);s.start()}
 /* Joker büyük görünümü: önce gömülü küçük görsel, yüksek çözünürlüklü img/j/ID.webp yüklenince değişir */
 const HC={};
 function hiLoad(id,cb){const u='img/j/'+id+'.webp';let i=HC[id];if(!i){i=HC[id]=new Image();i.src=u}if(cb){if(i.complete&&i.naturalWidth)cb(u);else i.addEventListener('load',()=>cb(u),{once:true})}}
@@ -215,6 +220,9 @@ function endRound(){
     else{S.over=true;MM(full,'Yeniden oyna',start)}
   }
 }
+let entering=false;
+function veil(ms=2000){const v=document.createElement('div');v.className='veil';v.style.animationDuration=ms+'ms';v.style.setProperty('--ms',ms*.9+'ms');v.innerHTML=`<img alt="" src="${IMG.logo}"><b>limbi games</b><span class="ldb"><i></i></span>`;document.body.appendChild(v);setTimeout(()=>v.remove(),ms+100)}
+function enter(fn){if(entering)return;entering=true;veil();setMusic('game');setTimeout(()=>{$('#menu').hidden=true;entering=false;fn()},1700)}
 function start(){setMusic('game');try{document.body.classList.remove('dead')}catch(e){}G={u:0,bo:0,log:[],over:false,used:[]};newBO3(G);deal(G);R();next()}
 
 /* ---------- ARAYÜZ ---------- */
@@ -245,7 +253,7 @@ function R(){
     return !back&&c.o==null?`<img class="c n${f}" ${a} src="${IMG.n[c.n]}" alt="${c.n}">`:`<div class="c${back?' bk':''}${f}" ${a}>${back?'':`${c.o??c.n}${c.o!=null?'<i>↺</i>':''}`}</div>`};
   const pips=[0,1,2].map(i=>`<span class="pip ${res[i]==null?(i==S.rounds?'now':''):res[i]>0?'w':res[i]<0?'l':'d'}"></span>`).join('');
   const sk=TH.map((t,i)=>`<span class="sk${i<bi?' past':i==bi?' cur':''}" title="Ölüm eşiği: ${t}'ten büyük atmalısın">${IC.skull}<small>${t}</small></span>`).join('');
-  $('#hdr').innerHTML=`<div class="hb"><span class="lab">Düello ${S.bo+1}</span><span class="pips">${pips}</span></div><div class="sc"><b>${S.pts[0]}</b><i>Sen</i><i>Rakip</i><b>${S.pts[1]}</b></div><div class="hb sks">${sk}<button class="gear" data-g="1" aria-label="Ayarlar">${IC.gear}</button></div>`;
+  $('#hdr').innerHTML=`<div class="hb"><span class="lab">Düello ${S.bo+1}</span><span class="pips">${pips}</span></div><div class="sc"><b>${S.pts[0]}</b><i>Sen</i><i>Rakip</i><b>${S.pts[1]}</b></div><div class="hb sks">${sk}<button class="gear" data-g="1" aria-label="Ayarlar">${IC.gear}<span>MENÜ</span></button></div>`;
   const my=S.turn==0&&!lock&&!S.wait,mt=total(S,0),ot=total(S,1,false),bust=!low&&mt>T,seal=T+(low?'L':'');
   const jp=n=>`<span class="jpips" title="Joker hakkı ${n}/2">${[0,1].map(i=>`<i${i<n?' class="on"':''}></i>`).join('')}</span>`;
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'');
@@ -284,7 +292,7 @@ function codex(){box(`<h3>Joker Kodeksi</h3><div class="cdx">${range(24).map(i=>
 function guide(){box(`<h3>Nasıl oynanır</h3><p class="gd">Amaç, tur sonunda sayı kartlarının toplamının <b>21'e</b> rakibinden daha yakın olması. 21'i geçersen turu kaybedersin. Sıranda istediğin kadar sayı kartı çekebilir, en fazla 2 joker oynayabilir, sonra pas dersin.</p><p class="gd">Rakibin bir şey yapmadan pas derse kapalı kartlar açılır. 3 turluk düelloyu kaybeden ölüm zarlarını atar, toplam eşiğin üstünde değilse ölür. Eşikler 4, 6, 8 ve 10'dur.</p><p class="gd">Joker Kodeksi'nde 24 jokerin hepsini ve hangilerinin etkisiz kılınabildiğini görebilirsin.</p>`)}
 function settings(){
   box(`<h3>Ayarlar</h3><label>Müzik<input type="range" id="sm" min="0" max="1" step=".05" value="${VM}"></label><label>Efektler<input type="range" id="ss" min="0" max="1" step=".05" value="${VS}"></label><label class="chk"><input type="checkbox" id="sr" ${RM?'checked':''}> Hareketi azalt</label><label class="chk"><input type="checkbox" id="sc" ${CRT?'checked':''}> CRT efekti (tarama çizgileri)</label><label class="chk"><input type="checkbox" id="sv" ${VB?'checked':''}> Titreşim</label><div class="row"><button class="btn alt sm" id="sk">Joker Kodeksi</button><button class="btn alt sm" id="sg">Nasıl oynanır</button></div>`);
-  $('#sm').oninput=e=>{VM=+e.target.value;LS('vm',VM);ac();MG.gain.value=VM*.8};
+  $('#sm').oninput=e=>{VM=+e.target.value;LS('vm',VM);ac();MG.gain.value=VM*.8;if(FILE&&mel)mel.volume=Math.min(1,VM*.8)};
   $('#ss').oninput=e=>{VS=+e.target.value;LS('vs',VS);ac();SG.gain.value=VS};$('#ss').onchange=()=>snd('draw');
   $('#sr').onchange=e=>{RM=e.target.checked;LS('rm',RM?1:0);document.body.classList.toggle('rm',RM)};
   $('#sc').onchange=e=>{CRT=e.target.checked;LS('crt',CRT?1:0);document.documentElement.classList.toggle('nocrt',!CRT)};
@@ -332,7 +340,7 @@ function onGuest(m){ // host: misafirin hamle istekleri (doğrulanır)
   }
 }
 function onHost(m){ // misafir: host'tan gelen durum/bildirimler
-  if(m.k=='s'){G=m.v;if(waitM){$('#m').hidden=true;lock=false;waitM=false}if(G.turn!=0||G.wait)P=null;$('#menu').hidden=true;R()}
+  if(m.k=='s'){G=m.v;if(waitM){$('#m').hidden=true;lock=false;waitM=false}if(G.turn!=0||G.wait)P=null;if(!$('#menu').hidden)setTimeout(()=>{$('#menu').hidden=true},1500);setMusic('game');R()}
   else if(m.k=='m'){waitM=true;M(m.html,null);snd(m.sd)}
   else if(m.k=='j')cast(m.p,m.id,R);
 }
@@ -342,15 +350,15 @@ function hostRoom(){
   peer=new Peer('necrodice-'+code);
   peer.on('open',()=>st('Oda kodu: '+code+' — rakip bekleniyor…'));
   peer.on('error',e=>{if(e.type=='unavailable-id'){peer.destroy();hostRoom()}else st('Hata: '+e.type)});
-  peer.on('connection',c=>{if(conn)return;conn=c;c.on('open',()=>{$('#menu').hidden=true;start()});c.on('data',onGuest);c.on('close',()=>M('Rakip ayrıldı.','Tamam',()=>location.reload()))});
+  peer.on('connection',c=>{if(conn)return;conn=c;c.on('open',()=>enter(start));c.on('data',onGuest);c.on('close',()=>M('Rakip ayrıldı.','Tamam',()=>location.reload()))});
 }
 function joinRoom(){
   const code=$('#code').value.trim().toUpperCase();if(!code)return st('Oda kodunu yaz');
   MODE='guest';st('Bağlanılıyor…');peer=new Peer();
-  peer.on('open',()=>{conn=peer.connect('necrodice-'+code,{reliable:true});conn.on('data',onHost);conn.on('open',()=>st('Bağlandı, oyun başlıyor…'));conn.on('close',()=>M('Bağlantı koptu.','Tamam',()=>location.reload()))});
+  peer.on('open',()=>{conn=peer.connect('necrodice-'+code,{reliable:true});conn.on('data',onHost);conn.on('open',()=>{st('Bağlandı, oyun başlıyor…');veil();setMusic('game')});conn.on('close',()=>M('Bağlantı koptu.','Tamam',()=>location.reload()))});
   peer.on('error',e=>st(e.type=='peer-unavailable'?'Oda bulunamadı':'Hata: '+e.type));
 }
-document.querySelectorAll('.d').forEach(b=>b.onclick=()=>{DIFF=b.dataset.d;MODE='bot';$('#menu').hidden=true;start()});
+document.querySelectorAll('.d').forEach(b=>b.onclick=()=>{DIFF=b.dataset.d;MODE='bot';enter(start)});
 $('#b4').onclick=codex;$('#b5').onclick=guide;$('#b6').onclick=settings;
 try{if(RM)document.body.classList.add('rm');if(!CRT)document.documentElement.classList.add('nocrt')}catch(e){}
 $('#slogo').src=IMG.logo;setTimeout(()=>{const s=$('#splash');s&&s.remove()},2900);
