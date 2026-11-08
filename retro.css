@@ -308,3 +308,6 @@ html{background:#04100a}
 .think i{font-style:normal;animation:blink 1.2s steps(1) infinite}
 .think i:nth-of-type(2){animation-delay:.2s}.think i:nth-of-type(3){animation-delay:.4s}
 .rm .think i{animation:none!important}
+
+/* mobilde sığdırma: kaydırma kapalı */
+html.fit,html.fit body{overflow:hidden;height:100%;overscroll-behavior:none}

@@ -91,9 +91,11 @@ function sfx(k,v=1){if(typeof BUF[k]=='string'){const a=new Audio(typeof SFXD!='
   const s=AC.createBufferSource(),g=AC.createGain();s.buffer=BUF[k];g.gain.value=v;s.connect(g);g.connect(SG);s.start()}
 /* Joker büyük görünümü: önce gömülü küçük görsel, yüksek çözünürlüklü img/j/ID.webp yüklenince değişir */
 const HC={};
-function hiLoad(id,cb){let i=HC[id];if(!i){i=HC[id]=new Image();const cs=['img/j/'+id+'.webp','j'+id+'.webp',id+'.webp','img/j'+id+'.webp'];i._i=0;
-  i.onload=()=>{AUD.hd='ok'};i.onerror=()=>{if(++i._i<cs.length)i.src=cs[i._i];else{if(AUD.hd!='ok')AUD.hd='fb';miss(cs[0])}};i.src=cs[0]}
+function hiLoad(id,cb){let i=HC[id];if(!i){i=HC[id]=new Image();const pd=String(id).padStart(2,'0'),cs=['img/j/'+id+'.webp','j'+id+'.webp',id+'.webp','img/j'+id+'.webp','img/j/'+pd+'.webp','/img/j/'+id+'.webp','img/j/'+id+'.png','img/j/'+id+'.jpg','img/j/'+id+'.avif','img/j/j'+id+'.webp','jokers/'+id+'.webp'];i._i=0;
+  i.onload=()=>{AUD.hd='ok';try{i.decode&&i.decode().catch(()=>{})}catch(e){}};i.onerror=()=>{if(++i._i<cs.length)i.src=cs[i._i];else{if(AUD.hd!='ok')AUD.hd='fb';miss(cs[0])}};i.src=cs[0]}
   if(cb){if(i.complete&&i.naturalWidth)cb(i.src);else i.addEventListener('load',()=>cb(i.src),{once:true})}}
+let hiPre=false;
+function hiPreload(){if(hiPre)return;hiPre=true;range(25).forEach((id,n)=>setTimeout(()=>hiLoad(id),400+n*120))} // tüm HD jokerler arka planda önceden yüklenir, tıklayınca anında hazır olur
 function hi(el,id){if(el)hiLoad(id,u=>{if(el.isConnected)el.src=u})}
 function tone(f,d,ty='sine',v=.12,w=0,sl=0){const a=ac(),t=a.currentTime+w,o=a.createOscillator(),g=a.createGain();o.type=ty;o.frequency.setValueAtTime(f,t);if(sl)o.frequency.linearRampToValueAtTime(Math.max(30,f+sl),t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(SG);o.start(t);o.stop(t+d)}
 function noise(d,v=.2,hp=2500,w=0){const a=ac(),t=a.currentTime+w,n=a.sampleRate*d|0,b=a.createBuffer(1,n,a.sampleRate),x=b.getChannelData(0);for(let i=0;i<n;i++)x[i]=Math.random()*2-1;const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=b;f.type='highpass';f.frequency.value=hp;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);s.connect(f);f.connect(g);g.connect(SG);s.start(t)}
@@ -307,9 +309,10 @@ function pass(){
   (S.pa=S.pa||[0,0])[S.turn]++;S.turns++;S.acted=false;S.turn=1-S.turn;R();next();
 }
 function next(){if(MODE=='bot'&&G.turn==1&&!lock&&!G.over)bot()}
-function M(html,btn,cb){lock=true;$('#mb').innerHTML=html+(btn?`<br><br><button id="mo" class="btn">${btn}</button>`:'<br><i>Oda sahibinin devam etmesi bekleniyor…</i>');$('#m').hidden=false;anim();
-  if(btn)$('#mo').onclick=()=>{$('#m').hidden=true;lock=false;cb()}}
-function MM(fn,btn,cb,sd){if(MODE=='host'&&conn&&conn.open)conn.send({k:'m',html:fn(1),sd:sd&&sd(1)});M(fn(0),btn,cb);snd(sd&&sd(0))}
+function M(html,btn,cb,end){lock=true;$('#mb').innerHTML=html+(btn?`<br><br><button id="mo" class="btn">${btn}</button>`:end?'':'<br><i>Oda sahibinin devam etmesi bekleniyor…</i>')+(end?'<br><br><button id="mx" class="btn alt">Ana menüye dön</button>':'');$('#m').hidden=false;anim();
+  if(btn)$('#mo').onclick=()=>{$('#m').hidden=true;lock=false;cb()};
+  if(end)$('#mx').onclick=exitGame}
+function MM(fn,btn,cb,sd,end){if(MODE=='host'&&conn&&conn.open)conn.send({k:'m',html:fn(1),sd:sd&&sd(1),end});M(fn(0),btn,cb,end);snd(sd&&sd(0))}
 function endRound(){
   const S=G,a=[total(S,0),total(S,1)],T=tg(S),r=outc(S,0);
   S.pts[0]+=r>0?1:r==0?.5:0;S.pts[1]+=r<0?1:r==0?.5:0;S.rounds++;S.res.push(r);S.wait=true;S.rev=true;
@@ -332,13 +335,13 @@ function endRound(){
     const full=v=>pre(v)+`<hr>Düelloyu ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısına göre)':how=='zar'?` (beraberlik zarı: ${hx[v]}–${hx[1-v]})`:''}.<br>Ölüm zarlarını ${L==v?'sen atıyorsun':'rakip atıyor'}: hayatta kalmak için ${th}'${EK[th]} büyük gelmeli.<div class="dice" data-a="${d1}" data-b="${d2}" data-s="${surv?'ok':L==v?'death':'win'}"></div><div class="after"><b>Toplam: ${roll}</b><br>`+(surv?(L==v?'Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>';
     if(surv){const n=S.bo+2,ek=['a','e','ye','e','e','e','ya','ye','e','a'][n%10];
       MM(full,`Düello ${n}'${ek} geç`,()=>{S.bo++;(S.mast=S.mast||[0,0])[L]=1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()})}
-    else{S.over=true;MM(full,'Yeniden oyna',start)}
+    else{S.over=true;MM(full,'Yeniden oyna',start,null,true)}
   }
 }
 let entering=false;
 function veil(ms=2000){const v=document.createElement('div');v.className='veil';v.style.animationDuration=ms+'ms';v.style.setProperty('--ms',ms*.9+'ms');v.innerHTML=`<img alt="" src="${IMG.logo}"><b>limbigames</b><span class="ldb"><i></i></span>`;document.body.appendChild(v);setTimeout(()=>v.remove(),ms+100)}
 function enter(fn){if(entering)return;entering=true;veil();setMusic('game');setTimeout(()=>{$('#menu').hidden=true;entering=false;fn()},1700)}
-function start(){setMusic('game');try{document.body.classList.remove('dead')}catch(e){}G={u:0,bo:0,log:[],over:false,used:[],av:Math.random()<.5?['t','c']:['c','t'],mast:[0,0]};prevAv[0]=prevAv[1]=undefined;newBO3(G);deal(G);sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
+function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}G={u:0,bo:0,log:[],over:false,used:[],av:Math.random()<.5?['t','c']:['c','t'],mast:[0,0]};prevAv[0]=prevAv[1]=undefined;newBO3(G);deal(G);sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
 
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
@@ -449,12 +452,33 @@ function cast(p,id,cb){ // joker sahnede büyür ve Kapat'a basılana kadar kal�
 }
 function count(el,a,b){if(!el)return;if(a==b||RM||typeof requestAnimationFrame=='undefined'){el.textContent=b;return}const t0=performance.now(),f=n=>{const x=Math.min(1,(n-t0)/450);el.textContent=Math.round(a+(b-a)*x*(2-x));if(x<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
 function fly(){ // yeni kartlar desteden uçarak gelir
-  const d=$('#deck');if(!d||!d.getBoundingClientRect)return;const dr=d.getBoundingClientRect();let i=0;
-  document.querySelectorAll('.fresh').forEach(el=>{const r=el.getBoundingClientRect();el.style.setProperty('--dx',(dr.left-r.left+(dr.width-r.width)/2)+'px');el.style.setProperty('--dy',(dr.top-r.top+(dr.height-r.height)/2)+'px');el.style.animationDelay=(i++*.13)+'s'});
+  const d=$('#deck');if(!d||!d.getBoundingClientRect)return;const dr=d.getBoundingClientRect();let i=0;const F=FIT||1;
+  document.querySelectorAll('.fresh').forEach(el=>{const r=el.getBoundingClientRect();el.style.setProperty('--dx',(dr.left-r.left+(dr.width-r.width)/2)/F+'px');el.style.setProperty('--dy',(dr.top-r.top+(dr.height-r.height)/2)/F+'px');el.style.animationDelay=(i++*.13)+'s'});
 }
+/* Mobilde kaydırma olmasın: oyun alanı ekrana sığmıyorsa tek parça olarak küçültülür (PC'ye dokunmaz) */
+let FIT=1,fitQ=0;
+function fit(){
+  fitQ=0;const m=document.querySelector('main');if(!m)return;
+  const css=['transform','transformOrigin','width','maxWidth','marginLeft','marginRight','minHeight','height'];
+  css.forEach(k=>m.style[k]='');FIT=1;
+  document.documentElement.classList.remove('fit');
+  if(innerWidth>700)return;
+  m.style.minHeight='0';m.style.height='auto';
+  const av=innerHeight-6,r0=m.getBoundingClientRect(),h=r0.height+Math.max(0,r0.top+scrollY),w=r0.width;
+  m.style.minHeight='';m.style.height='';
+  if(h<=av+1)return;
+  const k=Math.max(.5,av/h);if(k>=.995)return;
+  FIT=k;
+  m.style.maxWidth='none';m.style.width=(w/k)+'px';m.style.marginLeft='0';m.style.marginRight='0';
+  m.style.transformOrigin='0 0';m.style.transform=`scale(${k})`;m.style.height='auto';m.style.minHeight='0';
+  document.documentElement.classList.add('fit');
+}
+const fitSoon=()=>{if(!fitQ)fitQ=requestAnimationFrame(fit)};
+addEventListener('resize',fitSoon);addEventListener('orientationchange',()=>setTimeout(fitSoon,250));
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitSoon);
 function R(){
   if(!G)return;
-  watch();
+  watch();fitSoon();
   const S=G,low=act(S,19),cn=cand(),k=P&&P.ks[P.pk.length],bi=Math.min(S.bo,3),T=tg(S),res=S.res||[];
   let fresh=0;
   const cd=(c,back,fl,pk)=>{const nf=!seen.has(c.id);if(nf)fresh++;seen.add(c.id);
@@ -541,8 +565,24 @@ function settings(){
     G.over=true;start()};
   if($('#sx'))$('#sx').onclick=exitGame;
 }
+let leaving=false;
+function peerLeft(msg){ // rakip çıktı: ana menüye ASLA doğrudan atma, yalnızca "Ana menüye dön" ile limbigames perdesi üzerinden gidilir
+  if(leaving)return;
+  try{conn=null}catch(e){}
+  if(!G){st(msg);return}              // henüz oyun yok (lobi): sadece bilgi yaz
+  const c=$('#cast');if(c)c.remove();P=null;
+  if(G.over){ // oyun zaten bitmişti: sonuç penceresi kalsın, not eklensin, yeniden oyna kalksın
+    const mb=$('#mb');
+    if(!$('#m').hidden&&mb){const o=$('#mo');if(o){const br=o.previousElementSibling;o.remove();if(br&&br.tagName=='BR')br.remove()}
+      if(!mb.querySelector('.pl'))mb.insertAdjacentHTML('afterbegin',`<div class="pn pl">${msg}</div>`);
+      if(!$('#mx')){mb.insertAdjacentHTML('beforeend','<br><br><button id="mx" class="btn alt">Ana menüye dön</button>');$('#mx').onclick=exitGame}
+      lock=true;return}
+  }
+  G.over=true;botGen++;thinkOn=false;waitM=false;
+  M(`${msg}<br><b>Oyunu sen kazandın.</b>`,null,null,true);snd('win');
+}
 function exitGame(){ // limbigames perdesi, sonra ilk ekrana dön
-  if(entering)return;entering=true;botGen++;thinkOn=false;
+  if(entering)return;entering=true;leaving=true;botGen++;thinkOn=false;
   const c=$('#cast');if(c)c.remove();$('#m').hidden=true;lock=true;P=null;
   veil();
   setTimeout(()=>{
@@ -593,21 +633,21 @@ function onGuest(m){ // host: misafirin hamle istekleri (doğrulanır)
 }
 function onHost(m){ // misafir: host'tan gelen durum/bildirimler
   if(m.k=='s'){G=m.v;if(!G.over){try{document.body.classList.remove('dead')}catch(e){}}if(waitM){$('#m').hidden=true;lock=false;waitM=false}if(G.turn!=0||G.wait)P=null;if(!$('#menu').hidden)setTimeout(()=>{$('#menu').hidden=true},1500);setMusic('game');R()}
-  else if(m.k=='m'){waitM=true;M(m.html,null);snd(m.sd)}
+  else if(m.k=='m'){waitM=true;M(m.html,null,null,m.end);snd(m.sd)}
   else if(m.k=='j')cast(m.p,m.id,R);
 }
 const st=t=>$('#st').textContent=t;
 function hostRoom(){
-  MODE='host';sayT='';const code=Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random()*32|0]).join('');
+  MODE='host';leaving=false;sayT='';const code=Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random()*32|0]).join('');
   peer=new Peer('necrodice-'+code);
   peer.on('open',()=>st('Oda kodu: '+code+' — rakip bekleniyor…'));
   peer.on('error',e=>{if(e.type=='unavailable-id'){peer.destroy();hostRoom()}else st('Hata: '+e.type)});
-  peer.on('connection',c=>{if(conn)return;conn=c;c.on('open',()=>enter(start));c.on('data',onGuest);c.on('close',()=>M('Rakip oyundan ayrıldı.','Tamam',()=>location.reload()))});
+  peer.on('connection',c=>{if(conn)return;conn=c;c.on('open',()=>enter(start));c.on('data',onGuest);c.on('close',()=>peerLeft('Rakip oyundan ayrıldı.'))});
 }
 function joinRoom(){
   const code=$('#code').value.trim().toUpperCase();if(!code)return st('Oda kodunu yaz');
-  MODE='guest';sayT='';st('Bağlanılıyor…');peer=new Peer();
-  peer.on('open',()=>{conn=peer.connect('necrodice-'+code,{reliable:true});conn.on('data',onHost);conn.on('open',()=>{st('Bağlandı, oyun başlıyor…');veil();setMusic('game')});conn.on('close',()=>M('Bağlantı koptu.','Tamam',()=>location.reload()))});
+  MODE='guest';leaving=false;sayT='';st('Bağlanılıyor…');peer=new Peer();
+  peer.on('open',()=>{conn=peer.connect('necrodice-'+code,{reliable:true});conn.on('data',onHost);conn.on('open',()=>{st('Bağlandı, oyun başlıyor…');veil();setMusic('game')});conn.on('close',()=>peerLeft('Oda sahibi oyundan ayrıldı.'))});
   peer.on('error',e=>st(e.type=='peer-unavailable'?'Oda bulunamadı':'Hata: '+e.type));
 }
 document.querySelectorAll('.d').forEach(b=>b.onclick=()=>{DIFF=b.dataset.d;MODE='bot';enter(start)});
