@@ -1,0 +1,156 @@
+/* ============================================================
+   NECRODICE — RETRO KORKU TEMASI (VHS / CRT / 80'ler korku kasedi)
+   style.css'ten sonra yüklenir. Kaldırmak için index.html'den
+   <link href="retro.css"> satırını silmen yeterli.
+   Yazı tipleri: VT323 (terminal), Pirata One (gotik başlık)
+   ============================================================ */
+:root{
+  --ink:#050806;--line:#2c4a33;--p1:#0e1610;--p2:#070a08;
+  --blood:#c1121f;--blood2:#ff2d3d;--gold:#e2b84a;--lime:#7dff8a;
+  --bone:#cfc8a8;--txt:#cfe6cf;--crt:#7dff8a;
+  --hf:'Pirata One','UnifrakturMaguntia',Georgia,serif;
+  --mf:VT323,'Courier New',ui-monospace,monospace;
+}
+html{background:#020302}
+*{scrollbar-color:#5a0a10 #050806;scrollbar-width:thin}
+::selection{background:var(--blood);color:#000}
+body{font:22px/1.2 var(--mf);letter-spacing:.3px;text-shadow:0 0 4px #7dff8a33;
+  background:radial-gradient(120% 80% at 50% -10%,#10301f 0,#07130c 46%,#020302 100%) fixed}
+
+/* --- CRT katmanları: tarama çizgileri, grenli film, vinyet, yuvarlanan bant --- */
+html::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.12;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+html::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:51;box-shadow:none;
+  background:radial-gradient(ellipse at center,transparent 50%,#000d 100%),repeating-linear-gradient(0deg,#0000 0 2px,#0000004d 2px 3px)}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:49;
+  background:linear-gradient(#0000,#7dff8a10 45%,#7dff8a1c 50%,#0000) 0 -200px/100% 200px no-repeat;
+  animation:roll 9s linear infinite}
+@keyframes roll{to{background-position:0 110vh}}
+body::after{background:radial-gradient(60% 35% at 50% 115%,#c1121f44,transparent),radial-gradient(40% 30% at 90% 10%,#7dff8a12,transparent);
+  animation:throb 5s ease-in-out infinite alternate}
+@keyframes throb{from{opacity:.45;transform:none}to{opacity:1;transform:none}}
+html.nocrt::before,html.nocrt::after,html.nocrt body::before{display:none}
+body.rm::before,body.rm::after{animation:none!important}
+
+/* --- HUD ve oyuncu alanları: sert köşeler, düz gölge, kesik çizgili iç çerçeve --- */
+#hdr,.zone{border:2px solid var(--line);border-radius:2px;background:linear-gradient(#0e1610,#070a08);
+  box-shadow:0 0 0 1px #000,6px 6px 0 #000}
+.zone{outline:1px dashed #2c4a3a;outline-offset:-6px;transition:.2s}
+.zone.act{border-color:var(--lime);box-shadow:0 0 0 1px #000,0 0 20px #7dff8a44,6px 6px 0 #000;outline-color:#7dff8a66}
+.hb{font-size:19px}.lab{opacity:.85;text-transform:uppercase;letter-spacing:2px}
+.pip{border-radius:0;width:14px;height:14px;border:2px solid #3b5a42;background:#050806}
+.pip.now{border-color:var(--gold);box-shadow:0 0 8px var(--gold)}
+.sc{font-size:18px}.sc b{font:400 42px/1 var(--mf);color:var(--gold);text-shadow:0 0 8px #e2b84a88,2px 0 #ff2d3d66,-2px 0 #00e5ff44}
+.sk{color:#34503a}.sk.past{color:#7f9a84}.sk.cur{color:var(--blood2);text-shadow:0 0 10px var(--blood2)}
+.gear{color:var(--lime)}
+.who{margin-bottom:10px}
+.av{border-radius:2px;border:2px solid var(--bone);filter:grayscale(.35) contrast(1.15) sepia(.25);box-shadow:3px 3px 0 #000}
+.nm b{font:400 30px/1 var(--hf);letter-spacing:1px;color:var(--bone);text-shadow:2px 0 #ff2d3d66,-2px 0 #00e5ff33}
+.nm small,.meta{font-size:18px}
+.jb{border-radius:2px;box-shadow:2px 0 0 #000;border:1px solid #000}
+.tot small{font-size:17px;text-transform:uppercase;letter-spacing:1px}
+.tot b{font:400 56px/.9 var(--mf);color:var(--bone);text-shadow:0 0 10px #cfc8a855,2px 0 #ff2d3d55,-2px 0 #00e5ff33}
+.tot.bust b{color:var(--blood2);text-shadow:0 0 14px var(--blood2),3px 0 #00e5ff55;animation:jit .35s steps(2) infinite}
+@keyframes jit{50%{transform:translate(2px,-1px)}}
+.rm .tot.bust b{animation:none!important}
+.jpips i{border-radius:0;transform:none;border-color:var(--blood2);width:10px;height:10px}.jpips i.on{background:var(--blood2);box-shadow:0 0 6px var(--blood2)}
+.say{color:var(--blood2);font-style:normal;font-size:20px;text-shadow:0 0 6px #ff2d3d88}
+.say::after{content:"▌";margin-left:3px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.rm .say::after,.rm #prompt::after,.rm #splash b::after{animation:none!important}
+
+/* --- Kartlar --- */
+.c{border-radius:3px;border:2px solid var(--bone);background:#b9b18c;color:#5a0a10;
+  font:400 58px/1 var(--mf);text-shadow:none;box-shadow:0 0 0 1px #000,4px 4px 0 #000}
+.c.n{border:0;box-shadow:3px 3px 0 #000,0 0 0 1px #000}
+.c.bk{border-color:var(--blood2);box-shadow:0 0 0 1px #000,4px 4px 0 #000,0 0 12px #ff2d3d44}
+.c i{font-size:18px}
+.c:hover{transform:translate(-1px,-3px)}
+.hl{outline:3px dashed var(--blood2);outline-offset:3px}
+@keyframes glow{50%{outline-color:#ff2d3d33;box-shadow:0 0 20px var(--blood2)}}
+.c.mc{box-shadow:0 0 0 1px #000,0 0 0 3px #e2b84a77,4px 4px 0 #000}
+.deck{border-radius:3px;border:2px solid var(--blood2);box-shadow:3px 3px 0 -1px #6a1a1a,6px 6px 0 -2px #3a0d0d,8px 8px 0 #000}
+.deck b{border-radius:0;background:#000;border:1px solid var(--blood2);color:var(--blood2);font:400 22px var(--mf);padding:0 8px}
+
+/* --- Masa ortası: kanlı bant, mühür, etkiler --- */
+#fx{border:2px solid #5a0d16;border-radius:2px;
+  background:repeating-linear-gradient(45deg,#1c0509 0 10px,#12040a 10px 20px);
+  box-shadow:inset 0 0 36px #000,0 0 0 1px #000,6px 6px 0 #000}
+.seal{border-radius:50%;background:radial-gradient(circle at 35% 30%,#e11d2a,#7a0a12 70%);border:3px double #ffb3a0;
+  box-shadow:0 0 0 3px #1c0305,0 0 24px #ff2d3d99,inset 0 -6px 14px #0008}
+.seal small{font-size:17px;text-transform:uppercase;letter-spacing:2px}
+.seal b{font:400 48px/.9 var(--mf);color:#ffe9d2;text-shadow:2px 0 #00e5ff44,-2px 0 #000}
+.seal.alt{background:radial-gradient(circle at 35% 30%,#e2b84a,#7a5a12 70%)}.seal.alt b{color:#1e1004;text-shadow:none}
+@keyframes pulse{50%{box-shadow:0 0 0 3px #1c0305,0 0 36px #e2b84acc}}
+.e{border-radius:2px;border:2px solid #3b5a42;box-shadow:3px 3px 0 #000}
+.e.mine{border-color:var(--gold);box-shadow:0 0 12px #e2b84a77,3px 3px 0 #000}
+.none{font-size:18px}
+
+/* --- Sıra bildirimi ve düğmeler (terminal komut satırı) --- */
+#prompt{font:400 32px/1 var(--mf);letter-spacing:1px;margin:10px auto 6px}
+#prompt.go{color:var(--lime);text-shadow:0 0 8px #7dff8a99,2px 0 #ff2d3d44,-2px 0 #00e5ff33}
+#prompt.ask{color:var(--gold);text-shadow:0 0 8px #e2b84a88}
+#prompt.wait{opacity:.8;font-weight:400}
+#prompt.go::before,#prompt.wait::before{content:">";opacity:.8}
+#prompt.go::after,#prompt.wait::after{content:"_";animation:blink 1s steps(1) infinite}
+.btn{font:400 26px/1.05 var(--hf);letter-spacing:1px;text-transform:uppercase;color:#ffe9d2;
+  padding:9px 22px 7px;border:2px solid var(--blood2);border-radius:0;background:#2a0508;
+  text-shadow:2px 0 #00e5ff55,-2px 0 #ff2d3d88;
+  box-shadow:0 0 0 1px #000,5px 5px 0 #000,inset 0 0 14px #ff2d3d44}
+.btn:hover:not(:disabled){filter:none;background:#43070c;transform:translate(-1px,-1px);animation:gl .28s steps(2) 1}
+.btn:active:not(:disabled){transform:translate(4px,4px);box-shadow:0 0 0 1px #000,1px 1px 0 #000,inset 0 0 14px #ff2d3d44}
+@keyframes gl{25%{transform:translate(-3px,1px);text-shadow:-3px 0 #00e5ff,3px 0 #ff2d3d}75%{transform:translate(3px,-1px)}}
+.btn.alt{border-color:var(--lime);background:#07150b;color:#c8ffd0;box-shadow:0 0 0 1px #000,5px 5px 0 #000,inset 0 0 14px #7dff8a22}
+.btn.alt:hover:not(:disabled){background:#0d2414}
+.btn.sm{padding:5px 14px 3px;font-size:21px}
+.btn:disabled{opacity:.3}
+
+/* --- Joker eli --- */
+.j{border-radius:3px;border:2px solid var(--bone);box-shadow:0 0 12px #ff2d3d55,5px 7px 0 #000}
+.j:not(.dim):hover{box-shadow:0 0 24px #ff2d3dcc,5px 7px 0 #000}
+.j.dim{filter:brightness(.45) saturate(.4) sepia(.4);box-shadow:5px 7px 0 #000}
+#log{border-left:3px solid var(--blood);font-size:19px}
+
+/* --- Pencereler: eski işletim sistemi penceresi gibi başlık çubuğu --- */
+#menu,#m{background:#020302e6;backdrop-filter:blur(2px)}
+#mb{border:2px solid var(--blood2);border-radius:0;background:linear-gradient(#0c1510,#060907);
+  box-shadow:0 0 0 2px #000,0 0 0 4px #5a0a10,10px 10px 0 4px #000;line-height:1.25;font-size:22px;
+  animation:crtOn .35s steps(6) both}
+#mb::before{content:"▓ NECRODICE.EXE";display:block;margin:-22px -22px 16px;padding:2px 10px;background:var(--blood);color:#000;
+  font:400 22px/1.3 var(--mf);text-align:left;letter-spacing:2px;text-shadow:none}
+@keyframes crtOn{0%{opacity:0;transform:scaleY(.02) scaleX(1.15);filter:brightness(5)}60%{opacity:1;transform:scaleY(1.04);filter:brightness(2)}100%{transform:none;filter:none}}
+#mb b{color:var(--gold)}#mb hr{border-top:1px dashed var(--line)}
+#mb h3{font:400 34px/1 var(--hf);color:var(--blood2);letter-spacing:1px;text-shadow:2px 0 #00e5ff44}
+#mb input[type=range],#mb input[type=checkbox]{accent-color:var(--lime)}
+.gd{font-size:21px}
+.pn{font-size:21px;color:var(--gold)}
+.big{border-radius:2px;border:2px solid var(--bone);box-shadow:0 0 28px #ff2d3d66,6px 6px 0 #000}
+#cast img{border-radius:2px;border:2px solid var(--bone);box-shadow:0 0 60px #ff2d3dcc,0 0 0 100vmax #020302b3}
+#cast b{font:400 38px/1 var(--hf);color:var(--blood2);text-shadow:0 0 12px #ff2d3d,2px 0 #00e5ff55,0 3px 0 #000;letter-spacing:1px}
+.cdx img{border-radius:2px;border:1px solid var(--bone)}
+.die{border-radius:6px;background:#d9d2b4;box-shadow:inset 0 -4px 0 #a89f7c,0 0 0 1px #000,5px 6px 0 #000}
+.die b.p{background:#9b0d18}
+
+/* --- Ana menü --- */
+#mb2{background:#020302}
+#mb2::before{filter:saturate(.8) contrast(1.15);animation:vhs 7s steps(1) infinite}
+@keyframes vhs{0%,90%,100%{transform:none}91%{transform:translateX(-5px);filter:saturate(1.4) hue-rotate(25deg) contrast(1.2)}93%{transform:translateX(6px) skewX(2deg)}95%{transform:translateX(-2px)}97%{transform:none}}
+.rm #mb2::before{animation:none!important}
+.grp{border:1px dashed #3d6445;border-radius:0;background:#040704eb;box-shadow:4px 4px 0 #000}
+.grp>span{font:400 24px/1 var(--hf);letter-spacing:2px;color:var(--lime);opacity:1;text-transform:uppercase}
+.grp>span::before{content:"// ";color:var(--blood2)}
+#code{font:400 30px var(--mf);letter-spacing:4px;border:2px solid var(--lime);border-radius:0;background:#020402;color:var(--lime);
+  text-shadow:0 0 6px #7dff8a99;caret-color:var(--lime);box-shadow:inset 0 0 12px #7dff8a22}
+#code::placeholder{color:#3d6445}
+#st{color:var(--gold);font-size:21px;text-shadow:0 0 6px #e2b84a66}
+
+/* --- Açılış ekranı: kaset önyüklemesi --- */
+#splash{background:#020302}
+#slogo{border-radius:2px;filter:contrast(1.2) saturate(.7) sepia(.2);box-shadow:5px 5px 0 #000,0 0 0 2px #3d6445}
+#splash b{font:400 32px/1 var(--mf);letter-spacing:6px;color:var(--lime);text-transform:uppercase;text-shadow:0 0 8px #7dff8a99,2px 0 #ff2d3d55}
+#splash b::after{content:"█";margin-left:6px;animation:blink 1s steps(1) infinite}
+
+/* --- Dramatik anlar --- */
+#fl{background:#b0000f}
+.dead main{filter:grayscale(1) sepia(.7) hue-rotate(-50deg) saturate(3.5) brightness(.5);transition:filter 1.2s}
+#mute{border-radius:0;border:2px solid var(--lime);background:#07150b;color:var(--lime)}
