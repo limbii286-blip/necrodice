@@ -326,12 +326,12 @@ body:has(#menu:not([hidden])) main,body:has(#menu:not([hidden])) #cast,body:has(
 
 /* ===== v2: hedef yuvarlağı, kart çek/pas, ara ekranlar ===== */
 #fx .seal{width:92px;height:92px;display:flex;align-items:center;justify-content:center}
-#fx .seal b{font-size:54px;line-height:1;margin:0}
-#fx .seal.low b{font-size:27px;letter-spacing:0;margin:0}
+#fx .seal b{font-size:66px;line-height:1;margin:0}
+#fx .seal.low b{font-size:34px;letter-spacing:0;margin:0}
 #fx .jh.o{padding-right:54px}#fx .jh.m{padding-left:54px}
 #fx .btn{font-size:clamp(17px,5vw,24px);padding:15px 15px 12px}
 @media(max-width:400px){
-  #fx .seal{width:78px;height:78px}#fx .seal b{font-size:46px}#fx .seal.low b{font-size:23px}
+  #fx .seal{width:78px;height:78px}#fx .seal b{font-size:56px}#fx .seal.low b{font-size:29px}
   #fx .jh.o{padding-right:46px}#fx .jh.m{padding-left:46px}
   #fx .btn{font-size:clamp(15px,4.4vw,18px);padding:16px 8px 12px}
 }
