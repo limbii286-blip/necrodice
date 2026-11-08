@@ -91,7 +91,7 @@ function sfx(k,v=1){if(typeof BUF[k]=='string'){const a=new Audio(typeof SFXD!='
   const s=AC.createBufferSource(),g=AC.createGain();s.buffer=BUF[k];g.gain.value=v;s.connect(g);g.connect(SG);s.start()}
 /* Joker büyük görünümü: önce gömülü küçük görsel, yüksek çözünürlüklü img/j/ID.webp yüklenince değişir */
 const HC={};
-function hiLoad(id,cb){let i=HC[id];if(!i){i=HC[id]=new Image();const pd=String(id).padStart(2,'0'),cs=['img/j/'+id+'.webp','j'+id+'.webp',id+'.webp','img/j'+id+'.webp','img/j/'+pd+'.webp','/img/j/'+id+'.webp','img/j/'+id+'.png','img/j/'+id+'.jpg','img/j/'+id+'.avif','img/j/j'+id+'.webp','jokers/'+id+'.webp'];i._i=0;
+function hiLoad(id,cb){let i=HC[id];if(!i){i=HC[id]=new Image();const pd=String(id).padStart(2,'0'),cs=['img/j/'+id+'.png','img/j/'+id+'.webp','j'+id+'.webp',id+'.webp','img/j'+id+'.webp','img/j/'+pd+'.webp','/img/j/'+id+'.webp','img/j/'+id+'.jpg','img/j/'+id+'.avif','img/j/j'+id+'.webp','jokers/'+id+'.webp'];i._i=0;
   i.onload=()=>{AUD.hd='ok';try{i.decode&&i.decode().catch(()=>{})}catch(e){}};i.onerror=()=>{if(++i._i<cs.length)i.src=cs[i._i];else{if(AUD.hd!='ok')AUD.hd='fb';miss(cs[0])}};i.src=cs[0]}
   if(cb){if(i.complete&&i.naturalWidth)cb(i.src);else i.addEventListener('load',()=>cb(i.src),{once:true})}}
 let hiPre=false;
@@ -122,13 +122,24 @@ const shake=()=>{try{if(RM)return;document.body.classList.add('shake');setTimeou
 const flash=()=>{try{if(RM)return;const f=document.querySelector('#fl');f.classList.remove('go');void f.offsetWidth;f.classList.add('go')}catch(e){}};
 const PIP={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
 const die=n=>`<i class="die">${[...Array(9)].map((_,i)=>`<b${PIP[n].includes(i)?' class="p"':''}></b>`).join('')}</i>`;
-function anim(){ // ölüm zarı: kalp atışı, sallanma, durma
+function anim(){ // ölüm zarı: kalp atışı, sallanma, yavaşlayarak durma (yaklaşık 4-5 sn); zarı atan taraf düğmeye basar
   const d=document.querySelector('#mb .dice');if(!d)return;
-  const a=+d.dataset.a,b=+d.dataset.b,r=()=>1+Math.random()*6|0;d.innerHTML=die(r())+die(r());snd('heart');
-  setTimeout(()=>{d.classList.add('roll');snd('dice');let n=0;const iv=setInterval(()=>{
-    if(++n>=14){clearInterval(iv);d.innerHTML=die(a)+die(b);d.classList.remove('roll');d.classList.add('fin');snd(d.dataset.s);
-      if(d.dataset.s=='death'){try{document.body.classList.add('dead')}catch(e){}vib([200,80,400])}else flash()}
-    else d.innerHTML=die(r())+die(r())},90)},1700);
+  const a=+d.dataset.a,b=+d.dataset.b,r=()=>1+Math.random()*6|0,face=()=>{d.innerHTML=die(r())+die(r())};
+  const N=18,run=wait=>{
+    if(!d.isConnected)return;snd('heart');
+    setTimeout(()=>{
+      if(!d.isConnected)return;d.classList.add('roll');snd('dice');let i=0;
+      const tick=()=>{
+        if(!d.isConnected)return;
+        if(i++>=N){d.innerHTML=die(a)+die(b);d.classList.remove('roll');d.classList.add('fin');snd(d.dataset.s);
+          setTimeout(()=>{const x=document.querySelector('#mx');if(x)x.style.visibility=''},700);
+          if(d.dataset.s=='death'){try{document.body.classList.add('dead')}catch(e){}vib([200,80,400])}else flash();return}
+        face();setTimeout(tick,60+i*i*1.2)}; // başta hızlı, sonda yavaşlar
+      tick()},wait)};
+  face();
+  const rl=document.querySelector('#rl');
+  if(rl&&d.dataset.m=='1')rl.onclick=()=>{rl.remove();run(1100)};
+  else{if(rl)rl.remove();run(1800)}
 }
 
 /* ---------- MOTOR ---------- */
@@ -185,7 +196,7 @@ function play(S,p,id,pk){
 const PR={
   easy:{rand:.25,noise:.35,jc:.45,jp:.4,dm:.05,depth:0},
   med:{rand:.01,noise:.06,jc:.2,jp:1,dm:.03,depth:0},
-  hard:{rand:0,noise:0,jc:.2,jl:.08,jp:1,dm:.02,depth:2,beta:0,gap:6,mc:1,K:120,ms:700,top:4,rjp:.5}
+  hard:{rand:0,noise:0,jc:.2,jl:.08,jp:1,dm:.02,depth:2,beta:0,gap:6,mc:1,K:90,ms:400,top:4,rjp:.5}
 };
 let DIFF='med';
 const unk=(S,p)=>{const seen=new Set([...S.pl[p].open,...S.pl[p].closed,...S.pl[1-p].open,...(S.dead||[])].map(c=>c.n));return range(11).filter(n=>!seen.has(n))};
@@ -288,12 +299,16 @@ const rnd=r=>r[0]+Math.random()*(r[1]-r[0]);
 let botGen=0,thinkOn=false;
 function bot(){
   const S=G,prm=PR[DIFF],gen=++botGen;let n=0;
-  const think=r=>{thinkOn=true;R();talk('think',1,.55);R();setTimeout(step,rnd(r))};
+  let plan=null;
+  const think=r=>{thinkOn=true;R();talk('think',1,.55);R();const d=rnd(r);plan=null;
+    // karar, düşünme süresinin başında hesaplanır; hamle anında ekran donmaz
+    setTimeout(()=>{if(gen!=botGen||S!=G||S.turn!=1||S.over)return;plan={a:n++<8?(prm.mc?decideH:decide)(S,1,prm):null}},Math.min(400,d*.15));
+    setTimeout(step,d)};
   const step=()=>{
     if(gen!=botGen||S!=G)return;
     if(S.turn!=1||S.over){thinkOn=false;return}
     thinkOn=false;
-    const a=n++<8?(prm.mc?decideH:decide)(S,1,prm):null;
+    const a=plan?plan.a:(n++<8?(prm.mc?decideH:decide)(S,1,prm):null);plan=null;
     if(!a){R();return pass()}
     S.acted=true;
     if(a.t=='d'){const c=S.deck.pop();S.pl[1].open.push(c);S.log.push({p:1,t:`kart çekti (${c.n})`});R();talk('draw',0,.3);think(AFTER[DIFF])}
@@ -309,7 +324,9 @@ function pass(){
   (S.pa=S.pa||[0,0])[S.turn]++;S.turns++;S.acted=false;S.turn=1-S.turn;R();next();
 }
 function next(){if(MODE=='bot'&&G.turn==1&&!lock&&!G.over)bot()}
-function M(html,btn,cb,end){lock=true;$('#mb').innerHTML=html+(btn?`<br><br><button id="mo" class="btn">${btn}</button>`:end?'':'<br><i>Oda sahibinin devam etmesi bekleniyor…</i>')+(end?'<br><br><button id="mx" class="btn alt">Ana menüye dön</button>':'');$('#m').hidden=false;anim();
+function M(html,btn,cb,end){lock=true;$('#mb').innerHTML=html+(btn?`<br><br><button id="mo" class="btn">${btn}</button>`:end?'':'<br><i>Oda sahibinin devam etmesi bekleniyor…</i>')+(end?'<br><br><button id="mx" class="btn alt">Ana menüye dön</button>':'');$('#m').hidden=false;
+  if(end&&$('#mb .dice'))$('#mx').style.visibility='hidden'; // zar atılmadan sonuç sızmasın
+  anim();
   if(btn)$('#mo').onclick=()=>{$('#m').hidden=true;lock=false;cb()};
   if(end)$('#mx').onclick=exitGame}
 function MM(fn,btn,cb,sd,end){if(MODE=='host'&&conn&&conn.open)conn.send({k:'m',html:fn(1),sd:sd&&sd(1),end});M(fn(0),btn,cb,end);snd(sd&&sd(0))}
@@ -332,7 +349,7 @@ function endRound(){
       else{let x,y;do{x=d6()+d6();y=d6()+d6()}while(x==y);L=x<y?0:1;hx=[x,y];how='zar'}
     }
     const th=TH[Math.min(S.bo,3)],d1=d6(),d2=d6(),roll=d1+d2,surv=roll>th;
-    const full=v=>pre(v)+`<hr>Düelloyu ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısına göre)':how=='zar'?` (beraberlik zarı: ${hx[v]}–${hx[1-v]})`:''}.<br>Ölüm zarlarını ${L==v?'sen atıyorsun':'rakip atıyor'}: hayatta kalmak için ${th}'${EK[th]} büyük gelmeli.<div class="dice" data-a="${d1}" data-b="${d2}" data-s="${surv?'ok':L==v?'death':'win'}"></div><div class="after"><b>Toplam: ${roll}</b><br>`+(surv?(L==v?'Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>';
+    const full=v=>pre(v)+`<hr>Düelloyu ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısına göre)':how=='zar'?` (beraberlik zarı: ${hx[v]}–${hx[1-v]})`:''}.<br>Ölüm zarlarını ${L==v?'sen atıyorsun':'rakip atıyor'}: hayatta kalmak için ${th}'${EK[th]} büyük gelmeli.<div class="dice" data-a="${d1}" data-b="${d2}" data-m="${L==v?1:0}" data-s="${surv?'ok':L==v?'death':'win'}"></div>${L==v?'<button id="rl" class="btn">Ölüm zarını at</button>':''}<div class="after"><b>Toplam: ${roll}</b><br>`+(surv?(L==v?'Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>';
     if(surv){const n=S.bo+2,ek=['a','e','ye','e','e','e','ya','ye','e','a'][n%10];
       MM(full,`Düello ${n}'${ek} geç`,()=>{S.bo++;(S.mast=S.mast||[0,0])[L]=1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()})}
     else{S.over=true;MM(full,'Yeniden oyna',start,null,true)}
@@ -457,25 +474,39 @@ function fly(){ // yeni kartlar desteden uçarak gelir
 }
 /* Mobilde kaydırma olmasın: oyun alanı ekrana sığmıyorsa tek parça olarak küçültülür (PC'ye dokunmaz) */
 let FIT=1,fitQ=0;
+let fitSig='',fitK=0,fitKey='';
 function fit(){
   fitQ=0;const m=document.querySelector('main');if(!m)return;
+  const pr=document.querySelector('#prompt'),sig=[innerWidth,innerHeight,m.getElementsByTagName('*').length,sayT.length,thinkOn?1:0,pr?pr.textContent.length:0,G&&G.turn].join();
+  if(sig==fitSig)return;fitSig=sig;
   const css=['transform','transformOrigin','width','maxWidth','marginLeft','marginRight','minHeight','height'];
-  css.forEach(k=>m.style[k]='');FIT=1;
-  document.documentElement.classList.remove('fit');
+  const reset=()=>css.forEach(k=>m.style[k]='');
+  reset();FIT=1;document.documentElement.classList.remove('fit');
   if(innerWidth>700)return;
+  const kids=[...m.children].filter(e=>e.offsetHeight&&getComputedStyle(e).position!='fixed');
+  const bot=()=>Math.max(...kids.map(e=>e.getBoundingClientRect().bottom)); // içeriğin gerçek alt kenarı (main'in boş alt dolgusu sayılmaz)
   m.style.minHeight='0';m.style.height='auto';
-  const av=innerHeight-6,r0=m.getBoundingClientRect(),h=r0.height+Math.max(0,r0.top+scrollY),w=r0.width;
-  m.style.minHeight='';m.style.height='';
-  if(h<=av+1)return;
-  const k=Math.max(.5,av/h);if(k>=.995)return;
-  FIT=k;
-  m.style.maxWidth='none';m.style.width=(w/k)+'px';m.style.marginLeft='0';m.style.marginRight='0';
-  m.style.transformOrigin='0 0';m.style.transform=`scale(${k})`;m.style.height='auto';m.style.minHeight='0';
+  const r0=m.getBoundingClientRect(),w=r0.width,top=r0.top,av=innerHeight-3;
+  const nat=bot()-top; // ölçeksiz içerik yüksekliği
+  if(top+nat<=av+1){m.style.minHeight='';m.style.height='';fitK=0;return}
+  const put=k=>{FIT=k;m.style.maxWidth='none';m.style.width=(w/k)+'px';m.style.marginLeft='0';m.style.marginRight='0';
+    m.style.transformOrigin='0 0';m.style.transform=`scale(${k})`;m.style.height='auto';m.style.minHeight='0'};
+  const key=G?G.bo+':'+G.rounds:'';
+  let k=Math.max(.45,Math.min(1,(av-top)/nat));
+  if(key==fitKey&&fitK)k=Math.min(k,fitK); // aynı tur içinde ekran büyüyüp küçülüp zıplamasın
+  for(let i=0;i<4;i++){ // genişlik değişince satırlar kayabilir; alt kenar ekrana oturana kadar birkaç kez düzelt
+    put(k);const vb=bot();
+    if(Math.abs(vb-av)<=2||k<=.45&&vb>av)break;
+    const kn=Math.max(.45,Math.min(1,k*(av-top)/(vb-top)));
+    if(Math.abs(kn-k)<.002)break;k=kn;
+  }
+  if(key==fitKey&&fitK&&FIT>fitK+.003)put(fitK);
+  fitK=FIT;fitKey=key;
   document.documentElement.classList.add('fit');
 }
-const fitSoon=()=>{if(!fitQ)fitQ=requestAnimationFrame(fit)};
-addEventListener('resize',fitSoon);addEventListener('orientationchange',()=>setTimeout(fitSoon,250));
-if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitSoon);
+const fitSoon=()=>{if(!fitQ)fitQ=requestAnimationFrame(()=>fit())};
+addEventListener('resize',()=>{fitSig='';fitSoon()});addEventListener('orientationchange',()=>setTimeout(()=>{fitSig='';fitSoon()},250));
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{fitSig='';fitSoon()});
 function R(){
   if(!G)return;
   watch();fitSoon();
@@ -554,7 +585,7 @@ function guide(){box(`<h3>Nasıl oynanır</h3>
 <p class="gd">Hepsini Joker Kodeksi'nde görebilirsin.</p>`)}
 function settings(){
   const inGame=$('#menu').hidden&&!!G;
-  box(`<h3>Ayarlar</h3><label>Müzik<input type="range" id="sm" min="0" max="1" step=".05" value="${VM}"></label><label>Efektler<input type="range" id="ss" min="0" max="1" step=".05" value="${VS}"></label><label class="chk"><input type="checkbox" id="sr" ${RM?'checked':''}> Hareketi azalt</label><label class="chk"><input type="checkbox" id="sv" ${VB?'checked':''}> Titreşim</label><div class="row"><button class="btn alt sm" id="sk">Joker Kodeksi</button><button class="btn alt sm" id="sg">Nasıl oynanır</button></div>${inGame?`<div class="row">${MODE=='bot'?'<button class="btn alt sm" id="sa">Tekrar oyna</button>':''}</div><div class="row"><button class="btn sm" id="sx">Oyundan çık</button></div>`:''}`);
+  box(`<h3>Ayarlar</h3><label>Müzik<input type="range" id="sm" min="0" max="1" step=".05" value="${VM}"></label><label>Efektler<input type="range" id="ss" min="0" max="1" step=".05" value="${VS}"></label><label class="chk"><input type="checkbox" id="sr" ${RM?'checked':''}> Hareketi azalt</label><label class="chk"><input type="checkbox" id="sv" ${VB?'checked':''}> Titreşim</label><p class="pn">HD joker görselleri: ${AUD.hd=='ok'?'yüklendi':AUD.hd=='fb'?'BULUNAMADI (img/j/ID.png), küçük görsel kullanılıyor':'yükleniyor…'}</p><div class="row"><button class="btn alt sm" id="sk">Joker Kodeksi</button><button class="btn alt sm" id="sg">Nasıl oynanır</button></div>${inGame?`<div class="row">${MODE=='bot'?'<button class="btn alt sm" id="sa">Tekrar oyna</button>':''}</div><div class="row"><button class="btn sm" id="sx">Oyundan çık</button></div>`:''}`);
   $('#sm').oninput=e=>{VM=+e.target.value;LS('vm',VM);ac();MG.gain.value=VM*.8;if(FILE&&mel)mel.volume=Math.min(1,VM*.8)};
   $('#ss').oninput=e=>{VS=+e.target.value;LS('vs',VS);ac();SG.gain.value=VS};$('#ss').onchange=()=>snd('draw');
   $('#sr').onchange=e=>{RM=e.target.checked;LS('rm',RM?1:0);document.body.classList.toggle('rm',RM)};

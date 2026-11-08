@@ -311,3 +311,15 @@ html{background:#04100a}
 
 /* mobilde sığdırma: kaydırma kapalı */
 html.fit,html.fit body{overflow:hidden;height:100%;overscroll-behavior:none}
+
+/* ölüm zarını at düğmesi */
+#rl{display:block;margin:6px auto 10px;animation:rlPulse 1.4s ease-in-out infinite}
+@keyframes rlPulse{50%{box-shadow:0 0 0 2px #000,0 0 22px #ff2d3d99}}
+.dice~#mx{visibility:hidden}.dice.fin~#mx{visibility:visible}
+
+/* ana menü açıkken arkada önceki oyundan hiçbir şey görünmesin */
+#menu{background-color:#05040a;-webkit-backdrop-filter:none;backdrop-filter:none}
+body:has(#menu:not([hidden])) main,body:has(#menu:not([hidden])) #cast,body:has(#menu:not([hidden])) #fl{visibility:hidden}
+
+/* mobilde ekran sallama animasyonu yok: sığdırma ölçeğini bozup görüntüyü zıplatıyordu */
+@media(max-width:700px){.shake main{animation:none!important}}
