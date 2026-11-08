@@ -238,7 +238,7 @@ function start(){setMusic('game');try{document.body.classList.remove('dead')}cat
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
 let prevT=false,lastLk='',flipId=null,lastTot=[0,0],lastBust=false,prevSeal='',sayT='';
 const NAMES={t:'Tüccar',c:'Yozlaşmış Tüccar',m:'Ölümün Efendisi'};
-const avKey=(S,p)=>MODE=='bot'?(p==1?{easy:'t',med:'c',hard:'m'}[DIFF]:null):(S.mast&&S.mast[p]?'m':(S.av&&S.av[p])||'t');
+const avKey=(S,p)=>MODE=='bot'?(p==1?{easy:'t',med:'c',hard:'m'}[DIFF]:(S.mast&&S.mast[0]?'c':'t')):(S.mast&&S.mast[p]?'m':(S.av&&S.av[p])||'t');
 const avSrc=k=>k?AV[k]:IMG.bn,oppName=()=>NAMES[avKey(G,1)]||'Rakip';
 const prevAv=[undefined,undefined],morphT=[0,0];
 const peek=new Set(),seen=new Set(),seenE=new Set(),DN={easy:1,med:2,hard:3},DES=new Set([13,14,17]);
