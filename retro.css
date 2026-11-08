@@ -299,3 +299,6 @@ html{background:#04100a}
 .c.bk{box-shadow:0 4px 0 #000,0 0 10px #ff2d3d44}
 .c.mc{box-shadow:0 0 0 3px #e2b84a77,0 4px 0 #000}
 .j,.big,#cast img,.cdx img{image-rendering:auto}
+
+/* Bot sözleri: yenisi gelene kadar ekranda kalır, uzun cümleler alt satıra iner */
+.say{display:block;margin-top:3px;font-size:18px;line-height:1.1;overflow-wrap:anywhere;max-width:100%}
