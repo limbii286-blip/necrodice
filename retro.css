@@ -323,3 +323,20 @@ body:has(#menu:not([hidden])) main,body:has(#menu:not([hidden])) #cast,body:has(
 
 /* mobilde ekran sallama animasyonu yok: sığdırma ölçeğini bozup görüntüyü zıplatıyordu */
 @media(max-width:700px){.shake main{animation:none!important}}
+
+/* ===== v2: hedef yuvarlağı, kart çek/pas, ara ekranlar ===== */
+#fx .seal{width:92px;height:92px;display:flex;align-items:center;justify-content:center}
+#fx .seal b{font-size:54px;line-height:1;margin:0}
+#fx .seal.low b{font-size:27px;letter-spacing:0;margin:0}
+#fx .jh.o{padding-right:54px}#fx .jh.m{padding-left:54px}
+#fx .btn{font-size:clamp(17px,5vw,24px);padding:15px 15px 12px}
+@media(max-width:400px){
+  #fx .seal{width:78px;height:78px}#fx .seal b{font-size:46px}#fx .seal.low b{font-size:23px}
+  #fx .jh.o{padding-right:46px}#fx .jh.m{padding-left:46px}
+  #fx .btn{font-size:clamp(15px,4.4vw,18px);padding:16px 8px 12px}
+}
+#splash{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px}
+#slogo,.veil img{width:min(48vw,180px);height:auto}
+#splash b,.veil b{position:static;transform:none;margin:0;font-size:40px;line-height:1;letter-spacing:.1em;padding-left:.1em;text-align:center;text-transform:none}
+#splash b::after,.veil b::after{content:none;display:none}
+.veil{gap:18px}.ldb{width:min(48vw,180px)}

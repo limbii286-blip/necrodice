@@ -299,7 +299,7 @@ const rnd=r=>r[0]+Math.random()*(r[1]-r[0]);
 let botGen=0,thinkOn=false;
 function bot(){
   const S=G,prm=PR[DIFF],gen=++botGen;let n=0;
-  let plan=null;
+  let plan=null,held=0;
   const think=r=>{thinkOn=true;R();talk('think',1,.55);R();const d=rnd(r);plan=null;
     // karar, düşünme süresinin başında hesaplanır; hamle anında ekran donmaz
     setTimeout(()=>{if(gen!=botGen||S!=G||S.turn!=1||S.over)return;plan={a:n++<8?(prm.mc?decideH:decide)(S,1,prm):null}},Math.min(400,d*.15));
@@ -307,6 +307,8 @@ function bot(){
   const step=()=>{
     if(gen!=botGen||S!=G)return;
     if(S.turn!=1||S.over){thinkOn=false;return}
+    if(lock){held=1;return setTimeout(step,150)} // menü/pencere açık: oyun bekler
+    if(held){held=0;return setTimeout(step,700)} // kapanınca kısa bir nefes payı
     thinkOn=false;
     const a=plan?plan.a:(n++<8?(prm.mc?decideH:decide)(S,1,prm):null);plan=null;
     if(!a){R();return pass()}
@@ -458,6 +460,7 @@ function watch(){ // açık kartlar hedefi geçtiyse ya da tam hedefteyse bot yo
   if(o!=T)st.px=0;else if(!st.px&&talk('pexact',1,.8))st.px=1;
 }
 function cast(p,id,cb){ // joker sahnede büyür ve Kapat'a basılana kadar kalır
+  if(lock){setTimeout(()=>{if(G)cast(p,id,cb)},250);return} // menü/pencere açıkken bildirim gelmez, kapanınca gelir
   snd('play');
   if(p==0){if(DES.has(id)){shake();snd('stamp');vib(60)}cb&&cb();return} // kendi jokerimizin bildirimi yok, yalnızca rakibinki
   lock=true;
@@ -484,9 +487,9 @@ function fit(){
   reset();FIT=1;document.documentElement.classList.remove('fit');
   if(innerWidth>700)return;
   const kids=[...m.children].filter(e=>e.offsetHeight&&getComputedStyle(e).position!='fixed');
-  const bot=()=>Math.max(...kids.map(e=>e.getBoundingClientRect().bottom)); // içeriğin gerçek alt kenarı (main'in boş alt dolgusu sayılmaz)
+  const bot=()=>Math.max(...kids.map(e=>{const cs=e.id=='hand'?[...e.children]:[];return cs.length?Math.max(...cs.map(c=>c.getBoundingClientRect().bottom)):e.getBoundingClientRect().bottom})); // içeriğin gerçek alt kenarı (main'in boş alt dolgusu sayılmaz)
   m.style.minHeight='0';m.style.height='auto';
-  const r0=m.getBoundingClientRect(),w=r0.width,top=r0.top,av=innerHeight-3;
+  const r0=m.getBoundingClientRect(),w=r0.width,top=r0.top,av=innerHeight-2;
   const nat=bot()-top; // ölçeksiz içerik yüksekliği
   if(top+nat<=av+1){m.style.minHeight='';m.style.height='';fitK=0;return}
   const put=k=>{FIT=k;m.style.maxWidth='none';m.style.width=(w/k)+'px';m.style.marginLeft='0';m.style.marginRight='0';
@@ -496,7 +499,7 @@ function fit(){
   if(key==fitKey&&fitK)k=Math.min(k,fitK); // aynı tur içinde ekran büyüyüp küçülüp zıplamasın
   for(let i=0;i<4;i++){ // genişlik değişince satırlar kayabilir; alt kenar ekrana oturana kadar birkaç kez düzelt
     put(k);const vb=bot();
-    if(Math.abs(vb-av)<=2||k<=.45&&vb>av)break;
+    if(Math.abs(vb-av)<=1||k<=.45&&vb>av)break;
     const kn=Math.max(.45,Math.min(1,k*(av-top)/(vb-top)));
     if(Math.abs(kn-k)<.002)break;k=kn;
   }
@@ -532,7 +535,7 @@ function R(){
   const sl=$('#seal'),sc=(T!=21||low?' alt':'')+(low?' low':'');
   if(!sl._o){sl._o=1;sl.addEventListener('animationend',()=>sl.classList.remove('stamp'))}
   if(sl._c!==sc){sl._c=sc;sl.className='seal'+sc+(sl.classList.contains('stamp')?' stamp':'')}
-  setH('#seal',`<small>Hedef</small><b>${low?'En az':T}</b>`);
+  setH('#seal',`<b>${low?'En az':T}</b>`);
   if(prevSeal&&prevSeal!=seal){sl.classList.remove('stamp');void sl.offsetWidth;sl.classList.add('stamp')}
   $('#arr').className='arr '+(S.wait||S.over?'off':S.turn==0?'me':'op');
   $('#me').className='zone'+(my?' act':'');
