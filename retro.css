@@ -350,3 +350,6 @@ html.fitm #prompt{display:none!important}
 /* ===== v6: botun konuşma alanı sabit (2 satır), "düşünüyor" kaldırıldı ===== */
 .sayrow{height:39px;display:flex;align-items:center;margin:-4px 0 4px;overflow:hidden}
 .sayrow .say{display:block;margin:0;width:100%;font-size:16px;line-height:1.15;max-height:37px;overflow:hidden;text-align:left}
+
+/* ===== v7: mobilde üst boşluk (ölçek bunu da hesaba katar, alt kenar aynı kalır) ===== */
+@media(max-width:700px){main{padding-top:max(14px,env(safe-area-inset-top,0px))}}
