@@ -481,7 +481,7 @@ let fitSig='',fitK=0,fitKey='';
 function fit(){document.documentElement.classList.add('fitm');try{fit0()}finally{document.documentElement.classList.remove('fitm')}} // ölçüm sırasında sıra bildirimi gizlenir
 function fit0(){
   fitQ=0;const m=document.querySelector('main');if(!m)return;
-  const pr=document.querySelector('#prompt'),sig=[innerWidth,innerHeight,m.getElementsByTagName('*').length,sayT.length,thinkOn?1:0,pr?pr.textContent.length:0,G&&G.turn].join();
+  const pr=document.querySelector('#prompt'),sig=[innerWidth,innerHeight,m.getElementsByTagName('*').length,sayT.length,thinkOn?1:0,pr?pr.textContent.length:0,G&&G.turn,G?G.bo+':'+G.rounds+':'+(G.rev?1:0):''].join();
   if(sig==fitSig)return;fitSig=sig;
   const css=['transform','transformOrigin','width','maxWidth','marginLeft','marginRight','minHeight','height'];
   const reset=()=>css.forEach(k=>m.style[k]='');
@@ -495,7 +495,7 @@ function fit0(){
   if(top+nat<=av+1){m.style.minHeight='';m.style.height='';fitK=0;return}
   const put=k=>{FIT=k;m.style.maxWidth='none';m.style.width=(w/k)+'px';m.style.marginLeft='0';m.style.marginRight='0';
     m.style.transformOrigin='0 0';m.style.transform=`scale(${k})`;m.style.height='auto';m.style.minHeight='0'};
-  const key=G?G.bo+':'+G.rounds:''; // ölçek tur boyunca sabit; kartlar sarkarsa bir kez küçülür, yeni turda eski haline döner
+  const key=G?G.bo+':'+G.rounds+':'+(G.rev?1:0):''; // ölçek tur boyunca sabit; kartlar sarkarsa bir kez küçülür, yeni turda eski haline döner
   let k=Math.max(.45,Math.min(1,(av-top)/nat));
   if(key==fitKey&&fitK)k=Math.min(k,fitK); // aynı tur içinde ekran büyüyüp küçülüp zıplamasın
   for(let i=0;i<4;i++){ // genişlik değişince satırlar kayabilir; alt kenar ekrana oturana kadar birkaç kez düzelt
