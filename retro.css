@@ -353,3 +353,16 @@ html.fitm #prompt{display:none!important}
 
 /* ===== v7: mobilde üst boşluk (ölçek bunu da hesaba katar, alt kenar aynı kalır) ===== */
 @media(max-width:700px){main{padding-top:max(14px,env(safe-area-inset-top,0px))}}
+
+/* ===== v8: rakip toplamı "14 + ?", imkansız mod ===== */
+.tl{display:flex;align-items:baseline;justify-content:flex-end;gap:6px}
+.pq{font:400 30px/.9 var(--mf);font-style:normal;color:var(--bone);opacity:.6}
+.btn.imp{width:100%;color:var(--blood2);border-color:var(--blood2);text-shadow:0 0 10px var(--blood2);animation:impGlow 2.4s ease-in-out infinite}
+@keyframes impGlow{50%{box-shadow:0 0 18px #ff2d3d88}}
+#mb.rig .after,#mb.rig #mo{display:none!important}
+#cs{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:30px;padding:16px;background:radial-gradient(circle at 50% 55%,#2a0510e6,#000000f7);cursor:pointer;animation:csIn .7s both}
+@keyframes csIn{from{opacity:0}}
+#cs img{width:min(62vw,300px);aspect-ratio:1;object-fit:cover;border:3px solid var(--bone);box-shadow:0 0 0 6px #000,0 0 60px #ff2d3daa;animation:csPulse 2.4s ease-in-out infinite}
+@keyframes csPulse{50%{box-shadow:0 0 0 6px #000,0 0 90px #ff2d3dff}}
+#cs .bub{position:relative;max-width:min(88vw,430px);min-height:2.6em;padding:14px 18px;background:#0b0b0b;border:3px solid var(--bone);box-shadow:5px 5px 0 #000;font:400 27px/1.15 var(--mf);color:var(--bone);text-align:center}
+#cs .bub::after{content:"";position:absolute;bottom:-17px;left:50%;margin-left:-12px;border:12px solid transparent;border-top-color:var(--bone);border-bottom:0}

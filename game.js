@@ -96,7 +96,8 @@ function hiLoad(id,cb){let i=HC[id];if(!i){i=HC[id]=new Image();const pd=String(
   if(cb){if(i.complete&&i.naturalWidth)cb(i.src);else i.addEventListener('load',()=>cb(i.src),{once:true})}}
 let hiPre=false;
 function hiPreload(){if(hiPre)return;hiPre=true;range(25).forEach((id,n)=>setTimeout(()=>hiLoad(id),400+n*120))} // tüm HD jokerler arka planda önceden yüklenir, tıklayınca anında hazır olur
-function hi(el,id){if(el)hiLoad(id,u=>{if(el.isConnected)el.src=u})}
+function hi(el,id){if(!el)return;const fb=IMG.j[id];el.onerror=()=>{el.onerror=null;if(fb)el.src=fb}; // HD açılmazsa gömülü görsele dön
+  hiLoad(id,u=>{if(el.isConnected)el.src=u})}
 function tone(f,d,ty='sine',v=.12,w=0,sl=0){const a=ac(),t=a.currentTime+w,o=a.createOscillator(),g=a.createGain();o.type=ty;o.frequency.setValueAtTime(f,t);if(sl)o.frequency.linearRampToValueAtTime(Math.max(30,f+sl),t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(SG);o.start(t);o.stop(t+d)}
 function noise(d,v=.2,hp=2500,w=0){const a=ac(),t=a.currentTime+w,n=a.sampleRate*d|0,b=a.createBuffer(1,n,a.sampleRate),x=b.getChannelData(0);for(let i=0;i<n;i++)x[i]=Math.random()*2-1;const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=b;f.type='highpass';f.frequency.value=hp;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);s.connect(f);f.connect(g);g.connect(SG);s.start(t)}
 const SND={
@@ -196,7 +197,8 @@ function play(S,p,id,pk){
 const PR={
   easy:{rand:.25,noise:.35,jc:.45,jp:.4,dm:.05,depth:0},
   med:{rand:.01,noise:.06,jc:.2,jp:1,dm:.03,depth:0},
-  hard:{rand:0,noise:0,jc:.2,jl:.08,jp:1,dm:.02,depth:2,beta:0,gap:6,mc:1,K:90,ms:400,top:4,rjp:.5}
+  hard:{rand:0,noise:0,jc:.2,jl:.08,jp:1,dm:.02,depth:2,beta:0,gap:6,mc:1,K:500,ms:2200,top:4,rjp:.5},
+  imp:{rand:0,noise:0,jc:.1,jl:.05,jp:1,dm:.02,depth:2,beta:.7,gap:7,mc:1,K:30000,ms:7200,top:6,rjp:.7,bo3:1,pf:1} // imkansız: düello (BO3) skorunu ve joker eşitlik kuralını hesaba katar
 };
 let DIFF='med';
 const unk=(S,p)=>{const seen=new Set([...S.pl[p].open,...S.pl[p].closed,...S.pl[1-p].open,...(S.dead||[])].map(c=>c.n));return range(11).filter(n=>!seen.has(n))};
@@ -255,26 +257,32 @@ function listC(S,p,prm){
   });
   return out;
 }
-function world(S,p){ // bilinmeyenleri rastgele doldurulmuş bir "olası dünya"
+function world(S,p,prm){ // bilinmeyenleri rastgele doldurulmuş bir "olası dünya"
   const T=clone(S),q=1-p;T.log=[];T.jdeck=[];
-  const pool=shuf(unk(S,p)),cl=T.pl[q].closed[0];
+  let pool=shuf(unk(S,p));const cl=T.pl[q].closed[0];
   if(!pool.length)return T;
+  if(prm&&prm.beta&&S.pa&&S.pa[q]>0){const Tg=tg(S),base=total(S,q,false),w=pool.map(n=>{const t=base+n;return t<=Tg&&t>=Tg-prm.gap?1+prm.beta:1}),sm=w.reduce((a,b)=>a+b,0);let r=Math.random()*sm,i=0;while(i<w.length-1&&(r-=w[i])>0)i++;pool=[pool[i],...pool.filter((_,j)=>j!=i)]}
   cl.n=pool[0];T.deck=pool.slice(1,1+S.deck.length).map(n=>({id:++T.u,n}));
   const known=new Set([...S.hand[p],...(S.dj||[])]);
   T.hand[q]=shuf(range(24).filter(x=>!known.has(x))).slice(0,S.hand[q].length);
   return T;
 }
+function bo3v(T,p,r){ // tur sonucu r (p açısından) -> düelloyu kazanma değeri [-1,1]; son turda eşitlikte fazla joker kazanır
+  const q=1-p,np=T.pts[p]+(r>0?1:r==0?.5:0),nq=T.pts[q]+(r<0?1:r==0?.5:0);
+  if(np>=2||nq>=2||T.rounds+1>=3){let w;if(np>nq)w=1;else if(np<nq)w=0;else{const a=T.hand[p].length,b=T.hand[q].length;w=a>b?1:a<b?0:.5}return 2*w-1}
+  return Math.max(-.9,Math.min(.9,.55*(np-nq)+.03*(T.hand[p].length-T.hand[q].length)))}
 function rollout(T,p,a,pol){
   let actor=p,n=0;
   const doPass=()=>{if(T.turns>0&&!T.acted)return true;(T.pa=T.pa||[0,0])[actor]++;T.turns++;T.acted=false;T.turn=1-T.turn;actor=T.turn;n=0;return false};
   const doAct=(x,who)=>{if(x.t=='d')T.pl[who].open.push(T.deck.pop());else play(T,who,x.id,x.pk);T.acted=true};
-  if(!a){if(doPass())return outc(T,p)}else{doAct(a,p);n=1}
+  const fin=()=>pol.bo3?bo3v(T,p,outc(T,p)):outc(T,p);
+  if(!a){if(doPass())return fin()}else{doAct(a,p);n=1}
   for(let g=0;g<80;g++){
     const x=n++<8?decide(T,actor,pol):null;
     if(!x){if(doPass())break;continue}
     doAct(x,actor);
   }
-  return outc(T,p);
+  return fin();
 }
 function decideH(S,p,prm){
   const all=listC(S,p,prm).sort((x,y)=>y.v-x.v);
@@ -293,16 +301,34 @@ function decideH(S,p,prm){
   let bi=0;sc.forEach((s,i)=>{if(s>sc[bi]+1e-9)bi=i});
   return top[bi].a;
 }
+function decideHA(S,p,prm,done){ // zaman dilimli Monte-Carlo: ekranı dondurmadan çok daha fazla örnek
+  const now=()=>(typeof performance!='undefined'?performance:Date).now();
+  let all=listC(S,p,prm).sort((x,y)=>y.v-x.v);
+  if(!act(S,19)&&total(S,p,true)>=tg(S))all=all.filter(c=>!(c.a&&c.a.t=='d')); // hedefte/üstündeyken kart çekmek yalnızca batırır
+  const pass=all.find(c=>!c.a),draw=all.find(c=>c.a&&c.a.t=='d');
+  const top=all.slice(0,prm.top||4);[pass,draw].forEach(c=>{if(c&&!top.includes(c))top.push(c)});
+  all.filter(c=>c.a&&c.a.id==16&&!top.includes(c)).forEach(c=>top.push(c));
+  if(top.length==1)return done(top[0].a);
+  const cost=S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc,sum=top.map(()=>0),RP={...ROLL,...(prm.rjp!=null?{jp:prm.rjp}:{}),bo3:prm.bo3},K=prm.K||40,bud=prm.ms||0,t0=now();let k=0;
+  if(prm.pf&&pass){top.splice(top.indexOf(pass),1);top.unshift(pass)} // eşitlikte paslamak öncelikli
+  const fin=()=>{const sc=sum.map((v,i)=>v/Math.max(1,k)+(prm.w||0)*top[i].v);let bi=0;sc.forEach((v,i)=>{if(v>sc[bi]+1e-9)bi=i});done(top[bi].a)};
+  const tick=()=>{const t1=now();
+    while(k<K&&now()-t1<20){const W=world(S,p,prm);top.forEach((c,i)=>{const T=clone(W),j0=T.jUsed.slice(),r=rollout(T,p,c.a,RP);sum[i]+=r-cost*((T.jUsed[p]-j0[p])-.5*(T.jUsed[1-p]-j0[1-p]))});k++}
+    if(k>=K||(bud&&k>=8&&now()-t0>bud))return fin();setTimeout(tick,0)};
+  tick();
+}
 /* Bot zamanlaması: her hamleden önce düşünme süresi; jokerler ve çekmeler peş peşe gelmez */
-const THINK={easy:[3000,4300],med:[3500,5200],hard:[4300,6500]},AFTER={easy:[3000,3800],med:[3300,4400],hard:[3600,5000]};
+const THINK={easy:[3000,4300],med:[3500,5200],hard:[4300,6500],imp:[10000,13000]},AFTER={easy:[3000,3800],med:[3300,4400],hard:[3600,5000],imp:[10000,13000]};
 const rnd=r=>r[0]+Math.random()*(r[1]-r[0]);
 let botGen=0,thinkOn=false;
 function bot(){
   const S=G,prm=PR[DIFF],gen=++botGen;let n=0;
-  let plan=null,held=0;
-  const think=r=>{thinkOn=true;R();talk('think',1,.55);R();const d=rnd(r);plan=null;
+  let plan=null,held=0,pid=0;
+  const think=r=>{thinkOn=true;R();talk('think',1,.55);R();const d=rnd(r);plan=null;const my=++pid;
     // karar, düşünme süresinin başında hesaplanır; hamle anında ekran donmaz
-    setTimeout(()=>{if(gen!=botGen||S!=G||S.turn!=1||S.over)return;plan={a:n++<8?(prm.mc?decideH:decide)(S,1,prm):null}},Math.min(400,d*.15));
+    setTimeout(()=>{if(gen!=botGen||S!=G||S.turn!=1||S.over)return;if(n++>=8){plan={a:null};return}
+      const ok=a=>{if(my==pid&&gen==botGen&&S==G&&S.turn==1&&!S.over)plan={a}};
+      if(prm.mc)decideHA(S,1,prm,ok);else ok(decide(S,1,prm))},Math.min(400,d*.15));
     setTimeout(step,d)};
   const step=()=>{
     if(gen!=botGen||S!=G)return;
@@ -310,7 +336,7 @@ function bot(){
     if(lock){held=1;return setTimeout(step,150)} // menü/pencere açık: oyun bekler
     if(held){held=0;return setTimeout(step,700)} // kapanınca kısa bir nefes payı
     thinkOn=false;
-    const a=plan?plan.a:(n++<8?(prm.mc?decideH:decide)(S,1,prm):null);plan=null;
+    const a=plan?plan.a:(n++<8?(prm.mc?decideH:decide)(S,1,prm.mc?{...prm,K:90,ms:400}:prm):null);plan=null;pid++;
     if(!a){R();return pass()}
     S.acted=true;
     if(a.t=='d'){const c=S.deck.pop();S.pl[1].open.push(c);S.log.push({p:1,t:`kart çekti (${c.n})`});R();talk('draw',0,.3);think(AFTER[DIFF])}
@@ -351,11 +377,28 @@ function endRound(){
       else{let x,y;do{x=d6()+d6();y=d6()+d6()}while(x==y);L=x<y?0:1;hx=[x,y];how='zar'}
     }
     const th=TH[Math.min(S.bo,3)],d1=d6(),d2=d6(),roll=d1+d2,surv=roll>th;
-    const full=v=>pre(v)+`<hr>Düelloyu ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısına göre)':how=='zar'?` (beraberlik zarı: ${hx[v]}–${hx[1-v]})`:''}.<br>Ölüm zarlarını ${L==v?'sen atıyorsun':'rakip atıyor'}: hayatta kalmak için ${th}'${EK[th]} büyük gelmeli.<div class="dice" data-a="${d1}" data-b="${d2}" data-m="${L==v?1:0}" data-s="${surv?'ok':L==v?'death':'win'}"></div>${L==v?'<button id="rl" class="btn">Ölüm zarını at</button>':''}<div class="after"><b>Toplam: ${roll}</b><br>`+(surv?(L==v?'Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>';
-    if(surv){const n=S.bo+2,ek=['a','e','ye','e','e','e','ya','ye','e','a'][n%10];
-      MM(full,`Düello ${n}'${ek} geç`,()=>{S.bo++;(S.mast=S.mast||[0,0])[L]=1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()})}
+    const mk=(v,d1,d2,surv)=>{const roll=d1+d2;return pre(v)+`<hr>Düelloyu ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısına göre)':how=='zar'?` (beraberlik zarı: ${hx[v]}–${hx[1-v]})`:''}.<br>Ölüm zarlarını ${L==v?'sen atıyorsun':'rakip atıyor'}: hayatta kalmak için ${th}'${EK[th]} büyük gelmeli.<div class="dice" data-a="${d1}" data-b="${d2}" data-m="${L==v?1:0}" data-s="${surv?'ok':L==v?'death':'win'}"></div>${L==v?'<button id="rl" class="btn">Ölüm zarını at</button>':''}<div class="after"><b>Toplam: ${roll}</b><br>`+(surv?(L==v?'Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
+    const full=v=>mk(v,d1,d2,surv),rig=MODE=='bot'&&DIFF=='imp'&&L==1&&!surv;
+    if(surv||rig){const n=S.bo+2,ek=['a','e','ye','e','e','e','ya','ye','e','a'][n%10];
+      const lb=`Düello ${n}'${ek} geç`,go=()=>{S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()};
+      if(rig)impSave(mk(0,d1,d2,false),()=>M(mk(0,6,6,true),lb,go));else MM(full,lb,go)}
     else{S.over=true;MM(full,'Yeniden oyna',start,null,true)}
   }
+}
+function cutscene(txt,done){ // BİLİNMEYEN: ikonu ve konuşma balonu
+  lock=true;const el=document.createElement('div');el.id='cs';
+  el.innerHTML=`<div class="bub"><span></span></div><img src="${AV.u}" alt="">`;document.body.appendChild(el);
+  try{snd('stamp');vib([200,80,400])}catch(e){}
+  const sp=el.querySelector('span');let i=0,end=false,tm=null;
+  const out=()=>{if(end)return;end=true;clearInterval(tm);el.remove();done()};
+  setTimeout(()=>{tm=setInterval(()=>{sp.textContent=txt.slice(0,++i);if(i>=txt.length){clearInterval(tm);setTimeout(out,2800)}},48)},500);
+  el.onclick=()=>{if(i<txt.length){i=txt.length;clearInterval(tm);sp.textContent=txt;setTimeout(out,2200)}else out()};
+}
+function impSave(html,cont){ // BİLİNMEYEN ölecekken: zar düşer, sahne girer, zar yeniden atılır (6-6)
+  M(html,'.',()=>{});$('#mb').classList.add('rig');
+  const d=document.querySelector('#mb .dice');let n=0;
+  const w=setInterval(()=>{if(!d||!d.isConnected||++n>600){clearInterval(w);return}
+    if(d.classList.contains('fin')){clearInterval(w);setTimeout(()=>cutscene('Bu kadar kolay olacağını mı sandın? Bu oyunun yaratıcısı benim.',()=>{$('#mb').classList.remove('rig');cont()}),1000)}},120);
 }
 let entering=false;
 function veil(ms=2000){const v=document.createElement('div');v.className='veil';v.style.animationDuration=ms+'ms';v.style.setProperty('--ms',ms*.9+'ms');v.innerHTML=`<img alt="" src="${IMG.logo}"><b>limbigames</b><span class="ldb"><i></i></span>`;document.body.appendChild(v);setTimeout(()=>v.remove(),ms+100)}
@@ -365,11 +408,11 @@ function start(){hiPreload();setMusic('game');try{document.body.classList.remove
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
 let prevT=false,lastLk='',flipId=null,lastTot=[0,0],lastBust=false,prevSeal='',sayT='';
-const NAMES={t:'Tüccar',c:'Yozlaşmış Tüccar',m:'Ölümün Efendisi'};
-const avKey=(S,p)=>MODE=='bot'?(p==1?{easy:'t',med:'c',hard:'m'}[DIFF]:(S.mast&&S.mast[0]?'c':'t')):(S.mast&&S.mast[p]?'m':(S.av&&S.av[p])||'t');
+const NAMES={t:'Tüccar',c:'Yozlaşmış Tüccar',m:'Ölümün Efendisi',u:'BİLİNMEYEN'};
+const avKey=(S,p)=>MODE=='bot'?(p==1?{easy:'t',med:'c',hard:'m',imp:'u'}[DIFF]:(S.mast&&S.mast[0]>=2?'m':S.mast&&S.mast[0]>=1?'c':'t')):(S.mast&&S.mast[p]?'m':(S.av&&S.av[p])||'t');
 const avSrc=k=>k?AV[k]:IMG.bn,oppName=()=>NAMES[avKey(G,1)]||'Rakip';
 const prevAv=[undefined,undefined],morphT=[0,0];
-const peek=new Set(),seen=new Set(),seenE=new Set(),DN={easy:1,med:2,hard:3},DES=new Set([13,14,17]);
+const peek=new Set(),seen=new Set(),seenE=new Set(),DN={easy:1,med:2,hard:3,imp:5},DES=new Set([13,14,17]);
 const IC={
   skull:'<svg viewBox="0 0 24 24" class="ic"><path d="M12 2C7 2 4 5.5 4 10c0 3 1.5 4.5 3 5.5V20h10v-4.5c1.5-1 3-2.5 3-5.5 0-4.5-3-8-8-8z" fill="currentColor"/><circle cx="9" cy="11" r="2" fill="#091217"/><circle cx="15" cy="11" r="2" fill="#091217"/><path d="M10 20v-3m4 3v-3" stroke="#091217" stroke-width="1.5"/></svg>',
   gear:'<svg viewBox="0 0 24 24" class="ic"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M4 12h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="7" r="2.2" fill="currentColor"/><circle cx="8" cy="17" r="2.2" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg>'
@@ -438,6 +481,32 @@ hard:{hello:['Zarlar atıldı. Kader mühürlendi.','Ölüm masaya oturdu.','Son
  surv0:['Zardan kaçtın. Ölüm unutmaz.','Bir sonrakinde kaçamazsın.','Bu kez kaçtın. Gölgem seninle.'],
  surv1:['Bana zar atmak boşuna.','Ölüm ölmez.','Beni ölüm bile reddetti.']}
 };
+/* BİLİNMEYEN'in dili (Vor'Ethil) - kelimeler: ka=ben, nëth=sen, nu=değil/hayır, ae=evet, il=ve, vo=-in(aitlik);
+   thûl=zar, ærd=kart, vael=ölüm, kæth=oyun, sôl=ruh, mirn=küçük, ïlvar=sonsuz, ømar=yaratıcı, halu=el, thêr=zaman, ruun=hedef/sınır, ôrn=hamle, kael=kader;
+   fiiller: sael=görmek, orun=kazanmak, ushe=kaybetmek, drûn=düşmek/ölmek, thar=beklemek, vorn=almak, keth=vermek, mael=saymak, hesh=yok etmek, syl=yakmak;
+   ekler: -ar şimdiki, -esh geçmiş, -un gelecek, -it emir. Sıra: özne fiil nesne. */
+SAYS.imp={
+ hello:['Ka sael-ar nëth. Kæth ïlvar.','Nëth drûn-un. Ka thar-ar.','Ka ømar vo kæth.','Thûl il ærd il sôl vo nëth.'],
+ win:['Ka orun-esh. Nëth ushe-esh.','Sôl vo nëth mirn.','Thêr vo nëth mirn.','Ka mael-esh. Nëth drûn-un.'],
+ lose:['Nëth orun-esh. Thêr mirn.','Ka sael-ar. Ka thar-ar.','Nu ïlvar vo nëth.','Kael nu thar-ar.'],
+ tie:['Nu orun, nu ushe. Thar-ar.','Kael thar-ar.','Thûl nu keth-esh.'],
+ bust:['Nu! Ærd ushe-esh ka.','Ka nu mael-esh.','Kæth vo ka. Ka nu ushe-un.'],
+ joker:['Ærd vo ka sael-ar nëth.','Ôrn vo ka. Kael vo ka.','Halu vo ka vorn-ar.'],
+ jt:['Ruun nu thar-ar.','Ka ruun keth-ar.','Ruun vo nëth drûn-ar.'],
+ jd:['Ærd vo nëth syl-ar.','Hesh-esh. Nëth sael-ar nu.','Ærd drûn-esh.'],
+ js:['Halu vo ka vorn-esh.','Ærd vo nëth. Ærd vo ka.','Keth-ar nu. Vorn-ar.'],
+ jb:['Nu ôrn. Thar-it.','Nëth thar-it.','Ôrn vo nëth nu.'],
+ jn:['Ærd vo nëth nu.','Hesh-esh ôrn vo nëth.','Nu.'],
+ react:['Ka sael-esh. Ka sael-esh.','Ôrn vo nëth. Ka mael-esh.','Nu kael vo nëth.'],
+ draw:['Ærd vorn-ar.','Ka mael-ar.','Kael ærd keth-ar.'],
+ pass:['Ka thar-ar.','Thêr vo ka.','Nu ôrn. Ka orun-un.'],
+ think:['Ka mael-ar... mael-ar...','Thûl il ærd. Ka sael-ar.','Nëth halu sael-ar.','Kael mael-ar. Thêr ïlvar.'],
+ pbust:['Nëth drûn-esh.','Nëth ruun nu mael-esh.','Vael thar-ar nëth.'],
+ obust:['Ærd nu keth-esh.','Nu. Ka sael-ar.','Kæth nu orun-esh.'],
+ pexact:['Ruun. Nëth halu syl-un.','Ae ruun. Ærd ïlvar nu.','Nëth sael-ar ruun. Ka sael-ar ærd.'],
+ surv0:['Nëth drûn-esh nu. Vael thar-ar.','Thûl keth-esh nëth thêr.','Nëth thêr mirn.'],
+ surv1:['Ka drûn-esh nu.','Vael nu sael-ar ka.','Ka ïlvar.']
+};
 const lastSay={};
 function pickSay(cat){const L=(SAYS[DIFF]||SAYS.med)[cat]||SAYS[DIFF||'med'].joker||[];if(!L.length)return '';let i,n=0;do{i=Math.random()*L.length|0}while(L.length>1&&i==lastSay[DIFF+cat]&&n++<9);lastSay[DIFF+cat]=i;return L[i]}
 const jCat=id=>[8,9,10,11,19].includes(id)?'jt':[13,14].includes(id)?'jd':[15,16,17,18].includes(id)?'js':[23,24].includes(id)?'jb':id==12?'jn':'joker';
@@ -467,7 +536,7 @@ function cast(p,id,cb){ // joker sahnede büyür ve Kapat'a basılana kadar kal�
   const who=(MODE=='bot'?oppName():'Rakip')+' oynadı';
   const el=document.createElement('div');el.id='cast';el.className='from'+p;
   el.innerHTML=`<img src="${IMG.j[id]}" alt=""><button class="btn">Kapat</button>`;
-  document.body.appendChild(el);hi(el.querySelector('img'),id);
+  document.body.appendChild(el);const oz=document.querySelector('#opp');if(oz&&oz.getBoundingClientRect){const r=oz.getBoundingClientRect();el.style.setProperty('--sy',Math.round(r.top+r.height/2-innerHeight/2)+'px')}hi(el.querySelector('img'),id);
   el.onclick=()=>{if(!el.isConnected)return;el.remove();lock=false;if(DES.has(id)){shake();snd('stamp');vib(60)}if(MODE=='bot'&&p==1){talk(jCat(id),1,.85);R()}cb&&cb()};
 }
 function count(el,a,b){if(!el)return;if(a==b||RM||typeof requestAnimationFrame=='undefined'){el.textContent=b;return}const t0=performance.now(),f=n=>{const x=Math.min(1,(n-t0)/450);el.textContent=Math.round(a+(b-a)*x*(2-x));if(x<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
@@ -528,7 +597,7 @@ function R(){
     const el=(now-morphT[p])/1000,mo=morphT[p]&&el<1.1;return `<img class="av${mo?' morph':''}"${mo?` style="animation-delay:-${el.toFixed(2)}s"`:''} src="${avSrc(k)}" alt="">`};
   const av0=avh(0),av1=avh(1);
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'');
-  setH('#opp',`<div class="who">${av1}<div class="nm"><b>${MODE=='bot'||S.av?oppName():'Rakip'}</b><span class="meta">${MODE=='bot'?IC.skull.repeat(DN[DIFF]):'Online'}${jp(2-S.jUsed[1])}</span></div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot"><small>Açık toplam</small><b>${lastTot[1]}</b></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).join('')}${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>`);
+  setH('#opp',`<div class="who">${av1}<div class="nm"><b>${MODE=='bot'||S.av?oppName():'Rakip'}</b><span class="meta">${MODE=='bot'?IC.skull.repeat(DN[DIFF]):'Online'}${jp(2-S.jUsed[1])}</span></div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${S.rev?'':'<i class="pq">+ ?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).join('')}${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>`);
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<img class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}" src="${IMG.j[e.id]}" alt="">`};
   $('#deck b').textContent=S.deck.length;
   setH('#jo',(S.pj||[]).filter(x=>x.o==1).map(chip).join(''));
