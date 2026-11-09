@@ -481,31 +481,31 @@ hard:{hello:['Zarlar atıldı. Kader mühürlendi.','Ölüm masaya oturdu.','Son
  surv0:['Zardan kaçtın. Ölüm unutmaz.','Bir sonrakinde kaçamazsın.','Bu kez kaçtın. Gölgem seninle.'],
  surv1:['Bana zar atmak boşuna.','Ölüm ölmez.','Beni ölüm bile reddetti.']}
 };
-/* BİLİNMEYEN'in dili (Vor'Ethil) - kelimeler: ka=ben, nëth=sen, nu=değil/hayır, ae=evet, il=ve, vo=-in(aitlik);
-   thûl=zar, ærd=kart, vael=ölüm, kæth=oyun, sôl=ruh, mirn=küçük, ïlvar=sonsuz, ømar=yaratıcı, halu=el, thêr=zaman, ruun=hedef/sınır, ôrn=hamle, kael=kader;
-   fiiller: sael=görmek, orun=kazanmak, ushe=kaybetmek, drûn=düşmek/ölmek, thar=beklemek, vorn=almak, keth=vermek, mael=saymak, hesh=yok etmek, syl=yakmak;
-   ekler: -ar şimdiki, -esh geçmiş, -un gelecek, -it emir. Sıra: özne fiil nesne. */
+/* BİLİNMEYEN, Sauron gibi Kara Dil'de (Black Speech) konuşur. Tolkien'in kayıtlı Kara Dil kelimesi çok az olduğu için satırlar
+   gerçek kelimelerle ve Yüzük Dizesi'yle kurulur: ash=bir, nazg=yüzük, durb=egemen olmak, gimb=bulmak, thrak=getirmek, krimp=bağlamak,
+   -atul=onları, -ûk=hepsini, agh=ve, burzum=karanlık, ishi=içinde, ghâsh=ateş, gûl=hayalet, uruk=ork, snaga=köle, lug=kule, búrz=karanlık (Lugbúrz=Kara Kule).
+   Yüzük Dizesi: "Ash nazg durbatulûk, ash nazg gimbatul, ash nazg thrakatulûk agh burzum-ishi krimpatul." */
 SAYS.imp={
- hello:['Ka sael-ar nëth. Kæth ïlvar.','Nëth drûn-un. Ka thar-ar.','Ka ømar vo kæth.','Thûl il ærd il sôl vo nëth.'],
- win:['Ka orun-esh. Nëth ushe-esh.','Sôl vo nëth mirn.','Thêr vo nëth mirn.','Ka mael-esh. Nëth drûn-un.'],
- lose:['Nëth orun-esh. Thêr mirn.','Ka sael-ar. Ka thar-ar.','Nu ïlvar vo nëth.','Kael nu thar-ar.'],
- tie:['Nu orun, nu ushe. Thar-ar.','Kael thar-ar.','Thûl nu keth-esh.'],
- bust:['Nu! Ærd ushe-esh ka.','Ka nu mael-esh.','Kæth vo ka. Ka nu ushe-un.'],
- joker:['Ærd vo ka sael-ar nëth.','Ôrn vo ka. Kael vo ka.','Halu vo ka vorn-ar.'],
- jt:['Ruun nu thar-ar.','Ka ruun keth-ar.','Ruun vo nëth drûn-ar.'],
- jd:['Ærd vo nëth syl-ar.','Hesh-esh. Nëth sael-ar nu.','Ærd drûn-esh.'],
- js:['Halu vo ka vorn-esh.','Ærd vo nëth. Ærd vo ka.','Keth-ar nu. Vorn-ar.'],
- jb:['Nu ôrn. Thar-it.','Nëth thar-it.','Ôrn vo nëth nu.'],
- jn:['Ærd vo nëth nu.','Hesh-esh ôrn vo nëth.','Nu.'],
- react:['Ka sael-esh. Ka sael-esh.','Ôrn vo nëth. Ka mael-esh.','Nu kael vo nëth.'],
- draw:['Ærd vorn-ar.','Ka mael-ar.','Kael ærd keth-ar.'],
- pass:['Ka thar-ar.','Thêr vo ka.','Nu ôrn. Ka orun-un.'],
- think:['Ka mael-ar... mael-ar...','Thûl il ærd. Ka sael-ar.','Nëth halu sael-ar.','Kael mael-ar. Thêr ïlvar.'],
- pbust:['Nëth drûn-esh.','Nëth ruun nu mael-esh.','Vael thar-ar nëth.'],
- obust:['Ærd nu keth-esh.','Nu. Ka sael-ar.','Kæth nu orun-esh.'],
- pexact:['Ruun. Nëth halu syl-un.','Ae ruun. Ærd ïlvar nu.','Nëth sael-ar ruun. Ka sael-ar ærd.'],
- surv0:['Nëth drûn-esh nu. Vael thar-ar.','Thûl keth-esh nëth thêr.','Nëth thêr mirn.'],
- surv1:['Ka drûn-esh nu.','Vael nu sael-ar ka.','Ka ïlvar.']
+ hello:['Ash nazg durbatulûk.','Nazg gimbatul. Nazg thrakatulûk.','Burzum-ishi krimpatul.','Lugbúrz. Burzum-ishi.'],
+ win:['Ash nazg durbatulûk!','Krimpatul. Burzum-ishi krimpatul.','Ghâsh. Burzum.','Uruk. Nazg durb.'],
+ lose:['Nazg gimbatul.','Burzum-ishi... gimbatul.','Gûl. Gûl durb.'],
+ tie:['Ash... ash nazg.','Nazg durb nazg.','Burzum. Thrak.'],
+ bust:['Snaga!','Ghâsh nazg-ishi.','Burzum! Burzum!'],
+ joker:['Nazg thrakatul.','Ash nazg gimbatul.','Ghâsh-ishi nazg.'],
+ jt:['Nazg durb.','Ash nazg durbatulûk.','Durb. Durb. Durb.'],
+ jd:['Ghâsh-ishi krimpatul.','Ghâsh! Ghâsh!','Burzum thrakatul.'],
+ js:['Thrakatul.','Nazg thrakatulûk.','Gimbatul. Thrakatul.'],
+ jb:['Krimpatul.','Burzum-ishi krimpatul.','Krimp. Krimp.'],
+ jn:['Burzum.','Nazg durbatulûk.','Ash nazg.'],
+ react:['Gûl... gûl.','Gimbatul.','Nazg gimb. Nazg gimb.'],
+ draw:['Thrak.','Nazg thrak.','Gimb.'],
+ pass:['Burzum-ishi.','Ash.','Durb. Thrak.'],
+ think:['Gimb... gimb...','Nazg gimbatul...','Burzum-ishi... gimbatul.','Ash... nazg... ash...'],
+ pbust:['Snaga.','Ghâsh-ishi nazg.','Burzum krimpatul.'],
+ obust:['Ghâsh!','Nazg! Nazg!','Burzum!'],
+ pexact:['Gimbatul.','Nazg gimb ash.','Ash... nazg.'],
+ surv0:['Burzum-ishi gimbatul.','Nazg thrakatulûk.','Ash nazg durbatulûk.'],
+ surv1:['Ash nazg durbatulûk!','Lugbúrz.','Ghâsh. Burzum. Ash nazg.']
 };
 const lastSay={};
 function pickSay(cat){const L=(SAYS[DIFF]||SAYS.med)[cat]||SAYS[DIFF||'med'].joker||[];if(!L.length)return '';let i,n=0;do{i=Math.random()*L.length|0}while(L.length>1&&i==lastSay[DIFF+cat]&&n++<9);lastSay[DIFF+cat]=i;return L[i]}
