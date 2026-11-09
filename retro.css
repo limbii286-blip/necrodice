@@ -382,3 +382,19 @@ html.fitm #prompt{display:none!important}
 @keyframes dTumble{0%{transform:translateY(0) rotate(0) scale(1)}25%{transform:translateY(-16px) rotate(100deg) scale(1.1)}50%{transform:translateY(0) rotate(190deg) scale(.96)}75%{transform:translateY(-8px) rotate(280deg) scale(1.05)}100%{transform:translateY(0) rotate(360deg) scale(1)}}
 .dice.fin .die{animation:dLand .4s cubic-bezier(.2,.9,.25,1)!important}
 @keyframes dLand{0%{transform:translateY(-18px) scale(1.14) rotate(-8deg)}100%{transform:none}}
+
+/* ============================================================
+   BÜYÜK GÖRÜNÜM (karakter, sayı kartı, kapalı kart)
+   ============================================================ */
+.av,.cards .c{cursor:pointer}
+#zm{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  background:#020302e8;padding:16px;cursor:pointer;animation:zmIn .22s ease-out both}
+#zm .zi{display:block;object-fit:contain;image-rendering:auto;-webkit-backface-visibility:hidden;backface-visibility:hidden;
+  border:2px solid var(--bone);border-radius:2px;box-shadow:0 0 50px #ec4452aa,6px 6px 0 #000}
+#zm .zi.card{height:min(62vh,600px);max-width:90vw;aspect-ratio:2/3}
+#zm .zi.sq{width:min(88vw,50vh,460px);aspect-ratio:1/1}
+#zm b{font:400 38px/1.1 var(--hf);color:var(--bone);text-align:center;text-shadow:0 0 12px #ff2d3d,0 3px 0 #000;letter-spacing:1px;max-width:92vw}
+#zm small{font:400 22px/1.2 var(--mf);letter-spacing:1px;color:var(--lime);text-transform:uppercase;text-align:center;max-width:92vw}
+#zm .row{display:flex;gap:10px;margin-top:4px}
+@keyframes zmIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+.rm #zm{animation:none}

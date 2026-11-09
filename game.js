@@ -20,6 +20,7 @@ const ac=()=>{
   if(AC.state=='suspended')AC.resume();return AC;
 };
 /* Müzik: menüde menu.m4a, oyunda game1/game2 sırayla. Web Audio'ya bağlı olduğu için ses ayarı iOS'ta da çalışır. */
+(()=>{try{const h=document.createElement('script');h.src='hd.js';h.async=true;document.head.appendChild(h)}catch(e){}})(); // HD görseller (gömülü): HDJ jokerler, HDAV karakterler
 const FILE=location.protocol=='file:'; // çift tıkla açılınca Web Audio dosyaya erişemez: doğrudan <audio> kullan
 const AUD={mus:'?',sfx:'?',hd:'?'},MISS=[];const miss=u=>{try{u=new URL(u,location.href).href}catch(e){}if(!MISS.includes(u))MISS.push(u)}; // ayarlarda gösterilen dosya durumu
 const MU={menu:['menu.m4a'],game:['game1.m4a','game2.m4a']};
@@ -91,8 +92,11 @@ function sfx(k,v=1){if(typeof BUF[k]=='string'){const a=new Audio(typeof SFXD!='
   const s=AC.createBufferSource(),g=AC.createGain();s.buffer=BUF[k];g.gain.value=v;s.connect(g);g.connect(SG);s.start()}
 /* Joker büyük görünümü: önce gömülü küçük görsel, yüksek çözünürlüklü img/j/ID.webp yüklenince değişir */
 const HC={};
-function hiLoad(id,cb){let i=HC[id];if(!i){i=HC[id]=new Image();const pd=String(id).padStart(2,'0'),cs=['img/j/'+id+'.png','img/j/'+id+'.webp','j'+id+'.webp',id+'.webp','img/j'+id+'.webp','img/j/'+pd+'.webp','/img/j/'+id+'.webp','img/j/'+id+'.jpg','img/j/'+id+'.avif','img/j/j'+id+'.webp','jokers/'+id+'.webp'];i._i=0;
-  i.onload=()=>{AUD.hd='ok';try{i.decode&&i.decode().catch(()=>{})}catch(e){}};i.onerror=()=>{if(++i._i<cs.length)i.src=cs[i._i];else{if(AUD.hd!='ok')AUD.hd='fb';miss(cs[0])}};i.src=cs[0]}
+function hiLoad(id,cb){let i=HC[id];if(i&&i._x&&typeof HDJ!='undefined'&&HDJ[id]){i._x=0;i._e=1;i.src=HDJ[id]} // hd.js geç yüklendiyse yeniden dene
+  if(!i){i=HC[id]=new Image();const pd=String(id).padStart(2,'0'),cs=['img/j/'+id+'.png','img/j/'+id+'.webp','j'+id+'.webp',id+'.webp','img/j'+id+'.webp','img/j/'+pd+'.webp','/img/j/'+id+'.webp','img/j/'+id+'.jpg','img/j/'+id+'.avif','img/j/j'+id+'.webp','jokers/'+id+'.webp'];i._i=0;
+  i.onload=()=>{AUD.hd='ok';try{i.decode&&i.decode().catch(()=>{})}catch(e){}};if(typeof HDJ!='undefined'&&HDJ[id])cs.unshift(HDJ[id]); // gömülü HD kopya: klasör olmasa da, çevrimdışı da çalışır
+  cs.push('img/j/'+id+'.PNG',id+'.png','j/'+id+'.png','jokers/'+id+'.png');
+  i.onerror=()=>{if(++i._i<cs.length)i.src=cs[i._i];else if(!i._e&&typeof HDJ!='undefined'&&HDJ[id]){i._e=1;i.src=HDJ[id]}else{i._x=1;if(AUD.hd!='ok')AUD.hd='fb';miss(cs[0])}};i.src=cs[0]}
   if(cb){if(i.complete&&i.naturalWidth)cb(i.src);else i.addEventListener('load',()=>cb(i.src),{once:true})}}
 let hiPre=false;
 function hiPreload(){if(hiPre)return;hiPre=true;range(25).forEach((id,n)=>setTimeout(()=>hiLoad(id),400+n*120))} // tüm HD jokerler arka planda önceden yüklenir, tıklayınca anında hazır olur
@@ -383,10 +387,10 @@ function endRound(){
     }
     const th=TH[Math.min(S.bo,3)],d1=d6(),d2=d6(),roll=d1+d2,surv=roll>th;
     const mk=(v,d1,d2,surv)=>{const roll=d1+d2;return pre(v)+`<hr>Düelloyu ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısına göre)':how=='zar'?` (beraberlik zarı: ${hx[v]}–${hx[1-v]})`:''}.<br>Ölüm zarlarını ${L==v?'sen atıyorsun':'rakip atıyor'}: hayatta kalmak için ${th}'${EK[th]} büyük gelmeli.<div class="dice" data-a="${d1}" data-b="${d2}" data-m="${L==v?1:0}" data-s="${surv?'ok':L==v?'death':'win'}"></div>${L==v?'<button id="rl" class="btn">Ölüm zarını at</button>':''}<div class="after"><b>Toplam: ${roll}</b><br>`+(surv?(L==v?'Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
-    const full=v=>mk(v,d1,d2,surv),rig=MODE=='bot'&&DIFF=='imp'&&L==1&&!surv;
+    const full=v=>mk(v,d1,d2,surv),rig=MODE=='bot'&&DIFF=='imp'&&L==1&&!surv&&!S.rigDone; // sahne oyun başına bir kez; ikinci ölümde gerçekten ölür
     if(surv||rig){const n=S.bo+2,ek=['a','e','ye','e','e','e','ya','ye','e','a'][n%10];
       const lb=`Düello ${n}'${ek} geç`,go=()=>{S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()};
-      if(rig)impSave(mk(0,d1,d2,false),()=>M(mk(0,6,6,true),lb,go));else MM(full,lb,go)}
+      if(rig){S.rigDone=true;impSave(mk(0,d1,d2,false),()=>M(mk(0,6,6,true),lb,go))}else MM(full,lb,go)}
     else{S.over=true;MM(full,'Yeniden oyna',start,null,true)}
   }
 }
@@ -602,7 +606,7 @@ function R(){
   const my=S.turn==0&&!lock&&!S.wait,mt=total(S,0),ot=total(S,1,false),bust=!low&&mt>T,seal=T+(low?'L':'');
   const jp=n=>`<span class="jpips" title="Joker hakkı ${n}/2">${[0,1].map(i=>`<i${i<n?' class="on"':''}></i>`).join('')}</span>`;
   const avh=p=>{const k=avKey(S,p),now=performance.now();if(prevAv[p]!==undefined&&prevAv[p]!==k)morphT[p]=now;prevAv[p]=k;
-    const el=(now-morphT[p])/1000,mo=morphT[p]&&el<1.1;return `<img class="av${mo?' morph':''}"${mo?` style="animation-delay:-${el.toFixed(2)}s"`:''} src="${avSrc(k)}" alt="">`};
+    const el=(now-morphT[p])/1000,mo=morphT[p]&&el<1.1;return `<img class="av${mo?' morph':''}" data-av="${p}"${mo?` style="animation-delay:-${el.toFixed(2)}s"`:''} src="${avSrc(k)}" alt="">`};
   const av0=avh(0),av1=avh(1);
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'');
   setH('#opp',`<div class="who">${av1}<div class="nm"><b>${MODE=='bot'||S.av?oppName():'Rakip'}</b><span class="meta">${MODE=='bot'?IC.skull.repeat(DN[DIFF]):'Online'}${jp(2-S.jUsed[1])}</span></div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${S.rev?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).join('')}${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>`);
@@ -639,6 +643,34 @@ function doPlay(id,pk){const S=G;P=null;if(MODE=='guest'){conn.send({k:'play',id
 function pick(v){P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
 function startJoker(id){const ks=NEED[id]||[];if(ks.length){P={id,ks,pk:[]};R()}else doPlay(id,[])}
 function box(html,close=true){lock=true;$('#mb').innerHTML=html+(close?'<div class="row"><button id="pc" class="btn">Kapat</button></div>':'');$('#m').hidden=false;if(close)$('#pc').onclick=()=>{$('#m').hidden=true;lock=false;if(G)R()}}
+/* ---------- BÜYÜK GÖRÜNÜM: karakter, sayı kartı, kapalı kart ---------- */
+const HQ={};
+function hq(key,cs,cb){let i=HQ[key];if(!i){i=HQ[key]=new Image();i._i=0;i.onerror=()=>{if(++i._i<cs.length)i.src=cs[i._i];else i._f=1};i.src=cs[0]}
+  if(i._f)return;if(i.complete&&i.naturalWidth)cb(i.src);else i.addEventListener('load',()=>cb(i.src),{once:true})} // dosya varsa yüksek çözünürlüklüsü yüklenir, yoksa gömülü görsel kalır
+function zoom(o){ // {src, hd:cb=>…, cls, cap, sub, btn, fn}
+  const old=document.getElementById('zm');if(old)old.remove();
+  const el=document.createElement('div');el.id='zm';
+  el.innerHTML=`<img class="zi ${o.cls||''}" src="${o.src}" alt=""><b>${o.cap}</b>${o.sub?`<small>${o.sub}</small>`:''}<div class="row">${o.btn?`<button class="btn alt" data-zb="1">${o.btn}</button>`:''}<button class="btn" data-zc="1">Kapat</button></div>`;
+  document.body.appendChild(el);snd('info');
+  const im=el.querySelector('img');if(o.hd)o.hd(u=>{if(el.isConnected)im.src=u});
+  const kd=e=>{if(e.key=='Escape')close()},close=()=>{el.remove();document.removeEventListener('keydown',kd)};
+  document.addEventListener('keydown',kd);
+  el.onclick=e=>{const zb=e.target.closest&&e.target.closest('[data-zb]');close();if(zb&&o.fn)o.fn()}; // her yere dokunmak kapatır
+}
+const numHD=n=>cb=>{const cs=[`img/n/${n}.webp`,`img/n/${n}.png`,`img/n/${n}.jpg`,`img/n${n}.png`,`n${n}.png`];if(typeof HDN!='undefined'&&HDN[n])cs.unshift(HDN[n]);hq('n'+n,cs,cb)};
+const backHD=cb=>hq('bk',[...(typeof HDBK!='undefined'?[HDBK]:[]),'img/back.webp','img/back.png','img/n/back.png','img/n/back.webp','back.png'],cb);
+function zoomAv(p){const S=G,k=avKey(S,p),nm=NAMES[k]||(p?'Rakip':'Sen');
+  zoom({src:avSrc(k),cls:'sq',cap:nm,sub:p==0?'Sen':'Rakip',hd:cb=>{const cs=[];if(typeof HDAV!='undefined'&&HDAV[k])cs.push(HDAV[k]);cs.push(`img/av/${k}.webp`,`img/av/${k}.png`,`img/${k}.png`);hq('av'+k+(typeof HDAV!='undefined'?1:0),cs,cb)}})}
+function zoomCard(id){const S=G;let f=null;
+  for(const p of [0,1])for(const kd of ['open','closed']){const c=S.pl[p][kd].find(x=>x.id==id);if(c)f={c,p,closed:kd=='closed'}}
+  if(!f)return;const {c,p,closed}=f,own=p==0,up=!closed||S.rev||(own&&peek.has(id)); // kart yüzü açık mı?
+  if(!up){ // kapalı kart: arka yüzü
+    return zoom({src:IMG.bn,cls:'card',cap:own?'Senin kapalı kartın':'Rakibin kapalı kartı',hd:backHD,
+      btn:own&&!S.rev?'Kartıma bak':'',fn:()=>{peek.add(id);flipId=id;R();setTimeout(()=>zoomCard(id),80)}})}
+  const val=c.o!=null?c.o:c.n;
+  zoom({src:IMG.n[c.n],cls:'card',cap:`${val}`,hd:numHD(c.n),
+    sub:(closed?(own?'Senin kapalı kartın':'Rakibin kapalı kartı'):(own?'Senin açık kartın':'Rakibin açık kartı'))+(c.o!=null?` (joker etkisiyle ${c.o} sayılıyor, kartın aslı ${c.n})`:''),
+    btn:closed&&own&&!S.rev?'Kartımı gizle':'',fn:()=>{peek.delete(id);R()}})}
 function preview(id,use,note,back){ // jokeri büyük göster: Kullan / Kapat
   lock=true;snd('info');
   $('#mb').innerHTML=`<img class="big" src="${IMG.j[id]}" alt="${J[id]}">${note?`<div class="pn">${note}</div>`:''}<div class="row">${use?'<button id="pu" class="btn alt">Kullan</button>':''}<button id="pc" class="btn">Kapat</button></div>`;
@@ -704,7 +736,7 @@ function exitGame(){ // limbigames perdesi, sonra ilk ekrana dön
   },1700);
 }
 document.addEventListener('click',e=>{
-  const S=G,t=e.target.closest&&e.target.closest('[data-c],[data-e],[data-j],[data-s],[data-x],[data-g]');
+  const S=G,t=e.target.closest&&e.target.closest('[data-c],[data-e],[data-j],[data-s],[data-x],[data-g],[data-av]');
   if(lock||!t)return;
   if(t.dataset.g)return settings();
   if(!S||S.over)return;
@@ -716,7 +748,8 @@ document.addEventListener('click',e=>{
     else if(t.dataset.e&&k=='eff'&&opts(S,0,k).includes(u))pick(u);
     return;
   }
-  if(t.dataset.pk){flipId=c;peek.has(c)?peek.delete(c):peek.add(c);return R()} // kapalı kartı çevir
+  if(t.dataset.av!=null&&!t.dataset.c)return zoomAv(+t.dataset.av);
+  if(t.dataset.c&&!t.dataset.e&&!t.dataset.j)return zoomCard(c); // sayı kartı / kapalı kart büyük görünüm
   if(t.dataset.e){const x=S.eff.find(y=>y.uid==u)||(S.pj||[]).find(y=>y.uid==u);if(x)preview(x.id,false,`${x.o==0?'Senin jokerin':'Rakibin jokeri'}${x.neg?' (etkisiz kılındı)':''}${BLOCK.has(x.id)?'':' (anlık etki, kullanıldı)'}${x.id==22?(x.s>0?' (ekler)':' (çıkarır)'):''}`);return}
   if(t.dataset.j){const id=+t.dataset.j;preview(id,S.turn==0&&!S.wait&&playable(S,0,id))}
 });
@@ -749,21 +782,26 @@ function onHost(m){ // misafir: host'tan gelen durum/bildirimler
   else if(m.k=='j')cast(m.p,m.id,R);
 }
 const st=t=>$('#st').textContent=t;
+const NETERR=e=>({'network':1,'server-error':1,'socket-error':1,'socket-closed':1})[e.type]?'Sunucuya ulaşılamadı. İnternet bağlantını kontrol et.':e.type=='peer-unavailable'?'Oda bulunamadı':'Hata: '+e.type;
+const noNet=()=>{if(typeof Peer=='undefined'||navigator.onLine===false){MODE='bot';st('Online mod için internet bağlantısı gerekli. Bilgisayara karşı oynayabilirsin.');return true}return false};
 function hostRoom(){
+  if(noNet())return;
   MODE='host';leaving=false;sayT='';const code=Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random()*32|0]).join('');
   peer=new Peer('necrodice-'+code);
   peer.on('open',()=>st('Oda kodu: '+code+' — rakip bekleniyor…'));
-  peer.on('error',e=>{if(e.type=='unavailable-id'){peer.destroy();hostRoom()}else st('Hata: '+e.type)});
+  peer.on('error',e=>{if(e.type=='unavailable-id'){peer.destroy();hostRoom()}else st(NETERR(e))});
   peer.on('connection',c=>{if(conn)return;conn=c;c.on('open',()=>enter(start));c.on('data',onGuest);c.on('close',()=>peerLeft('Rakip oyundan ayrıldı.'))});
 }
 function joinRoom(){
+  if(noNet())return;
   const code=$('#code').value.trim().toUpperCase();if(!code)return st('Oda kodunu yaz');
   MODE='guest';leaving=false;sayT='';st('Bağlanılıyor…');peer=new Peer();
   peer.on('open',()=>{conn=peer.connect('necrodice-'+code,{reliable:true});conn.on('data',onHost);conn.on('open',()=>{st('Bağlandı, oyun başlıyor…');veil();setMusic('game')});conn.on('close',()=>peerLeft('Oda sahibi oyundan ayrıldı.'))});
-  peer.on('error',e=>st(e.type=='peer-unavailable'?'Oda bulunamadı':'Hata: '+e.type));
+  peer.on('error',e=>st(NETERR(e)));
 }
+const on=(id,f)=>{const e=document.querySelector(id);if(e)e.onclick=f}; // bir öğe yoksa diğer düğmeler yine de çalışır
 document.querySelectorAll('.d').forEach(b=>b.onclick=()=>{DIFF=b.dataset.d;MODE='bot';enter(start)});
-$('#b4').onclick=codex;$('#b5').onclick=guide;$('#b6').onclick=settings;
+on('#b4',codex);on('#b5',guide);on('#b6',settings);
 try{if(RM)document.body.classList.add('rm');if(!CRT)document.documentElement.classList.add('nocrt')}catch(e){}
-$('#slogo').src=IMG.logo;setTimeout(()=>{const s=$('#splash');s&&s.remove()},2900);
-$('#b2').onclick=hostRoom;$('#b3').onclick=joinRoom;
+try{$('#slogo').src=IMG.logo}catch(e){}setTimeout(()=>{const s=$('#splash');s&&s.remove()},2900);
+on('#b2',hostRoom);on('#b3',joinRoom);
