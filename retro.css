@@ -340,3 +340,13 @@ body:has(#menu:not([hidden])) main,body:has(#menu:not([hidden])) #cast,body:has(
 #splash b,.veil b{position:static;transform:none;margin:0;font-size:40px;line-height:1;letter-spacing:.1em;padding-left:.1em;text-align:center;text-transform:none}
 #splash b::after,.veil b::after{content:none;display:none}
 .veil{gap:18px}.ldb{width:min(48vw,180px)}
+
+/* ===== v5: düello noktaları + sabit mobil ölçek ===== */
+#hdr .pip.w{background:var(--lime);border-color:var(--lime);box-shadow:0 0 6px #7dff8a88}
+#hdr .pip.d{background:#8b928d;border-color:#b6bdb8;box-shadow:none}
+#opp .who{min-height:var(--whoh,0)}
+html.fitm #prompt{display:none!important}
+
+/* ===== v6: botun konuşma alanı sabit (2 satır), "düşünüyor" kaldırıldı ===== */
+.sayrow{height:39px;display:flex;align-items:center;margin:-4px 0 4px;overflow:hidden}
+.sayrow .say{display:block;margin:0;width:100%;font-size:16px;line-height:1.15;max-height:37px;overflow:hidden;text-align:left}

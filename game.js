@@ -487,11 +487,6 @@ function fit0(){
   const reset=()=>css.forEach(k=>m.style[k]='');
   reset();FIT=1;document.documentElement.classList.remove('fit');
   if(innerWidth>700)return;
-  { // rakibin konuşma/düşünüyor satırları için yer önceden ayrılır: yükseklik değişmez, ekran küçülmez
-    const op=document.querySelector('#opp'),nm=document.querySelector('#opp .nm'),wh=document.querySelector('#opp .who');
-    if(op&&nm&&wh){op.style.setProperty('--whoh','0px');const add=[];['say','think'].forEach(c=>{if(!nm.querySelector('.'+c)){const d=document.createElement('small');d.className=c;d.textContent='x';nm.appendChild(d);add.push(d)}});
-      const hw=wh.offsetHeight;add.forEach(d=>d.remove());op.style.setProperty('--whoh',hw+'px')}
-  }
   const kids=[...m.children].filter(e=>e.offsetHeight&&getComputedStyle(e).position!='fixed');
   const bot=()=>Math.max(...kids.map(e=>{const cs=e.id=='hand'?[...e.children]:[];return cs.length?Math.max(...cs.map(c=>c.getBoundingClientRect().bottom)):e.getBoundingClientRect().bottom})); // içeriğin gerçek alt kenarı (main'in boş alt dolgusu sayılmaz)
   m.style.minHeight='0';m.style.height='auto';
@@ -533,7 +528,7 @@ function R(){
     const el=(now-morphT[p])/1000,mo=morphT[p]&&el<1.1;return `<img class="av${mo?' morph':''}"${mo?` style="animation-delay:-${el.toFixed(2)}s"`:''} src="${avSrc(k)}" alt="">`};
   const av0=avh(0),av1=avh(1);
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'');
-  setH('#opp',`<div class="who">${av1}<div class="nm"><b>${MODE=='bot'||S.av?oppName():'Rakip'}</b><span class="meta">${MODE=='bot'?IC.skull.repeat(DN[DIFF]):'Online'}${jp(2-S.jUsed[1])}</span>${sayT?`<small class="say">${sayT}</small>`:''}${thinkOn&&MODE=='bot'&&S.turn==1&&!S.wait&&!S.over?'<small class="think">düşünüyor<i>.</i><i>.</i><i>.</i></small>':''}</div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot"><small>Açık toplam</small><b>${lastTot[1]}</b></div></div><div class="cards">${S.pl[1].open.map(c=>cd(c)).join('')}${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>`);
+  setH('#opp',`<div class="who">${av1}<div class="nm"><b>${MODE=='bot'||S.av?oppName():'Rakip'}</b><span class="meta">${MODE=='bot'?IC.skull.repeat(DN[DIFF]):'Online'}${jp(2-S.jUsed[1])}</span></div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot"><small>Açık toplam</small><b>${lastTot[1]}</b></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).join('')}${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>`);
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<img class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}" src="${IMG.j[e.id]}" alt="">`};
   $('#deck b').textContent=S.deck.length;
   setH('#jo',(S.pj||[]).filter(x=>x.o==1).map(chip).join(''));
