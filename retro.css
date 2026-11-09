@@ -371,3 +371,14 @@ html.fitm #prompt{display:none!important}
 .dr{flex-wrap:nowrap;gap:8px}
 .dr .btn{flex:1 1 0;min-width:0;width:auto;padding:12px 0 10px;font-size:clamp(10px,3.1vw,17px);letter-spacing:0;white-space:nowrap;overflow:hidden}
 @media(max-width:380px){.tl{gap:3px}.tot b,.pq{font-size:46px}}
+
+/* ===== v10: imkansız düğmesi siyah, "en az" boşluğu, zar at sabit, yavaş zar takla ===== */
+.btn.imp{color:#000;text-shadow:none}
+#fx .seal.low b{word-spacing:-.15em}
+#rl{animation:none!important;text-shadow:none!important}
+.dice.roll{animation:none!important}
+.dice.roll .die{animation:dTumble 1.5s ease-in-out infinite!important}
+.dice.roll .die+.die{animation-delay:-.5s!important}
+@keyframes dTumble{0%{transform:translateY(0) rotate(0) scale(1)}25%{transform:translateY(-16px) rotate(100deg) scale(1.1)}50%{transform:translateY(0) rotate(190deg) scale(.96)}75%{transform:translateY(-8px) rotate(280deg) scale(1.05)}100%{transform:translateY(0) rotate(360deg) scale(1)}}
+.dice.fin .die{animation:dLand .4s cubic-bezier(.2,.9,.25,1)!important}
+@keyframes dLand{0%{transform:translateY(-18px) scale(1.14) rotate(-8deg)}100%{transform:none}}

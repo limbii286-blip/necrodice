@@ -123,24 +123,26 @@ const shake=()=>{try{if(RM)return;document.body.classList.add('shake');setTimeou
 const flash=()=>{try{if(RM)return;const f=document.querySelector('#fl');f.classList.remove('go');void f.offsetWidth;f.classList.add('go')}catch(e){}};
 const PIP={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
 const die=n=>`<i class="die">${[...Array(9)].map((_,i)=>`<b${PIP[n].includes(i)?' class="p"':''}></b>`).join('')}</i>`;
-function anim(){ // ölüm zarı: kalp atışı, sallanma, yavaşlayarak durma (yaklaşık 4-5 sn); zarı atan taraf düğmeye basar
+function anim(){ // ölüm zarı: yavaş takla (zarlar yerinde döner, yüzler değişir), yavaşlayarak durma (~4 sn); zarı atan taraf düğmeye basar
   const d=document.querySelector('#mb .dice');if(!d)return;
-  const a=+d.dataset.a,b=+d.dataset.b,r=()=>1+Math.random()*6|0,face=()=>{d.innerHTML=die(r())+die(r())};
-  const N=18,run=wait=>{
+  const a=+d.dataset.a,b=+d.dataset.b,r=()=>1+Math.random()*6|0;
+  const setD=(el,n)=>el.querySelectorAll('b').forEach((x,i)=>{x.className=PIP[n].includes(i)?'p':''}); // zarlar yeniden kurulmaz: CSS takla kesintisiz sürer
+  const face=()=>{const ds=d.querySelectorAll('.die');if(ds.length<2)d.innerHTML=die(r())+die(r());else{setD(ds[0],r());setD(ds[1],r())}};
+  const N=11,run=wait=>{
     if(!d.isConnected)return;snd('heart');
     setTimeout(()=>{
       if(!d.isConnected)return;d.classList.add('roll');snd('dice');let i=0;
       const tick=()=>{
         if(!d.isConnected)return;
         if(i++>=N){d.innerHTML=die(a)+die(b);d.classList.remove('roll');d.classList.add('fin');snd(d.dataset.s);
-          setTimeout(()=>{const x=document.querySelector('#mx');if(x)x.style.visibility=''},700);
+          setTimeout(()=>{const x=document.querySelector('#mx');if(x)x.style.visibility=''},600);
           if(d.dataset.s=='death'){try{document.body.classList.add('dead')}catch(e){}vib([200,80,400])}else flash();return}
-        face();setTimeout(tick,60+i*i*1.2)}; // başta hızlı, sonda yavaşlar
+        face();setTimeout(tick,170+i*i*2.4)}; // yavaş başlar, sonda daha da yavaşlar
       tick()},wait)};
   face();
   const rl=document.querySelector('#rl');
-  if(rl&&d.dataset.m=='1')rl.onclick=()=>{rl.remove();run(1100)};
-  else{if(rl)rl.remove();run(1800)}
+  if(rl&&d.dataset.m=='1')rl.onclick=()=>{rl.remove();run(800)};
+  else{if(rl)rl.remove();run(1500)}
 }
 
 /* ---------- MOTOR ---------- */
@@ -198,7 +200,7 @@ const PR={
   easy:{rand:.25,noise:.35,jc:.45,jp:.4,dm:.05,depth:0},
   med:{rand:.01,noise:.06,jc:.2,jp:1,dm:.03,depth:0},
   hard:{rand:0,noise:0,jc:.2,jl:.08,jp:1,dm:.02,depth:2,beta:0,gap:6,mc:1,K:500,ms:2200,top:4,rjp:.5},
-  imp:{rand:0,noise:0,jc:.1,jl:.05,jp:1,dm:.02,depth:2,beta:.7,gap:7,mc:1,K:30000,ms:7200,top:6,rjp:.7,bo3:1,pf:1} // imkansız: düello (BO3) skorunu ve joker eşitlik kuralını hesaba katar
+  imp:{rand:0,noise:0,jc:.1,jl:.05,jp:1,dm:.02,depth:2,beta:.7,gap:7,mc:1,K:30000,ms:7200,top:6,rjp:.7,bo3:1,pf:1,learn:1} // imkansız: düello (BO3) skorunu ve joker eşitlik kuralını hesaba katar
 };
 let DIFF='med';
 const unk=(S,p)=>{const seen=new Set([...S.pl[p].open,...S.pl[p].closed,...S.pl[1-p].open,...(S.dead||[])].map(c=>c.n));return range(11).filter(n=>!seen.has(n))};
@@ -261,7 +263,7 @@ function world(S,p,prm){ // bilinmeyenleri rastgele doldurulmuş bir "olası dü
   const T=clone(S),q=1-p;T.log=[];T.jdeck=[];
   let pool=shuf(unk(S,p));const cl=T.pl[q].closed[0];
   if(!pool.length)return T;
-  if(prm&&prm.beta&&S.pa&&S.pa[q]>0){const Tg=tg(S),base=total(S,q,false),w=pool.map(n=>{const t=base+n;return t<=Tg&&t>=Tg-prm.gap?1+prm.beta:1}),sm=w.reduce((a,b)=>a+b,0);let r=Math.random()*sm,i=0;while(i<w.length-1&&(r-=w[i])>0)i++;pool=[pool[i],...pool.filter((_,j)=>j!=i)]}
+  if(prm&&prm.beta&&S.pa&&S.pa[q]>0){const Tg=tg(S),base=total(S,q,false),Lr=prm.learn&&PROF.n>=6,w=pool.map(n=>{const t=base+n;if(Lr)return PROF.p[Math.max(-6,Math.min(12,Tg-t))+6]+.7;return t<=Tg&&t>=Tg-prm.gap?1+prm.beta:1}),sm=w.reduce((a,b)=>a+b,0);let r=Math.random()*sm,i=0;while(i<w.length-1&&(r-=w[i])>0)i++;pool=[pool[i],...pool.filter((_,j)=>j!=i)]}
   cl.n=pool[0];T.deck=pool.slice(1,1+S.deck.length).map(n=>({id:++T.u,n}));
   const known=new Set([...S.hand[p],...(S.dj||[])]);
   T.hand[q]=shuf(range(24).filter(x=>!known.has(x))).slice(0,S.hand[q].length);
@@ -358,8 +360,11 @@ function M(html,btn,cb,end){lock=true;$('#mb').innerHTML=html+(btn?`<br><br><but
   if(btn)$('#mo').onclick=()=>{$('#m').hidden=true;lock=false;cb()};
   if(end)$('#mx').onclick=exitGame}
 function MM(fn,btn,cb,sd,end){if(MODE=='host'&&conn&&conn.open)conn.send({k:'m',html:fn(1),sd:sd&&sd(1),end});M(fn(0),btn,cb,end);snd(sd&&sd(0))}
+const PROF=(()=>{try{const o=JSON.parse(LS('prof')||'null');if(o&&Array.isArray(o.p)&&o.p.length==19)return o}catch(e){}return{n:0,p:new Array(19).fill(0)}})(); // oyuncunun pas geçtiği toplamlar (hedefe uzaklık) bu cihazda saklanır
+function profRec(S,tot,T){if(act(S,19)||!S.pa||!(S.pa[0]>0))return;const d=Math.max(-6,Math.min(12,T-tot));PROF.p[d+6]++;PROF.n++;LS('prof',JSON.stringify(PROF))}
 function endRound(){
   const S=G,a=[total(S,0),total(S,1)],T=tg(S),r=outc(S,0);
+  if(MODE=='bot')profRec(S,a[0],T);
   S.pts[0]+=r>0?1:r==0?.5:0;S.pts[1]+=r<0?1:r==0?.5:0;S.rounds++;S.res.push(r);S.wait=true;S.rev=true;
   const pre=v=>{const w=v?-r:r;return `Kapalı kartlar açıldı.<br>Sen: ${a[v]} · Rakip: ${a[1-v]} · Hedef: ${T}${act(S,19)?' (en düşük kazanır)':''}<br><b>${w>0?'Turu sen kazandın':w<0?'Turu rakip kazandı':'Tur berabere'}</b>`};
   R();snd('flip');lock=true; // kapalı kartlar çevrilir, sonra sonuç penceresi açılır
@@ -481,31 +486,34 @@ hard:{hello:['Zarlar atıldı. Kader mühürlendi.','Ölüm masaya oturdu.','Son
  surv0:['Zardan kaçtın. Ölüm unutmaz.','Bir sonrakinde kaçamazsın.','Bu kez kaçtın. Gölgem seninle.'],
  surv1:['Bana zar atmak boşuna.','Ölüm ölmez.','Beni ölüm bile reddetti.']}
 };
-/* BİLİNMEYEN, Sauron gibi Kara Dil'de (Black Speech) konuşur. Tolkien'in kayıtlı Kara Dil kelimesi çok az olduğu için satırlar
-   gerçek kelimelerle ve Yüzük Dizesi'yle kurulur: ash=bir, nazg=yüzük, durb=egemen olmak, gimb=bulmak, thrak=getirmek, krimp=bağlamak,
-   -atul=onları, -ûk=hepsini, agh=ve, burzum=karanlık, ishi=içinde, ghâsh=ateş, gûl=hayalet, uruk=ork, snaga=köle, lug=kule, búrz=karanlık (Lugbúrz=Kara Kule).
-   Yüzük Dizesi: "Ash nazg durbatulûk, ash nazg gimbatul, ash nazg thrakatulûk agh burzum-ishi krimpatul." */
+/* BİLİNMEYEN'in dili: Kara Dil (Black Speech) sertliği + Elfçe (Sindarin/Quenya) ezgisi. Tolkien'in kayıtlı kelimesi azdır, kalanı aynı seslerle uydurulmuştur.
+   Kara Dil kökleri: ash=bir, nazg=halka (hedef), durb-=egemen olmak/kazanmak, gimb-=bulmak/görmek, thrak-=getirmek/çekmek/almak, krimp-=bağlamak/engellemek,
+     agh=ve, burzum=karanlık/ölüm, ghâsh-=yakmak, gûl=hayalet, snaga=köle/zayıf.
+   Elfçe kökleri: ni=ben, le=sen, o=-in (aitlik), na=için, ú=değil, mellon=dost (alaycı), mor=kara, elen=yıldız, naur=ateş, dagor=savaş/oyun, firn-=ölmek,
+     umbar=kader, fëa=ruh, ant-=vermek.
+   Uydurma: dhaur=zar, karth=kart, dûr=hamle, gûr=el, thêl=zaman, kest-=saymak, ushk-=kaybetmek, thar-=beklemek, Ilumaur=yaratıcı.
+   Ekler: -a şimdiki, -ë geçmiş, -on gelecek, -ûk emir. Sıra: özne fiil nesne. */
 SAYS.imp={
- hello:['Ash nazg durbatulûk.','Nazg gimbatul. Nazg thrakatulûk.','Burzum-ishi krimpatul.','Lugbúrz. Burzum-ishi.'],
- win:['Ash nazg durbatulûk!','Krimpatul. Burzum-ishi krimpatul.','Ghâsh. Burzum.','Uruk. Nazg durb.'],
- lose:['Nazg gimbatul.','Burzum-ishi... gimbatul.','Gûl. Gûl durb.'],
- tie:['Ash... ash nazg.','Nazg durb nazg.','Burzum. Thrak.'],
- bust:['Snaga!','Ghâsh nazg-ishi.','Burzum! Burzum!'],
- joker:['Nazg thrakatul.','Ash nazg gimbatul.','Ghâsh-ishi nazg.'],
- jt:['Nazg durb.','Ash nazg durbatulûk.','Durb. Durb. Durb.'],
- jd:['Ghâsh-ishi krimpatul.','Ghâsh! Ghâsh!','Burzum thrakatul.'],
- js:['Thrakatul.','Nazg thrakatulûk.','Gimbatul. Thrakatul.'],
- jb:['Krimpatul.','Burzum-ishi krimpatul.','Krimp. Krimp.'],
- jn:['Burzum.','Nazg durbatulûk.','Ash nazg.'],
- react:['Gûl... gûl.','Gimbatul.','Nazg gimb. Nazg gimb.'],
- draw:['Thrak.','Nazg thrak.','Gimb.'],
- pass:['Burzum-ishi.','Ash.','Durb. Thrak.'],
- think:['Gimb... gimb...','Nazg gimbatul...','Burzum-ishi... gimbatul.','Ash... nazg... ash...'],
- pbust:['Snaga.','Ghâsh-ishi nazg.','Burzum krimpatul.'],
- obust:['Ghâsh!','Nazg! Nazg!','Burzum!'],
- pexact:['Gimbatul.','Nazg gimb ash.','Ash... nazg.'],
- surv0:['Burzum-ishi gimbatul.','Nazg thrakatulûk.','Ash nazg durbatulûk.'],
- surv1:['Ash nazg durbatulûk!','Lugbúrz.','Ghâsh. Burzum. Ash nazg.']
+ hello:['Ni gimb-a le, mellon. Dagor o burzum.','Le firn-on. Ni thar-a.','Ni Ilumaur o dagor agh o fëa.','Dhaur agh karth agh fëa o le.','Elen ú na le. Mor na ni.','Ash nazg. Ash umbar. Ash ni.','Burzum thar-a le, mellon.','Ni gimb-a. Le gimb-a ú.'],
+ win:['Ni durb-ë. Le ushk-ë.','Fëa o le snaga.','Mor durb-a. Elen firn-a.','Umbar o ni. Ú umbar o le.','Le ushk-ë, mellon. Burzum gimb-a le.','Nazg krimp-ë le.','Ni kest-ë. Le firn-on.','Naur o ni ghâsh-a fëa o le.'],
+ lose:['Le durb-ë. Thêl snaga.','Ni gimb-a. Ni thar-a.','Ú burzum o ni.','Umbar ú thar-a.','Elen o le ghâsh-a.','Dagor ú firn-ë. Ni thar-a.','Ú mellon, le. Ni gimb-ë.'],
+ tie:['Ú durb, ú ushk. Thar-a.','Umbar thar-a.','Dhaur ú ant-ë.','Ash nazg. Ú durb-ë.','Burzum thar-a agh ni thar-a.','Mor ú firn-ë.'],
+ bust:['Ú! Karth ushk-ë ni.','Ni ú kest-ë.','Dagor o ni. Ni ú ushk-on.','Ghâsh! Karth ghâsh-ë.','Nazg ú krimp-ë ni.','Mor ú firn-a.'],
+ joker:['Karth o ni gimb-a le.','Dûr o ni. Umbar o ni.','Gûr o ni thrak-a.','Krimp-ûk! Ni durb-on.','Mor agh karth.','Ni thrak-a umbar.','Elen ú gimb-a dûr o ni.'],
+ jt:['Nazg ú thar-a.','Ni nazg ant-a.','Nazg o le firn-a.','Ash nazg na ni.','Nazg thrak-ë. Nazg krimp-ë.','Umbar nazg ant-a.'],
+ jd:['Karth o le ghâsh-a.','Ghâsh-ë. Le gimb-a ú.','Karth firn-ë.','Naur agh burzum.','Gûl karth o le.','Karth o le. Karth ú.'],
+ js:['Gûr o ni thrak-ë.','Karth o le. Karth o ni.','Ú ant-a. Thrak-a.','Mor thrak-a elen.','Le ant-ë ú. Ni thrak-ë.','Krimp-ë karth o le.'],
+ jb:['Ú dûr. Thar-ûk.','Le thar-ûk.','Dûr o le ú.','Krimp-ë dûr o le.','Thar-ûk, mellon.','Burzum krimp-a le.'],
+ jn:['Karth o le ú.','Ghâsh-ë dûr o le.','Ú.','Krimp-ë karth o le.','Karth o le firn-ë.','Ú ú ú.'],
+ react:['Ni gimb-ë. Ni gimb-ë.','Dûr o le. Ni kest-ë.','Ú umbar o le.','Ni gimb-a agh le gimb-a ú.','Mellon... mellon...','Elen firn-a.'],
+ draw:['Karth thrak-a.','Ni kest-a.','Umbar karth ant-a.','Thrak-a. Kest-a. Durb-on.','Dhaur ant-a ni.','Mor karth gimb-a.'],
+ pass:['Ni thar-a.','Thêl o ni.','Ú dûr. Ni durb-on.','Dagor thar-a agh ni thar-a.','Burzum thar-a.','Ash nazg. Ni thar-a.'],
+ think:['Ni kest-a... kest-a...','Dhaur agh karth. Ni gimb-a.','Gûr o le gimb-a.','Mor gimb-a. Mor kest-a.','Elen ghâsh-a. Ni thar-a.','Umbar kest-a. Burzum thar-a.','Ni gimb-a fëa o le.','Ash... ash... nazg...'],
+ pbust:['Le firn-ë.','Le nazg ú kest-ë.','Burzum thar-a le.','Nazg krimp-ë le.','Ú mellon. Le ushk-ë.','Fëa o le ghâsh-a.'],
+ obust:['Karth ú ant-ë.','Ú. Ni gimb-a.','Umbar ú thar-ë.','Dhaur ú durb-ë.','Ghâsh. Ni thar-a.'],
+ pexact:['Nazg. Gûr o le ghâsh-on.','Ash nazg. Karth ú na le.','Le gimb-a nazg. Ni gimb-a karth.','Nazg o le. Burzum o ni.','Mellon, nazg krimp-on le.','Naur thar-a gûr o le.'],
+ surv0:['Le firn-ë ú. Burzum thar-a.','Dhaur ant-ë le thêl.','Thêl o le snaga.','Mellon, umbar ú durb-ë.','Burzum ú ghâsh-ë le. Thar-a.','Le thar-a. Ni thar-a.'],
+ surv1:['Ni firn-ë ú.','Burzum ú gimb-a ni.','Ni Ilumaur.','Ash ni. Ash umbar.','Dagor ú firn-ë ni.','Mor ú firn-a.']
 };
 const lastSay={};
 function pickSay(cat){const L=(SAYS[DIFF]||SAYS.med)[cat]||SAYS[DIFF||'med'].joker||[];if(!L.length)return '';let i,n=0;do{i=Math.random()*L.length|0}while(L.length>1&&i==lastSay[DIFF+cat]&&n++<9);lastSay[DIFF+cat]=i;return L[i]}
@@ -597,7 +605,7 @@ function R(){
     const el=(now-morphT[p])/1000,mo=morphT[p]&&el<1.1;return `<img class="av${mo?' morph':''}"${mo?` style="animation-delay:-${el.toFixed(2)}s"`:''} src="${avSrc(k)}" alt="">`};
   const av0=avh(0),av1=avh(1);
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'');
-  setH('#opp',`<div class="who">${av1}<div class="nm"><b>${MODE=='bot'||S.av?oppName():'Rakip'}</b><span class="meta">${MODE=='bot'?IC.skull.repeat(DN[DIFF]):'Online'}${jp(2-S.jUsed[1])}</span></div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${S.rev?'':'<i class="pq">+ ?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).join('')}${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>`);
+  setH('#opp',`<div class="who">${av1}<div class="nm"><b>${MODE=='bot'||S.av?oppName():'Rakip'}</b><span class="meta">${MODE=='bot'?IC.skull.repeat(DN[DIFF]):'Online'}${jp(2-S.jUsed[1])}</span></div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${S.rev?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).join('')}${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>`);
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<img class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}" src="${IMG.j[e.id]}" alt="">`};
   $('#deck b').textContent=S.deck.length;
   setH('#jo',(S.pj||[]).filter(x=>x.o==1).map(chip).join(''));
