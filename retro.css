@@ -398,3 +398,29 @@ html.fitm #prompt{display:none!important}
 #zm .row{display:flex;gap:10px;margin-top:4px}
 @keyframes zmIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
 .rm #zm{animation:none}
+
+/* ============================================================
+   İLK EKRAN: görsel ekrana yapışık durmasın, renkleri ve havası altına/yanlara taşsın
+   ============================================================ */
+#menu{background:#0b0f1a}
+#menu::before{content:"";position:absolute;inset:-70px;z-index:0;pointer-events:none;
+  background:var(--cv) center top/cover no-repeat;filter:blur(38px) saturate(1.25) brightness(.62)}
+#menu::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(120% 70% at 50% 42%,transparent 40%,#05070dcc 100%),linear-gradient(180deg,transparent 45%,#070a14b8 100%)}
+#mb2{position:relative;z-index:1;background:transparent;box-shadow:none}
+#mb2::before{-webkit-mask-image:linear-gradient(#000 52%,#0000 100%);mask-image:linear-gradient(#000 52%,#0000 100%);filter:none}
+
+/* rakip toplamı "11 + ?" kutudan taşmasın */
+.who{min-width:0}.nm{min-width:0}
+.tot{flex:none;max-width:42%}
+.tot b{font-size:clamp(32px,10.6vw,46px)}
+.pq{font-size:clamp(22px,7vw,32px);margin:0 -1px}
+.tl{gap:2px}
+
+/* zorluk göstergesi: zar simgeleri */
+.meta .ic.dif{width:17px;height:17px;color:var(--blood2);filter:drop-shadow(0 0 3px #ec445288)}
+
+/* iPhone/Safari: ölçülen üst güvenli alan (game.js --sat'i yazar) */
+main{padding-top:max(14px,var(--sat,env(safe-area-inset-top,0px)))}
+/* uzun isimler (BİLİNMEYEN) joker sırtlarının altına girmesin */
+.nm b{font-size:clamp(17px,5.1vw,24px);letter-spacing:0;overflow-wrap:anywhere}

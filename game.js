@@ -160,15 +160,17 @@ function deal(S){
 }
 const act=(S,id)=>S.eff.some(e=>e.id==id&&!e.neg);
 function total(S,p,wc=true){
-  const f=(c,cl)=>{let v=c.o??c.n;if(act(S,1)&&v%2)v*=2;if(act(S,2)&&v%2==0)v/=2;if(cl){if(act(S,20))return 0;if(act(S,21))v*=2}return v};
+  const f=(c,cl)=>{const b=c.o??c.n;let v=b;if(act(S,1)&&b%2)v=b*2;else if(act(S,2)&&b%2==0)v=b/2; // x2: tekler iki katı, ÷2: çiftler yarısı (ikisi birlikte olunca da her kart yalnızca bir kez etkilenir)
+    if(cl){if(act(S,20))return 0;if(act(S,21))v*=2}return v};
   let t=0;S.pl[p].open.forEach(c=>t+=f(c,0));if(wc)S.pl[p].closed.forEach(c=>t+=f(c,1));
   S.eff.forEach(e=>{if(e.neg||e.o!=p)return;if(e.id==3)t+=5;if(e.id==4)t-=5;if(e.id==22)t+=e.s*S.deck.length});
   return t;
 }
-function tg(S){const e=S.eff.filter(e=>!e.neg&&e.id>=8&&e.id<=11).pop();return e?{8:27,9:24,10:17,11:15}[e.id]:21}
+const TGS=new Set([8,9,10,11,19]),tgE=S=>S.eff.filter(e=>!e.neg&&TGS.has(e.id)).pop(),lowW=S=>{const e=tgE(S);return !!e&&e.id==19}; // hedef değiştirenlerden SON oynanan geçerli
+function tg(S){const e=tgE(S);return e&&e.id<19?{8:27,9:24,10:17,11:15}[e.id]:21}
 function outc(S,p){ // p açısından: 1 kazan, 0 berabere, -1 kaybet
   const a=total(S,p),b=total(S,1-p),T=tg(S);
-  if(act(S,19))return Math.sign(b-a);
+  if(lowW(S))return Math.sign(b-a);
   if(a>T&&b>T)return 0;if(a>T)return -1;if(b>T)return 1;return Math.sign(a-b);
 }
 const canDraw=(S,p)=>S.deck.length>0&&!S.eff.some(e=>e.id==23&&!e.neg&&e.o!=p);
@@ -284,7 +286,7 @@ function rollout(T,p,a,pol){
   const fin=()=>pol.bo3?bo3v(T,p,outc(T,p)):outc(T,p);
   if(!a){if(doPass())return fin()}else{doAct(a,p);n=1}
   for(let g=0;g<80;g++){
-    const x=n++<8?decide(T,actor,pol):null;
+    const x=n++<8?(pol.hm&&actor!=p?hmove(T,actor,pol):decide(T,actor,pol)):null;
     if(!x){if(doPass())break;continue}
     doAct(x,actor);
   }
@@ -310,12 +312,12 @@ function decideH(S,p,prm){
 function decideHA(S,p,prm,done){ // zaman dilimli Monte-Carlo: ekranı dondurmadan çok daha fazla örnek
   const now=()=>(typeof performance!='undefined'?performance:Date).now();
   let all=listC(S,p,prm).sort((x,y)=>y.v-x.v);
-  if(!act(S,19)&&total(S,p,true)>=tg(S))all=all.filter(c=>!(c.a&&c.a.t=='d')); // hedefte/üstündeyken kart çekmek yalnızca batırır
+  if(!lowW(S)&&total(S,p,true)>=tg(S))all=all.filter(c=>!(c.a&&c.a.t=='d')); // hedefte/üstündeyken kart çekmek yalnızca batırır
   const pass=all.find(c=>!c.a),draw=all.find(c=>c.a&&c.a.t=='d');
   const top=all.slice(0,prm.top||4);[pass,draw].forEach(c=>{if(c&&!top.includes(c))top.push(c)});
   all.filter(c=>c.a&&c.a.id==16&&!top.includes(c)).forEach(c=>top.push(c));
   if(top.length==1)return done(top[0].a);
-  const cost=S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc,sum=top.map(()=>0),RP={...ROLL,...(prm.rjp!=null?{jp:prm.rjp}:{}),bo3:prm.bo3},K=prm.K||40,bud=prm.ms||0,t0=now();let k=0;
+  const cost=S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc,sum=top.map(()=>0),RP={...ROLL,...(prm.rjp!=null?{jp:prm.rjp}:{}),bo3:prm.bo3,hm:prm.learn&&LRN.ht>=15},K=prm.K||40,bud=prm.ms||0,t0=now();let k=0;
   if(prm.pf&&pass){top.splice(top.indexOf(pass),1);top.unshift(pass)} // eşitlikte paslamak öncelikli
   const fin=()=>{const sc=sum.map((v,i)=>v/Math.max(1,k)+(prm.w||0)*top[i].v);let bi=0;sc.forEach((v,i)=>{if(v>sc[bi]+1e-9)bi=i});done(top[bi].a)};
   const tick=()=>{const t1=now();
@@ -328,7 +330,7 @@ const THINK={easy:[3000,4300],med:[3500,5200],hard:[4300,6500],imp:[10000,13000]
 const rnd=r=>r[0]+Math.random()*(r[1]-r[0]);
 let botGen=0,thinkOn=false;
 function bot(){
-  const S=G,prm=PR[DIFF],gen=++botGen;let n=0;
+  const S=G,prm=DIFF=='imp'?impPrm():PR[DIFF],gen=++botGen;let n=0;
   let plan=null,held=0,pid=0;
   const think=r=>{thinkOn=true;R();talk('think',1,.55);R();const d=rnd(r);plan=null;const my=++pid;
     // karar, düşünme süresinin başında hesaplanır; hamle anında ekran donmaz
@@ -365,16 +367,45 @@ function M(html,btn,cb,end){lock=true;$('#mb').innerHTML=html+(btn?`<br><br><but
   if(end)$('#mx').onclick=exitGame}
 function MM(fn,btn,cb,sd,end){if(MODE=='host'&&conn&&conn.open)conn.send({k:'m',html:fn(1),sd:sd&&sd(1),end});M(fn(0),btn,cb,end);snd(sd&&sd(0))}
 const PROF=(()=>{try{const o=JSON.parse(LS('prof')||'null');if(o&&Array.isArray(o.p)&&o.p.length==19)return o}catch(e){}return{n:0,p:new Array(19).fill(0)}})(); // oyuncunun pas geçtiği toplamlar (hedefe uzaklık) bu cihazda saklanır
-function profRec(S,tot,T){if(act(S,19)||!S.pa||!(S.pa[0]>0))return;const d=Math.max(-6,Math.min(12,T-tot));PROF.p[d+6]++;PROF.n++;LS('prof',JSON.stringify(PROF))}
+function profRec(S,tot,T){if(lowW(S)||!S.pa||!(S.pa[0]>0))return;const d=Math.max(-6,Math.min(12,T-tot));PROF.p[d+6]++;PROF.n++;LS('prof',JSON.stringify(PROF))}
+
+/* ---------- İMKANSIZ BOT: oynadığı oyunlardan öğrenir (bu cihazda saklanır) ----------
+   1) Oyuncu modeli: oyuncu hedefe ne kadar uzaktayken kart çekiyor / pas geçiyor, ne sıklıkla joker oynuyor.
+      Bot, hamle seçerken oyuncunun cevabını kendi gibi değil, bu öğrendiği alışkanlıklarla simüle eder.
+   2) Ayar seçimi: birkaç farklı oyun tarzı (risk, joker maliyeti, rakip tahmini) denenir; oyuncuya karşı
+      en çok tur kazandıran tarz zamanla daha sık seçilir (UCB). */
+const ARMS=[{},{jc:.05,jl:.02},{jc:.18,jl:.1},{beta:.4,gap:6},{beta:1,gap:8},{dm:.05},{rjp:.45},{rjp:.95}];
+const LRN=(()=>{try{const o=JSON.parse(LS('lrn')||'null');if(o&&o.v==1&&Array.isArray(o.dp)&&o.dp.length==19&&Array.isArray(o.arm)&&o.arm.length==ARMS.length)return o}catch(e){}return lrnNew()})();
+function lrnNew(){return{v:1,dp:Array.from({length:19},()=>[0,0]),ht:0,hj:0,jp:{},arm:ARMS.map(()=>[0,0]),cur:0,g:[0,0],r:[0,0,0]}}
+const lrnSave=()=>LS('lrn',JSON.stringify(LRN)),learning=()=>MODE=='bot'&&DIFF=='imp';
+function lrnAct(S,kind,id){ // oyuncunun hamlesi: 'd' kart çek, 'p' pas, 'j' joker
+  if(!learning())return;LRN.ht++;
+  if(kind=='j'){LRN.hj++;LRN.jp[id]=(LRN.jp[id]|0)+1}
+  else if(!lowW(S)){const d=Math.max(-6,Math.min(12,tg(S)-total(S,0)))+6;LRN.dp[d][kind=='d'?0:1]++}
+  lrnSave()}
+function armPick(){const N=LRN.arm.reduce((t,a)=>t+a[0],0);let bi=0,bs=-1;
+  LRN.arm.forEach((a,i)=>{const v=a[0]?a[1]/a[0]+.3*Math.sqrt(Math.log(N+1)/a[0]):9;if(v>bs){bs=v;bi=i}});LRN.cur=bi}
+function lrnRound(r){ // r: oyuncu açısından tur sonucu
+  if(!learning())return;const sc=r<0?1:r==0?.5:0,a=LRN.arm[LRN.cur];a[0]++;a[1]+=sc;LRN.r[r<0?0:r>0?1:2]++;lrnSave()}
+function lrnGame(botWon){if(!learning())return;LRN.g[1]++;if(botWon)LRN.g[0]++;lrnSave()}
+const impPrm=()=>({...PR.imp,...ARMS[LRN.cur]});
+const hjr=()=>(LRN.hj+1)/(LRN.ht+6); // oyuncunun bir hamlede joker oynama olasılığı
+function hmove(T,a,pol){ // simülasyonda oyuncunun hamlesi: öğrendiği alışkanlıklar
+  if(lowW(T))return decide(T,a,pol);
+  const d=Math.max(-6,Math.min(12,tg(T)-total(T,a)))+6,e=LRN.dp[d],n=e[0]+e[1];
+  if(n<5)return decide(T,a,pol); // bu durumda yeterli veri yok: güçlü oyuncu varsay
+  if(canDraw(T,a)&&Math.random()<(e[0]+.3)/(n+.6))return{t:'d'};
+  if(T.jUsed[a]<2&&!T.noJ[a]&&T.hand[a].length&&Math.random()<hjr()){const x=decide(T,a,{...pol,jp:1});if(x&&x.t=='j')return x}
+  return null}
 function endRound(){
   const S=G,a=[total(S,0),total(S,1)],T=tg(S),r=outc(S,0);
-  if(MODE=='bot')profRec(S,a[0],T);
+  if(MODE=='bot'){profRec(S,a[0],T);lrnRound(r)}
   S.pts[0]+=r>0?1:r==0?.5:0;S.pts[1]+=r<0?1:r==0?.5:0;S.rounds++;S.res.push(r);S.wait=true;S.rev=true;
-  const pre=v=>{const w=v?-r:r;return `Kapalı kartlar açıldı.<br>Sen: ${a[v]} · Rakip: ${a[1-v]} · Hedef: ${T}${act(S,19)?' (en düşük kazanır)':''}<br><b>${w>0?'Turu sen kazandın':w<0?'Turu rakip kazandı':'Tur berabere'}</b>`};
+  const pre=v=>{const w=v?-r:r;return `Kapalı kartlar açıldı.<br>Sen: ${a[v]} · Rakip: ${a[1-v]} · Hedef: ${T}${lowW(S)?' (en düşük kazanır)':''}<br><b>${w>0?'Turu sen kazandın':w<0?'Turu rakip kazandı':'Tur berabere'}</b>`};
   R();snd('flip');lock=true; // kapalı kartlar çevrilir, sonra sonuç penceresi açılır
   setTimeout(()=>{if(S!==G)return;lock=false;fin()},1700);
   function fin(){
-    if(MODE=='bot'){const Tg=tg(S);talk(r==0?'tie':r<0?'win':(a[1]>Tg&&!act(S,19)?'bust':'lose'),2);R()}
+    if(MODE=='bot'){const Tg=tg(S);talk(r==0?'tie':r<0?'win':(a[1]>Tg&&!lowW(S)?'bust':'lose'),2);R()}
     if(!(S.pts.some(x=>x>=2)||S.rounds>=3)){
       if(r==0)[0,1].forEach(p=>S.jdeck.length&&S.hand[p].push(S.jdeck.pop()));
       return MM(v=>pre(v)+(r==0?'<br>Tur berabere bitti, ikiniz de birer joker çektiniz.':''),'Sonraki tur',()=>{deal(S);R();next()},v=>{const w=v?-r:r;return w>0?'win':w<0?'lose':'ok'});
@@ -391,7 +422,7 @@ function endRound(){
     if(surv||rig){const n=S.bo+2,ek=['a','e','ye','e','e','e','ya','ye','e','a'][n%10];
       const lb=`Düello ${n}'${ek} geç`,go=()=>{S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()};
       if(rig){S.rigDone=true;impSave(mk(0,d1,d2,false),()=>M(mk(0,6,6,true),lb,go))}else MM(full,lb,go)}
-    else{S.over=true;MM(full,'Yeniden oyna',start,null,true)}
+    else{S.over=true;lrnGame(L==0);MM(full,'Yeniden oyna',start,null,true)}
   }
 }
 function cutscene(txt,done){ // BİLİNMEYEN: ikonu ve konuşma balonu
@@ -412,7 +443,7 @@ function impSave(html,cont){ // BİLİNMEYEN ölecekken: zar düşer, sahne gire
 let entering=false;
 function veil(ms=2000){const v=document.createElement('div');v.className='veil';v.style.animationDuration=ms+'ms';v.style.setProperty('--ms',ms*.9+'ms');v.innerHTML=`<img alt="" src="${IMG.logo}"><b>limbigames</b><span class="ldb"><i></i></span>`;document.body.appendChild(v);setTimeout(()=>v.remove(),ms+100)}
 function enter(fn){if(entering)return;entering=true;veil();setMusic('game');setTimeout(()=>{$('#menu').hidden=true;entering=false;fn()},1700)}
-function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}G={u:0,bo:0,log:[],over:false,used:[],av:Math.random()<.5?['t','c']:['c','t'],mast:[0,0]};prevAv[0]=prevAv[1]=undefined;newBO3(G);deal(G);sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
+function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}G={u:0,bo:0,log:[],over:false,used:[],av:Math.random()<.5?['t','c']:['c','t'],mast:[0,0]};prevAv[0]=prevAv[1]=undefined;newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
 
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
@@ -423,6 +454,7 @@ const avSrc=k=>k?AV[k]:IMG.bn,oppName=()=>NAMES[avKey(G,1)]||'Rakip';
 const prevAv=[undefined,undefined],morphT=[0,0];
 const peek=new Set(),seen=new Set(),seenE=new Set(),DN={easy:1,med:2,hard:3,imp:5},DES=new Set([13,14,17]);
 const IC={
+  dif:'<svg viewBox="0 0 24 24" class="ic dif"><path d="M12 2l8.5 5v10L12 22l-8.5-5V7z" fill="currentColor"/><path d="M12 7l4.6 8H7.4z" fill="none" stroke="#091217" stroke-width="1.5" stroke-linejoin="round"/></svg>',
   skull:'<svg viewBox="0 0 24 24" class="ic"><path d="M12 2C7 2 4 5.5 4 10c0 3 1.5 4.5 3 5.5V20h10v-4.5c1.5-1 3-2.5 3-5.5 0-4.5-3-8-8-8z" fill="currentColor"/><circle cx="9" cy="11" r="2" fill="#091217"/><circle cx="15" cy="11" r="2" fill="#091217"/><path d="M10 20v-3m4 3v-3" stroke="#091217" stroke-width="1.5"/></svg>',
   gear:'<svg viewBox="0 0 24 24" class="ic"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M4 12h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="7" r="2.2" fill="currentColor"/><circle cx="8" cy="17" r="2.2" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg>'
 };
@@ -534,7 +566,7 @@ function talk(cat,pri=0,prob=1){
   sayT=fillSay(s);sayAt=now;return true;
 }
 function watch(){ // açık kartlar hedefi geçtiyse ya da tam hedefteyse bot yorum yapar (kapalı kart hesaba katılmaz)
-  const S=G;if(MODE!='bot'||!S||!S.pl||S.over||S.wait||S.rev||!S.st||act(S,19))return;
+  const S=G;if(MODE!='bot'||!S||!S.pl||S.over||S.wait||S.rev||!S.st||lowW(S))return;
   const T=tg(S),o=total(S,0,false),b=total(S,1,false),st=S.st;
   if(o<=T)st.pb=0;else if(!st.pb&&talk('pbust',1))st.pb=1;
   if(b<=T)st.ob=0;else if(!st.ob&&talk('obust',1))st.ob=1;
@@ -559,6 +591,16 @@ function fly(){ // yeni kartlar desteden uçarak gelir
 /* Mobilde kaydırma olmasın: oyun alanı ekrana sığmıyorsa tek parça olarak küçültülür (PC'ye dokunmaz) */
 let FIT=1,fitQ=0;
 let fitSig='',fitK=0,fitKey='';
+/* iPhone/Safari: çentik / üst bar payı bazen env() ile 0 okunuyor ve içerik yukarı yapışıyor; gerçek değeri ölçüp --sat değişkenine yazarız */
+const satProbe=(()=>{const d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;width:1px;height:env(safe-area-inset-top,0px);visibility:hidden;pointer-events:none';document.documentElement.appendChild(d);return d})();
+let satV=-1;
+function satUpdate(){let v=satProbe.getBoundingClientRect().height||0;
+  const ios=/iPhone|iPad/.test(navigator.userAgent),sa=navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
+  if(!v&&ios&&sa&&innerWidth<innerHeight)v=47; // ana ekrandan açılan uygulama: çentiğin altına girmesin
+  v=Math.round(v);if(v==satV)return;satV=v;document.documentElement.style.setProperty('--sat',v+'px');requestAnimationFrame(()=>{fitSig='';if(G)fit()})}
+['load','pageshow','resize','orientationchange'].forEach(e=>addEventListener(e,satUpdate));
+if(window.visualViewport)visualViewport.addEventListener('resize',satUpdate);
+[0,150,500,1500,3500].forEach(t=>setTimeout(satUpdate,t));
 function fit(){document.documentElement.classList.add('fitm');try{fit0()}finally{document.documentElement.classList.remove('fitm')}} // ölçüm sırasında sıra bildirimi gizlenir
 function fit0(){
   fitQ=0;const m=document.querySelector('main');if(!m)return;
@@ -595,7 +637,7 @@ if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{fitSig=''
 function R(){
   if(!G)return;
   watch();fitSoon();
-  const S=G,low=act(S,19),cn=cand(),k=P&&P.ks[P.pk.length],bi=Math.min(S.bo,3),T=tg(S),res=S.res||[];
+  const S=G,low=lowW(S),cn=cand(),k=P&&P.ks[P.pk.length],bi=Math.min(S.bo,3),T=tg(S),res=S.res||[];
   let fresh=0;
   const cd=(c,back,fl,pk)=>{const nf=!seen.has(c.id);if(nf)fresh++;seen.add(c.id);
     const f=(nf?' fresh':'')+(fl?' flip':'')+(cn.includes(c.id)?' hl':'')+(pk?' mc':''),a=`data-c="${c.id}"${pk?' data-pk="1"':''}${pk&&S.rev?' style="--fd:.6s"':''}`;
@@ -609,7 +651,7 @@ function R(){
     const el=(now-morphT[p])/1000,mo=morphT[p]&&el<1.1;return `<img class="av${mo?' morph':''}" data-av="${p}"${mo?` style="animation-delay:-${el.toFixed(2)}s"`:''} src="${avSrc(k)}" alt="">`};
   const av0=avh(0),av1=avh(1);
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'');
-  setH('#opp',`<div class="who">${av1}<div class="nm"><b>${MODE=='bot'||S.av?oppName():'Rakip'}</b><span class="meta">${MODE=='bot'?IC.skull.repeat(DN[DIFF]):'Online'}${jp(2-S.jUsed[1])}</span></div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${S.rev?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).join('')}${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>`);
+  setH('#opp',`<div class="who">${av1}<div class="nm"><b>${MODE=='bot'||S.av?oppName():'Rakip'}</b><span class="meta">${MODE=='bot'?IC.dif.repeat(DN[DIFF]):'Online'}${jp(2-S.jUsed[1])}</span></div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${S.rev?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).join('')}${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>`);
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<img class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}" src="${IMG.j[e.id]}" alt="">`};
   $('#deck b').textContent=S.deck.length;
   setH('#jo',(S.pj||[]).filter(x=>x.o==1).map(chip).join(''));
@@ -639,7 +681,7 @@ function R(){
   fly();flipId=null;
   if(MODE=='host'&&conn&&conn.open)conn.send({k:'s',v:view(G)});
 }
-function doPlay(id,pk){const S=G;P=null;if(MODE=='guest'){conn.send({k:'play',id,pk});return R()}play(S,0,id,pk);S.acted=true;S.log.push({p:0,t:`joker oynadı: ${J[id]}`});note(0,id,()=>{if(MODE=='bot')talk('react',1,.5);R()})}
+function doPlay(id,pk){const S=G;P=null;if(MODE=='guest'){conn.send({k:'play',id,pk});return R()}lrnAct(S,'j',id);play(S,0,id,pk);S.acted=true;S.log.push({p:0,t:`joker oynadı: ${J[id]}`});note(0,id,()=>{if(MODE=='bot')talk('react',1,.5);R()})}
 function pick(v){P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
 function startJoker(id){const ks=NEED[id]||[];if(ks.length){P={id,ks,pk:[]};R()}else doPlay(id,[])}
 function box(html,close=true){lock=true;$('#mb').innerHTML=html+(close?'<div class="row"><button id="pc" class="btn">Kapat</button></div>':'');$('#m').hidden=false;if(close)$('#pc').onclick=()=>{$('#m').hidden=true;lock=false;if(G)R()}}
@@ -692,18 +734,19 @@ function guide(){box(`<h3>Nasıl oynanır</h3>
 <hr>
 <h3>Blok jokerler</h3>
 <p class="gd">Bu jokerler oynandıktan sonra tur sonuna kadar masada kalır ve etkisini sürdürür. Kodekste "etkisiz kılınabilir" yazar. <b>Joker etkisiz</b> ile iptal edilebilen tek grup budur. Etkisiz kılınan joker soluklaşır.</p>
-<p class="gd"><b>Tekler ×2:</b> herkesin tek sayılı kartları iki katı sayılır.<br><b>Çiftler ÷2:</b> herkesin çift sayılı kartları yarıya iner.<br><b>+5 / −5:</b> yalnızca oynayanın toplamına eklenir ya da çıkarılır.<br><b>Hedef 27 / 24 / 17 / 15:</b> hedefi değiştirir. Birden fazla varsa sonuncusu geçerlidir.<br><b>En az kazanır:</b> toplamı en düşük olan turu alır.<br><b>Kapalılar sayılmaz:</b> kapalı kartlar 0 sayılır.<br><b>Kapalılar ×2:</b> kapalı kartlar iki katı sayılır.<br><b>Deste sayısı ±:</b> destede kalan kart sayısı, oynayanın toplamına eklenir ya da çıkarılır. Deste azaldıkça değişir.<br><b>Rakip kart çekemez:</b> rakip bu tur kart çekemez.</p>
+<p class="gd"><b>Tekler ×2:</b> herkesin tek sayılı kartları iki katı sayılır.<br><b>Çiftler ÷2:</b> herkesin çift sayılı kartları yarıya iner.<br><b>+5 / −5:</b> yalnızca oynayanın toplamına eklenir ya da çıkarılır.<br><b>Hedef 27 / 24 / 17 / 15 ve En az kazanır:</b> hedefi değiştirir. Hepsi aynı yuvayı paylaşır, yani sonradan oynanan öncekinin yerine geçer. En az kazanır'dan sonra bir hedef jokeri oynanırsa o geçerli olur.<br><b>Kapalılar sayılmaz:</b> kapalı kartlar 0 sayılır.<br><b>Kapalılar ×2:</b> kapalı kartlar iki katı sayılır.<br><b>Deste sayısı ±:</b> destede kalan kart sayısı, oynayanın toplamına eklenir ya da çıkarılır. Deste azaldıkça değişir.<br><b>Rakip kart çekemez:</b> rakip bu tur kart çekemez.</p>
 <h3>Anlık jokerler</h3>
 <p class="gd">Oynandığı anda etki eder, masada kalmaz ve etkisiz kılınamaz: rakibe kart çektirme, kartı 0 ya da 12 yapma, kart imha etme, açık ya da kapalı kart takası, kart çalma, kart hediye etme, rakibin joker kullanmasını engelleme ve Joker etkisiz'in kendisi.</p>
 <p class="gd">Hepsini Joker Kodeksi'nde görebilirsin.</p>`)}
 function settings(){
   const inGame=$('#menu').hidden&&!!G;
-  box(`<h3>Ayarlar</h3><label>Müzik<input type="range" id="sm" min="0" max="1" step=".05" value="${VM}"></label><label>Efektler<input type="range" id="ss" min="0" max="1" step=".05" value="${VS}"></label><label class="chk"><input type="checkbox" id="sr" ${RM?'checked':''}> Hareketi azalt</label><label class="chk"><input type="checkbox" id="sv" ${VB?'checked':''}> Titreşim</label><div class="row"><button class="btn alt sm" id="sk">Joker Kodeksi</button><button class="btn alt sm" id="sg">Nasıl oynanır</button></div>${inGame?`<div class="row">${MODE=='bot'?'<button class="btn alt sm" id="sa">Tekrar oyna</button>':''}</div><div class="row"><button class="btn alt sm" id="sx">Oyundan çık</button></div>`:''}`);
+  box(`<h3>Ayarlar</h3><label>Müzik<input type="range" id="sm" min="0" max="1" step=".05" value="${VM}"></label><label>Efektler<input type="range" id="ss" min="0" max="1" step=".05" value="${VS}"></label><label class="chk"><input type="checkbox" id="sr" ${RM?'checked':''}> Hareketi azalt</label><label class="chk"><input type="checkbox" id="sv" ${VB?'checked':''}> Titreşim</label><div class="row"><button class="btn alt sm" id="sk">Joker Kodeksi</button><button class="btn alt sm" id="sg">Nasıl oynanır</button></div><p class="mem">İmkansız bot: ${LRN.ht} hamle, ${LRN.r[0]+LRN.r[1]+LRN.r[2]} tur ve ${LRN.g[1]} oyundan öğrendi${LRN.r[0]+LRN.r[1]+LRN.r[2]>0?` · tur kazanma %${Math.round(100*(LRN.r[0]+LRN.r[2]/2)/(LRN.r[0]+LRN.r[1]+LRN.r[2]))}`:''}</p><div class="row"><button class="btn sm" id="sz">Bot hafızasını sıfırla</button></div>${inGame?`<div class="row">${MODE=='bot'?'<button class="btn alt sm" id="sa">Tekrar oyna</button>':''}</div><div class="row"><button class="btn alt sm" id="sx">Oyundan çık</button></div>`:''}`);
   $('#sm').oninput=e=>{VM=+e.target.value;LS('vm',VM);ac();MG.gain.value=VM*.8;if(FILE&&mel)mel.volume=Math.min(1,VM*.8)};
   $('#ss').oninput=e=>{VS=+e.target.value;LS('vs',VS);ac();SG.gain.value=VS};$('#ss').onchange=()=>snd('draw');
   $('#sr').onchange=e=>{RM=e.target.checked;LS('rm',RM?1:0);document.body.classList.toggle('rm',RM)};
   $('#sv').onchange=e=>{VB=e.target.checked;LS('vb',VB?1:0)};
   $('#sk').onclick=codex;$('#sg').onclick=guide;
+  $('#sz').onclick=()=>{if(confirm('İmkansız botun öğrendikleri silinsin mi?')){Object.assign(LRN,lrnNew());PROF.n=0;PROF.p.fill(0);lrnSave();LS('prof',JSON.stringify(PROF));settings()}};
   if($('#sa'))$('#sa').onclick=()=>{ // aynı botla baştan başla, mevcut oyun iptal
     botGen++;thinkOn=false;const c=$('#cast');if(c)c.remove();$('#m').hidden=true;lock=false;P=null;
     G.over=true;start()};
@@ -753,8 +796,8 @@ document.addEventListener('click',e=>{
   if(t.dataset.e){const x=S.eff.find(y=>y.uid==u)||(S.pj||[]).find(y=>y.uid==u);if(x)preview(x.id,false,`${x.o==0?'Senin jokerin':'Rakibin jokeri'}${x.neg?' (etkisiz kılındı)':''}${BLOCK.has(x.id)?'':' (anlık etki, kullanıldı)'}${x.id==22?(x.s>0?' (ekler)':' (çıkarır)'):''}`);return}
   if(t.dataset.j){const id=+t.dataset.j;preview(id,S.turn==0&&!S.wait&&playable(S,0,id))}
 });
-$('#draw').onclick=()=>{const S=G;if(S.turn||lock||P||!canDraw(S,0))return;if(MODE=='guest')return conn.send({k:'draw'});const c=S.deck.pop();S.pl[0].open.push(c);S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R()};
-$('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE=='guest')conn.send({k:'pass'});else pass()}};
+$('#draw').onclick=()=>{const S=G;if(S.turn||lock||P||!canDraw(S,0))return;if(MODE=='guest')return conn.send({k:'draw'});lrnAct(S,'d');const c=S.deck.pop();S.pl[0].open.push(c);S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R()};
+$('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE=='guest')conn.send({k:'pass'});else{lrnAct(G,'p');pass()}}};
 
 /* ---------- ONLINE (PeerJS) ---------- */
 let MODE='bot',peer,conn,waitM=false;
