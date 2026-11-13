@@ -174,34 +174,109 @@ const d20=()=>1+Math.random()*20|0;
 function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı animasyonu
   const d=document.querySelector('#mb .d20-box');if(!d)return;
   const target=+d.dataset.roll,dc=+d.dataset.dc,isMe=d.dataset.m=='1',res=d.dataset.s;
-  const numEl=d.querySelector('.d20-num'),dieEl=d.querySelector('.d20-die');
-  const N=16,run=wait=>{
-    if(!d.isConnected)return;snd('heart');
-    setTimeout(()=>{
-      if(!d.isConnected)return;
-      d.classList.add('rolling');snd('dice');vib([100,50,100]);
-      let step=0;
-      const tick=()=>{
-        if(!d.isConnected)return;
-        if(step++>=N){
-          d.classList.remove('rolling');
-          d.classList.add('finished');
-          numEl.textContent=target;
-          if(target>=20){dieEl.classList.add('crit-success');snd('win');flash();vib([80,80,200])}
-          else if(target==1||res=='death'){dieEl.classList.add('crit-fail');snd('death');try{document.body.classList.add('dead')}catch(e){}vib([300,100,500])}
-          else{snd(res);flash()}
-          setTimeout(()=>{const x=document.querySelector('#mx');if(x)x.style.visibility=''},600);
-          return;
-        }
-        numEl.textContent=1+Math.random()*20|0;
-        setTimeout(tick,90+step*step*2.2);
-      };
-      tick();
-    },wait);
+  const cv=d.querySelector('#d20cv');
+  if(!cv)return;
+
+  // Face 0 directly pointing at camera angle
+  const targetRx = Math.atan(1 / Math.sqrt(2)); // ~0.61548
+  const targetRy = Math.PI / 4;                // ~0.78539
+  const targetRz = 0;
+
+  let rx = targetRx, ry = targetRy, rz = targetRz;
+  let rolling = false, finished = false;
+  let animId = null;
+
+  const render = (num, isCrit, isFail, scale) => {
+    if(typeof draw3DD20=='function'){
+      draw3DD20(cv, rx, ry, rz, num, rolling, isCrit, isFail, scale);
+    }
   };
+
+  // Initial draw before roll
+  render('?', false, false, 1.0);
+
+  const runRoll = () => {
+    if(!d.isConnected || rolling) return;
+    rolling = true;
+    d.classList.add('rolling');
+    snd('dice');vib([100,50,100]);
+
+    const startTime = performance.now();
+    const duration = 2400; // 2.4 seconds realistic physics deceleration roll
+
+    // Initial spin speed
+    let vx = 18 + Math.random() * 8;
+    let vy = 22 + Math.random() * 8;
+    let vz = 12 + Math.random() * 6;
+
+    const frame = now => {
+      if(!d.isConnected) return;
+      const elapsed = now - startTime;
+      const progress = Math.min(1.0, elapsed / duration);
+
+      if(progress < 1.0) {
+        // Cubic ease-out deceleration
+        const ease = 1.0 - Math.pow(progress, 2.5);
+        rx += vx * ease * 0.016;
+        ry += vy * ease * 0.016;
+        rz += vz * ease * 0.016;
+
+        // Visual bounce & wobble
+        const bounce = 1.0 + Math.sin(progress * Math.PI * 4) * 0.12 * ease;
+        const currentDisplayNum = 1 + (Math.random() * 20 | 0);
+        render(currentDisplayNum, false, false, bounce);
+        animId = requestAnimationFrame(frame);
+      } else {
+        // Landing & Slam
+        rolling = false;
+        finished = true;
+        d.classList.remove('rolling');
+        d.classList.add('finished');
+
+        // Snap smoothly to exact landing face
+        rx = targetRx;
+        ry = targetRy;
+        rz = targetRz;
+
+        const isCrit = target >= 20;
+        const isFail = target == 1 || res == 'death';
+
+        // Impact bounce animation
+        let slamStep = 0;
+        const slamFrames = [1.25, 0.92, 1.06, 0.98, 1.0];
+        const doSlam = () => {
+          if(!d.isConnected) return;
+          if(slamStep < slamFrames.length) {
+            render(target, isCrit, isFail, slamFrames[slamStep++]);
+            setTimeout(doSlam, 45);
+          } else {
+            render(target, isCrit, isFail, 1.0);
+          }
+        };
+        doSlam();
+
+        if(isCrit){snd('win');flash();vib([80,80,200])}
+        else if(isFail){snd('death');try{document.body.classList.add('dead')}catch(e){}vib([300,100,500])}
+        else{snd(res);flash()}
+
+        setTimeout(()=>{const x=document.querySelector('#mx');if(x)x.style.visibility=''},600);
+      }
+    };
+    animId = requestAnimationFrame(frame);
+  };
+
   const rl=document.querySelector('#rl');
-  if(rl&&isMe)rl.onclick=()=>{rl.remove();run(600)};
-  else{if(rl)rl.remove();run(1300)}
+  if(rl&&isMe) {
+    rl.onclick=()=>{
+      rl.remove();
+      snd('heart');
+      setTimeout(runRoll, 300);
+    };
+  } else {
+    if(rl) rl.remove();
+    snd('heart');
+    setTimeout(runRoll, 1000);
+  }
 }
 
 /* ---------- MOTOR ---------- */
@@ -544,7 +619,7 @@ function endRound(){
       else{let x,y;do{x=d6()+d6();y=d6()+d6()}while(x==y);L=x<y?0:1;hx=[x,y];how='zar'}
     }
     const th=TH[Math.min(S.bo,3)],roll=d20(),surv=roll>=th;
-    const mk=(v,roll,surv)=>{return pre(v)+`<hr>Düelloyu ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısına göre)':how=='zar'?` (beraberlik zarı: ${hx[v]}–${hx[1-v]})`:''}.<br>Ölüm zarını (D20) ${L==v?'sen atıyorsun':'rakip atıyor'}:<div class="d20-box" data-roll="${roll}" data-dc="${th}" data-m="${L==v?1:0}" data-s="${surv?'ok':L==v?'death':'win'}"><div class="d20-stage"><div class="d20-glow"></div><div class="d20-die"><div class="d20-facet f1"></div><div class="d20-facet f2"></div><div class="d20-facet f3"></div><div class="d20-facet f4"></div><div class="d20-facet f5"></div><div class="d20-front"><span class="d20-num">?</span></div></div></div><div class="d20-dc-badge">HAYATTA KALMA HEDEFİ: <i>${th}</i></div></div>${L==v?'<button id="rl" class="btn d20-btn">ÖLÜM ZARINI AT</button>':''}<div class="after"><b>Zar Sonucu: ${roll}</b><br>`+(surv?(L==v?'Kurtuldun! Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
+    const mk=(v,roll,surv)=>{return pre(v)+`<hr>Düelloyu ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısına göre)':how=='zar'?` (beraberlik zarı: ${hx[v]}–${hx[1-v]})`:''}.<br>Ölüm zarını (D20) ${L==v?'sen atıyorsun':'rakip atıyor'}:<div class="d20-box" data-roll="${roll}" data-dc="${th}" data-m="${L==v?1:0}" data-s="${surv?'ok':L==v?'death':'win'}"><div class="d20-stage"><div class="d20-glow"></div><canvas id="d20cv" class="d20-canvas" width="280" height="280"></canvas></div><div class="d20-dc-badge"><span class="lbl">HAYATTA KALMA HEDEFİ</span><span class="val">${th}</span></div></div>${L==v?'<button id="rl" class="btn d20-btn">ÖLÜM ZARINI AT</button>':''}<div class="after"><b>Zar Sonucu: ${roll}</b><br>`+(surv?(L==v?'Kurtuldun! Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
     const full=v=>mk(v,roll,surv),rig=MODE=='bot'&&DIFF=='imp'&&L==1&&!surv&&!S.rigDone; // sahne oyun başına bir kez; ikinci ölümde gerçekten ölür
     if(surv||rig){const n=S.bo+2,ek=['a','e','ye','e','e','e','ya','ye','e','a'][n%10];
       const lb=`Düello ${n}'${ek} geç`,go=()=>{S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()};
