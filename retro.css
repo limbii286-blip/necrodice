@@ -45,6 +45,9 @@ body.rm::before,body.rm::after{animation:none!important}
 .tot small{font-size:17px;text-transform:uppercase;letter-spacing:1px}
 .tot b{font:400 56px/.9 var(--mf);color:var(--bone);text-shadow:0 0 10px #cfc8a855}
 .tot.bust b{color:var(--blood2);text-shadow:0 0 14px var(--blood2);animation:jit .5s steps(2) 3}
+.tot.exact b{color:#7dff8a;text-shadow:0 0 12px rgba(125,255,138,0.65),0 0 20px rgba(125,255,138,0.35);animation:exactGlow 2s ease-in-out infinite}
+.tot.exact small{color:#7dff8a;opacity:1}
+@keyframes exactGlow{0%,100%{text-shadow:0 0 10px rgba(125,255,138,0.5)}50%{text-shadow:0 0 16px rgba(125,255,138,0.85),0 0 24px rgba(125,255,138,0.4)}}
 @keyframes jit{50%{transform:translate(2px,-1px)}}
 .rm .tot.bust b{animation:none!important}
 .jpips i{border-radius:0;transform:none;border-color:var(--blood2);width:10px;height:10px}.jpips i.on{background:var(--blood2);box-shadow:0 0 6px var(--blood2)}
