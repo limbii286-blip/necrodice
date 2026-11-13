@@ -205,12 +205,12 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı animas
     snd('dice');vib([100,50,100]);
 
     const startTime = performance.now();
-    const duration = 2400; // 2.4 seconds realistic physics deceleration roll
+    const duration = 2600; // Akıcı ve tatmin edici yavaşlama
 
-    // Initial spin speed
-    let vx = 18 + Math.random() * 8;
-    let vy = 22 + Math.random() * 8;
-    let vz = 12 + Math.random() * 6;
+    // Yavaşlatılmış ve kontrollü dönüş hızları (önceki: 18..26 yerine daha tok 7..11)
+    let vx = 7.5 + Math.random() * 3.5;
+    let vy = 9.0 + Math.random() * 3.5;
+    let vz = 5.0 + Math.random() * 2.5;
 
     const frame = now => {
       if(!d.isConnected) return;
@@ -218,14 +218,14 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı animas
       const progress = Math.min(1.0, elapsed / duration);
 
       if(progress < 1.0) {
-        // Cubic ease-out deceleration
-        const ease = 1.0 - Math.pow(progress, 2.5);
+        // Yumuşak kademeli yavaşlama (ease-out)
+        const ease = 1.0 - Math.pow(progress, 2.0);
         rx += vx * ease * 0.016;
         ry += vy * ease * 0.016;
         rz += vz * ease * 0.016;
 
         // Visual bounce & wobble
-        const bounce = 1.0 + Math.sin(progress * Math.PI * 4) * 0.12 * ease;
+        const bounce = 1.0 + Math.sin(progress * Math.PI * 3) * 0.08 * ease;
         const currentDisplayNum = 1 + (Math.random() * 20 | 0);
         render(currentDisplayNum, false, false, bounce);
         animId = requestAnimationFrame(frame);

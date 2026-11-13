@@ -87,14 +87,14 @@
       if (fd.norm[2] <= 0.0) return;
 
       const { p0, p1, p2, norm, fi } = fd;
-      // Phong diffuse reflection
-      const diff = Math.max(0.12, norm[0] * ldir[0] + norm[1] * ldir[1] + norm[2] * ldir[2]);
+      // Mat / saten yakut dokusu: parlama yumuşatıldı, diff dengelendi
+      const diff = Math.max(0.25, norm[0] * ldir[0] + norm[1] * ldir[1] + norm[2] * ldir[2]);
       
-      // Specular reflection (glossy resin highlight)
+      // Specular reflection (yumuşak mat yansıma)
       const rx_l = 2 * diff * norm[0] - ldir[0];
       const ry_l = 2 * diff * norm[1] - ldir[1];
       const rz_l = 2 * diff * norm[2] - ldir[2];
-      const spec = Math.pow(Math.max(0, rz_l), 14) * 0.45;
+      const spec = Math.pow(Math.max(0, rz_l), 6) * 0.12;
 
       const s0 = [cx + p0[0] * baseScale, cy - p0[1] * baseScale];
       const s1 = [cx + p1[0] * baseScale, cy - p1[1] * baseScale];
@@ -107,34 +107,32 @@
       ctx.lineTo(s2[0], s2[1]);
       ctx.closePath();
 
-      // Deep ruby red gradient per facet
+      // Mat bordo/yakut reçine tonları
       const grad = ctx.createLinearGradient(s0[0], s0[1], (s1[0]+s2[0])/2, (s1[1]+s2[1])/2);
       
       if (isCrit) {
-        // Glowing gold/crimson
-        grad.addColorStop(0, `rgb(${Math.min(255, (255 * diff + spec * 255)|0)}, ${Math.min(255, (200 * diff + spec * 255)|0)}, 40)`);
-        grad.addColorStop(1, `rgb(${Math.min(255, (160 * diff)|0)}, ${Math.min(255, (90 * diff)|0)}, 10)`);
+        grad.addColorStop(0, `rgb(${Math.min(255, (220 * diff + spec * 120)|0)}, ${Math.min(255, (170 * diff + spec * 100)|0)}, 35)`);
+        grad.addColorStop(1, `rgb(${Math.min(255, (140 * diff)|0)}, ${Math.min(255, (80 * diff)|0)}, 10)`);
       } else if (isFail) {
-        // Dark blackened crimson
-        grad.addColorStop(0, `rgb(${Math.min(255, (120 * diff + spec * 180)|0)}, 20, 25)`);
-        grad.addColorStop(1, `rgb(${Math.min(255, (45 * diff)|0)}, 5, 8)`);
+        grad.addColorStop(0, `rgb(${Math.min(255, (95 * diff + spec * 90)|0)}, 18, 22)`);
+        grad.addColorStop(1, `rgb(${Math.min(255, (40 * diff)|0)}, 5, 8)`);
       } else {
-        // BG3 Ruby Red Gemstone
-        grad.addColorStop(0, `rgb(${Math.min(255, (245 * diff + spec * 255)|0)}, ${Math.min(255, (28 * diff + spec * 255)|0)}, 45)`);
-        grad.addColorStop(1, `rgb(${Math.min(255, (110 * diff)|0)}, 8, 16)`);
+        // Mat kadife bordo / koyu kızıl ton
+        grad.addColorStop(0, `rgb(${Math.min(255, (190 * diff + spec * 130)|0)}, ${Math.min(255, (22 * diff)|0)}, 36)`);
+        grad.addColorStop(1, `rgb(${Math.min(255, (90 * diff)|0)}, 8, 14)`);
       }
 
       ctx.fillStyle = grad;
       ctx.fill();
 
-      // Sharp gold-leaf bevel borders
-      ctx.strokeStyle = isCrit ? 'rgba(255, 235, 140, 0.95)' : 'rgba(240, 190, 80, 0.75)';
-      ctx.lineWidth = 2.4;
+      // Mat antika pirinç çerçeve kenarları
+      ctx.strokeStyle = isCrit ? 'rgba(235, 210, 120, 0.9)' : 'rgba(195, 150, 65, 0.65)';
+      ctx.lineWidth = 2.0;
       ctx.lineJoin = 'round';
       ctx.stroke();
 
-      // Inner subtle rim bevel
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+      // İç çerçeve (hafif gölge)
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
       ctx.lineWidth = 1.0;
       ctx.stroke();
 
