@@ -233,21 +233,21 @@ body.rm::before,body.rm::after{animation:none!important}
 .e.opp{border-color:var(--blood2);box-shadow:0 0 12px #ec445288,3px 3px 0 #000}
 .e.mine{border-color:var(--lime);box-shadow:0 0 12px #7dff8a77,3px 3px 0 #000}
 
-/* hedef yuvarlağı: kutunun tam ortası */
-#fx .seal{position:absolute;inset:0;margin:auto;width:78px;height:78px;z-index:3;white-space:nowrap}
+/* hedef yuvarlağı: kırmızı alanla yeşil alanın birleştiği dikey eksenin tam ortası */
+#fx .seal{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);margin:0;width:92px;height:92px;z-index:3;white-space:nowrap;display:flex;align-items:center;justify-content:center}
 #fx .seal small{font-size:15px;line-height:1}
-#fx .seal b{font-size:44px;line-height:.9}
+#fx .seal b{font-size:66px;line-height:1;margin:0}
 #fx .seal.low small{font-size:13px}
-#fx .seal.low b{font-size:22px;letter-spacing:0;line-height:1;margin-top:2px}
+#fx .seal.low b{font-size:34px;letter-spacing:0;margin:0}
 
 /* ok: yuvarlaktan çıkar, sırası kimdeyse onu gösterir (üst = rakip, alt = sen) */
-.arr{position:absolute;left:50%;width:28px;height:84px;margin-left:-14px;z-index:2}
+.arr{position:absolute;left:50%;width:32px;height:120px;margin-left:-16px;z-index:2}
 .arr i{display:block;width:100%;height:100%;animation:arrow .8s steps(2) infinite;
-  clip-path:polygon(10px 0,18px 0,18px 6px,22px 6px,22px 12px,28px 12px,28px 20px,20px 20px,20px 84px,8px 84px,8px 20px,0 20px,0 12px,6px 12px,6px 6px,10px 6px)}
-.arr.op{bottom:50%;filter:drop-shadow(0 0 5px var(--blood2))}.arr.op i{background:var(--blood2)}
-.arr.me{top:50%;transform:scaleY(-1);filter:drop-shadow(0 0 5px var(--lime))}.arr.me i{background:var(--lime)}
+  clip-path:polygon(11px 0,21px 0,21px 8px,26px 8px,26px 16px,32px 16px,32px 24px,22px 24px,22px 120px,10px 120px,10px 24px,0 24px,0 16px,6px 16px,6px 8px,11px 8px)}
+.arr.op{bottom:calc(50% + 15px);filter:drop-shadow(0 0 7px var(--blood2))}.arr.op i{background:var(--blood2)}
+.arr.me{top:calc(50% + 15px);transform:scaleY(-1);filter:drop-shadow(0 0 7px var(--lime))}.arr.me i{background:var(--lime)}
 .arr.off{display:none}
-@keyframes arrow{50%{transform:translateY(-5px)}}
+@keyframes arrow{50%{transform:translateY(-8px)}}
 .rm .arr i{animation:none!important}
 
 @media(max-width:400px){
@@ -255,7 +255,11 @@ body.rm::before,body.rm::after{animation:none!important}
   #fx .btn{font-size:clamp(15px,4.3vw,18px);padding:15px 7px 11px}
   #fx .cl{gap:5px}#fx .deck{width:calc(var(--cw)*.55);height:calc(var(--ch)*.55);margin-right:5px}
   #fx .jh.o{padding-right:42px}#fx .jh.m{padding-left:42px}
-  #fx .seal{width:64px;height:64px;border-width:2px}#fx .seal b{font-size:36px}#fx .seal small{font-size:12px}#fx .seal.low b{font-size:19px}#fx .seal.low small{font-size:11px}
+  #fx .seal{width:78px;height:78px;border-width:2px}#fx .seal b{font-size:56px}#fx .seal small{font-size:12px}#fx .seal.low b{font-size:29px}#fx .seal.low small{font-size:11px}
+  .arr{width:26px;height:96px;margin-left:-13px}
+  .arr i{clip-path:polygon(9px 0,17px 0,17px 6px,21px 6px,21px 13px,26px 13px,26px 20px,18px 20px,18px 96px,8px 96px,8px 20px,0 20px,0 13px,5px 13px,5px 6px,9px 6px)}
+  .arr.op{bottom:calc(50% + 10px)}
+  .arr.me{top:calc(50% + 10px)}
 }
 
 /* karakter kareleri */
@@ -359,13 +363,13 @@ body:has(#menu:not([hidden])) main,body:has(#menu:not([hidden])) #cast,body:has(
 @media(max-width:700px){.shake main{animation:none!important}}
 
 /* ===== v2: hedef yuvarlağı, kart çek/pas, ara ekranlar ===== */
-#fx .seal{width:92px;height:92px;display:flex;align-items:center;justify-content:center}
+#fx .seal{left:50%;top:50%;transform:translate(-50%,-50%);margin:0;width:92px;height:92px;display:flex;align-items:center;justify-content:center}
 #fx .seal b{font-size:66px;line-height:1;margin:0}
 #fx .seal.low b{font-size:34px;letter-spacing:0;margin:0}
 #fx .jh.o{padding-right:54px}#fx .jh.m{padding-left:54px}
 #fx .btn{font-size:clamp(17px,5vw,24px);padding:15px 15px 12px}
 @media(max-width:400px){
-  #fx .seal{width:78px;height:78px}#fx .seal b{font-size:56px}#fx .seal.low b{font-size:29px}
+  #fx .seal{left:50%;top:50%;transform:translate(-50%,-50%);margin:0;width:78px;height:78px}#fx .seal b{font-size:56px}#fx .seal.low b{font-size:29px}
   #fx .jh.o{padding-right:46px}#fx .jh.m{padding-left:46px}
   #fx .btn{font-size:clamp(15px,4.4vw,18px);padding:16px 8px 12px}
 }
