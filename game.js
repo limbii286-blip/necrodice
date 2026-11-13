@@ -392,7 +392,14 @@ try{
         if(d.PROF)mergeGlobalPROF(d.PROF);
         console.log('Firebase: Global bot hafızası yüklendi!');
       }
-    }).catch(e=>console.warn('Firebase get error:',e));
+      // Telefonda veya yerelde daha önce birikmiş veri varsa hemen Firebase'e aktar
+      if((LRN && LRN.ht > 0) || (PROF && PROF.n > 0)){
+        syncToFirebase();
+      }
+    }).catch(e=>{
+      console.warn('Firebase get error:',e);
+      if((LRN && LRN.ht > 0) || (PROF && PROF.n > 0)) syncToFirebase();
+    });
   }
 }catch(e){console.warn('Firebase init error:',e)}
 
