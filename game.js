@@ -891,6 +891,7 @@ if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{fitSig=''
 function R(){
   if(!G)return;
   watch();fitSoon();
+  try{if(window.Necro3D)Necro3D.sync(G)}catch(e){console.warn('3D',e)}
   const S=G,low=lowW(S),cn=cand(),k=P&&P.ks[P.pk.length],bi=Math.min(S.bo,3),T=tg(S),res=S.res||[];
   let fresh=0;
   const cd=(c,back,fl,pk)=>{const nf=!seen.has(c.id);if(nf)fresh++;seen.add(c.id);
@@ -1030,11 +1031,12 @@ function guide(){box(`<h3>Nasıl oynanır</h3>
 <p class="gd">Hepsini Joker Kodeksi'nde görebilirsin.</p>`)}
 function settings(){
   const inGame=$('#menu').hidden&&!!G;
-  box(`<h3>Ayarlar</h3><label>Müzik<input type="range" id="sm" min="0" max="1" step=".05" value="${VM}"></label><label>Efektler<input type="range" id="ss" min="0" max="1" step=".05" value="${VS}"></label><label class="chk"><input type="checkbox" id="sr" ${RM?'checked':''}> Hareketi azalt</label><label class="chk"><input type="checkbox" id="sv" ${VB?'checked':''}> Titreşim</label>${inGame?`<div class="row"><button class="btn alt sm" id="sk">Joker Kodeksi</button><button class="btn alt sm" id="sg">Nasıl oynanır</button></div>`:''}${inGame?`<div class="row">${MODE=='bot'?'<button class="btn alt sm" id="sa">Tekrar oyna</button>':''}</div><div class="row"><button class="btn alt sm" id="sx">Ana menüye dön</button></div>`:''}`);
+  box(`<h3>Ayarlar</h3><label>Müzik<input type="range" id="sm" min="0" max="1" step=".05" value="${VM}"></label><label>Efektler<input type="range" id="ss" min="0" max="1" step=".05" value="${VS}"></label><label class="chk"><input type="checkbox" id="sr" ${RM?'checked':''}> Hareketi azalt</label><label class="chk"><input type="checkbox" id="sv" ${VB?'checked':''}> Titreşim</label><label class="chk"><input type="checkbox" id="s3" ${window.Necro3D&&Necro3D.isActive()?'checked':''}> 3D masa görünümü</label>${inGame?`<div class="row"><button class="btn alt sm" id="sk">Joker Kodeksi</button><button class="btn alt sm" id="sg">Nasıl oynanır</button></div>`:''}${inGame?`<div class="row">${MODE=='bot'?'<button class="btn alt sm" id="sa">Tekrar oyna</button>':''}</div><div class="row"><button class="btn alt sm" id="sx">Ana menüye dön</button></div>`:''}`);
   $('#sm').oninput=e=>{VM=+e.target.value;LS('vm',VM);ac();MG.gain.value=VM*.8;if(FILE&&mel)mel.volume=Math.min(1,VM*.8)};
   $('#ss').oninput=e=>{VS=+e.target.value;LS('vs',VS);ac();SG.gain.value=VS};$('#ss').onchange=()=>snd('draw');
   $('#sr').onchange=e=>{RM=e.target.checked;LS('rm',RM?1:0);document.body.classList.toggle('rm',RM)};
   $('#sv').onchange=e=>{VB=e.target.checked;LS('vb',VB?1:0)};
+  if($('#s3'))$('#s3').onchange=e=>{if(window.Necro3D){Necro3D.toggle(e.target.checked);R()}};
   if($('#sk'))$('#sk').onclick=codex;if($('#sg'))$('#sg').onclick=guide;
   if($('#sa'))$('#sa').onclick=()=>{ // aynı botla baştan başla, mevcut oyun iptal
     botGen++;thinkOn=false;const c=$('#cast');if(c)c.remove();$('#m').hidden=true;lock=false;P=null;

@@ -736,3 +736,15 @@ main{padding-top:max(14px,var(--sat,env(safe-area-inset-top,0px)))}
 .slot-actions .btn{
   flex:1;padding:10px 6px;font-size:18px;
 }
+
+/* ===== 3D MASA GÖRÜNÜMÜ ===== */
+#scene3d{position:fixed;inset:0;z-index:0;pointer-events:none;display:none}
+#scene3d canvas{display:block;width:100%;height:100%}
+body.view-3d #scene3d{display:block}
+body.view-3d,html:has(body.view-3d){background:#040305}
+body.view-3d main{position:relative;z-index:2;background:none!important}
+body.view-3d #hdr,body.view-3d .zone,body.view-3d #fx{background:none!important;border-color:transparent!important;box-shadow:none!important;outline:none!important}
+body.view-3d #fx::before,body.view-3d #fx::after{display:none}
+body.view-3d #hdr{background:linear-gradient(#000000aa,#0000)!important}
+body.view-3d .zone .c,body.view-3d .zone img.c,body.view-3d #fx .deck{opacity:0!important;pointer-events:none!important}
+body.view-3d #fx .jh .c{opacity:1!important;pointer-events:auto!important}
