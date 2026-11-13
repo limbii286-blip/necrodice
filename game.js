@@ -654,7 +654,7 @@ function impSave(html,cont){ // BİLİNMEYEN ölecekken: zar düşer, sahne gire
 let entering=false;
 function veil(ms=2000){const v=document.createElement('div');v.className='veil';v.style.animationDuration=ms+'ms';v.style.setProperty('--ms',ms*.9+'ms');v.innerHTML=`<img alt="" src="${IMG.logo}"><b>limbigames</b><span class="ldb"><i></i></span>`;document.body.appendChild(v);setTimeout(()=>v.remove(),ms+100)}
 function enter(fn){if(entering)return;entering=true;veil();setMusic('game');setTimeout(()=>{$('#menu').hidden=true;entering=false;fn()},1700)}
-function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}G={u:0,bo:0,log:[],over:false,used:[],av:Math.random()<.5?['t','c']:['c','t'],mast:[0,0]};prevAv[0]=prevAv[1]=undefined;newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
+function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}G={u:0,bo:0,log:[],over:false,used:[],av:['t','c'],mast:[0,0]};prevAv[0]=prevAv[1]=undefined;newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
 
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
@@ -864,8 +864,8 @@ function R(){
   const avh=p=>{const k=avKey(S,p),now=performance.now();if(prevAv[p]!==undefined&&prevAv[p]!==k)morphT[p]=now;prevAv[p]=k;
     const el=(now-morphT[p])/1000,mo=morphT[p]&&el<1.1;return `<img class="av${mo?' morph':''}" data-av="${p}"${mo?` style="animation-delay:-${el.toFixed(2)}s"`:''} src="${avSrc(k)}" alt="">`};
   const av0=avh(0),av1=avh(1);
-  const p0Name=isSpec?'1. Oyuncu (Oda Sahibi)':'Sen';
-  const p1Name=isSpec?'2. Oyuncu (Misafir)':(MODE=='bot'||S.av?oppName():'Rakip');
+  const p0Name=isSpec?'Tüccar (Oda Sahibi)':(MODE=='host'?'Tüccar (Sen)':'Sen');
+  const p1Name=isSpec?'Yozlaşmış Tüccar (Misafir)':(MODE=='guest'?'Yozlaşmış Tüccar (Sen)':(MODE=='host'?'Yozlaşmış Tüccar (Rakip)':(MODE=='bot'||S.av?oppName():'Rakip')));
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'');
   setH('#opp',`<div class="who">${av1}<div class="nm"><b>${p1Name}</b><span class="meta">${MODE=='bot'?IC.dif.repeat(DN[DIFF]):'Online'}${jp(2-S.jUsed[1])}</span></div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${S.rev?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}<span class="gap"></span>${S.pl[1].open.map(c=>cd(c)).join('')}</div>`);
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<img class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}" src="${IMG.j[e.id]}" alt="">`};
@@ -1081,8 +1081,50 @@ function note(p,id,cb){
   }
   cast(p,id,cb);
 }
-function onGuest(m){ // host: misafirin hamle istekleri (doğrulanır)
+function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gelen mesajlar
+  if(m.k=='query_slots'){
+    const guestBusy = !!(conn && conn.open);
+    fromConn.send({
+      k: 'slots_info',
+      slots: {
+        p0: { name: 'Tüccar', role: 'Oda Sahibi', busy: true },
+        p1: { name: 'Yozlaşmış Tüccar', role: 'Misafir Oyuncu', busy: guestBusy }
+      },
+      specCount: spectators.length
+    });
+    return;
+  }
+  if(m.k=='join_as'){
+    if(m.role=='player'){
+      if(!conn || !conn.open){
+        conn = fromConn;
+        fromConn._role = 'player';
+        fromConn.send({k:'role', role:'player'});
+        const ls=$('#lobbyStatus');if(ls)ls.textContent='Rakip bağlandı! Oyun başlıyor…';
+        setTimeout(()=>{
+          $('#m').hidden=true;lock=false;
+          enter(start);
+        },600);
+        fromConn.on('close',()=>peerLeft('Rakip oyundan ayrıldı.'));
+      }else{
+        // Oyuncu slotu dolmuş, mecburen izleyiciye al veya bilgi ver
+        fromConn.send({k:'slot_full'});
+      }
+    }else if(m.role=='spectator'){
+      fromConn._role = 'spectator';
+      spectators.push(fromConn);
+      fromConn.send({k:'role', role:'spectator'});
+      if(G) fromConn.send({k:'s', v:specView(G), specCount:spectators.length});
+      fromConn.on('close',()=>{
+        spectators=spectators.filter(x=>x!==fromConn);
+        if(G)R();
+      });
+    }
+    return;
+  }
+
   const S=G;if(!S||S.over||S.wait||S.turn!=1)return;
+  if(fromConn !== conn) return; // Hamleleri sadece aktif rakip (conn) yapabilir!
   if(m.k=='draw'){if(!canDraw(S,1))return;const c=S.deck.pop();S.pl[1].open.push(c);S.acted=true;S.log.push({p:1,t:`kart çekti (${c.n})`});R()}
   else if(m.k=='pass')pass();
   else if(m.k=='play'){
@@ -1092,10 +1134,25 @@ function onGuest(m){ // host: misafirin hamle istekleri (doğrulanır)
   }
 }
 function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
+  if(m.k=='slots_info'){
+    showJoinModal(m.slots, m.specCount);
+    return;
+  }
+  if(m.k=='slot_full'){
+    st('Oyuncu slotu doldu! İzleyici olarak katılabilirsin.');
+    const btnP = $('#btnJoinPlayer');
+    if(btnP){ btnP.disabled = true; btnP.textContent = 'Dolu'; }
+    return;
+  }
   if(m.k=='role'){
+    $('#m').hidden = true; lock = false;
     if(m.role=='spectator'){
       MODE='spectator';
       st('Odaya izleyici olarak katıldın.');
+      veil();setMusic('game');
+    }else if(m.role=='player'){
+      MODE='guest';
+      st('Odaya oyuncu olarak katıldın.');
       veil();setMusic('game');
     }
     return;
@@ -1110,11 +1167,7 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
   }
   else if(m.k=='m'){
     waitM=true;
-    if(MODE=='spectator'){
-      M(m.html,null,null,m.end);
-    }else{
-      M(m.html,null,null,m.end);
-    }
+    M(m.html,null,null,m.end);
     snd(m.sd);
   }
   else if(m.k=='j')cast(m.p,m.id,R);
@@ -1181,36 +1234,98 @@ function hostRoom(){
   });
 
   peer.on('connection',c=>{
-    // Eğer henüz 2. oyuncu (rakip) yoksa veya bağlantısı kapandıysa:
-    if(!conn||!conn.open){
-      conn=c;
-      const ls=$('#lobbyStatus');if(ls)ls.textContent='Rakip bağlandı! Oyun başlıyor…';
-      setTimeout(()=>{
-        $('#m').hidden=true;lock=false;
-        enter(start);
-      },600);
-      c.on('data',onGuest);
-      c.on('close',()=>peerLeft('Rakip oyundan ayrıldı.'));
-      return;
-    }
-
-    // 2 kişi zaten varsa: sonra gelen herkes İZLEYİCİ slotuna alınır
-    spectators.push(c);
-    c.on('open',()=>{
-      c.send({k:'role',role:'spectator'});
-      if(G)c.send({k:'s',v:specView(G),specCount:spectators.length});
-    });
-    c.on('close',()=>{
-      spectators=spectators.filter(x=>x!==c);
-      if(G)R();
-    });
+    c.on('data', m => onGuest(m, c));
   });
 }
+function showJoinModal(slots, specCount){
+  const p0 = slots.p0, p1 = slots.p1;
+  const p1Free = !p1.busy;
+  const currentCode = $('#code') ? $('#code').value.trim().toUpperCase() : '';
+  
+  box(`
+    <div class="join-modal">
+      <h3 style="margin-bottom:6px">Odaya Katıl</h3>
+      <span class="join-code-tag">${currentCode}</span>
+      <p style="font-size:18px;color:var(--bone);margin-bottom:8px">Mevcut oyuncu slotları:</p>
+      
+      <div class="slot-list">
+        <div class="slot-card">
+          <div class="slot-info">
+            <img class="slot-av" src="${avSrc('t')}" alt="Tüccar">
+            <div class="slot-names">
+              <b>${p0.name}</b>
+              <small>1. Oyuncu · ${p0.role}</small>
+            </div>
+          </div>
+          <span class="slot-status busy">DOLU</span>
+        </div>
+        
+        <div class="slot-card">
+          <div class="slot-info">
+            <img class="slot-av" src="${avSrc('c')}" alt="Yozlaşmış Tüccar">
+            <div class="slot-names">
+              <b>${p1.name}</b>
+              <small>2. Oyuncu · ${p1.role}</small>
+            </div>
+          </div>
+          <span class="slot-status ${p1Free?'free':'busy'}">${p1Free?'BOŞ':'DOLU'}</span>
+        </div>
+      </div>
+      
+      <div class="slot-actions">
+        <button id="btnJoinPlayer" class="btn ${p1Free?'':'dim'}" ${p1Free?'':'disabled'}>
+          ${p1Free?'Oyuncu Olarak Katıl':'Oyuncu Slotu Dolu'}
+        </button>
+        <button id="btnJoinSpec" class="btn alt">
+          İzleyici Olarak Katıl ${specCount ? `(${specCount})` : ''}
+        </button>
+      </div>
+    </div>
+  `, true);
+
+  const bp = $('#btnJoinPlayer');
+  if(bp && p1Free){
+    bp.onclick = () => {
+      bp.disabled = true;
+      bp.textContent = 'Bağlanılıyor…';
+      if(conn && conn.open) conn.send({k:'join_as', role:'player'});
+    };
+  }
+
+  const bs = $('#btnJoinSpec');
+  if(bs){
+    bs.onclick = () => {
+      bs.disabled = true;
+      bs.textContent = 'İzleyici olarak giriliyor…';
+      if(conn && conn.open) conn.send({k:'join_as', role:'spectator'});
+    };
+  }
+
+  const pc = $('#pc');
+  if(pc){
+    pc.textContent = 'Vazgeç';
+    pc.onclick = () => {
+      try{if(conn)conn.close()}catch(e){}
+      try{if(peer)peer.destroy()}catch(e){}
+      conn = null; peer = null; MODE = 'bot';
+      $('#m').hidden = true; lock = false; st('');
+    };
+  }
+}
+
 function joinRoom(){
   if(noNet())return;
   const code=$('#code').value.trim().toUpperCase();if(!code)return st('Oda kodunu yaz');
-  MODE='guest';leaving=false;sayT='';st('Bağlanılıyor…');peer=new Peer();
-  peer.on('open',()=>{conn=peer.connect('necrodice-'+code,{reliable:true});conn.on('data',onHost);conn.on('open',()=>{st('Bağlandı, oyun başlıyor…');veil();setMusic('game')});conn.on('close',()=>peerLeft('Oda sahibi oyundan ayrıldı.'))});
+  leaving=false;sayT='';st('Odaya bağlanılıyor…');peer=new Peer();
+  peer.on('open',()=>{
+    conn=peer.connect('necrodice-'+code,{reliable:true});
+    conn.on('data',onHost);
+    conn.on('open',()=>{
+      st('Oda bulundu. Slot durumu alınıyor…');
+      conn.send({k:'query_slots'});
+    });
+    conn.on('close',()=>peerLeft('Oda sahibi oyundan ayrıldı.'));
+  });
   peer.on('error',e=>st(NETERR(e)));
 }
 const on=(id,f)=>{const e=document.querySelector(id);if(e)e.onclick=f}; // bir öğe yoksa diğer düğmeler yine de çalışır

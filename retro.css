@@ -609,3 +609,55 @@ main{padding-top:max(14px,var(--sat,env(safe-area-inset-top,0px)))}
   text-align:center;color:#b3a8c9;font-size:15px;letter-spacing:.5px;
   margin-top:4px;opacity:.85;
 }
+
+/* ============================================================
+   ODA KATILIM MODALI (JOIN ROOM MODAL / SLOTS)
+   ============================================================ */
+.join-modal{
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;padding:8px 4px 6px;
+}
+.join-code-tag{
+  display:inline-block;background:#050806;border:1px solid #34503a;
+  border-radius:4px;padding:2px 10px;font:700 24px/1 var(--mf);
+  letter-spacing:3px;color:var(--gold);margin-bottom:12px;
+}
+.slot-list{
+  width:100%;display:flex;flex-direction:column;gap:8px;margin:10px 0 16px;
+}
+.slot-card{
+  display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(180deg,#101a13,#080d09);
+  border:1px solid #284431;border-radius:6px;
+  padding:8px 12px;text-align:left;
+}
+.slot-info{
+  display:flex;align-items:center;gap:10px;
+}
+.slot-av{
+  width:40px;height:40px;border-radius:4px;border:1px solid var(--bone);
+  object-fit:cover;box-shadow:2px 2px 0 #000;
+}
+.slot-names b{
+  display:block;font:400 22px/1 var(--hf);color:var(--bone);letter-spacing:1px;
+}
+.slot-names small{
+  display:block;font-size:14px;color:#8ab493;letter-spacing:.5px;
+}
+.slot-status{
+  display:inline-flex;align-items:center;gap:6px;
+  font:600 13px/1 var(--sf);letter-spacing:1px;text-transform:uppercase;
+  padding:4px 8px;border-radius:4px;
+}
+.slot-status.busy{
+  background:#260a0d;border:1px solid #731821;color:#ff8591;
+}
+.slot-status.free{
+  background:#0c2413;border:1px solid #1f6b36;color:#85ff9e;
+}
+.slot-actions{
+  width:100%;display:flex;gap:10px;margin-top:6px;
+}
+.slot-actions .btn{
+  flex:1;padding:10px 6px;font-size:18px;
+}
