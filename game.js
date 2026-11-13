@@ -164,7 +164,10 @@ const SND={
   stamp(){tone(70,.25,'square',.2);noise(.12,.35,400)}
 };
 function snd(n){if(!n||VS<=0)return;try{ac();SND[n]()}catch(e){}}
-document.addEventListener('pointerdown',()=>{try{ac()}catch(e){}});
+// Tarayıcı kuralı: Sayfaya ilk kullanıcı etkileşimiyle birlikte AudioContext ve Müzik başlar
+['pointerdown','click','keydown','touchstart'].forEach(ev=>{
+  document.addEventListener(ev,()=>{try{ac()}catch(e){}},{once:false});
+});
 const vib=m=>{try{if(VB&&navigator.vibrate)navigator.vibrate(m)}catch(e){}};
 const shake=()=>{try{if(RM)return;document.body.classList.add('shake');setTimeout(()=>document.body.classList.remove('shake'),450)}catch(e){}};
 const flash=()=>{try{if(RM)return;const f=document.querySelector('#fl');f.classList.remove('go');void f.offsetWidth;f.classList.add('go')}catch(e){}};
