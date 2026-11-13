@@ -20,7 +20,7 @@ const ac=()=>{
   if(AC.state=='suspended')AC.resume();return AC;
 };
 /* Müzik: menüde menu.m4a, oyunda game1/game2 sırayla. Web Audio'ya bağlı olduğu için ses ayarı iOS'ta da çalışır. */
-(()=>{try{const h=document.createElement('script');h.src='hd.js';h.async=true;document.head.appendChild(h)}catch(e){}})(); // HD görseller (gömülü): HDJ jokerler, HDAV karakterler
+(()=>{try{const h=document.createElement('script');h.src='hd.js?v=20261113_art';h.async=true;document.head.appendChild(h)}catch(e){}})(); // HD görseller (gömülü): HDJ jokerler, HDAV karakterler
 const FILE=location.protocol=='file:'; // çift tıkla açılınca Web Audio dosyaya erişemez: doğrudan <audio> kullan
 const AUD={mus:'?',sfx:'?',hd:'?'},MISS=[];const miss=u=>{try{u=new URL(u,location.href).href}catch(e){}if(!MISS.includes(u))MISS.push(u)}; // ayarlarda gösterilen dosya durumu
 const MU={menu:['music_gothic.wav'],game:['music_gothic.wav']};
@@ -787,7 +787,12 @@ function zoom(o){ // {src, hd:cb=>…, cls, cap, sub, btn, fn}
 const numHD=n=>cb=>{const cs=[`img/n/${n}.webp`,`img/n/${n}.png`,`img/n/${n}.jpg`,`img/n${n}.png`,`n${n}.png`];if(typeof HDN!='undefined'&&HDN[n])cs.unshift(HDN[n]);hq('n'+n,cs,cb)};
 const backHD=cb=>hq('bk',[...(typeof HDBK!='undefined'?[HDBK]:[]),'img/back.webp','img/back.png','img/n/back.png','img/n/back.webp','back.png'],cb);
 function zoomAv(p){const S=G,k=avKey(S,p),nm=NAMES[k]||(p?'Rakip':'Sen');
-  zoom({src:avSrc(k),cls:'sq',cap:nm,sub:p==0?'Sen':'Rakip',hd:cb=>{const cs=[];if(typeof HDAV!='undefined'&&HDAV[k])cs.push(HDAV[k]);cs.push(`img/av/${k}.webp`,`img/av/${k}.png`,`img/${k}.png`);hq('av'+k+(typeof HDAV!='undefined'?1:0),cs,cb)}})}
+  const initialSrc=(typeof HDAV!='undefined'&&HDAV[k])?HDAV[k]:avSrc(k);
+  zoom({src:initialSrc,cls:'sq',cap:nm,sub:p==0?'Sen':'Rakip',hd:cb=>{
+    if(typeof HDAV!='undefined'&&HDAV[k]){cb(HDAV[k]);return;}
+    const cs=[`img/av/${k}.jpg`,`img/av/${k}.png`,`img/av/${k}.webp`,`img/${k}.png`];
+    hq('av_'+k+'_v3',cs,cb);
+  }})}
 function zoomCard(id){const S=G;let f=null;
   for(const p of [0,1])for(const kd of ['open','closed']){const c=S.pl[p][kd].find(x=>x.id==id);if(c)f={c,p,closed:kd=='closed'}}
   if(!f)return;const {c,p,closed}=f,own=p==0,up=!closed||S.rev||(own&&peek.has(id)); // kart yüzü açık mı?
