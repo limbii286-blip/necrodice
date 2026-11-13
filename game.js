@@ -23,8 +23,8 @@ const ac=()=>{
 (()=>{try{const h=document.createElement('script');h.src='hd.js';h.async=true;document.head.appendChild(h)}catch(e){}})(); // HD görseller (gömülü): HDJ jokerler, HDAV karakterler
 const FILE=location.protocol=='file:'; // çift tıkla açılınca Web Audio dosyaya erişemez: doğrudan <audio> kullan
 const AUD={mus:'?',sfx:'?',hd:'?'},MISS=[];const miss=u=>{try{u=new URL(u,location.href).href}catch(e){}if(!MISS.includes(u))MISS.push(u)}; // ayarlarda gösterilen dosya durumu
-const MU={menu:['music_menu.mp3','menu.m4a'],game:['music_gothic.wav','music_game1.mp3','music_game2.mp3']};
-let curM='menu',mel=null,gi=Math.random()*2|0;
+const MU={menu:['music_gothic.wav'],game:['music_gothic.wav']};
+let curM='menu',mel=null,gi=0;
 
 /* Yerleşik müzik: audio/*.m4a bulunamazsa Web Audio ile üretilen karanlık ambiyans çalar (dosya gerekmez) */
 let syn=null,NOF=false;
@@ -69,7 +69,7 @@ function playM(){
   if(!AC||!curM||(mel&&mel._m==curM))return;
   if(NOF){if(mel){mel.onerror=null;mel.pause();mel=null}startSyn();return}
   const old=mel,list=MU[curM],el=new Audio(),g=AC.createGain(),t=AC.currentTime;
-  el._m=curM;el._g=g;el.preload='auto';el.loop=curM=='menu';
+  el._m=curM;el._g=g;el.preload='auto';el.loop=true;
   const fn=curM=='game'?list[gi++%list.length]:list[0];el.src='audio/'+fn;
   const cs=['audio/'+fn,fn,'/audio/'+fn,'../audio/'+fn];el._i=0;el.onerror=()=>{if(++el._i<cs.length){el.src=cs[el._i];el.play().catch(()=>{})}else{AUD.mus='bad';NOF=true;el.onerror=null;if(mel===el){mel=null}startSyn()}};el.onplaying=()=>{AUD.mus='ok'};
   el.onended=()=>{if(mel===el&&el._m=='game'){mel=null;playM()}}; // sıradaki parça
