@@ -802,19 +802,8 @@ function cast(p,id,cb){ // joker sahnede büyür ve Kapat'a basılana kadar kal�
   snd('play');
   if(p==0){if(DES.has(id)){shake();snd('stamp');vib(60)}cb&&cb();return} // kendi jokerimizin bildirimi yok, yalnızca rakibinki
   lock=true;
-  const isHost = MODE=='host';
-  const isGuest = MODE=='guest';
-  const isSpec = MODE=='spectator';
-  let whoTitle = '';
-  if(isSpec){
-    whoTitle = p==0 ? 'Tüccar (1. Oyuncu) bir joker oynadı:' : 'Yozlaşmış Tüccar (2. Oyuncu) bir joker oynadı:';
-  } else {
-    const oppLabel = isHost ? 'Yozlaşmış Tüccar (Rakip)' : (isGuest ? 'Tüccar (Rakip)' : oppName());
-    whoTitle = `${oppLabel} bir joker oynadı:`;
-  }
-  const jName = J[id] || 'Joker';
   const el=document.createElement('div');el.id='cast';el.className='from'+p;
-  el.innerHTML=`<div class="cw">${whoTitle}</div><img src="${IMG.j[id]}" alt="${jName}"><b>${jName}</b><button class="btn">Kapat</button>`;
+  el.innerHTML=`<img src="${IMG.j[id]}" alt=""><button class="btn">Kapat</button>`;
   document.body.appendChild(el);const oz=document.querySelector('#opp');if(oz&&oz.getBoundingClientRect){const r=oz.getBoundingClientRect();el.style.setProperty('--sy',Math.round(r.top+r.height/2-innerHeight/2)+'px')}hi(el.querySelector('img'),id);
   el.onclick=()=>{if(!el.isConnected)return;el.remove();lock=false;if(DES.has(id)){shake();snd('stamp');vib(60)}if(MODE=='bot'&&p==1){talk(jCat(id),1,.85);R()}cb&&cb()};
 }

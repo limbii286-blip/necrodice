@@ -70,14 +70,14 @@ body.rm::before,body.rm::after{animation:none!important}
 .deck b{border-radius:0;background:#000;border:1px solid var(--blood2);color:var(--blood2);font:400 22px var(--mf);padding:0 8px}
 
 /* Kart çekme ve deste animasyonları */
-.deck.pull{animation:deckDrawPulse .4s ease-out}
+.deck.pull{animation:deckDrawPulse .45s ease-out}
 @keyframes deckDrawPulse{
   0%{transform:scale(1)}
-  40%{transform:scale(1.18) translateY(-4px);box-shadow:0 0 25px var(--blood2),0 0 40px #ff2d3d}
+  40%{transform:scale(1.22) translateY(-4px);box-shadow:0 0 30px var(--blood2),0 0 50px #ff2d3d}
   100%{transform:scale(1)}
 }
 
-/* Yeni çekilen kartın belirgin, vurucu ve pürüzsüz geliş animasyonu */
+/* Yeni çekilen kartın belirgin, vurucu ve pürüzsüz geliş animasyonu (hem oyuncu hem rakip için) */
 .cards .c.fresh{
   animation:cardFlyIn .68s cubic-bezier(0.18, 0.9, 0.28, 1.15) both;
   will-change:transform,opacity,filter;
@@ -90,7 +90,7 @@ body.rm::before,body.rm::after{animation:none!important}
   }
   60%{
     opacity:1;
-    transform:translate(calc(var(--dx, 0px) * 0.15), calc(var(--dy, -80px) * 0.15)) scale(1.14) rotate(4deg);
+    transform:translate(calc(var(--dx) * 0.15), calc(var(--dy) * 0.15)) scale(1.14) rotate(4deg);
     filter:drop-shadow(0 0 35px rgba(255,215,80,0.85)) brightness(1.3);
   }
   80%{
@@ -199,12 +199,10 @@ body.rm::before,body.rm::after{animation:none!important}
 @media(max-width:350px){.sc i{display:none}}
 
 /* --- Joker sahnesi: Kapat'a basılana kadar kalır --- */
-#cast{pointer-events:auto;background:#020302c7;gap:12px;z-index:20}
+#cast{pointer-events:auto;background:#020302d9;gap:18px;z-index:20}
 #cast img{box-shadow:0 0 50px #ec4452aa;animation:castIn .5s cubic-bezier(.2,.9,.25,1) both}
 @keyframes castIn{from{opacity:0;transform:translateY(var(--sy)) scale(.3) rotate(-12deg)}to{opacity:1;transform:none}}
-#cast b{animation:fade .5s both;text-align:center;padding:0 12px}
-#cast .cw{font:400 24px/1 var(--mf);letter-spacing:2px;text-transform:uppercase;color:var(--lime)}
-#cast .btn{margin-top:6px}
+#cast .btn{margin-top:10px}
 .e.used{border-style:dashed}
 
 /* ============================================================
