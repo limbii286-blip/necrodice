@@ -905,8 +905,15 @@ function zoom(o){ // {src, hd:cb=>…, cls, cap, sub, btn, fn}
   document.addEventListener('keydown',kd);
   el.onclick=e=>{const zb=e.target.closest&&e.target.closest('[data-zb]');close();if(zb&&o.fn)o.fn()}; // her yere dokunmak kapatır
 }
-const numHD=n=>cb=>{const cs=[`img/n/${n}.webp`,`img/n/${n}.png`,`img/n/${n}.jpg`,`img/n${n}.png`,`n${n}.png`];if(typeof HDN!='undefined'&&HDN[n])cs.unshift(HDN[n]);hq('n'+n,cs,cb)};
-const backHD=cb=>hq('bk',[...(typeof HDBK!='undefined'?[HDBK]:[]),'img/back.webp','img/back.png','img/n/back.png','img/n/back.webp','back.png'],cb);
+const numHD=n=>cb=>{
+  if(typeof HDN!='undefined'&&HDN[n]){cb(HDN[n]);return;}
+  const cs=[`img/n/${n}.png`,`img/n/${n}.jpg`,`img/n/${n}.webp`,`img/n${n}.png`,`n${n}.png`];
+  hq('n_'+n+'_v2',cs,cb);
+};
+const backHD=cb=>{
+  if(typeof HDBK!='undefined'&&HDBK){cb(HDBK);return;}
+  hq('bk_v2',['img/back.png','img/back.jpg','img/n/back.png','img/n/back.jpg','img/back.webp'],cb);
+};
 function zoomAv(p){const S=G,k=avKey(S,p),nm=NAMES[k]||(p?'Rakip':'Sen');
   const initialSrc=(typeof HDAV!='undefined'&&HDAV[k])?HDAV[k]:avSrc(k);
   zoom({src:initialSrc,cls:'sq',cap:nm,sub:p==0?'Sen':'Rakip',hd:cb=>{
@@ -919,10 +926,12 @@ function zoomCard(id){const S=G;let f=null;
   for(const p of [0,1])for(const kd of ['open','closed']){const c=S.pl[p][kd].find(x=>x.id==id);if(c)f={c,p,closed:kd=='closed'}}
   if(!f)return;const {c,p,closed}=f,own=p==0,up=!closed||S.rev||(own&&peek.has(id)); // kart yüzü açık mı?
   if(!up){ // kapalı kart: arka yüzü
-    return zoom({src:IMG.bn,cls:'card',cap:own?'Senin kapalı kartın':'Rakibin kapalı kartı',hd:backHD,
+    const initialSrc=(typeof HDBK!='undefined'&&HDBK)?HDBK:IMG.bn;
+    return zoom({src:initialSrc,cls:'card',cap:own?'Senin kapalı kartın':'Rakibin kapalı kartı',hd:backHD,
       btn:own&&!S.rev?'Kartıma bak':'',fn:()=>{snd('flip');peek.add(id);flipId=id;R();setTimeout(()=>zoomCard(id),80)}})}
   const val=c.o!=null?c.o:c.n;
-  zoom({src:IMG.n[c.n],cls:'card',cap:`${val}`,hd:numHD(c.n),
+  const initialSrc=(typeof HDN!='undefined'&&HDN[c.n])?HDN[c.n]:IMG.n[c.n];
+  zoom({src:initialSrc,cls:'card',cap:`${val}`,hd:numHD(c.n),
     sub:(closed?(own?'Senin kapalı kartın':'Rakibin kapalı kartı'):(own?'Senin açık kartın':'Rakibin açık kartı'))+(c.o!=null?` (joker etkisiyle ${c.o} sayılıyor, kartın aslı ${c.n})`:''),
     btn:closed&&own&&!S.rev?'Kartımı gizle':'',fn:()=>{snd('flip');peek.delete(id);R()}})}
 function preview(id,use,note,back){ // jokeri büyük göster: Kullan / Kapat
