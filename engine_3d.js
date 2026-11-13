@@ -449,15 +449,31 @@
       if (e.target.closest && e.target.closest('button,input,label,#menu,#m,#hand,[data-e],[data-j],[data-s],[data-x],[data-g],[data-av]')) return;
       v.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
       ray.setFromCamera(v, camera);
-      const hits = ray.intersectObjects(cardMeshes.filter(c => !String(c.id).startsWith('deck_')).map(c => c.mesh), true);
+      const hits = ray.intersectObjects(cardMeshes.map(c => c.mesh), true);
       if (!hits.length) return;
-      let o = hits[0].object;
+      const o = hits[0].object;
       const item = cardMeshes.find(c => c.mesh === o || c.mesh.children.includes(o));
       if (!item) return;
+      if (String(item.id).startsWith('deck_')) { // desteye tıkla = kart çek
+        const d = document.getElementById('draw');
+        if (d && !d.disabled) d.click();
+        return;
+      }
       const el = document.querySelector('[data-c="' + item.id + '"]');
       if (el) el.click();
     });
   }
+
+  // Desteye gelince el imleci
+  document.addEventListener('mousemove', function(e) {
+    if (!is3DActive || !camera) return;
+    const ray = new THREE.Raycaster();
+    ray.setFromCamera(new THREE.Vector2((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1), camera);
+    const decks = cardMeshes.filter(c => String(c.id).startsWith('deck_')).map(c => c.mesh);
+    const d = document.getElementById('draw');
+    const over = decks.length && ray.intersectObjects(decks, true).length && d && !d.disabled;
+    document.body.style.cursor = over ? 'pointer' : '';
+  });
 
   // Global hooks for game.js
   window.Necro3D = {
