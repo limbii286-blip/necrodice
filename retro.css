@@ -434,3 +434,89 @@ html.fitm #prompt{display:none!important}
 main{padding-top:max(14px,var(--sat,env(safe-area-inset-top,0px)))}
 /* uzun isimler (BİLİNMEYEN) joker sırtlarının altına girmesin */
 .nm b{font-size:clamp(17px,5.1vw,24px);letter-spacing:0;overflow-wrap:anywhere}
+
+/* ============================================================
+   BALDUR'S GATE 3 TARZI KIRMIZI 3D D20 ÖLÜM ZARI SİSTEMİ
+   ============================================================ */
+.d20-box{display:flex;flex-direction:column;align-items:center;justify-content:center;margin:16px 0 10px;min-height:140px;position:relative}
+.d20-stage{position:relative;width:110px;height:110px;display:flex;align-items:center;justify-content:center;perspective:600px}
+.d20-glow{position:absolute;inset:-15px;background:radial-gradient(circle,rgba(225,29,42,0.45) 0%,transparent 70%);border-radius:50%;pointer-events:none;animation:d20Pulse 2.4s ease-in-out infinite}
+@keyframes d20Pulse{0%,100%{transform:scale(0.9);opacity:0.4}50%{transform:scale(1.15);opacity:0.8}}
+
+.d20-die{
+  width:90px;height:90px;position:relative;
+  background:radial-gradient(circle at 35% 30%,#ff3344 0%,#b30e1c 55%,#54040a 100%);
+  clip-path:polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 25px rgba(230,20,35,0.6),inset 0 0 15px rgba(255,200,200,0.4),0 8px 20px #000;
+  border:1px solid #ff7788;
+  transform-style:preserve-3d;
+  transition:transform 0.4s cubic-bezier(0.2,1.2,0.3,1);
+  animation:d20Float 3s ease-in-out infinite;
+}
+@keyframes d20Float{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-8px) rotate(4deg)}}
+
+.d20-num{
+  font:700 42px/1 'VT323',var(--mf),serif;
+  color:#fff2d6;
+  text-shadow:0 0 8px rgba(0,0,0,0.9),0 2px 4px #000,0 0 12px #ffdd88;
+  z-index:2;
+  user-select:none;
+}
+
+.d20-dc-badge{
+  position:absolute;bottom:-18px;background:#050806;border:2px solid #e2b84a;
+  color:#f5d77f;font:400 17px/1 var(--mf);padding:3px 10px;border-radius:2px;
+  box-shadow:0 2px 8px #000;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;
+}
+
+/* BG3 Yuvarlanma / Tumble Animasyonu */
+.d20-box.rolling .d20-die{
+  animation:bg3Roll 0.28s linear infinite!important;
+  box-shadow:0 0 35px rgba(255,40,60,0.9),0 0 60px rgba(255,40,60,0.5);
+}
+@keyframes bg3Roll{
+  0%{transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1.15)}
+  25%{transform:rotateX(90deg) rotateY(180deg) rotateZ(45deg) scale(1.22)}
+  50%{transform:rotateX(180deg) rotateY(270deg) rotateZ(90deg) scale(1.15)}
+  75%{transform:rotateX(270deg) rotateY(90deg) rotateZ(135deg) scale(1.22)}
+  100%{transform:rotateX(360deg) rotateY(360deg) rotateZ(180deg) scale(1.15)}
+}
+
+/* BG3 İniş / Land Animasyonu */
+.d20-box.finished .d20-die{
+  animation:bg3Land 0.5s cubic-bezier(0.15,1.5,0.3,1) forwards!important;
+}
+@keyframes bg3Land{
+  0%{transform:translateY(-30px) scale(1.35) rotate(-15deg)}
+  50%{transform:translateY(4px) scale(0.92) rotate(4deg)}
+  100%{transform:translateY(0) scale(1) rotate(0deg)}
+}
+
+/* Doğal 20 (Critical Success) Altın Parlama */
+.d20-die.crit-success{
+  background:radial-gradient(circle at 35% 30%,#ffe177 0%,#d4981d 55%,#5e3c04 100%)!important;
+  border-color:#fff2b2!important;
+  box-shadow:0 0 50px rgba(255,215,0,0.9),0 0 80px rgba(255,215,0,0.6)!important;
+}
+.d20-die.crit-success .d20-num{color:#ffffff!important;text-shadow:0 0 10px #ffe177,0 2px 4px #000!important}
+
+/* Başarısızlık / Ölüm Kırılması */
+.d20-die.crit-fail{
+  background:radial-gradient(circle at 35% 30%,#80050c 0%,#450106 65%,#1c0002 100%)!important;
+  border-color:#590409!important;
+  box-shadow:0 0 25px rgba(255,0,0,0.5),0 0 50px #000!important;
+}
+
+.d20-btn{
+  display:block;margin:14px auto 6px;padding:12px 24px;
+  background:#2a0508;border:2px solid var(--blood2);color:#ffc2c6;
+  font-size:20px;letter-spacing:1px;box-shadow:0 4px 0 #000,0 0 15px rgba(225,29,42,0.4);
+  animation:bg3BtnPulse 1.8s ease-in-out infinite;cursor:pointer;
+}
+@keyframes bg3BtnPulse{0%,100%{box-shadow:0 4px 0 #000,0 0 12px rgba(225,29,42,0.3)}50%{box-shadow:0 4px 0 #000,0 0 24px rgba(225,29,42,0.7)}}
+
+.d20-box~#mx,.d20-box~#mo{visibility:hidden}
+.d20-box.finished~#mx,.d20-box.finished~#mo{visibility:visible}
+.d20-box~.after{opacity:0;transition:opacity .6s}
+.d20-box.finished~.after{opacity:1}

@@ -1,7 +1,7 @@
 // NECRODICE - motor + bot + arayüz (online mod için motor UI'dan ayrı tutuldu)
 const $=s=>document.querySelector(s);
 const setH=(sel,h)=>{const e=$(sel);if(e&&e._h!==h){e.innerHTML=h;e._h=h}}; // aynı içerik tekrar yazılmaz: animasyon/titreme olmaz
-const TH=[4,6,8,10],EK={4:'ten',6:'dan',8:'den',10:'dan'}; // eşik + ayrılma eki: 4'ten, 6'dan, 8'den, 10'dan
+const TH=[4,9,15,19],EK={4:'e',9:'a',15:'e',19:'a'}; // D20 hayatta kalma eşikleri: 4'e, 9'a, 15'e, 19'a (BG3 DC mantığı)
 const BLOCK=new Set([1,2,3,4,8,9,10,11,19,20,21,22,23]); // blok sembollü jokerler
 const J=['','Tekler ×2','Çiftler ÷2','+5','−5','Rakip kart çeker','Kart → 0','Kart → 12','Hedef 27','Hedef 24','Hedef 17','Hedef 15','Joker etkisiz','Kendi kartını imha','Rakip kartını imha','Açık kart takası','Kapalı kart takası','Kart çal','Kart hediye','En az kazanır','Kapalılar sayılmaz','Kapalılar ×2','Deste sayısı ±','Rakip kart çekemez','Rakip joker kullanamaz'];
 const NEED={6:['any'],7:['any'],12:['eff'],13:['my'],14:['opp'],15:['my','opp'],17:['opp'],18:['my'],22:['sign']};
@@ -127,26 +127,38 @@ const shake=()=>{try{if(RM)return;document.body.classList.add('shake');setTimeou
 const flash=()=>{try{if(RM)return;const f=document.querySelector('#fl');f.classList.remove('go');void f.offsetWidth;f.classList.add('go')}catch(e){}};
 const PIP={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
 const die=n=>`<i class="die">${[...Array(9)].map((_,i)=>`<b${PIP[n].includes(i)?' class="p"':''}></b>`).join('')}</i>`;
-function anim(){ // ölüm zarı: yavaş takla (zarlar yerinde döner, yüzler değişir), yavaşlayarak durma (~4 sn); zarı atan taraf düğmeye basar
-  const d=document.querySelector('#mb .dice');if(!d)return;
-  const a=+d.dataset.a,b=+d.dataset.b,r=()=>1+Math.random()*6|0;
-  const setD=(el,n)=>el.querySelectorAll('b').forEach((x,i)=>{x.className=PIP[n].includes(i)?'p':''}); // zarlar yeniden kurulmaz: CSS takla kesintisiz sürer
-  const face=()=>{const ds=d.querySelectorAll('.die');if(ds.length<2)d.innerHTML=die(r())+die(r());else{setD(ds[0],r());setD(ds[1],r())}};
-  const N=11,run=wait=>{
+const d20=()=>1+Math.random()*20|0;
+function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı animasyonu
+  const d=document.querySelector('#mb .d20-box');if(!d)return;
+  const target=+d.dataset.roll,dc=+d.dataset.dc,isMe=d.dataset.m=='1',res=d.dataset.s;
+  const numEl=d.querySelector('.d20-num'),dieEl=d.querySelector('.d20-die');
+  const N=14,run=wait=>{
     if(!d.isConnected)return;snd('heart');
     setTimeout(()=>{
-      if(!d.isConnected)return;d.classList.add('roll');snd('dice');let i=0;
+      if(!d.isConnected)return;
+      d.classList.add('rolling');snd('dice');vib([80,40,80]);
+      let step=0;
       const tick=()=>{
         if(!d.isConnected)return;
-        if(i++>=N){d.innerHTML=die(a)+die(b);d.classList.remove('roll');d.classList.add('fin');snd(d.dataset.s);
+        if(step++>=N){
+          d.classList.remove('rolling');
+          d.classList.add('finished');
+          numEl.textContent=target;
+          if(target==20){dieEl.classList.add('crit-success');snd('win');flash()}
+          else if(target==1||res=='death'){dieEl.classList.add('crit-fail');snd('death');try{document.body.classList.add('dead')}catch(e){}vib([250,80,500])}
+          else{snd(res);flash()}
           setTimeout(()=>{const x=document.querySelector('#mx');if(x)x.style.visibility=''},600);
-          if(d.dataset.s=='death'){try{document.body.classList.add('dead')}catch(e){}vib([200,80,400])}else flash();return}
-        face();setTimeout(tick,170+i*i*2.4)}; // yavaş başlar, sonda daha da yavaşlar
-      tick()},wait)};
-  face();
+          return;
+        }
+        numEl.textContent=1+Math.random()*20|0;
+        setTimeout(tick,120+step*step*2.8);
+      };
+      tick();
+    },wait);
+  };
   const rl=document.querySelector('#rl');
-  if(rl&&d.dataset.m=='1')rl.onclick=()=>{rl.remove();run(800)};
-  else{if(rl)rl.remove();run(1500)}
+  if(rl&&isMe)rl.onclick=()=>{rl.remove();run(600)};
+  else{if(rl)rl.remove();run(1300)}
 }
 
 /* ---------- MOTOR ---------- */
@@ -488,12 +500,12 @@ function endRound(){
       if(j[0]!=j[1]){L=j[0]<j[1]?0:1;how='joker'}
       else{let x,y;do{x=d6()+d6();y=d6()+d6()}while(x==y);L=x<y?0:1;hx=[x,y];how='zar'}
     }
-    const th=TH[Math.min(S.bo,3)],d1=d6(),d2=d6(),roll=d1+d2,surv=roll>th;
-    const mk=(v,d1,d2,surv)=>{const roll=d1+d2;return pre(v)+`<hr>Düelloyu ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısına göre)':how=='zar'?` (beraberlik zarı: ${hx[v]}–${hx[1-v]})`:''}.<br>Ölüm zarlarını ${L==v?'sen atıyorsun':'rakip atıyor'}: hayatta kalmak için ${th}'${EK[th]} büyük gelmeli.<div class="dice" data-a="${d1}" data-b="${d2}" data-m="${L==v?1:0}" data-s="${surv?'ok':L==v?'death':'win'}"></div>${L==v?'<button id="rl" class="btn">Ölüm zarını at</button>':''}<div class="after"><b>Toplam: ${roll}</b><br>`+(surv?(L==v?'Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
-    const full=v=>mk(v,d1,d2,surv),rig=MODE=='bot'&&DIFF=='imp'&&L==1&&!surv&&!S.rigDone; // sahne oyun başına bir kez; ikinci ölümde gerçekten ölür
+    const th=TH[Math.min(S.bo,3)],roll=d20(),surv=roll>=th;
+    const mk=(v,roll,surv)=>{return pre(v)+`<hr>Düelloyu ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısına göre)':how=='zar'?` (beraberlik zarı: ${hx[v]}–${hx[1-v]})`:''}.<br>Ölüm zarını (D20) ${L==v?'sen atıyorsun':'rakip atıyor'}: hayatta kalmak için <b>${th}</b> veya üstü gelmeli.<div class="d20-box" data-roll="${roll}" data-dc="${th}" data-m="${L==v?1:0}" data-s="${surv?'ok':L==v?'death':'win'}"><div class="d20-stage"><div class="d20-glow"></div><div class="d20-die"><span class="d20-num">?</span></div><div class="d20-dc-badge">HEDEF: ${th}</div></div></div>${L==v?'<button id="rl" class="btn d20-btn">Ölüm Zarını At (D20)</button>':''}<div class="after"><b>Zar Sonucu: ${roll}</b><br>`+(surv?(L==v?'Hayatta kaldın!':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
+    const full=v=>mk(v,roll,surv),rig=MODE=='bot'&&DIFF=='imp'&&L==1&&!surv&&!S.rigDone; // sahne oyun başına bir kez; ikinci ölümde gerçekten ölür
     if(surv||rig){const n=S.bo+2,ek=['a','e','ye','e','e','e','ya','ye','e','a'][n%10];
       const lb=`Düello ${n}'${ek} geç`,go=()=>{S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()};
-      if(rig){S.rigDone=true;impSave(mk(0,d1,d2,false),()=>M(mk(0,6,6,true),lb,go))}else MM(full,lb,go)}
+      if(rig){S.rigDone=true;impSave(mk(0,1,false),()=>M(mk(0,20,true),lb,go))}else MM(full,lb,go)}
     else{S.over=true;lrnGame(L==0);MM(full,'Yeniden oyna',start,null,true)}
   }
 }
@@ -506,11 +518,11 @@ function cutscene(txt,done){ // BİLİNMEYEN: ikonu ve konuşma balonu
   setTimeout(()=>{tm=setInterval(()=>{sp.textContent=txt.slice(0,++i);if(i>=txt.length){clearInterval(tm);setTimeout(out,2800)}},48)},500);
   el.onclick=()=>{if(i<txt.length){i=txt.length;clearInterval(tm);sp.textContent=txt;setTimeout(out,2200)}else out()};
 }
-function impSave(html,cont){ // BİLİNMEYEN ölecekken: zar düşer, sahne girer, zar yeniden atılır (6-6)
+function impSave(html,cont){ // BİLİNMEYEN ölecekken: zar düşer, sahne girer, zar yeniden atılır (Nat 20)
   M(html,'.',()=>{});$('#mb').classList.add('rig');
-  const d=document.querySelector('#mb .dice');let n=0;
+  const d=document.querySelector('#mb .d20-box');let n=0;
   const w=setInterval(()=>{if(!d||!d.isConnected||++n>600){clearInterval(w);return}
-    if(d.classList.contains('fin')){clearInterval(w);setTimeout(()=>cutscene('Bu kadar kolay olacağını mı sandın? Bu oyunun yaratıcısı benim.',()=>{$('#mb').classList.remove('rig');cont()}),1000)}},120);
+    if(d.classList.contains('finished')){clearInterval(w);setTimeout(()=>cutscene('Bu kadar kolay olacağını mı sandın? Bu oyunun yaratıcısı benim.',()=>{$('#mb').classList.remove('rig');cont()}),1000)}},120);
 }
 let entering=false;
 function veil(ms=2000){const v=document.createElement('div');v.className='veil';v.style.animationDuration=ms+'ms';v.style.setProperty('--ms',ms*.9+'ms');v.innerHTML=`<img alt="" src="${IMG.logo}"><b>limbigames</b><span class="ldb"><i></i></span>`;document.body.appendChild(v);setTimeout(()=>v.remove(),ms+100)}
@@ -715,7 +727,7 @@ function R(){
     const f=(nf?' fresh':'')+(fl?' flip':'')+(cn.includes(c.id)?' hl':'')+(pk?' mc':''),a=`data-c="${c.id}"${pk?' data-pk="1"':''}${pk&&S.rev?' style="--fd:.6s"':''}`;
     return !back&&c.o==null?`<img class="c n${f}" ${a} src="${IMG.n[c.n]}" alt="${c.n}">`:`<div class="c${back?' bk':''}${f}" ${a}>${back?'':`${c.o??c.n}${c.o!=null?'<i>↺</i>':''}`}</div>`};
   const pips=[0,1,2].map(i=>`<span class="pip ${res[i]==null?(i==S.rounds?'now':''):res[i]>0?'w':res[i]<0?'l':'d'}"></span>`).join('');
-  const sk=TH.map((t,i)=>`<span class="sk${i<bi?' past':i==bi?' cur':''}" title="Ölüm eşiği: ${t}'${EK[t]} büyük atmalısın">${IC.skull}<small>${t}</small></span>`).join('');
+  const sk=TH.map((t,i)=>`<span class="sk${i<bi?' past':i==bi?' cur':''}" title="D20 Ölüm Eşiği: ${t} veya üstü atmalısın">${IC.skull}<small>${t}</small></span>`).join('');
   setH('#hdr',`<div class="hs sks">${sk}</div><div class="hc"><span class="lab">Düello ${S.bo+1}</span><span class="pips">${pips}</span></div><div class="hg"><button class="gear" data-g="1" aria-label="Ayarlar">${IC.gear}<span>MENÜ</span></button></div>`);
   const my=S.turn==0&&!lock&&!S.wait,mt=total(S,0),ot=total(S,1,false),bust=!low&&mt>T,seal=T+(low?'L':'');
   const jp=n=>`<span class="jpips" title="Joker hakkı ${n}/2">${[0,1].map(i=>`<i${i<n?' class="on"':''}></i>`).join('')}</span>`;
@@ -799,7 +811,7 @@ function guide(){box(`<h3>Nasıl oynanır</h3>
 <p class="gd"><b>Başlangıç:</b> her tur herkes bir açık, bir kapalı kart alır (kartlar 1–11). Açık kartı küçük olan başlar. Kapalı kartına dokunarak kendi kartına bakabilirsin, rakibinki tur sonuna kadar gizlidir. Her oyuncunun elinde 4 joker vardır.</p>
 <p class="gd"><b>Sıranda:</b> istediğin kadar <b>Kart çek</b> diyebilir (çekilen kart açık gelir), tur başına en fazla 2 joker oynayabilir, sonra <b>Pas</b> dersin. Orta kutudaki ok, sıranın kimde olduğunu gösterir.</p>
 <p class="gd"><b>Turun bitmesi:</b> sırası gelen oyuncu kart çekmeden ve joker oynamadan pas derse tur biter ve kapalı kartlar açılır (oyunun ilk sırası hariç). Böyle bir durumda Pas düğmesi <b>Turu bitir</b> olur.</p>
-<p class="gd"><b>Düello:</b> 3 turluk bir düellodur (galibiyet 1, beraberlik yarım puan). Kaybeden iki zar atar, toplam eşikten büyük değilse ölür. Eşikler 4, 6, 8 ve 10'dur, her yeni düelloda yükselir. Puanlar eşitse elinde daha az joker kalan kaybeder, o da eşitse zar karar verir. Berabere biten turda ikiniz de birer joker çekersiniz.</p>
+<p class="gd"><b>Düello:</b> 3 turluk bir düellodur (galibiyet 1, beraberlik yarım puan). Kaybeden kırmızı D20 ölüm zarını atar, sonuç ölüm eşiğinden küçükse ölür. Eşikler 4, 9, 15 ve 19'dur (BG3 DC mantığı), her yeni düelloda yükselir. Puanlar eşitse elinde daha az joker kalan kaybeder, o da eşitse zar karar verir. Berabere biten turda ikiniz de birer joker çekersiniz.</p>
 <hr>
 <h3>Orta kutu</h3>
 <p class="gd">Ortadaki yuvarlak güncel hedefi gösterir. Soldaki kırmızı alanda rakibin, sağdaki yeşil alanda senin oynadığın jokerler durur. Üzerlerine dokunarak ne yaptıklarını görebilirsin.</p>
