@@ -1,7 +1,7 @@
 // NECRODICE - motor + bot + arayüz (online mod için motor UI'dan ayrı tutuldu)
 const $=s=>document.querySelector(s);
 const setH=(sel,h)=>{const e=$(sel);if(e&&e._h!==h){e.innerHTML=h;e._h=h}}; // aynı içerik tekrar yazılmaz: animasyon/titreme olmaz
-const TH=[4,9,15,19],EK={4:'e',9:'a',15:'e',19:'a'}; // D20 hayatta kalma eşikleri: 4'e, 9'a, 15'e, 19'a (BG3 DC mantığı)
+const TH=[4,9,15,18],EK={4:'e',9:'a',15:'e',18:'e'}; // D20 hayatta kalma eşikleri: 4'e, 9'a, 15'e, 18'e (BG3 DC mantığı)
 const BLOCK=new Set([1,2,3,4,8,9,10,11,19,20,21,22,23]); // blok sembollü jokerler
 const J=['','Tekler ×2','Çiftler ÷2','+5','−5','Rakip kart çeker','Kart → 0','Kart → 12','Hedef 27','Hedef 24','Hedef 17','Hedef 15','Joker etkisiz','Kendi kartını imha','Rakip kartını imha','Açık kart takası','Kapalı kart takası','Kart çal','Kart hediye','En az kazanır','Kapalılar sayılmaz','Kapalılar ×2','Deste sayısı ±','Rakip kart çekemez','Rakip joker kullanamaz'];
 const NEED={6:['any'],7:['any'],12:['eff'],13:['my'],14:['opp'],15:['my','opp'],17:['opp'],18:['my'],22:['sign']};
@@ -811,7 +811,7 @@ function guide(){box(`<h3>Nasıl oynanır</h3>
 <p class="gd"><b>Başlangıç:</b> her tur herkes bir açık, bir kapalı kart alır (kartlar 1–11). Açık kartı küçük olan başlar. Kapalı kartına dokunarak kendi kartına bakabilirsin, rakibinki tur sonuna kadar gizlidir. Her oyuncunun elinde 4 joker vardır.</p>
 <p class="gd"><b>Sıranda:</b> istediğin kadar <b>Kart çek</b> diyebilir (çekilen kart açık gelir), tur başına en fazla 2 joker oynayabilir, sonra <b>Pas</b> dersin. Orta kutudaki ok, sıranın kimde olduğunu gösterir.</p>
 <p class="gd"><b>Turun bitmesi:</b> sırası gelen oyuncu kart çekmeden ve joker oynamadan pas derse tur biter ve kapalı kartlar açılır (oyunun ilk sırası hariç). Böyle bir durumda Pas düğmesi <b>Turu bitir</b> olur.</p>
-<p class="gd"><b>Düello:</b> 3 turluk bir düellodur (galibiyet 1, beraberlik yarım puan). Kaybeden kırmızı D20 ölüm zarını atar, sonuç ölüm eşiğinden küçükse ölür. Eşikler 4, 9, 15 ve 19'dur (BG3 DC mantığı), her yeni düelloda yükselir. Puanlar eşitse elinde daha az joker kalan kaybeder, o da eşitse zar karar verir. Berabere biten turda ikiniz de birer joker çekersiniz.</p>
+<p class="gd"><b>Düello:</b> 3 turluk bir düellodur (galibiyet 1, beraberlik yarım puan). Kaybeden kırmızı D20 ölüm zarını atar, sonuç ölüm eşiğinden küçükse ölür. Eşikler 4, 9, 15 ve 18'dir (BG3 DC mantığı), her yeni düelloda yükselir. Puanlar eşitse elinde daha az joker kalan kaybeder, o da eşitse zar karar verir. Berabere biten turda ikiniz de birer joker çekersiniz.</p>
 <hr>
 <h3>Orta kutu</h3>
 <p class="gd">Ortadaki yuvarlak güncel hedefi gösterir. Soldaki kırmızı alanda rakibin, sağdaki yeşil alanda senin oynadığın jokerler durur. Üzerlerine dokunarak ne yaptıklarını görebilirsin.</p>
