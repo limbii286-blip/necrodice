@@ -857,7 +857,7 @@ function R(){
     const el=(now-morphT[p])/1000,mo=morphT[p]&&el<1.1;return `<img class="av${mo?' morph':''}" data-av="${p}"${mo?` style="animation-delay:-${el.toFixed(2)}s"`:''} src="${avSrc(k)}" alt="">`};
   const av0=avh(0),av1=avh(1);
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'');
-  setH('#opp',`<div class="who">${av1}<div class="nm"><b>${MODE=='bot'||S.av?oppName():'Rakip'}</b><span class="meta">${MODE=='bot'?IC.dif.repeat(DN[DIFF]):'Online'}${jp(2-S.jUsed[1])}</span></div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${S.rev?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).join('')}${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>`);
+  setH('#opp',`<div class="who">${av1}<div class="nm"><b>${MODE=='bot'||S.av?oppName():'Rakip'}</b><span class="meta">${MODE=='bot'?IC.dif.repeat(DN[DIFF]):'Online'}${jp(2-S.jUsed[1])}</span></div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${S.rev?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}<span class="gap"></span>${S.pl[1].open.map(c=>cd(c)).join('')}</div>`);
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<img class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}" src="${IMG.j[e.id]}" alt="">`};
   $('#deck b').textContent=S.deck.length;
   setH('#jo',(S.pj||[]).filter(x=>x.o==1).map(chip).join(''));
@@ -869,7 +869,7 @@ function R(){
   if(prevSeal&&prevSeal!=seal){sl.classList.remove('stamp');void sl.offsetWidth;sl.classList.add('stamp')}
   $('#arr').className='arr '+(S.wait||S.over?'off':S.turn==0?'me':'op');
   $('#me').className='zone'+(my?' act':'');
-  setH('#me',`<div class="who">${av0}<div class="nm"><b>Sen</b><span class="meta">${jp(2-S.jUsed[0])}</span></div><div class="tot${bust?' bust':exact?' exact':''}"><small>${bust?'Battın':exact?'Tam Hedef':'Toplamın'}</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`);
+  setH('#me',`<div class="who">${av0}<div class="nm"><b>Sen</b><span class="meta">${jp(2-S.jUsed[0])}</span></div><div class="tot${bust?' bust':exact?' exact':''}"><small>${bust?'Battın':exact?'Tam Hedef':'Toplamın'}</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}<span class="gap"></span>${S.pl[0].open.map(c=>cd(c)).join('')}</div>`);
   $('#prompt').className=P?'ask':'';
   setH('#prompt',P?`${J[P.id]}: ${KTXT[k]} ${k=='sign'?'<button class="btn sm" data-s="1">Ekle</button><button class="btn sm" data-s="-1">Çıkar</button>':''}<button class="btn sm alt" data-x="1">Vazgeç</button>`:'');
   const ends=S.turns>0&&!S.acted; // şimdi pas dersem tur biter
