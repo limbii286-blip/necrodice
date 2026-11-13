@@ -206,12 +206,21 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı animas
     snd('dice');vib([100,50,100]);
 
     const startTime = performance.now();
-    const duration = 2600; // Akıcı ve tatmin edici yavaşlama
+    const duration = 2800; // Akıcı, tatmin edici ve doğal yavaşlama
 
-    // Yavaşlatılmış ve kontrollü dönüş hızları (önceki: 18..26 yerine daha tok 7..11)
-    let vx = 7.5 + Math.random() * 3.5;
-    let vy = 9.0 + Math.random() * 3.5;
-    let vz = 5.0 + Math.random() * 2.5;
+    // Hedeflenen yüzün tam iniş açıları
+    // Zarın dönüşü tam hedef açıda bitecek şekilde toplam devir sayısı hesaplanır
+    const totalRevX = 2; // 2 tam devir
+    const totalRevY = 3; // 3 tam devir
+    const totalRevZ = 1; // 1 tam devir
+
+    const startRx = rx;
+    const startRy = ry;
+    const startRz = rz;
+
+    const endRx = targetRx + totalRevX * Math.PI * 2;
+    const endRy = targetRy + totalRevY * Math.PI * 2;
+    const endRz = targetRz + totalRevZ * Math.PI * 2;
 
     const frame = now => {
       if(!d.isConnected) return;
@@ -219,16 +228,15 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı animas
       const progress = Math.min(1.0, elapsed / duration);
 
       if(progress < 1.0) {
-        // Yumuşak kademeli yavaşlama (ease-out)
-        const ease = 1.0 - Math.pow(progress, 2.0);
-        rx += vx * ease * 0.016;
-        ry += vy * ease * 0.016;
-        rz += vz * ease * 0.016;
+        // Yumuşak kübik yavaşlama (cubic ease-out: başlangıçta hızlı, sonra gittikçe süzülerek hedefe kilitlenir)
+        const t = 1.0 - Math.pow(1.0 - progress, 3.0);
+        rx = startRx + (endRx - startRx) * t;
+        ry = startRy + (endRy - startRy) * t;
+        rz = startRz + (endRz - startRz) * t;
 
-        // Visual bounce & wobble
-        const bounce = 1.0 + Math.sin(progress * Math.PI * 3) * 0.08 * ease;
-        const currentDisplayNum = 1 + (Math.random() * 20 | 0);
-        render(currentDisplayNum, false, false, bounce);
+        // Hafif zıplama efekti
+        const bounce = 1.0 + Math.sin(progress * Math.PI) * 0.08 * (1.0 - progress);
+        render(target, false, false, bounce);
         animId = requestAnimationFrame(frame);
       } else {
         // Landing & Slam
@@ -237,7 +245,7 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı animas
         d.classList.remove('rolling');
         d.classList.add('finished');
 
-        // Snap smoothly to exact landing face
+        // Tam hedef açısına pürüzsüz kilitlenmiş hali
         rx = targetRx;
         ry = targetRy;
         rz = targetRz;
@@ -245,14 +253,14 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı animas
         const isCrit = target >= 20;
         const isFail = target == 1 || res == 'death';
 
-        // Impact bounce animation
+        // Tok ve tatmin edici oturma sarsıntısı
         let slamStep = 0;
-        const slamFrames = [1.25, 0.92, 1.06, 0.98, 1.0];
+        const slamFrames = [1.18, 0.94, 1.05, 0.99, 1.0];
         const doSlam = () => {
           if(!d.isConnected) return;
           if(slamStep < slamFrames.length) {
             render(target, isCrit, isFail, slamFrames[slamStep++]);
-            setTimeout(doSlam, 45);
+            setTimeout(doSlam, 40);
           } else {
             render(target, isCrit, isFail, 1.0);
           }

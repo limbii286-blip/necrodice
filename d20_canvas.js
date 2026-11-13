@@ -140,7 +140,7 @@
       if (norm[2] > 0.42) {
         const f_cx = (s0[0] + s1[0] + s2[0]) / 3;
         const f_cy = (s0[1] + s1[1] + s2[1]) / 3;
-        const numStr = (fi === 0 && !isRolling) ? String(targetNum) : String(FACE_NUMS[fi]);
+        const numStr = (fi === 0) ? String(targetNum) : String(FACE_NUMS[fi]);
 
         ctx.save();
         ctx.translate(f_cx, f_cy);
