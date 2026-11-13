@@ -189,9 +189,9 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı animas
   let rolling = false, finished = false;
   let animId = null;
 
-  const render = (num, isCrit, isFail, scale) => {
+  const render = (num, isCrit, isFail, scale, textPop) => {
     if(typeof draw3DD20=='function'){
-      draw3DD20(cv, rx, ry, rz, num, rolling, isCrit, isFail, scale);
+      draw3DD20(cv, rx, ry, rz, num, rolling, isCrit, isFail, scale, textPop);
     }
   };
 
@@ -253,19 +253,28 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı animas
         const isCrit = target >= 20;
         const isFail = target == 1 || res == 'death';
 
-        // Tok ve tatmin edici oturma sarsıntısı
-        let slamStep = 0;
-        const slamFrames = [1.18, 0.94, 1.05, 0.99, 1.0];
-        const doSlam = () => {
+        // BG3 Tarzı Tatmin Edici Karar Vuruşu (Zar oturur, bize bakan sayı kameraya doğru hafifçe zıplayıp netleşir)
+        let popStep = 0;
+        // scaleMult (tüm zar) ve popMult (bize bakan sayı) dizisi
+        const popSeq = [
+          { s: 1.15, p: 1.35 },
+          { s: 1.12, p: 1.42 },
+          { s: 1.05, p: 1.30 },
+          { s: 0.96, p: 1.15 },
+          { s: 1.02, p: 1.08 },
+          { s: 1.0,  p: 1.0 }
+        ];
+        const doPop = () => {
           if(!d.isConnected) return;
-          if(slamStep < slamFrames.length) {
-            render(target, isCrit, isFail, slamFrames[slamStep++]);
-            setTimeout(doSlam, 40);
+          if(popStep < popSeq.length) {
+            const frame = popSeq[popStep++];
+            render(target, isCrit, isFail, frame.s, frame.p);
+            setTimeout(doPop, 45);
           } else {
-            render(target, isCrit, isFail, 1.0);
+            render(target, isCrit, isFail, 1.0, 1.0);
           }
         };
-        doSlam();
+        doPop();
 
         if(isCrit){snd('win');flash();vib([80,80,200])}
         else if(isFail){snd('death');try{document.body.classList.add('dead')}catch(e){}vib([300,100,500])}

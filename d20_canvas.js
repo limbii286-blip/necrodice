@@ -27,7 +27,7 @@
     11, 17, 5, 13, 8
   ];
 
-  window.draw3DD20 = function(cv, rx, ry, rz, targetNum, isRolling, isCrit, isFail, scaleMult) {
+  window.draw3DD20 = function(cv, rx, ry, rz, targetNum, isRolling, isCrit, isFail, scaleMult, textPopMult) {
     if (!cv) return;
     const ctx = cv.getContext('2d');
     const w = cv.width, h = cv.height;
@@ -35,6 +35,7 @@
 
     const cx = w / 2, cy = h / 2;
     const baseScale = (w * 0.40) * (scaleMult || 1.0);
+    const textPop = textPopMult || 1.0;
 
     const cx_r = Math.cos(rx), sx_r = Math.sin(rx);
     const cy_r = Math.cos(ry), sy_r = Math.sin(ry);
@@ -151,22 +152,27 @@
         const ang = Math.atan2(upY, upX) + Math.PI / 2;
         ctx.rotate(ang * 0.3); // subtle natural perspective tilt
 
-        const fontSz = Math.max(16, baseScale * (numStr.length > 1 ? 0.36 : 0.42) * norm[2]);
+        const fontSz = Math.max(16, baseScale * (numStr.length > 1 ? 0.36 : 0.42) * norm[2] * (fi === 0 ? textPop : 1.0));
         ctx.font = `900 ${fontSz|0}px 'Cinzel', 'Times New Roman', serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        // Gold relief text with engraving shadow
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
-        ctx.shadowBlur = 4;
+        // Gold relief text with engraving shadow & subtle burst glow when popping
+        if (fi === 0 && textPop > 1.05) {
+          ctx.shadowColor = isCrit ? 'rgba(255, 235, 120, 0.95)' : isFail ? 'rgba(255, 60, 60, 0.85)' : 'rgba(255, 215, 90, 0.85)';
+          ctx.shadowBlur = 10 * textPop;
+        } else {
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+          ctx.shadowBlur = 4;
+        }
         ctx.shadowOffsetX = 1;
         ctx.shadowOffsetY = 2;
-        ctx.fillStyle = isCrit ? '#ffffff' : '#ffea9f';
+        ctx.fillStyle = isCrit ? '#ffffff' : (fi === 0 && textPop > 1.05) ? '#fff8db' : '#ffea9f';
         ctx.fillText(numStr, 0, 0);
 
-        if (isCrit) {
-          ctx.strokeStyle = '#ffd700';
-          ctx.lineWidth = 1;
+        if (isCrit || (fi === 0 && textPop > 1.05)) {
+          ctx.strokeStyle = isCrit ? '#ffd700' : 'rgba(255, 215, 120, 0.6)';
+          ctx.lineWidth = 1.2;
           ctx.strokeText(numStr, 0, 0);
         }
         ctx.restore();
