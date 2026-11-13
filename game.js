@@ -498,7 +498,13 @@ function M(html,btn,cb,end){lock=true;$('#mb').innerHTML=html+(btn?`<br><br><but
   anim();
   if(btn)$('#mo').onclick=()=>{$('#m').hidden=true;lock=false;cb()};
   if(end)$('#mx').onclick=exitGame}
-function MM(fn,btn,cb,sd,end){if(MODE=='host'&&conn&&conn.open)conn.send({k:'m',html:fn(1),sd:sd&&sd(1),end});M(fn(0),btn,cb,end);snd(sd&&sd(0))}
+function MM(fn,btn,cb,sd,end){
+  if(MODE=='host'){
+    if(conn&&conn.open)conn.send({k:'m',html:fn(1),sd:sd&&sd(1),end});
+    spectators.forEach(s=>{try{if(s.open)s.send({k:'m',html:fn(2),sd:sd&&sd(2),end,spec:true})}catch(e){}});
+  }
+  M(fn(0),btn,cb,end);snd(sd&&sd(0));
+}
 const PROF=(()=>{try{const o=JSON.parse(LS('prof')||'null');if(o&&Array.isArray(o.p)&&o.p.length==19)return o}catch(e){}return{n:0,p:new Array(19).fill(0)}})(); // oyuncunun pas geçtiği toplamlar (hedefe uzaklık) bu cihazda saklanır
 function profRec(S,tot,T){if(lowW(S)||!S.pa||!(S.pa[0]>0))return;const d=Math.max(-6,Math.min(12,T-tot));PROF.p[d+6]++;PROF.n++;LS('prof',JSON.stringify(PROF));syncToFirebase()}
 
@@ -849,15 +855,19 @@ function R(){
     return !back&&c.o==null?`<img class="c n${f}" ${a} src="${IMG.n[c.n]}" alt="${c.n}">`:`<div class="c${back?' bk':''}${f}" ${a}>${back?'':`${c.o??c.n}${c.o!=null?'<i>↺</i>':''}`}</div>`};
   const pips=[0,1,2].map(i=>`<span class="pip ${res[i]==null?(i==S.rounds?'now':''):res[i]>0?'w':res[i]<0?'l':'d'}"></span>`).join('');
   const sk=TH.map((t,i)=>`<span class="sk${i<bi?' past':i==bi?' cur':''}" title="D20 Ölüm Eşiği: ${t} veya üstü atmalısın">${IC.skull}<small>${t}</small></span>`).join('');
-  setH('#hdr',`<div class="hs sks">${sk}</div><div class="hc"><span class="lab">Düello ${S.bo+1}</span><span class="pips">${pips}</span></div><div class="hg"><button class="gear" data-g="1" aria-label="Ayarlar">${IC.gear}<span>MENÜ</span></button></div>`);
-  const my=S.turn==0&&!lock&&!S.wait,mt=total(S,0),ot=total(S,1,false),bust=!low&&mt>T,seal=T+(low?'L':'');
+  const isSpec=MODE=='spectator';
+  const specHdr=isSpec?`<div class="spec-badge"><i></i>İzleyici Modu${specCount>1?` (${specCount})`:''}</div>`:'';
+  setH('#hdr',`<div class="hs sks">${sk}</div><div class="hc"><span class="lab">Düello ${S.bo+1}</span><span class="pips">${pips}</span>${specHdr}</div><div class="hg"><button class="gear" data-g="1" aria-label="Ayarlar">${IC.gear}<span>MENÜ</span></button></div>`);
+  const my=!isSpec&&S.turn==0&&!lock&&!S.wait,mt=total(S,0),ot=total(S,1,false),bust=!low&&mt>T,seal=T+(low?'L':'');
   const exact=!low&&mt===T; // Hedef sayı tuttu: sadece bizim tarafa hafif parlak yeşil
   const jp=n=>`<span class="jpips" title="Joker hakkı ${n}/2">${[0,1].map(i=>`<i${i<n?' class="on"':''}></i>`).join('')}</span>`;
   const avh=p=>{const k=avKey(S,p),now=performance.now();if(prevAv[p]!==undefined&&prevAv[p]!==k)morphT[p]=now;prevAv[p]=k;
     const el=(now-morphT[p])/1000,mo=morphT[p]&&el<1.1;return `<img class="av${mo?' morph':''}" data-av="${p}"${mo?` style="animation-delay:-${el.toFixed(2)}s"`:''} src="${avSrc(k)}" alt="">`};
   const av0=avh(0),av1=avh(1);
+  const p0Name=isSpec?'1. Oyuncu (Oda Sahibi)':'Sen';
+  const p1Name=isSpec?'2. Oyuncu (Misafir)':(MODE=='bot'||S.av?oppName():'Rakip');
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'');
-  setH('#opp',`<div class="who">${av1}<div class="nm"><b>${MODE=='bot'||S.av?oppName():'Rakip'}</b><span class="meta">${MODE=='bot'?IC.dif.repeat(DN[DIFF]):'Online'}${jp(2-S.jUsed[1])}</span></div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${S.rev?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}<span class="gap"></span>${S.pl[1].open.map(c=>cd(c)).join('')}</div>`);
+  setH('#opp',`<div class="who">${av1}<div class="nm"><b>${p1Name}</b><span class="meta">${MODE=='bot'?IC.dif.repeat(DN[DIFF]):'Online'}${jp(2-S.jUsed[1])}</span></div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${S.rev?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}<span class="gap"></span>${S.pl[1].open.map(c=>cd(c)).join('')}</div>`);
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<img class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}" src="${IMG.j[e.id]}" alt="">`};
   $('#deck b').textContent=S.deck.length;
   setH('#jo',(S.pj||[]).filter(x=>x.o==1).map(chip).join(''));
@@ -869,14 +879,24 @@ function R(){
   if(prevSeal&&prevSeal!=seal){sl.classList.remove('stamp');void sl.offsetWidth;sl.classList.add('stamp')}
   $('#arr').className='arr '+(S.wait||S.over?'off':S.turn==0?'me':'op');
   $('#me').className='zone'+(my?' act':'');
-  setH('#me',`<div class="who">${av0}<div class="nm"><b>Sen</b><span class="meta">${jp(2-S.jUsed[0])}</span></div><div class="tot${bust?' bust':exact?' exact':''}"><small>${bust?'Battın':exact?'Tam Hedef':'Toplamın'}</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}<span class="gap"></span>${S.pl[0].open.map(c=>cd(c)).join('')}</div>`);
+  setH('#me',`<div class="who">${av0}<div class="nm"><b>${p0Name}</b><span class="meta">${jp(2-S.jUsed[0])}</span></div><div class="tot${bust?' bust':exact?' exact':''}"><small>${bust?'Battın':exact?'Tam Hedef':(isSpec?'Toplam':'Toplamın')}</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}<span class="gap"></span>${S.pl[0].open.map(c=>cd(c)).join('')}</div>`);
   $('#prompt').className=P?'ask':'';
   setH('#prompt',P?`${J[P.id]}: ${KTXT[k]} ${k=='sign'?'<button class="btn sm" data-s="1">Ekle</button><button class="btn sm" data-s="-1">Çıkar</button>':''}<button class="btn sm alt" data-x="1">Vazgeç</button>`:'');
   const ends=S.turns>0&&!S.acted; // şimdi pas dersem tur biter
-  $('#draw').disabled=!(my&&!P&&canDraw(S,0));$('#pass').disabled=!(my&&!P);
-  $('#pass').textContent=ends?'Turu bitir':'Pas';$('#pass').className='btn sm'+(ends?'':' alt');
+  $('#draw').disabled=isSpec||!(my&&!P&&canDraw(S,0));$('#pass').disabled=isSpec||!(my&&!P);
+  if(isSpec){
+    $('#draw').style.display='none';$('#pass').style.display='none';
+  }else{
+    $('#draw').style.display='';$('#pass').style.display='';
+    $('#pass').textContent=ends?'Turu bitir':'Pas';$('#pass').className='btn sm'+(ends?'':' alt');
+  }
   const n=S.hand[0].length;
-  setH('#hand',S.hand[0].map((id,i)=>`<img class="j${my&&!P&&playable(S,0,id)?'':' dim'}" style="--r:${((i-(n-1)/2)*5).toFixed(1)}deg" data-j="${id}" src="${IMG.j[id]}" alt="">`).join(''));
+  if(isSpec){
+    setH('#hand',`<div class="spec-notice">👁️ Canlı Maç Yayını · İzleyici Modundasın</div>`);
+  }else{
+    setH('#hand',S.hand[0].map((id,i)=>`<img class="j${my&&!P&&playable(S,0,id)?'':' dim'}" style="--r:${((i-(n-1)/2)*5).toFixed(1)}deg" data-j="${id}" src="${IMG.j[id]}" alt="">`).join(''));
+  }
+  count(document.querySelector('#me .tot b'),lastTot[0],mt);count(document.querySelector('#opp .tot b'),lastTot[1],ot);lastTot=[mt,ot];
   count(document.querySelector('#me .tot b'),lastTot[0],mt);count(document.querySelector('#opp .tot b'),lastTot[1],ot);lastTot=[mt,ot];
   (S.pj||[]).forEach(e=>seenE.add(e.uid));S.hand[0].forEach(id=>hiLoad(id));
   if(prevSeal&&prevSeal!=seal)snd('stamp');prevSeal=seal;
@@ -885,7 +905,13 @@ function R(){
   const mt0=S.turn==0&&!S.wait;if(mt0&&!prevT)snd('turn');prevT=mt0;
   const last=S.log[S.log.length-1],lk=S.log.length+JSON.stringify(last);if(lk!=lastLk){lastLk=lk;if(last&&last.t=='pas dedi')snd('pass')}
   fly();flipId=null;
-  if(MODE=='host'&&conn&&conn.open)conn.send({k:'s',v:view(G)});
+  if(MODE=='host'){
+    if(conn&&conn.open)conn.send({k:'s',v:view(G)});
+    if(spectators.length){
+      const sv=specView(G);
+      spectators.forEach(s=>{try{if(s.open)s.send({k:'s',v:sv,specCount:spectators.length})}catch(e){}});
+    }
+  }
 }
 function doPlay(id,pk){const S=G;P=null;if(MODE=='guest'){conn.send({k:'play',id,pk});return R()}lrnAct(S,'j',id);play(S,0,id,pk);S.acted=true;S.log.push({p:0,t:`joker oynadı: ${J[id]}`});note(0,id,()=>{if(MODE=='bot')talk('react',1,.5);R()})}
 function pick(v){P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
@@ -976,6 +1002,11 @@ let leaving=false;
 function peerLeft(msg){ // rakip çıktı: ana menüye ASLA doğrudan atma, yalnızca "Ana menüye dön" ile limbigames perdesi üzerinden gidilir
   if(leaving)return;
   try{conn=null}catch(e){}
+  if(MODE=='spectator'){
+    // İzleyiciyken oda kapandıysa veya bağlantı koptuysa:
+    M(`Oda bağlantısı kesildi.<br><b>Yayın sona erdi.</b>`,null,null,true);
+    return;
+  }
   if(!G){st(msg);return}              // henüz oyun yok (lobi): sadece bilgi yaz
   const c=$('#cast');if(c)c.remove();P=null;
   if(G.over){ // oyun zaten bitmişti: sonuç penceresi kalsın, not eklensin, yeniden oyna kalksın
@@ -993,7 +1024,10 @@ function exitGame(){ // limbigames perdesi, sonra ilk ekrana dön
   const c=$('#cast');if(c)c.remove();$('#m').hidden=true;lock=true;P=null;
   veil();
   setTimeout(()=>{
-    try{if(conn)conn.close()}catch(e){}try{if(peer)peer.destroy()}catch(e){}conn=null;peer=null;waitM=false;
+    try{if(conn)conn.close()}catch(e){}
+    try{spectators.forEach(s=>{try{s.close()}catch(err){}})}catch(e){}
+    try{if(peer)peer.destroy()}catch(e){}
+    conn=null;spectators=[];peer=null;waitM=false;specCount=0;
     if(G)G.over=true;G=null;MODE='bot';sayT='';try{document.body.classList.remove('dead')}catch(e){}
     st('');$('#menu').hidden=false;lock=false;entering=false;setMusic('menu');
   },1700);
@@ -1020,7 +1054,7 @@ $('#draw').onclick=()=>{const S=G;if(S.turn||lock||P||!canDraw(S,0))return;if(MO
 $('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE=='guest')conn.send({k:'pass'});else{lrnAct(G,'p');pass()}}};
 
 /* ---------- ONLINE (PeerJS) ---------- */
-let MODE='bot',peer,conn,waitM=false;
+let MODE='bot',peer,conn,spectators=[],specCount=0,waitM=false;
 function view(S){ // rakibe gidecek, gizli bilgisi temizlenmiş ve aynalanmış durum
   const f=a=>[a[1],a[0]];
   return {av:[S.av[1],S.av[0]],mast:[S.mast[1],S.mast[0]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:1-S.turn,pts:f(S.pts),rev:S.rev,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),noJ:f(S.noJ),
@@ -1028,7 +1062,25 @@ function view(S){ // rakibe gidecek, gizli bilgisi temizlenmiş ve aynalanmış 
     pl:[S.pl[1],{open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:S.rev?c.o:undefined}))}],
     eff:S.eff.map(e=>({...e,o:1-e.o})),pj:(S.pj||[]).map(e=>({...e,o:1-e.o})),log:S.log.slice(-6).map(l=>({...l,p:l.p<0?-1:1-l.p}))};
 }
-function note(p,id,cb){if(MODE=='host'&&conn&&conn.open){conn.send({k:'j',p:1-p,id});R()}cast(p,id,cb)}
+function specView(S){ // izleyicilere gidecek durum (0 = host/oda sahibi, 1 = misafir oyuncu, kapalı kartlar rev olmadan görünmez)
+  return {
+    av:[S.av[0],S.av[1]],mast:[S.mast[0],S.mast[1]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:S.turn,pts:S.pts,rev:S.rev,res:S.res,jUsed:S.jUsed,noJ:S.noJ,
+    hand:[S.hand[0].map(()=>0),S.hand[1].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
+    pl:[
+      {open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:S.rev?c.o:undefined}))},
+      {open:S.pl[1].open,closed:S.pl[1].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:S.rev?c.o:undefined}))}
+    ],
+    eff:S.eff.map(e=>({...e})),pj:(S.pj||[]).map(e=>({...e})),log:S.log.slice(-6).map(l=>({...l}))
+  };
+}
+function note(p,id,cb){
+  if(MODE=='host'){
+    if(conn&&conn.open)conn.send({k:'j',p:1-p,id});
+    spectators.forEach(s=>{try{if(s.open)s.send({k:'j',p,id})}catch(e){}});
+    R();
+  }
+  cast(p,id,cb);
+}
 function onGuest(m){ // host: misafirin hamle istekleri (doğrulanır)
   const S=G;if(!S||S.over||S.wait||S.turn!=1)return;
   if(m.k=='draw'){if(!canDraw(S,1))return;const c=S.deck.pop();S.pl[1].open.push(c);S.acted=true;S.log.push({p:1,t:`kart çekti (${c.n})`});R()}
@@ -1039,9 +1091,32 @@ function onGuest(m){ // host: misafirin hamle istekleri (doğrulanır)
     play(S,1,id,pk);S.acted=true;S.log.push({p:1,t:`joker oynadı: ${J[id]}`});note(1,id,R);
   }
 }
-function onHost(m){ // misafir: host'tan gelen durum/bildirimler
-  if(m.k=='s'){G=m.v;if(!G.over){try{document.body.classList.remove('dead')}catch(e){}}if(waitM){$('#m').hidden=true;lock=false;waitM=false}if(G.turn!=0||G.wait)P=null;if(!$('#menu').hidden)setTimeout(()=>{$('#menu').hidden=true},1500);setMusic('game');R()}
-  else if(m.k=='m'){waitM=true;M(m.html,null,null,m.end);snd(m.sd)}
+function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
+  if(m.k=='role'){
+    if(m.role=='spectator'){
+      MODE='spectator';
+      st('Odaya izleyici olarak katıldın.');
+      veil();setMusic('game');
+    }
+    return;
+  }
+  if(m.k=='s'){
+    if(m.specCount!=null)specCount=m.specCount;
+    G=m.v;if(!G.over){try{document.body.classList.remove('dead')}catch(e){}}
+    if(waitM){$('#m').hidden=true;lock=false;waitM=false}
+    if(MODE!='spectator'&&(G.turn!=0||G.wait))P=null;
+    if(!$('#menu').hidden)setTimeout(()=>{$('#menu').hidden=true},1500);
+    setMusic('game');R();
+  }
+  else if(m.k=='m'){
+    waitM=true;
+    if(MODE=='spectator'){
+      M(m.html,null,null,m.end);
+    }else{
+      M(m.html,null,null,m.end);
+    }
+    snd(m.sd);
+  }
   else if(m.k=='j')cast(m.p,m.id,R);
 }
 const st=t=>$('#st').textContent=t;
@@ -1049,7 +1124,7 @@ const NETERR=e=>({'network':1,'server-error':1,'socket-error':1,'socket-closed':
 const noNet=()=>{if(typeof Peer=='undefined'||navigator.onLine===false){MODE='bot';st('Online mod için internet bağlantısı gerekli. Bilgisayara karşı oynayabilirsin.');return true}return false};
 function hostRoom(){
   if(noNet())return;
-  MODE='host';leaving=false;sayT='';const code=Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random()*32|0]).join('');
+  MODE='host';leaving=false;sayT='';spectators=[];specCount=0;const code=Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random()*32|0]).join('');
   st('Oda oluşturuluyor…');
   peer=new Peer('necrodice-'+code);
   
@@ -1084,7 +1159,7 @@ function hostRoom(){
       pc.textContent='Lobiyi Kapat';
       pc.onclick=()=>{
         try{if(peer)peer.destroy()}catch(e){}
-        peer=null;conn=null;MODE='bot';
+        peer=null;conn=null;spectators=[];MODE='bot';
         $('#m').hidden=true;lock=false;st('');
       };
     }
@@ -1106,15 +1181,29 @@ function hostRoom(){
   });
 
   peer.on('connection',c=>{
-    if(conn)return;
-    conn=c;
-    const ls=$('#lobbyStatus');if(ls)ls.textContent='Rakip bağlandı! Oyun başlıyor…';
-    setTimeout(()=>{
-      $('#m').hidden=true;lock=false;
-      enter(start);
-    },600);
-    c.on('data',onGuest);
-    c.on('close',()=>peerLeft('Rakip oyundan ayrıldı.'));
+    // Eğer henüz 2. oyuncu (rakip) yoksa veya bağlantısı kapandıysa:
+    if(!conn||!conn.open){
+      conn=c;
+      const ls=$('#lobbyStatus');if(ls)ls.textContent='Rakip bağlandı! Oyun başlıyor…';
+      setTimeout(()=>{
+        $('#m').hidden=true;lock=false;
+        enter(start);
+      },600);
+      c.on('data',onGuest);
+      c.on('close',()=>peerLeft('Rakip oyundan ayrıldı.'));
+      return;
+    }
+
+    // 2 kişi zaten varsa: sonra gelen herkes İZLEYİCİ slotuna alınır
+    spectators.push(c);
+    c.on('open',()=>{
+      c.send({k:'role',role:'spectator'});
+      if(G)c.send({k:'s',v:specView(G),specCount:spectators.length});
+    });
+    c.on('close',()=>{
+      spectators=spectators.filter(x=>x!==c);
+      if(G)R();
+    });
   });
 }
 function joinRoom(){

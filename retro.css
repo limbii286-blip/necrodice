@@ -584,3 +584,28 @@ main{padding-top:max(14px,var(--sat,env(safe-area-inset-top,0px)))}
   from{transform:translateY(0);opacity:.4}
   to{transform:translateY(-8px);opacity:1}
 }
+
+/* ============================================================
+   İZLEYİCİ MODU (SPECTATOR BADGE & CONTROLS)
+   ============================================================ */
+.spec-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:linear-gradient(180deg,#14121a,#0a0810);
+  border:1px solid #7d6ba8;border-radius:4px;
+  padding:3px 10px;color:#d5cde8;font-size:16px;
+  letter-spacing:1px;text-transform:uppercase;
+  box-shadow:0 0 10px rgba(125,107,168,0.3);
+}
+.spec-badge i{
+  display:inline-block;width:8px;height:8px;border-radius:50%;
+  background:#a388ee;box-shadow:0 0 6px #a388ee;
+  animation:specPulse 1.8s ease-in-out infinite alternate;
+}
+@keyframes specPulse{
+  from{opacity:0.4;transform:scale(0.85)}
+  to{opacity:1;transform:scale(1.2)}
+}
+.spec-notice{
+  text-align:center;color:#b3a8c9;font-size:15px;letter-spacing:.5px;
+  margin-top:4px;opacity:.85;
+}
