@@ -23,7 +23,7 @@ const ac=()=>{
 (()=>{try{const h=document.createElement('script');h.src='hd.js';h.async=true;document.head.appendChild(h)}catch(e){}})(); // HD görseller (gömülü): HDJ jokerler, HDAV karakterler
 const FILE=location.protocol=='file:'; // çift tıkla açılınca Web Audio dosyaya erişemez: doğrudan <audio> kullan
 const AUD={mus:'?',sfx:'?',hd:'?'},MISS=[];const miss=u=>{try{u=new URL(u,location.href).href}catch(e){}if(!MISS.includes(u))MISS.push(u)}; // ayarlarda gösterilen dosya durumu
-const MU={menu:['menu.m4a'],game:['game1.m4a','game2.m4a']};
+const MU={menu:['music_menu.mp3','menu.m4a'],game:['music_gothic.wav','music_game1.mp3','music_game2.mp3']};
 let curM='menu',mel=null,gi=Math.random()*2|0;
 
 /* Yerleşik müzik: audio/*.m4a bulunamazsa Web Audio ile üretilen karanlık ambiyans çalar (dosya gerekmez) */
