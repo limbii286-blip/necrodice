@@ -748,3 +748,7 @@ body.view-3d #fx::before,body.view-3d #fx::after{display:none}
 body.view-3d #hdr{background:linear-gradient(#000000aa,#0000)!important}
 body.view-3d .zone .c,body.view-3d .zone img.c,body.view-3d #fx .deck{opacity:0!important;pointer-events:none!important}
 body.view-3d #fx .jh .c{opacity:1!important;pointer-events:auto!important}
+body.view-3d #fx .ctl{justify-content:center;gap:clamp(90px,26vw,150px)}
+body.view-3d #fx .cl .deck{display:none}
+body.view-3d #fx .seal{top:50px;transform:translate(-50%,0) rotate(-4deg) scale(.78)}
+@media(min-width:701px){body.view-3d #hand{position:fixed;left:0;right:0;bottom:0;z-index:5;margin:0}}

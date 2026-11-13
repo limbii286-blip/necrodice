@@ -95,6 +95,7 @@
     camera.position.set(0, 2.2, 3.4);
     camera.rotation.x = -0.52;
 
+    fitFov();
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -260,10 +261,17 @@
     mouse.ty = (e.clientY / window.innerHeight - 0.5) * 2;
   }
 
+  // Dar (dikey) ekranlarda yatay görüş açısını koru: masa ve kartlar kenara taşmasın
+  function fitFov() {
+    const a = window.innerWidth / window.innerHeight;
+    camera.aspect = a;
+    camera.fov = Math.min(100, Math.max(48, 2 * Math.atan(Math.tan(0.62) / a) * 180 / Math.PI));
+    camera.updateProjectionMatrix();
+  }
+
   function onWindowResize() {
     if (!camera || !renderer) return;
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
+    fitFov();
     renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
@@ -334,7 +342,7 @@
     pOpen.forEach((c) => {
       const mesh = create3DCardMesh(c, false, true);
       const targetX = startX_P + (idx++) * spacing;
-      mesh.position.set(targetX, tableSurfaceY, 0.95);
+      mesh.position.set(targetX, tableSurfaceY, 1.5);
       mesh.rotation.set(0, 0, 0); // Face up
       scene.add(mesh);
       cardMeshes.push({ id: c.id, mesh, p: 0 });
@@ -344,7 +352,7 @@
       const isRevealed = S.rev || (typeof peek !== 'undefined' && peek.has(c.id));
       const mesh = create3DCardMesh(c, !isRevealed, true);
       const targetX = startX_P + (idx++) * spacing;
-      mesh.position.set(targetX, tableSurfaceY, 0.95);
+      mesh.position.set(targetX, tableSurfaceY, 1.5);
       // If closed, flipped face down (-PI on Z or rotated)
       if (!isRevealed) {
         mesh.rotation.set(0, 0, Math.PI);
@@ -389,7 +397,7 @@
       const deckCount = Math.min(S.deck.length, 11);
       for (let i = 0; i < deckCount; i++) {
         const dMesh = create3DCardMesh({ n: 0 }, true, false);
-        dMesh.position.set(-1.45, tableSurfaceY + i * 0.007, 0.2);
+        dMesh.position.set(-1.8, tableSurfaceY + i * 0.007, 0.4);
         dMesh.rotation.set(0, 0.05 * i, Math.PI);
         scene.add(dMesh);
         cardMeshes.push({ id: 'deck_' + i, mesh: dMesh });
