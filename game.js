@@ -367,9 +367,71 @@ function M(html,btn,cb,end){lock=true;$('#mb').innerHTML=html+(btn?`<br><br><but
   if(end)$('#mx').onclick=exitGame}
 function MM(fn,btn,cb,sd,end){if(MODE=='host'&&conn&&conn.open)conn.send({k:'m',html:fn(1),sd:sd&&sd(1),end});M(fn(0),btn,cb,end);snd(sd&&sd(0))}
 const PROF=(()=>{try{const o=JSON.parse(LS('prof')||'null');if(o&&Array.isArray(o.p)&&o.p.length==19)return o}catch(e){}return{n:0,p:new Array(19).fill(0)}})(); // oyuncunun pas geçtiği toplamlar (hedefe uzaklık) bu cihazda saklanır
-function profRec(S,tot,T){if(lowW(S)||!S.pa||!(S.pa[0]>0))return;const d=Math.max(-6,Math.min(12,T-tot));PROF.p[d+6]++;PROF.n++;LS('prof',JSON.stringify(PROF))}
+function profRec(S,tot,T){if(lowW(S)||!S.pa||!(S.pa[0]>0))return;const d=Math.max(-6,Math.min(12,T-tot));PROF.p[d+6]++;PROF.n++;LS('prof',JSON.stringify(PROF));syncToFirebase()}
 
-/* ---------- İMKANSIZ BOT: oynadığı oyunlardan öğrenir (bu cihazda saklanır) ----------
+/* ---------- FIREBASE / GLOBAL BOT MEMORY ---------- */
+const FB_CFG={
+  apiKey: "AIzaSyBdrfPIhArtP0ck9A05--Z7s4Oq6exAZqQ",
+  authDomain: "necrodice.firebaseapp.com",
+  projectId: "necrodice",
+  storageBucket: "necrodice.firebasestorage.app",
+  messagingSenderId: "865937962056",
+  appId: "1:865937962056:web:d54c137e3ca1e8cc95547d"
+};
+let fbDb=null,fbDoc=null;
+try{
+  if(window.firebase){
+    firebase.initializeApp(FB_CFG);
+    fbDb=firebase.firestore();
+    fbDoc=fbDb.collection('bot').doc('global_memory');
+    // Global hafızayı çekip yerel LRN ve PROF ile birleştir
+    fbDoc.get().then(doc=>{
+      if(doc.exists){
+        const d=doc.data();
+        if(d.LRN)mergeGlobalLRN(d.LRN);
+        if(d.PROF)mergeGlobalPROF(d.PROF);
+        console.log('Firebase: Global bot hafızası yüklendi!');
+      }
+    }).catch(e=>console.warn('Firebase get error:',e));
+  }
+}catch(e){console.warn('Firebase init error:',e)}
+
+function mergeGlobalLRN(g){
+  if(!g)return;
+  if(Array.isArray(g.dp)&&g.dp.length==19){
+    for(let i=0;i<19;i++){LRN.dp[i][0]=Math.max(LRN.dp[i][0],g.dp[i][0]||0);LRN.dp[i][1]=Math.max(LRN.dp[i][1],g.dp[i][1]||0)}
+  }
+  if(Array.isArray(g.arm)&&g.arm.length==ARMS.length){
+    for(let i=0;i<ARMS.length;i++){LRN.arm[i][0]=Math.max(LRN.arm[i][0],g.arm[i][0]||0);LRN.arm[i][1]=Math.max(LRN.arm[i][1],g.arm[i][1]||0)}
+  }
+  LRN.ht=Math.max(LRN.ht,g.ht||0);
+  LRN.hj=Math.max(LRN.hj,g.hj||0);
+  if(g.g){LRN.g[0]=Math.max(LRN.g[0],g.g[0]||0);LRN.g[1]=Math.max(LRN.g[1],g.g[1]||0)}
+  if(g.r){LRN.r[0]=Math.max(LRN.r[0],g.r[0]||0);LRN.r[1]=Math.max(LRN.r[1],g.r[1]||0);LRN.r[2]=Math.max(LRN.r[2],g.r[2]||0)}
+  if(g.jp){for(let k in g.jp)LRN.jp[k]=Math.max(LRN.jp[k]||0,g.jp[k])}
+  lrnSave(false);
+}
+
+function mergeGlobalPROF(g){
+  if(!g)return;
+  if(Array.isArray(g.p)&&g.p.length==19){
+    for(let i=0;i<19;i++)PROF.p[i]=Math.max(PROF.p[i],g.p[i]||0);
+  }
+  PROF.n=Math.max(PROF.n,g.n||0);
+  LS('prof',JSON.stringify(PROF));
+}
+
+let fbSyncTimer=null;
+function syncToFirebase(){
+  if(!fbDoc)return;
+  clearTimeout(fbSyncTimer);
+  fbSyncTimer=setTimeout(()=>{
+    fbDoc.set({LRN,PROF,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})
+      .catch(e=>console.warn('Firebase sync error:',e));
+  },1500);
+}
+
+/* ---------- İMKANSIZ BOT: oynadığı oyunlardan öğrenir (bu cihazda ve Firebase'de saklanır) ----------
    1) Oyuncu modeli: oyuncu hedefe ne kadar uzaktayken kart çekiyor / pas geçiyor, ne sıklıkla joker oynuyor.
       Bot, hamle seçerken oyuncunun cevabını kendi gibi değil, bu öğrendiği alışkanlıklarla simüle eder.
    2) Ayar seçimi: birkaç farklı oyun tarzı (risk, joker maliyeti, rakip tahmini) denenir; oyuncuya karşı
@@ -380,7 +442,7 @@ window.botMemory=LRN;
 window.botStats=()=>{const tr=LRN.r[0]+LRN.r[1]+LRN.r[2];return{toplamHamle:LRN.ht,jokerKullanimi:LRN.hj,toplamTur:tr,turSonuclari:{botKazandi:LRN.r[0],oyuncuKazandi:LRN.r[1],berabere:LRN.r[2]},turKazanmaYuzdesi:tr>0?Math.round(100*(LRN.r[0]+LRN.r[2]/2)/tr)+'%':'0%',oyunlar:{botKazandi:LRN.g[0],toplamOyun:LRN.g[1]},detay:LRN}};
 window.resetBotStats=()=>{Object.assign(LRN,lrnNew());PROF.n=0;PROF.p.fill(0);lrnSave();LS('prof',JSON.stringify(PROF));console.log('Bot hafızası sıfırlandı.');return 'Sıfırlandı'};
 function lrnNew(){return{v:1,dp:Array.from({length:19},()=>[0,0]),ht:0,hj:0,jp:{},arm:ARMS.map(()=>[0,0]),cur:0,g:[0,0],r:[0,0,0]}}
-const lrnSave=()=>LS('lrn',JSON.stringify(LRN)),learning=()=>MODE=='bot'&&DIFF=='imp';
+const lrnSave=(sync=true)=>{LS('lrn',JSON.stringify(LRN));if(sync)syncToFirebase()},learning=()=>MODE=='bot'&&DIFF=='imp';
 function lrnAct(S,kind,id){ // oyuncunun hamlesi: 'd' kart çek, 'p' pas, 'j' joker
   if(!learning())return;LRN.ht++;
   if(kind=='j'){LRN.hj++;LRN.jp[id]=(LRN.jp[id]|0)+1}
