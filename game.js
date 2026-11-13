@@ -797,7 +797,19 @@ function cast(p,id,cb){ // joker sahnede büyür ve Kapat'a basılana kadar kal�
 function count(el,a,b){if(!el)return;if(a==b||RM||typeof requestAnimationFrame=='undefined'){el.textContent=b;return}const t0=performance.now(),f=n=>{const x=Math.min(1,(n-t0)/450);el.textContent=Math.round(a+(b-a)*x*(2-x));if(x<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
 function fly(){ // yeni kartlar desteden uçarak gelir
   const d=$('#deck');if(!d||!d.getBoundingClientRect)return;const dr=d.getBoundingClientRect();let i=0;const F=FIT||1;
-  document.querySelectorAll('.fresh').forEach(el=>{const r=el.getBoundingClientRect();el.style.setProperty('--dx',(dr.left-r.left+(dr.width-r.width)/2)/F+'px');el.style.setProperty('--dy',(dr.top-r.top+(dr.height-r.height)/2)/F+'px');el.style.animationDelay=(i++*.13)+'s'});
+  const freshCards=document.querySelectorAll('.fresh');
+  if(freshCards.length){
+    d.classList.remove('pull');
+    void d.offsetWidth;
+    d.classList.add('pull');
+    setTimeout(()=>d.classList.remove('pull'),500);
+  }
+  freshCards.forEach(el=>{
+    const r=el.getBoundingClientRect();
+    el.style.setProperty('--dx',(dr.left-r.left+(dr.width-r.width)/2)/F+'px');
+    el.style.setProperty('--dy',(dr.top-r.top+(dr.height-r.height)/2)/F+'px');
+    el.style.animationDelay=(i++*.13)+'s';
+  });
 }
 /* Mobilde kaydırma olmasın: oyun alanı ekrana sığmıyorsa tek parça olarak küçültülür (PC'ye dokunmaz) */
 let FIT=1,fitQ=0;
