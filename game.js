@@ -1050,10 +1050,72 @@ const noNet=()=>{if(typeof Peer=='undefined'||navigator.onLine===false){MODE='bo
 function hostRoom(){
   if(noNet())return;
   MODE='host';leaving=false;sayT='';const code=Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random()*32|0]).join('');
+  st('Oda oluşturuluyor…');
   peer=new Peer('necrodice-'+code);
-  peer.on('open',()=>st('Oda kodu: '+code+' — rakip bekleniyor…'));
-  peer.on('error',e=>{if(e.type=='unavailable-id'){peer.destroy();hostRoom()}else st(NETERR(e))});
-  peer.on('connection',c=>{if(conn)return;conn=c;c.on('open',()=>enter(start));c.on('data',onGuest);c.on('close',()=>peerLeft('Rakip oyundan ayrıldı.'))});
+  
+  const showLobby=()=>{
+    box(`
+      <div class="lobby-box">
+        <h3 style="margin-bottom:8px">Çevrim İçi Lobi</h3>
+        <p style="color:var(--bone);font-size:20px;margin-bottom:14px">Rakip bekleniyor… Bu kodu arkadaşına ilet:</p>
+        <div class="lobby-code-badge" id="lobbyCodeBox" title="Kodu Kopyala">
+          <span class="lobby-lbl">ODA KODU</span>
+          <b class="lobby-code">${code}</b>
+          <span class="lobby-copy-hint">kopyalamak için tıkla</span>
+        </div>
+        <div class="lobby-spinner"><i></i><i></i><i></i></div>
+        <p id="lobbyStatus" style="font-size:18px;color:#a0b8a4;margin-top:12px">Bağlantı açık · Rakip bekleniyor</p>
+      </div>
+    `, true);
+
+    const cb=$('#lobbyCodeBox');
+    if(cb){
+      cb.onclick=()=>{
+        try{
+          navigator.clipboard.writeText(code);
+          const h=cb.querySelector('.lobby-copy-hint');
+          if(h){h.textContent='Kopyalandı!';setTimeout(()=>h.textContent='kopyalamak için tıkla',2000)}
+        }catch(e){}
+      };
+    }
+
+    const pc=$('#pc');
+    if(pc){
+      pc.textContent='Lobiyi Kapat';
+      pc.onclick=()=>{
+        try{if(peer)peer.destroy()}catch(e){}
+        peer=null;conn=null;MODE='bot';
+        $('#m').hidden=true;lock=false;st('');
+      };
+    }
+  };
+
+  peer.on('open',()=>{
+    st('Oda kodu: '+code+' — rakip bekleniyor…');
+    showLobby();
+  });
+
+  peer.on('error',e=>{
+    if(e.type=='unavailable-id'){
+      try{peer.destroy()}catch(err){}
+      hostRoom();
+    }else{
+      st(NETERR(e));
+      const ls=$('#lobbyStatus');if(ls)ls.textContent=NETERR(e);
+    }
+  });
+
+  peer.on('connection',c=>{
+    if(conn)return;
+    conn=c;
+    const ls=$('#lobbyStatus');if(ls)ls.textContent='Rakip bağlandı! Oyun başlıyor…';
+    setTimeout(()=>{
+      $('#m').hidden=true;lock=false;
+      enter(start);
+    },600);
+    c.on('data',onGuest);
+    c.on('close',()=>peerLeft('Rakip oyundan ayrıldı.'));
+  });
 }
 function joinRoom(){
   if(noNet())return;
