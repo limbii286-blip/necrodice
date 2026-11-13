@@ -651,15 +651,16 @@ function endRound(){
         <div class="bg3-card-border"></div>
         <i class="bg3-corner tl"></i><i class="bg3-corner tr"></i><i class="bg3-corner bl"></i><i class="bg3-corner br"></i>
         <div class="bg3-dc-arch">
-          <span class="lbl">DIFFICULTY CLASS</span>
+          <span class="lbl">HEDEF</span>
           <span class="val">${th}</span>
         </div>
         <div class="d20-stage">
           <div class="d20-glow"></div>
           <canvas id="d20cv" class="d20-canvas" width="280" height="280"></canvas>
         </div>
+        ${L==v?'<button id="rl" class="btn d20-btn">ÖLÜM ZARINI AT</button>':''}
       </div>
-    </div>${L==v?'<button id="rl" class="btn d20-btn">ZARI AT</button>':''}<div class="after"><b>Zar Sonucu: ${roll}</b><br>`+(surv?(L==v?'Kurtuldun! Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
+    </div><div class="after"><b>Zar Sonucu: ${roll}</b><br>`+(surv?(L==v?'Kurtuldun! Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
     const full=v=>mk(v,roll,surv),rig=MODE=='bot'&&DIFF=='imp'&&L==1&&!surv&&!S.rigDone; // sahne oyun başına bir kez; ikinci ölümde gerçekten ölür
     if(surv||rig){const n=S.bo+2,ek=['a','e','ye','e','e','e','ya','ye','e','a'][n%10];
       const lb=`Düello ${n}'${ek} geç`,go=()=>{S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()};

@@ -485,7 +485,7 @@ main{padding-top:max(14px,var(--sat,env(safe-area-inset-top,0px)))}
   width:260px;
   background:radial-gradient(ellipse at 50% 30%, #1c1524 0%, #0d0a14 70%, #05040a 100%);
   border:3px solid #8e6d3a;
-  border-radius:18px 18px 24px 24px;
+  border-radius:24px 24px 28px 28px;
   box-shadow:0 0 0 2px #000, 0 16px 40px rgba(0,0,0,0.95), 0 0 30px rgba(142,109,58,0.25), inset 0 0 25px rgba(0,0,0,0.8);
   padding:16px 14px 18px;
   display:flex;
@@ -495,21 +495,21 @@ main{padding-top:max(14px,var(--sat,env(safe-area-inset-top,0px)))}
   overflow:hidden;
 }
 .bg3-card-border{
-  position:absolute;inset:4px;
-  border:1px solid #c8a35d;
-  border-radius:14px 14px 20px 20px;
+  position:absolute;inset:5px;
+  border:1.5px solid #c8a35d;
+  border-radius:20px 20px 24px 24px;
   pointer-events:none;
   opacity:0.65;
 }
 .bg3-corner{
-  position:absolute;width:8px;height:8px;border:2px solid #e5c07b;
+  position:absolute;width:10px;height:10px;border:2px solid #e5c07b;
 }
-.bg3-corner.tl{top:6px;left:6px;border-right:0;border-bottom:0}
-.bg3-corner.tr{top:6px;right:6px;border-left:0;border-bottom:0}
-.bg3-corner.bl{bottom:6px;left:6px;border-right:0;border-top:0}
-.bg3-corner.br{bottom:6px;right:6px;border-left:0;border-top:0}
+.bg3-corner.tl{top:8px;left:8px;border-right:0;border-bottom:0}
+.bg3-corner.tr{top:8px;right:8px;border-left:0;border-bottom:0}
+.bg3-corner.bl{bottom:8px;left:8px;border-right:0;border-top:0}
+.bg3-corner.br{bottom:8px;right:8px;border-left:0;border-top:0}
 
-/* Üst Kemer: DIFFICULTY CLASS (DC) */
+/* Üst Kemer: HEDEF */
 .bg3-dc-arch{
   position:relative;
   width:100%;
@@ -517,27 +517,34 @@ main{padding-top:max(14px,var(--sat,env(safe-area-inset-top,0px)))}
   padding:4px 0 12px;
   border-bottom:1px solid rgba(200,163,93,0.3);
 }
+.bg3-dc-arch::after{
+  content:"";
+  position:absolute;
+  left:15%;right:15%;bottom:-1px;
+  height:1px;
+  background:linear-gradient(90deg, transparent, #e5c07b, transparent);
+}
 .bg3-dc-arch .lbl{
   display:block;
-  font:700 12px/1.1 'Cinzel', 'Trajan Pro', Georgia, serif;
-  letter-spacing:2px;
+  font:700 13px/1.1 'Cinzel', 'Trajan Pro', Georgia, serif;
+  letter-spacing:4px;
   color:#baa47d;
   text-transform:uppercase;
-  margin-bottom:3px;
+  margin-bottom:4px;
   text-shadow:0 1px 3px #000;
 }
 .bg3-dc-arch .val{
   display:block;
-  font:700 32px/1 'Cinzel', 'Times New Roman', serif;
+  font:700 36px/1 'Cinzel', 'Times New Roman', serif;
   color:#f4eedb;
-  text-shadow:0 0 12px rgba(230,195,120,0.6), 0 2px 4px #000;
+  text-shadow:0 0 14px rgba(230,195,120,0.65), 0 2px 4px #000;
   letter-spacing:1px;
 }
 
 /* Zar Sahnesi (Aşağıdan yukarı süzülüş) */
 .d20-stage{
   position:relative;width:170px;height:170px;
-  margin:10px 0 4px;
+  margin:10px 0 6px;
   display:flex;align-items:center;justify-content:center;
 }
 .d20-canvas{
@@ -570,18 +577,33 @@ main{padding-top:max(14px,var(--sat,env(safe-area-inset-top,0px)))}
   filter:drop-shadow(0 10px 24px rgba(0,0,0,0.9)) drop-shadow(0 0 25px rgba(180,10,20,0.7));
 }
 
+/* Baldur's Gate 3 "Click dice to roll" tarzı kart altı butonu */
 .d20-btn{
-  display:block;margin:14px auto 4px;padding:12px 28px;
-  background:linear-gradient(180deg,#2d1f11 0%,#150c05 100%);
-  border:2px solid #c8a35d;color:#fcecd0;
-  font:700 18px/1 'Cinzel',var(--mf),serif;letter-spacing:2px;
-  box-shadow:0 4px 0 #000, 0 0 16px rgba(200,163,93,0.3);
-  animation:bg3BtnPulse 2s ease-in-out infinite;cursor:pointer;
-  text-transform:uppercase;border-radius:4px;
+  display:inline-block;
+  margin:8px auto 2px;
+  padding:10px 22px 9px;
+  background:rgba(20, 14, 10, 0.85);
+  border:1.5px solid #a48143;
+  color:#edd9b4;
+  font:700 14px/1 'Cinzel',var(--mf),serif;
+  letter-spacing:2px;
+  box-shadow:inset 0 0 10px rgba(0,0,0,0.8), 0 0 14px rgba(164,129,67,0.3);
+  animation:bg3BtnPulse 2.4s ease-in-out infinite;
+  cursor:pointer;
+  text-transform:uppercase;
+  border-radius:4px;
+  transition:all .2s ease;
+}
+.d20-btn:hover{
+  border-color:#e5c07b;
+  color:#fff2d6;
+  background:rgba(40, 26, 16, 0.95);
+  box-shadow:inset 0 0 14px rgba(0,0,0,0.9), 0 0 22px rgba(229,192,123,0.6);
+  transform:scale(1.03);
 }
 @keyframes bg3BtnPulse{
-  0%,100%{box-shadow:0 4px 0 #000,0 0 10px rgba(200,163,93,0.25);transform:scale(1)}
-  50%{box-shadow:0 4px 0 #000,0 0 22px rgba(200,163,93,0.65);transform:scale(1.02)}
+  0%,100%{box-shadow:inset 0 0 8px rgba(0,0,0,0.8), 0 0 8px rgba(164,129,67,0.25);transform:scale(1)}
+  50%{box-shadow:inset 0 0 12px rgba(0,0,0,0.8), 0 0 18px rgba(229,192,123,0.55);transform:scale(1.02)}
 }
 .d20-btn:active{transform:translate(0,2px);box-shadow:0 2px 0 #000}
 
