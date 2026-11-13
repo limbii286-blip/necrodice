@@ -104,10 +104,33 @@ document.addEventListener('visibilitychange',()=>{if(syn&&AC){document.hidden?AC
 const BUF={};
 const getA=f=>{const k=f.replace('.wav',''),ok=r=>{if(!r.ok)throw 0;return r.arrayBuffer()};
   return fetch('audio/'+f).then(ok).catch(()=>fetch(f).then(ok)).catch(()=>{if(typeof SFXD=='undefined'||!SFXD[k])throw 0;return fetch(SFXD[k]).then(ok)})}; // bulunamazsa gömülü kopya
-function loadSfx(){if(FILE){BUF.draw='kart_cekme';BUF.play='joker_oynama';BUF.info='joker_bilgi';AUD.sfx='file';return}
-  [['draw','kart_cekme'],['play','joker_oynama'],['info','joker_bilgi']].forEach(([k,f])=>getA(f+'.wav').then(b=>AC.decodeAudioData(b)).then(d=>{BUF[k]=d;AUD.sfx=AUD.sfx=='bad'?'bad':'ok'}).catch(e=>{AUD.sfx='bad';miss('audio/'+f+'.wav');console.warn('efekt yüklenemedi: '+f+'.wav',e)}))}
-function sfx(k,v=1){if(typeof BUF[k]=='string'){const a=new Audio(typeof SFXD!='undefined'&&SFXD[BUF[k]]||'audio/'+BUF[k]+'.wav');a.volume=Math.min(1,VS*v);a.play().catch(()=>{});return}
-  const s=AC.createBufferSource(),g=AC.createGain();s.buffer=BUF[k];g.gain.value=v;s.connect(g);g.connect(SG);s.start()}
+function loadSfx(){
+  const list=[
+    ['draw','kart_cekme'],
+    ['tap','kart_tiklama'],
+    ['flip','kart_cevirme'],
+    ['play','joker_oynama'],
+    ['info','joker_bilgi'],
+    ['dice_clack','zar_carpma'],
+    ['click','buton_tik']
+  ];
+  if(FILE){
+    list.forEach(([k,f])=>{BUF[k]=f});
+    AUD.sfx='file';return;
+  }
+  list.forEach(([k,f])=>getA(f+'.wav').then(b=>AC.decodeAudioData(b)).then(d=>{BUF[k]=d;AUD.sfx=AUD.sfx=='bad'?'bad':'ok'}).catch(e=>{
+    AUD.sfx='bad';miss('audio/'+f+'.wav');console.warn('efekt yüklenemedi: '+f+'.wav',e);
+  }));
+}
+function sfx(k,v=1){
+  if(!AC)return;
+  if(typeof BUF[k]=='string'||!BUF[k]){
+    const soundKey=BUF[k]||(k=='draw'?'kart_cekme':k=='play'?'joker_oynama':k=='flip'?'kart_cevirme':k=='tap'?'kart_tiklama':'buton_tik');
+    const a=new Audio(typeof SFXD!='undefined'&&SFXD[soundKey]||'audio/'+soundKey+'.wav');
+    a.volume=Math.min(1,VS*v);a.play().catch(()=>{});return;
+  }
+  const s=AC.createBufferSource(),g=AC.createGain();s.buffer=BUF[k];g.gain.value=Math.min(1,VS*v);s.connect(g);g.connect(SG);s.start();
+}
 /* Joker büyük görünümü: önce gömülü küçük görsel, yüksek çözünürlüklü img/j/ID.webp yüklenince değişir */
 const HC={};
 function hiLoad(id,cb){let i=HC[id];if(i&&i._x&&typeof HDJ!='undefined'&&HDJ[id]){i._x=0;i._e=1;i.src=HDJ[id]} // hd.js geç yüklendiyse yeniden dene
@@ -123,13 +146,15 @@ function hi(el,id){if(!el)return;const fb=IMG.j[id];el.onerror=()=>{el.onerror=n
 function tone(f,d,ty='sine',v=.12,w=0,sl=0){const a=ac(),t=a.currentTime+w,o=a.createOscillator(),g=a.createGain();o.type=ty;o.frequency.setValueAtTime(f,t);if(sl)o.frequency.linearRampToValueAtTime(Math.max(30,f+sl),t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(SG);o.start(t);o.stop(t+d)}
 function noise(d,v=.2,hp=2500,w=0){const a=ac(),t=a.currentTime+w,n=a.sampleRate*d|0,b=a.createBuffer(1,n,a.sampleRate),x=b.getChannelData(0);for(let i=0;i<n;i++)x[i]=Math.random()*2-1;const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=b;f.type='highpass';f.frequency.value=hp;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);s.connect(f);f.connect(g);g.connect(SG);s.start(t)}
 const SND={
-  draw(){if(BUF.draw)return sfx('draw');noise(.14,.22,2500);tone(300,.06,'triangle',.05)},
-  flip(){noise(.07,.3,4500);tone(1100,.04,'square',.04)},
-  info(){if(BUF.info)sfx('info')},
-  play(){if(BUF.play)return sfx('play');tone(200,.5,'sawtooth',.09,0,-120);tone(660,.3,'triangle',.08,.1);tone(880,.4,'sine',.06,.18)},
-  pass(){tone(130,.15,'sine',.2);tone(90,.2,'sine',.15,.05)},
-  turn(){tone(740,.1,'sine',.07);tone(988,.14,'sine',.06,.09)},
-  dice(){for(let i=0;i<10;i++){noise(.035,.28,1200+Math.random()*2500,i*.1);tone(180+Math.random()*120,.05,'square',.04,i*.1)}},
+  draw(){sfx('draw',1)},
+  tap(){sfx('tap',.9)},
+  flip(){sfx('flip',1)},
+  info(){sfx('info',.85)},
+  play(){sfx('play',1)},
+  click(){sfx('click',.8)},
+  pass(){sfx('click',.9);tone(110,.18,'sine',.25)},
+  turn(){sfx('tap',.7);tone(587,.12,'sine',.08);tone(880,.16,'sine',.06,.05)},
+  dice(){sfx('dice_clack',1);for(let i=0;i<4;i++){setTimeout(()=>sfx('dice_clack',.6-i*.1),40+i*60)}},
   win(){[523,659,784,1047].forEach((f,i)=>tone(f,.4,'triangle',.12,i*.11))},
   lose(){[330,277,233,185].forEach((f,i)=>tone(f,.45,'sawtooth',.07,i*.14))},
   ok(){[440,554,659].forEach((f,i)=>tone(f,.35,'sine',.1,i*.09))},
@@ -812,15 +837,16 @@ function zoomAv(p){const S=G,k=avKey(S,p),nm=NAMES[k]||(p?'Rakip':'Sen');
     hq('av_'+k+'_v3',cs,cb);
   }})}
 function zoomCard(id){const S=G;let f=null;
+  snd('tap');
   for(const p of [0,1])for(const kd of ['open','closed']){const c=S.pl[p][kd].find(x=>x.id==id);if(c)f={c,p,closed:kd=='closed'}}
   if(!f)return;const {c,p,closed}=f,own=p==0,up=!closed||S.rev||(own&&peek.has(id)); // kart yüzü açık mı?
   if(!up){ // kapalı kart: arka yüzü
     return zoom({src:IMG.bn,cls:'card',cap:own?'Senin kapalı kartın':'Rakibin kapalı kartı',hd:backHD,
-      btn:own&&!S.rev?'Kartıma bak':'',fn:()=>{peek.add(id);flipId=id;R();setTimeout(()=>zoomCard(id),80)}})}
+      btn:own&&!S.rev?'Kartıma bak':'',fn:()=>{snd('flip');peek.add(id);flipId=id;R();setTimeout(()=>zoomCard(id),80)}})}
   const val=c.o!=null?c.o:c.n;
   zoom({src:IMG.n[c.n],cls:'card',cap:`${val}`,hd:numHD(c.n),
     sub:(closed?(own?'Senin kapalı kartın':'Rakibin kapalı kartı'):(own?'Senin açık kartın':'Rakibin açık kartı'))+(c.o!=null?` (joker etkisiyle ${c.o} sayılıyor, kartın aslı ${c.n})`:''),
-    btn:closed&&own&&!S.rev?'Kartımı gizle':'',fn:()=>{peek.delete(id);R()}})}
+    btn:closed&&own&&!S.rev?'Kartımı gizle':'',fn:()=>{snd('flip');peek.delete(id);R()}})}
 function preview(id,use,note,back){ // jokeri büyük göster: Kullan / Kapat
   lock=true;snd('info');
   $('#mb').innerHTML=`<img class="big" src="${IMG.j[id]}" alt="${J[id]}">${note?`<div class="pn">${note}</div>`:''}<div class="row">${use?'<button id="pu" class="btn alt">Kullan</button>':''}<button id="pc" class="btn">Kapat</button></div>`;
