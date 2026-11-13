@@ -66,19 +66,37 @@ function synthM(m){
 function startSyn(){if(!AC||!curM||(syn&&syn.m==curM))return;if(syn)syn.stop();syn=synthM(curM)}
 function playM(){
   if(syn&&syn.m!=curM){syn.stop();syn=null}
-  if(!AC||!curM||(mel&&mel._m==curM))return;
-  if(NOF){if(mel){mel.onerror=null;mel.pause();mel=null}startSyn();return}
-  const old=mel,list=MU[curM],el=new Audio(),g=AC.createGain(),t=AC.currentTime;
+  if(!AC||!curM)return;
+  // Menü ve Oyun aynı tek parça atmosferik piyano müziğini paylaşıyorsa kesinti yapma, devam ettir!
+  if(mel){
+    mel._m=curM;
+    return;
+  }
+  if(NOF){startSyn();return}
+  const list=MU[curM],el=new Audio(),g=AC.createGain(),t=AC.currentTime;
   el._m=curM;el._g=g;el.preload='auto';el.loop=true;
-  const fn=curM=='game'?list[gi++%list.length]:list[0];el.src='audio/'+fn;
-  const cs=['audio/'+fn,fn,'/audio/'+fn,'../audio/'+fn];el._i=0;el.onerror=()=>{if(++el._i<cs.length){el.src=cs[el._i];el.play().catch(()=>{})}else{AUD.mus='bad';NOF=true;el.onerror=null;if(mel===el){mel=null}startSyn()}};el.onplaying=()=>{AUD.mus='ok'};
-  el.onended=()=>{if(mel===el&&el._m=='game'){mel=null;playM()}}; // sıradaki parça
+  const fn=list[0];
+  const cs=[typeof GOTHIC_MUSIC_DATA!='undefined'?GOTHIC_MUSIC_DATA:'','audio/'+fn,fn,'/audio/'+fn].filter(Boolean);
+  el._i=0;
+  el.onerror=()=>{
+    if(++el._i<cs.length){
+      el.src=cs[el._i];
+      el.play().catch(()=>{});
+    }else{
+      AUD.mus='bad';NOF=true;el.onerror=null;
+      if(mel===el){mel=null}
+      startSyn();
+    }
+  };
+  el.onplaying=()=>{AUD.mus='ok'};
+  el.src=cs[0];
   if(FILE)el.volume=Math.min(1,VM*.8);
-  else{try{AC.createMediaElementSource(el).connect(g)}catch(e){console.warn('müzik bağlanamadı',e);return}
-    g.connect(MG);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(1,t+1.5)}
-  mel=el;el.play().catch(e=>console.warn('müzik çalınamadı',e));
-  if(old&&FILE){old.onerror=null;old.pause();old.src=''}
-  else if(old){const gt=AC.currentTime;old._g.gain.cancelScheduledValues(gt);old._g.gain.setValueAtTime(old._g.gain.value,gt);old._g.gain.linearRampToValueAtTime(0,gt+1.2);setTimeout(()=>{old.onerror=null;old.pause();old.src=''},1300)}
+  else{
+    try{AC.createMediaElementSource(el).connect(g)}catch(e){console.warn('müzik bağlanamadı',e);return}
+    g.connect(MG);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(1,t+1.2);
+  }
+  mel=el;
+  el.play().catch(e=>console.warn('müzik çalınamadı',e));
 }
 function setMusic(m){curM=m;playM()}
 document.addEventListener('visibilitychange',()=>{if(syn&&AC){document.hidden?AC.suspend():AC.resume();return}if(!mel)return;if(document.hidden)mel.pause();else mel.play().catch(()=>{})});
