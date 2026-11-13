@@ -856,7 +856,7 @@ function R(){
   const pips=[0,1,2].map(i=>`<span class="pip ${res[i]==null?(i==S.rounds?'now':''):res[i]>0?'w':res[i]<0?'l':'d'}"></span>`).join('');
   const sk=TH.map((t,i)=>`<span class="sk${i<bi?' past':i==bi?' cur':''}" title="D20 Ölüm Eşiği: ${t} veya üstü atmalısın">${IC.skull}<small>${t}</small></span>`).join('');
   const isSpec=MODE=='spectator';
-  const specHdr=isSpec?`<div class="spec-badge"><i></i>İzleyici Modu${specCount>1?` (${specCount})`:''}</div>`:'';
+  const specHdr=isSpec?`<div class="spec-badge"><i></i>İzleyici Modu (${specCount||1}/${MAX_SPECTATORS})</div>`:'';
   setH('#hdr',`<div class="hs sks">${sk}</div><div class="hc"><span class="lab">Düello ${S.bo+1}</span><span class="pips">${pips}</span>${specHdr}</div><div class="hg"><button class="gear" data-g="1" aria-label="Ayarlar">${IC.gear}<span>MENÜ</span></button></div>`);
   const my=!isSpec&&S.turn==0&&!lock&&!S.wait,mt=total(S,0),ot=total(S,1,false),bust=!low&&mt>T,seal=T+(low?'L':'');
   const exact=!low&&mt===T; // Hedef sayı tuttu: sadece bizim tarafa hafif parlak yeşil
@@ -1055,6 +1055,7 @@ $('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE=='guest')conn.send({k:'
 
 /* ---------- ONLINE (PeerJS) ---------- */
 let MODE='bot',peer,conn,spectators=[],specCount=0,waitM=false;
+const MAX_SPECTATORS = 5;
 function view(S){ // rakibe gidecek, gizli bilgisi temizlenmiş ve aynalanmış durum
   const f=a=>[a[1],a[0]];
   return {av:[S.av[1],S.av[0]],mast:[S.mast[1],S.mast[0]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:1-S.turn,pts:f(S.pts),rev:S.rev,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),noJ:f(S.noJ),
@@ -1111,6 +1112,10 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
         fromConn.send({k:'slot_full'});
       }
     }else if(m.role=='spectator'){
+      if(spectators.length >= MAX_SPECTATORS){
+        fromConn.send({k:'spec_full', max: MAX_SPECTATORS});
+        return;
+      }
       fromConn._role = 'spectator';
       spectators.push(fromConn);
       fromConn.send({k:'role', role:'spectator'});
@@ -1142,6 +1147,12 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
     st('Oyuncu slotu doldu! İzleyici olarak katılabilirsin.');
     const btnP = $('#btnJoinPlayer');
     if(btnP){ btnP.disabled = true; btnP.textContent = 'Dolu'; }
+    return;
+  }
+  if(m.k=='spec_full'){
+    st(`İzleyici slotu dolu! En fazla ${m.max||5} izleyici katılabilir.`);
+    const btnS = $('#btnJoinSpec');
+    if(btnS){ btnS.disabled = true; btnS.textContent = `İzleyici Dolu (${m.max||5}/${m.max||5})`; }
     return;
   }
   if(m.k=='role'){
@@ -1240,6 +1251,7 @@ function hostRoom(){
 function showJoinModal(slots, specCount){
   const p0 = slots.p0, p1 = slots.p1;
   const p1Free = !p1.busy;
+  const specFree = (specCount || 0) < MAX_SPECTATORS;
   const currentCode = $('#code') ? $('#code').value.trim().toUpperCase() : '';
   
   box(`
@@ -1276,8 +1288,8 @@ function showJoinModal(slots, specCount){
         <button id="btnJoinPlayer" class="btn ${p1Free?'':'dim'}" ${p1Free?'':'disabled'}>
           ${p1Free?'Oyuncu Olarak Katıl':'Oyuncu Slotu Dolu'}
         </button>
-        <button id="btnJoinSpec" class="btn alt">
-          İzleyici Olarak Katıl ${specCount ? `(${specCount})` : ''}
+        <button id="btnJoinSpec" class="btn alt ${specFree?'':'dim'}" ${specFree?'':'disabled'}>
+          ${specFree ? `İzleyici Olarak Katıl (${specCount||0}/${MAX_SPECTATORS})` : `İzleyici Dolu (${MAX_SPECTATORS}/${MAX_SPECTATORS})`}
         </button>
       </div>
     </div>
@@ -1293,7 +1305,7 @@ function showJoinModal(slots, specCount){
   }
 
   const bs = $('#btnJoinSpec');
-  if(bs){
+  if(bs && specFree){
     bs.onclick = () => {
       bs.disabled = true;
       bs.textContent = 'İzleyici olarak giriliyor…';
