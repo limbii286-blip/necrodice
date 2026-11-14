@@ -30,38 +30,50 @@ let curM='menu',mel=null,gi=0;
 let syn=null,NOF=false;
 function synthM(m){
   const a=AC,out=a.createGain(),t0=a.currentTime,game=m=='game';
-  out.gain.setValueAtTime(0,t0);out.gain.linearRampToValueAtTime(1,t0+2);out.connect(MG);
+  out.gain.setValueAtTime(0,t0);out.gain.linearRampToValueAtTime(1,t0+1.5);out.connect(MG);
   const dl=a.createDelay(1),fb=a.createGain(),wet=a.createGain();
-  dl.delayTime.value=game?.28:.42;fb.gain.value=.38;wet.gain.value=.4;dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(out);
-  const lp=a.createBiquadFilter(),dg=a.createGain();lp.type='lowpass';lp.frequency.value=360;dg.gain.value=game?.2:.15;lp.connect(dg);dg.connect(out);
-  const lfo=a.createOscillator(),lg=a.createGain();lfo.frequency.value=.07;lg.gain.value=150;lfo.connect(lg);lg.connect(lp.frequency);
-  const oscs=[lfo];
-  [55,55.35,82.4].forEach(f=>{const o=a.createOscillator();o.type='sawtooth';o.frequency.value=f;o.connect(lp);oscs.push(o)});
-  oscs.forEach(o=>o.start());
+  dl.delayTime.value=0.235;fb.gain.value=0.28;wet.gain.value=0.32;dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(out);
   const hz=n=>440*Math.pow(2,(n-69)/12);
-  const CH=[[57,60,64,69],[53,57,60,65],[50,53,57,62],[52,56,59,64]]; // Am F Dm E
-  const PAT=game?[0,2,1,3,2,3,1,2]:[0,1,2,3,2,1,2,3];
-  const dur=game?.36:.55;let step=0,next=a.currentTime+.15;
-  function pluck(f,t,v){
-    const o=a.createOscillator(),g=a.createGain(),fl=a.createBiquadFilter();
-    o.type='square';o.frequency.value=f;fl.type='lowpass';fl.frequency.value=1800;
-    g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+dur*1.8);
-    o.connect(fl);fl.connect(g);g.connect(out);g.connect(dl);o.start(t);o.stop(t+dur*1.9);
+  // D Dorian 6/8 Orta Çağ Taverna Akorları (Dm - C - G/B - Am - Dm - F - C - Dm)
+  const CH=[[50,57,62,65],[48,55,60,64],[47,55,59,62],[45,52,57,60],[50,57,62,65],[53,57,60,65],[48,55,60,64],[50,57,62,65]];
+  const MEL=[62,62,65,69,69,67, 64,64,67,60,60,60, 59,62,67,65,64,62, 64,64,60,57,57,57, 62,64,65,69,69,72, 69,69,67,65,65,62, 64,65,67,64,64,60, 62,62,62,62,57,50];
+  const dur=0.235;let step=0,next=a.currentTime+0.1;
+  function lute(f,t,v,dMul=2.2){
+    const o=a.createOscillator(),o2=a.createOscillator(),g=a.createGain(),fl=a.createBiquadFilter();
+    o.type='triangle';o.frequency.value=f;
+    o2.type='sawtooth';o2.frequency.value=f*2;
+    fl.type='lowpass';fl.frequency.setValueAtTime(2200,t);fl.frequency.exponentialRampToValueAtTime(420,t+dur*dMul);
+    g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(0.0008,t+dur*dMul);
+    const g2=a.createGain();g2.gain.value=0.22;
+    o.connect(fl);o2.connect(g2);g2.connect(fl);fl.connect(g);g.connect(out);g.connect(dl);
+    o.start(t);o2.start(t);o.stop(t+dur*dMul+0.02);o2.stop(t+dur*dMul+0.02);
   }
-  function thump(t){
-    const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.setValueAtTime(70,t);o.frequency.exponentialRampToValueAtTime(38,t+.25);
-    g.gain.setValueAtTime(.35,t);g.gain.exponentialRampToValueAtTime(.001,t+.3);o.connect(g);g.connect(out);o.start(t);o.stop(t+.32);
+  function flute(f,t,v,len){
+    const o=a.createOscillator(),g=a.createGain(),fl=a.createBiquadFilter();
+    o.type='sine';o.frequency.value=f;fl.type='lowpass';fl.frequency.value=1600;
+    g.gain.setValueAtTime(0.001,t);g.gain.linearRampToValueAtTime(v,t+0.035);g.gain.exponentialRampToValueAtTime(0.001,t+len);
+    o.connect(fl);fl.connect(g);g.connect(out);g.connect(dl);o.start(t);o.stop(t+len+0.02);
+  }
+  function bodhran(t,acc){
+    const o=a.createOscillator(),g=a.createGain();o.type='sine';
+    o.frequency.setValueAtTime(acc?110:145,t);o.frequency.exponentialRampToValueAtTime(acc?58:88,t+0.18);
+    g.gain.setValueAtTime(acc?0.26:0.14,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.22);
+    o.connect(g);g.connect(out);o.start(t);o.stop(t+0.24);
   }
   function sched(t){
-    const ch=CH[(step>>3)%4],i=step%8,n=ch[PAT[i]]+(i%4==3&&Math.random()<.4?12:0);
-    if(Math.random()<.88)pluck(hz(n+12),t,game?.045:.04);
-    if(i==0)pluck(hz(ch[0]-12),t,.08);
-    if(game&&i%4==0)thump(t);
+    const bar=Math.floor(step/6)%8,b=step%6,ch=CH[bar];
+    const arp=[ch[0],ch[2],ch[1],ch[3],ch[2],ch[1]][b];
+    lute(hz(arp),t,b==0?0.09:(b==3?0.07:0.05));
+    if(b==0)lute(hz(ch[0]-12),t,0.11,3.2);
+    const mIdx=step%MEL.length,mNote=MEL[mIdx];
+    if(step%2==0||b==2||b==5)flute(hz(mNote+12),t,0.055,dur*1.8);
+    if(b==0)bodhran(t,true);
+    else if(b==3||b==2)bodhran(t,false);
     step++;
   }
-  const timer=setInterval(()=>{while(next<a.currentTime+.4){sched(next);next+=dur}},120);
-  return{m,stop(){clearInterval(timer);const t=a.currentTime;out.gain.cancelScheduledValues(t);out.gain.setValueAtTime(out.gain.value,t);out.gain.linearRampToValueAtTime(0,t+1.2);
-    setTimeout(()=>{oscs.forEach(o=>{try{o.stop()}catch(e){}});try{out.disconnect()}catch(e){}},1400)}};
+  const timer=setInterval(()=>{while(next<a.currentTime+0.4){sched(next);next+=dur}},100);
+  return{m,stop(){clearInterval(timer);const t=a.currentTime;out.gain.cancelScheduledValues(t);out.gain.setValueAtTime(out.gain.value,t);out.gain.linearRampToValueAtTime(0,t+1.0);
+    setTimeout(()=>{try{out.disconnect()}catch(e){}},1200)}};
 }
 function startSyn(){if(!AC||!curM||(syn&&syn.m==curM))return;if(syn)syn.stop();syn=synthM(curM)}
 function playM(){
