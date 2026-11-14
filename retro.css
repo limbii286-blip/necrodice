@@ -737,20 +737,27 @@ main{padding-top:max(14px,var(--sat,env(safe-area-inset-top,0px)))}
   flex:1;padding:10px 6px;font-size:18px;
 }
 
-/* ===== 3D MASA GÖRÜNÜMÜ ===== */
+/* ===== 3D MASA GÖRÜNÜMÜ (SAF BİRİNCİ ŞAHIS / SIFIR HAVADA UI) ===== */
 #scene3d{position:fixed;inset:0;z-index:0;pointer-events:none;display:none}
 #scene3d canvas{display:block;width:100%;height:100%}
 body.view-3d #scene3d{display:block}
 body.view-3d,html:has(body.view-3d){background:#040305}
-body.view-3d main{position:relative;z-index:2;background:none!important;display:flex;flex-direction:column;min-height:calc(100dvh - 24px)}
-/* Her mekanik masada: havada duran buton/kart/mühür yok */
-body.view-3d #fx,body.view-3d #hand,body.view-3d .zone .cards,body.view-3d .zone .jbs,body.view-3d #hdr .hg,body.view-3d #prompt button{display:none!important}
-body.view-3d #hdr,body.view-3d .zone{background:none!important;border-color:transparent!important;box-shadow:none!important;outline:none!important}
-body.view-3d #hdr{background:linear-gradient(#000000aa,#0000)!important}
-body.view-3d #me{margin-top:auto}
-body.view-3d #prompt{text-shadow:0 2px 6px #000}
+body.view-3d main{position:relative;z-index:2;background:none!important;display:flex;flex-direction:column;min-height:calc(100dvh - 24px);pointer-events:none}
+/* Her mekanik ve bilgi masada: havada duran hiçbir UI, avatar, skor, başlık, kart veya buton yok */
+body.view-3d #hdr,
+body.view-3d #fx,
+body.view-3d #hand,
+body.view-3d #me,
+body.view-3d #opp .who,
+body.view-3d #opp .cards,
+body.view-3d #prompt,
+body.view-3d #zm,
+body.view-3d #cast{display:none!important}
+body.view-3d .zone{background:none!important;border-color:transparent!important;box-shadow:none!important;outline:none!important}
+/* Sadece rakibin konuşma cümlesi sinematik altyazı olarak kukuletasının altında süzülür */
+body.view-3d #opp{padding:0!important;margin:0!important;pointer-events:none}
+body.view-3d #opp .sayrow{position:fixed;top:16%;left:50%;transform:translateX(-50%);width:min(90vw,540px);text-align:center;z-index:4;pointer-events:none;justify-content:center}
+body.view-3d #opp .say{background:rgba(6,4,8,0.78);border:1px solid rgba(180,130,65,0.4);padding:6px 16px;border-radius:4px;color:#e8d6b3;text-shadow:0 2px 6px #000;box-shadow:0 6px 20px rgba(0,0,0,0.85)}
 
-/* 3D: zar sahnesi ve sonuç pencereleri masada */
-body.view-3d #m:has(.d20-box),body.view-3d #m:has(#mo),body.view-3d #m:has(#mx){pointer-events:none;background:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;align-items:flex-end;padding-bottom:10px}
-body.view-3d #m:has(.d20-box) #mb,body.view-3d #m:has(#mo) #mb,body.view-3d #m:has(#mx) #mb{pointer-events:auto;max-height:36vh;overflow:auto;background:#050407cc!important}
-body.view-3d #mb .bg3-roll-card,body.view-3d #mb #mo,body.view-3d #mb #mx{display:none!important}
+/* 3D: zar sahnesi, sonuç pencereleri ve kart inceleme masada; sadece Ayarlar/Kodeks/Rehber (#pc ve .cdx/.gd/input) modal olarak açılır */
+body.view-3d #m:has(.d20-box),body.view-3d #m:has(#mo),body.view-3d #m:has(#mx),body.view-3d #m:has(img.big){opacity:0!important;pointer-events:none!important}

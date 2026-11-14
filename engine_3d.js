@@ -613,9 +613,9 @@
       }
     });
 
-    // 5. KÜLLÜK & TÜTEN PURO (Sağ ön köşe: tıkla = kor parlar, duman yükselir)
+    // 5. KÜLLÜK & TÜTEN PURO (Sağ orta-ön: tıkla = kor parlar, duman yükselir)
     const ashGrp = new THREE.Group();
-    ashGrp.position.set(1.62, TABLE_Y, 1.32);
+    ashGrp.position.set(1.78, TABLE_Y, 0.54);
 
     const tray = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.13, 0.04, 18), darkBrass);
     tray.position.y = 0.02;
@@ -641,7 +641,7 @@
     const smokeMat = new THREE.MeshBasicMaterial({ color: 0x999999, transparent: true, opacity: 0.18, depthWrite: false });
     for (let i = 0; i < 6; i++) {
       const sm = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), smokeMat.clone());
-      sm.position.set(1.5, TABLE_Y + 0.08 + i * 0.08, 1.28);
+      sm.position.set(1.66, TABLE_Y + 0.08 + i * 0.08, 0.50);
       scene.add(sm);
       smokeParticles.push({ mesh: sm, phase: i * 1.1, boost: 0 });
     }
@@ -733,7 +733,7 @@
       sp.boost = Math.max(0, sp.boost - dt * 0.6);
       const u = (time * (0.35 + sp.boost * 0.4) + sp.phase) % 1.0;
       sp.mesh.position.y = 0.58 + u * 0.65;
-      sp.mesh.position.x = 1.5 + Math.sin(time * 2 + i) * 0.05 * u;
+      sp.mesh.position.x = 1.66 + Math.sin(time * 2 + i) * 0.05 * u;
       sp.mesh.scale.setScalar(0.6 + u * (1.2 + sp.boost));
       sp.mesh.material.opacity = (1 - u) * (0.18 + sp.boost * 0.22);
     });
@@ -1305,9 +1305,114 @@
     });
     ['tkp', 'tkm', 'tkx'].forEach(k => { if (!wantTok[k] && items.has(k)) items.get(k).seen = false; });
 
+    // 11) MASA ÜZERİ SKOR TABLETLERİ (Havada TOPLAM yazısı yerine masada dövme demir plakalar)
+    const myTot = total(S, 0), opTot = total(S, 1, false);
+    const bust = !low && myTot > T, exact = !low && myTot === T;
+    const myTxt = 'SEN: ' + myTot + '\nJOKER: ' + Math.max(0, 2 - S.jUsed[0]) + '/2';
+    const myBg = bust ? '#470b10' : exact ? '#16381e' : '#1b1410';
+    const myFg = bust ? '#ff9999' : exact ? '#a8ffbe' : '#ecd8ad';
+    let stMe = items.get('slab_me');
+    if (!stMe) {
+      stMe = ensureItem('slab_me', 'static', () => createSlate(0.76, 0.04, 0.38, myTxt, myBg, myFg));
+      stMe.label = myTxt + myBg;
+    } else if (stMe.label !== myTxt + myBg) {
+      setSlateText(stMe.mesh, myTxt, myBg, myFg);
+      stMe.label = myTxt + myBg;
+    }
+    stMe.seen = true;
+    placeItem(stMe, 1.45, TABLE_Y + 0.025, 1.32, 0, -0.18, 0, 1);
+
+    const opName = (typeof MODE !== 'undefined' && MODE === 'bot' && typeof oppName === 'function') ? oppName().toLocaleUpperCase('tr') : 'RAKİP';
+    const opScoreStr = S.rev ? String(total(S, 1, true)) : (opTot + ' + ?');
+    const opTxt = opName + '\nTOPLAM: ' + opScoreStr;
+    let stOp = items.get('slab_op');
+    if (!stOp) {
+      stOp = ensureItem('slab_op', 'static', () => createSlate(0.84, 0.04, 0.38, opTxt, '#1f1214', '#e6c8a0'));
+      stOp.label = opTxt;
+    } else if (stOp.label !== opTxt) {
+      setSlateText(stOp.mesh, opTxt, '#1f1214', '#e6c8a0');
+      stOp.label = opTxt;
+    }
+    stOp.seen = true;
+    placeItem(stOp, -1.35, TABLE_Y + 0.025, -0.45, 0, 0.16, 0, 1);
+
+    // 12) DÜELLO SKORU & ÖLÜM EŞİĞİ TABLETİ (Üst bar yerine masanın sol üstünde pirinç çetele levhası)
+    const res = S.res || [];
+    const pipsStr = [0, 1, 2].map(i => res[i] == null ? (i == S.rounds ? '◈' : '◇') : res[i] > 0 ? '★' : res[i] < 0 ? '✕' : '◆').join(' ');
+    const dcVal = (typeof TH !== 'undefined') ? TH[Math.min(S.bo, 3)] : 4;
+    const duelTxt = 'DÜELLO ' + (S.bo + 1) + '  [' + pipsStr + ']\nÖLÜM EŞİĞİ: ' + dcVal + '+';
+    let stDu = items.get('slab_duel');
+    if (!stDu) {
+      stDu = ensureItem('slab_duel', 'static', () => createSlate(0.92, 0.045, 0.38, duelTxt, '#1a1510', '#d8b560'));
+      stDu.label = duelTxt;
+    } else if (stDu.label !== duelTxt) {
+      setSlateText(stDu.mesh, duelTxt, '#1a1510', '#d8b560');
+      stDu.label = duelTxt;
+    }
+    stDu.seen = true;
+    placeItem(stDu, -0.58, TABLE_Y + 0.025, -0.98, 0, 0.06, 0, 1);
+
     items.forEach(it => {
-      if (!it.seen && it.key !== 'pass' && it.key !== 'book' && !/^m_/.test(it.key)) it.dying = true;
+      if (!it.seen && it.key !== 'pass' && it.key !== 'book' && !/^m_/.test(it.key) && !/^slab_/.test(it.key)) it.dying = true;
     });
+  }
+
+  // Dikdörtgen dövme demir / ahşap masa üstü bilgi levhası (skor, düello çetelesi ve ferman için)
+  function slateTexture(text, bg, fg) {
+    const c = document.createElement('canvas');
+    c.width = 512; c.height = 256;
+    const x = c.getContext('2d');
+    x.fillStyle = bg || '#1b1410';
+    x.fillRect(0, 0, 512, 256);
+    for (let i = 0; i < 900; i++) {
+      x.fillStyle = i % 2 ? 'rgba(0,0,0,0.18)' : 'rgba(255,215,155,0.05)';
+      x.fillRect(Math.random() * 512, Math.random() * 256, 3, 2);
+    }
+    x.strokeStyle = '#8c6d2e';
+    x.lineWidth = 8;
+    x.strokeRect(12, 12, 488, 232);
+    x.strokeStyle = 'rgba(220,180,100,0.35)';
+    x.lineWidth = 2;
+    x.strokeRect(22, 22, 468, 212);
+    // Köşe perçinleri
+    [[26, 26], [486, 26], [26, 230], [486, 230]].forEach(([rx, ry]) => {
+      x.fillStyle = '#9c7a38';
+      x.beginPath(); x.arc(rx, ry, 6, 0, Math.PI * 2); x.fill();
+    });
+    const lines = String(text).split('\n');
+    let fs = lines.length > 2 ? 42 : lines.length > 1 ? 56 : 74;
+    const ff = '"Pirata One", "Cinzel", serif';
+    do { x.font = 'bold ' + fs + 'px ' + ff; fs -= 3; }
+    while (fs > 22 && Math.max.apply(null, lines.map(l => x.measureText(l).width)) > 448);
+    const lh = fs * 1.18;
+    x.textAlign = 'center'; x.textBaseline = 'middle';
+    lines.forEach((l, i) => {
+      const py = 128 + (i - (lines.length - 1) / 2) * lh;
+      x.fillStyle = 'rgba(0,0,0,0.85)';
+      x.fillText(l, 259, py + 4);
+      x.fillStyle = fg || '#ecd8ad';
+      x.fillText(l, 256, py);
+    });
+    const tex = new THREE.CanvasTexture(c);
+    tex.anisotropy = 4;
+    return tex;
+  }
+
+  function createSlate(w, h, d, text, bg, fg) {
+    const side = new THREE.MeshStandardMaterial({ color: 0x1e1610, roughness: 0.55, metalness: 0.72 });
+    const top = new THREE.MeshStandardMaterial({ map: slateTexture(text, bg, fg), roughness: 0.52, metalness: 0.25 });
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), [side, side, top, side, side, side]);
+    mesh.castShadow = true; mesh.receiveShadow = true;
+    mesh.userData.topMat = top;
+    return mesh;
+  }
+
+  function setSlateText(mesh, text, bg, fg) {
+    const m = mesh.userData.topMat;
+    if (!m) return;
+    if (m.map) m.map.dispose();
+    m.map = slateTexture(text, bg, fg);
+    m.needsUpdate = true;
   }
 
   function bookTexture() {
@@ -1365,7 +1470,6 @@
     while (o && !(o.userData && o.userData.item)) o = o.parent;
     return o ? o.userData.item : null;
   }
-  const overlayOpen = t => !!(t.closest && t.closest('button,input,label,#menu,#m,#zm,#cast,#fl,[data-av]'));
 
   function initPicking() {
     document.addEventListener('click', function(e) {
@@ -1522,14 +1626,24 @@
   }
 
   function modalOpen() { const m = document.getElementById('m'); return !!m && !m.hidden; }
+  // Sadece Ayarlar / Kodeks / Nasıl oynanır pencereleri 2D overlay olarak kalır; kart önizleme ve sonuç pencereleri 3D masadadır
+  function is2DSettingsDialogOpen() {
+    const m = document.getElementById('m');
+    if (!m || m.hidden) return false;
+    return !!m.querySelector('#sm,.cdx,.gd');
+  }
+  const overlayOpen = t => !!(t.closest && (t.closest('#menu') || (is2DSettingsDialogOpen() && t.closest('#m'))));
 
   function updateModal() {
     const open = modalOpen();
-    const box = open ? document.querySelector('#mb .d20-box') : null;
+    const is2DModal = is2DSettingsDialogOpen();
+    const box = (open && !is2DModal) ? document.querySelector('#mb .d20-box') : null;
     if (box && !die.group) buildDie();
     if (die.group) die.group.visible = !!box;
+
+    // 1) Sonuç ve D20 plakaları (#mo, #mx) + Tur Sonu Özeti Fermanı (m_scroll)
     const wants = {};
-    if (open) {
+    if (open && !is2DModal) {
       ['mo', 'mx'].forEach(id => {
         const el = document.getElementById(id);
         if (el && getComputedStyle(el).visibility !== 'hidden') wants[id] = el.textContent.trim();
@@ -1547,6 +1661,31 @@
         items.get(key).dying = true;
       }
     });
+
+    // Tur / Düello sonuç metni masanın üzerinde parşömen ferman (m_scroll) olarak belirir
+    const mb = document.getElementById('mb');
+    const bigImg = (open && !is2DModal) ? document.querySelector('#mb img.big') : null;
+    if (open && !is2DModal && !bigImg && mb) {
+      let raw = '';
+      if (box) {
+        const aft = mb.querySelector('.after');
+        const fin = box.classList.contains('finished');
+        raw = fin && aft ? aft.innerText.trim() : ('ÖLÜM ZARI (HEDEF ' + box.dataset.dc + '+)\n' + (document.getElementById('rl') ? 'ZARA DOKUNARAK AT' : 'RAKİP ZAR ATIYOR...'));
+      } else {
+        const clone = mb.cloneNode(true);
+        clone.querySelectorAll('button, .d20-box').forEach(e => e.remove());
+        raw = clone.innerText.trim();
+      }
+      if (raw) {
+        const scTxt = raw.split('\n').map(s => s.trim()).filter(Boolean).slice(0, 3).join('\n');
+        const it = ensureItem('m_scroll', 'static', () => createSlate(1.42, 0.035, 0.52, scTxt, '#291d12', '#f5e2ba'), new V3(0, TABLE_Y + 0.7, 0.2));
+        if (it.label !== scTxt) { setSlateText(it.mesh, scTxt, '#291d12', '#f5e2ba'); it.label = scTxt; }
+        placeItem(it, -0.15, TABLE_Y + 0.055, box ? 1.02 : 0.58, 0, 0, 0, 1);
+      }
+    } else if (items.has('m_scroll')) {
+      items.get('m_scroll').dying = true;
+    }
+
     if (box) {
       const dc = box.dataset.dc, txt = 'HEDEF\n' + dc;
       const it = ensureItem('m_dc', 'plate', () => createPlate(0.3, 0.07, txt, '#3a0c12', '#f0cf85', 0x24120c), new V3(-0.9, TABLE_Y + 0.8, 0.6));
@@ -1556,8 +1695,45 @@
     } else if (items.has('m_dc')) {
       items.get('m_dc').dying = true;
     }
+
+    // 2) JOKER ÖNİZLEME (#mb img.big) VE KART İNCELEME (#zm) MASADA 3D OLARAK YÜKSELİR
+    const zmEl = document.getElementById('zm');
+    const castEl = document.getElementById('cast');
+    const inspectSrc = bigImg ? bigImg.getAttribute('src')
+      : zmEl && zmEl.querySelector('img') ? zmEl.querySelector('img').getAttribute('src')
+      : castEl && castEl.querySelector('img') ? castEl.querySelector('img').getAttribute('src') : null;
+
+    if (inspectSrc) {
+      const it = ensureItem('m_inspect', 'card', () => createCard(inspectSrc, backSrc()), new V3(0, TABLE_Y + 0.2, 1.2));
+      setFront(it, inspectSrc);
+      it.dom = bigImg ? '#pc' : (zmEl ? '[data-zc]' : '#cast button');
+      placeItem(it, 0, TABLE_Y + 0.78, 1.45, 0.88, 0, 0, 1.65);
+
+      // Kullan / Kartıma Bak aksiyon madalyonu
+      const actSel = bigImg && document.getElementById('pu') ? '#pu'
+        : (zmEl && zmEl.querySelector('[data-zb]') ? '[data-zb]' : null);
+      if (actSel) {
+        const actEl = document.querySelector(actSel);
+        const actTxt = (actEl ? actEl.textContent.trim() : 'KULLAN').toLocaleUpperCase('tr');
+        const ait = ensureItem('m_iact', 'plate', () => createPlate(0.26, 0.07, actTxt, '#3b1510', '#f5dca8', 0x24120c), new V3(-0.6, TABLE_Y + 0.5, 1.3));
+        if (ait.label !== actTxt) { setPlateText(ait.mesh, actTxt, '#3b1510', '#f5dca8'); ait.label = actTxt; }
+        ait.dom = actSel;
+        placeItem(ait, -0.68, TABLE_Y + 0.06, 1.28, 0, 0, 0, 1);
+      } else if (items.has('m_iact')) {
+        items.get('m_iact').dying = true;
+      }
+
+      // Kapat / Bırak madalyonu
+      const clsSel = bigImg ? '#pc' : (zmEl ? '[data-zc]' : '#cast button');
+      const cit = ensureItem('m_icls', 'plate', () => createPlate(0.24, 0.065, 'BIRAK', '#1c1814', '#dec89a', 0x1e1813), new V3(0.6, TABLE_Y + 0.5, 1.3));
+      cit.dom = clsSel;
+      placeItem(cit, 0.68, TABLE_Y + 0.06, 1.28, 0, 0, 0, 1);
+    } else {
+      ['m_inspect', 'm_iact', 'm_icls'].forEach(k => { if (items.has(k)) items.get(k).dying = true; });
+    }
+
     const pit = items.get('pass');
-    if (pit && open) pit.mesh.visible = false;
+    if (pit && (open || zmEl || castEl)) pit.mesh.visible = false;
   }
 
   function pickDie(cx, cy) {
