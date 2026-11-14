@@ -900,7 +900,7 @@ function R(){
   const p1Name=isSpec?'Yozlaşmış Tüccar (Misafir)':(MODE=='guest'?'Yozlaşmış Tüccar (Sen)':(MODE=='host'?'Yozlaşmış Tüccar (Rakip)':(MODE=='bot'||S.av?oppName():'Rakip')));
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'');
   setH('#opp',`<div class="who">${av1}<div class="nm"><b>${p1Name}</b><span class="meta">${MODE=='bot'?IC.dif.repeat(DN[DIFF]):'Online'}${jp(2-S.jUsed[1])}</span></div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${S.rev?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>`);
-  const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<img class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}" src="${IMG.j[e.id]}" alt="">`};
+  const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<span class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}"><img src="${IMG.j[e.id]}" alt=""></span>`};
   $('#deck b').textContent=S.deck.length;
   setH('#jo',(S.pj||[]).filter(x=>x.o==1).map(chip).join(''));
   setH('#jm',(S.pj||[]).filter(x=>x.o==0).map(chip).join(''));
@@ -1463,6 +1463,61 @@ on('#b2',hostRoom);on('#b3',joinRoom);
 
   document.addEventListener('pointerup',e=>finishPointer(e,false));
   document.addEventListener('pointercancel',e=>finishPointer(e,true));
+})();
+
+/* ---------- ORTADAKİ YUVARLAK KULLANILMIŞ JOKER İKONLARI: ÜZERİNE GELİNCE BÜYÜK KART GÖSTERİMİ ---------- */
+(function initUsedJokerHoverInspect(){
+  let hoverTimer=null,activeChip=null;
+
+  function hideInspect(){
+    if(hoverTimer){clearTimeout(hoverTimer);hoverTimer=null}
+    activeChip=null;
+    const old=document.getElementById('joker-inspect-pop');
+    if(old)old.remove();
+  }
+
+  function showInspect(u){
+    const S=G;
+    if(!S||S.over||lock)return;
+    const x=(S.eff&&S.eff.find(y=>y.uid==u))||(S.pj&&S.pj.find(y=>y.uid==u));
+    if(!x)return;
+    let pop=document.getElementById('joker-inspect-pop');
+    if(!pop){
+      pop=document.createElement('div');
+      pop.id='joker-inspect-pop';
+      document.body.appendChild(pop);
+    }
+    const statusTxt=`${x.o==0?'Senin Jokerin':'Rakibin Jokeri'}${x.neg?' · Etkisiz Kılındı':(BLOCK.has(x.id)?' · Aktif Blok Etkisi':' · Anlık Etki (Kullanıldı)')}${x.id==22?(x.s>0?' (Ekler)':' (Çıkarır)'):''}`;
+    pop.innerHTML=`<div class="jip-card"><img src="${IMG.j[x.id]}" alt="${J[x.id]||''}"><div class="jip-tag ${x.o==0?'mine':'opp'}">${statusTxt}</div></div>`;
+    const im=pop.querySelector('img');
+    if(im)hi(im,x.id);
+  }
+
+  document.addEventListener('pointerover',e=>{
+    const chip=e.target.closest&&e.target.closest('#fx .e[data-e]');
+    if(!chip){
+      if(activeChip)hideInspect();
+      return;
+    }
+    if(chip===activeChip)return;
+    hideInspect();
+    activeChip=chip;
+    const u=+chip.dataset.e;
+    hoverTimer=setTimeout(()=>{
+      if(activeChip===chip)showInspect(u);
+    },120);
+  });
+
+  document.addEventListener('pointerout',e=>{
+    if(!activeChip)return;
+    const rel=e.relatedTarget;
+    if(rel&&rel.closest&&rel.closest('#fx .e[data-e]')===activeChip)return;
+    hideInspect();
+  });
+
+  document.addEventListener('pointerdown',()=>{
+    if(activeChip)hideInspect();
+  });
 })();
 
 /* ---------- LEGENDS OF RUNETERRA VADİ & ORTADAN İKİYE YARILMIŞ TAHTA SAHNESİ ---------- */
