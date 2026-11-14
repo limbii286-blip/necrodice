@@ -109,32 +109,35 @@ body:has(#menu:not([hidden])) #fl {
   display: block;
 }
 
-/* Merkezi Gotik Orta Çağ Rölikeri / Demir-Taş Sunak Çerçevesi */
+/* Merkezi Gotik Büyü Kitabı (Grimoire) & Oyma Taş Sunak Çerçevesi */
 #mb2 {
   position: relative !important;
   z-index: 2 !important;
-  width: min(94vw, 620px) !important;
-  max-width: 620px !important;
+  width: min(92vw, 580px) !important;
+  max-width: 580px !important;
   height: auto !important;
   max-height: calc(100dvh - 20px) !important;
-  padding: clamp(14px, 2.4dvh, 26px) clamp(16px, 3vw, 32px) clamp(12px, 2dvh, 20px) !important;
+  padding: clamp(14px, 2.3dvh, 24px) clamp(16px, 2.8vw, 30px) clamp(12px, 1.9dvh, 18px) !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: clamp(8px, 1.5dvh, 14px) !important;
+  gap: clamp(8px, 1.4dvh, 13px) !important;
   border-radius: 14px !important;
-  border: 3px solid #9c783e !important;
+  border: 2.5px solid #8a739e !important;
   background:
-    radial-gradient(85% 55% at 50% 10%, rgba(165, 28, 38, 0.18) 0%, transparent 70%),
-    linear-gradient(180deg, #1b1416 0%, #110c0e 55%, #0a0709 100%) !important;
+    radial-gradient(85% 55% at 50% 8%, rgba(185, 115, 255, 0.16) 0%, transparent 72%),
+    radial-gradient(75% 50% at 50% 95%, rgba(235, 175, 85, 0.12) 0%, transparent 70%),
+    linear-gradient(180deg, rgba(24, 20, 34, 0.80) 0%, rgba(16, 13, 24, 0.86) 55%, rgba(11, 9, 17, 0.90) 100%) !important;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   box-shadow:
-    0 0 0 3px #080506,
-    0 0 0 6px #4a351b,
-    0 24px 65px rgba(0, 0, 0, 0.96),
-    0 0 55px rgba(145, 22, 32, 0.28),
-    inset 0 1px 0 rgba(242, 210, 139, 0.38),
-    inset 0 0 40px rgba(0, 0, 0, 0.9) !important;
+    0 0 0 3px #0c0a12,
+    0 0 0 5px #4e4263,
+    0 24px 65px rgba(0, 0, 0, 0.95),
+    0 0 52px rgba(168, 85, 247, 0.25),
+    inset 0 1px 0 rgba(242, 220, 175, 0.35),
+    inset 0 0 36px rgba(8, 6, 14, 0.82) !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
   animation: gothicRise 0.55s cubic-bezier(0.2, 0.9, 0.3, 1) both !important;
@@ -144,18 +147,18 @@ body:has(#menu:not([hidden])) #fl {
   to { opacity: 1; transform: none; }
 }
 
-/* Gotik İç Telkari Çerçeve */
+/* Gotik İç Telkari & Ametist Rün Çerçevesi */
 #mb2::after {
   content: "";
   position: absolute;
   inset: 7px;
-  border: 1px solid rgba(212, 168, 85, 0.32);
+  border: 1px solid rgba(216, 180, 254, 0.26);
   border-radius: 9px;
   pointer-events: none;
   z-index: 0;
 }
 
-/* Üst Başlık: Gotik Kalkan/Kafatası Arması + Orta Çağ Başlığı + Kuşak */
+/* Üst Başlık: Gotik Kalkan/Kafatası Arması + Büyü Kitabı Başlığı + Kuşak */
 .hs-header {
   position: relative;
   z-index: 1;
@@ -167,16 +170,16 @@ body:has(#menu:not([hidden])) #fl {
 
 .hs-medallion {
   position: relative;
-  width: clamp(54px, 8.2dvh, 74px);
-  height: clamp(54px, 8.2dvh, 74px);
+  width: clamp(54px, 8.2dvh, 72px);
+  height: clamp(54px, 8.2dvh, 72px);
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 35%, #4a1219 0%, #21080c 65%, #0c0406 100%);
-  border: 2.5px solid #c89d54;
+  background: radial-gradient(circle at 50% 35%, #3b2454 0%, #1d122b 65%, #0c0814 100%);
+  border: 2.5px solid #d4af64;
   box-shadow:
-    0 0 0 3px #0d0809,
-    0 0 0 5px #634721,
+    0 0 0 3px #0e0b14,
+    0 0 0 5px #6c5785,
     0 8px 22px rgba(0, 0, 0, 0.95),
-    0 0 24px rgba(175, 28, 42, 0.55),
+    0 0 24px rgba(192, 132, 252, 0.55),
     inset 0 0 14px rgba(0, 0, 0, 0.85);
   display: flex;
   align-items: center;
@@ -188,7 +191,7 @@ body:has(#menu:not([hidden])) #fl {
   position: absolute;
   inset: 4px;
   border-radius: 50%;
-  border: 1.5px dashed rgba(212, 168, 85, 0.55);
+  border: 1.5px dashed rgba(216, 180, 254, 0.55);
   animation: hsSpin 24s linear infinite;
 }
 @keyframes hsSpin {
@@ -205,69 +208,71 @@ body:has(#menu:not([hidden])) #fl {
 
 .hs-title {
   margin: 0 !important;
-  font: 900 clamp(30px, 5.2dvh, 48px)/1 var(--hf) !important;
+  font: 900 clamp(30px, 5.2dvh, 46px)/1 var(--hf) !important;
   letter-spacing: 5px !important;
-  background: linear-gradient(180deg, #fff3d1 0%, #deb262 48%, #9e6e24 85%, #59380b 100%);
+  background: linear-gradient(180deg, #fff7e0 0%, #ebd098 42%, #c99b4e 78%, #7d5720 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent !important;
-  filter: drop-shadow(0 3px 0 #090405) drop-shadow(0 6px 16px rgba(0, 0, 0, 0.95));
+  filter: drop-shadow(0 3px 0 #09060e) drop-shadow(0 0 18px rgba(192, 132, 252, 0.45));
   text-shadow: none !important;
 }
 
 .hs-ribbon {
   margin-top: 5px;
-  padding: 3px 20px;
-  background: linear-gradient(90deg, transparent 0%, rgba(92, 16, 24, 0.85) 20%, rgba(128, 20, 32, 0.95) 50%, rgba(92, 16, 24, 0.85) 80%, transparent 100%);
-  border-top: 1px solid rgba(212, 168, 85, 0.65);
-  border-bottom: 1px solid rgba(212, 168, 85, 0.65);
+  padding: 3px 22px;
+  background: linear-gradient(90deg, transparent 0%, rgba(56, 32, 82, 0.82) 20%, rgba(84, 44, 122, 0.92) 50%, rgba(56, 32, 82, 0.82) 80%, transparent 100%);
+  border-top: 1px solid rgba(216, 180, 254, 0.55);
+  border-bottom: 1px solid rgba(216, 180, 254, 0.55);
 }
 .hs-ribbon span {
-  font: 700 clamp(10px, 1.4dvh, 13px)/1.2 var(--mf);
+  font: 700 clamp(11px, 1.55dvh, 14px)/1.2 var(--bf);
   letter-spacing: 2.5px;
-  color: #e8d6b3;
+  color: #f3e6ca;
   text-transform: uppercase;
 }
 
-/* Orta Gövde: Dövme Demir ve Taş Oyun Modu Plakaları */
+/* Orta Gövde: Oyma Taş & Büyü Kitabı (Grimoire) Kutucukları */
 .hs-body {
   position: relative;
   z-index: 1;
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: clamp(8px, 1.5dvh, 13px);
+  gap: clamp(8px, 1.4dvh, 12px);
 }
 
 #mb2 .grp.hs-plaque {
   margin: 0 !important;
   padding: clamp(10px, 1.8dvh, 15px) clamp(12px, 2vw, 18px) !important;
   background:
-    radial-gradient(80% 90% at 50% 0%, rgba(196, 150, 75, 0.07), transparent 70%),
-    linear-gradient(180deg, #140f12 0%, #0b080a 100%) !important;
-  border: 2px solid #6e522b !important;
+    radial-gradient(80% 90% at 50% 0%, rgba(192, 132, 252, 0.10), transparent 72%),
+    linear-gradient(180deg, rgba(31, 26, 44, 0.88) 0%, rgba(17, 14, 26, 0.94) 100%) !important;
+  border: 1.5px solid #756394 !important;
   border-radius: 10px !important;
   box-shadow:
-    inset 0 3px 12px rgba(0, 0, 0, 0.95),
-    0 1px 0 rgba(235, 195, 120, 0.18) !important;
+    0 6px 18px rgba(0, 0, 0, 0.75),
+    inset 0 2px 10px rgba(0, 0, 0, 0.88),
+    inset 0 1px 0 rgba(235, 215, 255, 0.22) !important;
 }
 
 #mb2 .grp.hs-plaque > span {
   display: block;
-  font: 700 clamp(13px, 1.9dvh, 16px)/1.1 var(--mf) !important;
-  letter-spacing: 2.5px !important;
-  color: #dfc082 !important;
-  text-shadow: 0 2px 4px #000 !important;
+  font: 700 clamp(15px, 2.15dvh, 19px)/1.15 var(--bf) !important;
+  letter-spacing: 2px !important;
+  color: #f3dfb9 !important;
+  text-shadow: 0 2px 5px #000 !important;
   margin-bottom: clamp(7px, 1.2dvh, 11px) !important;
   text-transform: uppercase;
 }
 #mb2 .grp.hs-plaque > span::before,
 #mb2 .grp.hs-plaque > span::after {
-  content: " ❖ ";
-  color: #9e2430;
+  content: " ᛟ ";
+  color: #c084fc;
+  text-shadow: 0 0 8px rgba(192, 132, 252, 0.75);
 }
 
-/* Zorluk Seçim Düğmeleri: Orta Çağ Dövme Demir, Antik Tunç ve Kan Mührü Plakaları */
+/* Zorluk Seçim Düğmeleri: Oyma Taş & Rün Ciltli Kitap Plakaları */
 #mb2 .dr {
   display: grid !important;
   grid-template-columns: repeat(4, 1fr);
@@ -277,94 +282,96 @@ body:has(#menu:not([hidden])) #fl {
 
 #mb2 .dr .btn {
   padding: clamp(9px, 1.6dvh, 13px) 4px !important;
-  font: 700 clamp(12px, 1.75dvh, 15px)/1.1 var(--mf) !important;
-  letter-spacing: 1px !important;
-  border-radius: 6px !important;
-  border: 2px solid #8a6b3a !important;
-  background: linear-gradient(180deg, #2b211c 0%, #16100e 100%) !important;
-  color: #ebd9b7 !important;
-  text-transform: uppercase;
+  font: 700 clamp(13px, 1.85dvh, 16px)/1.1 var(--mf) !important;
+  letter-spacing: 0.8px !important;
+  border-radius: 7px !important;
+  border: 1.5px solid #7c6b96 !important;
+  background: linear-gradient(180deg, #2d263b 0%, #171321 100%) !important;
+  color: #f2e4c9 !important;
+  text-transform: none !important;
   box-shadow:
-    0 4px 0 #070506,
+    0 4px 0 #09070e,
     0 6px 14px rgba(0, 0, 0, 0.88),
-    inset 0 1px 0 rgba(255, 230, 180, 0.25),
+    inset 0 1px 0 rgba(255, 238, 205, 0.25),
     inset 0 -3px 0 rgba(0, 0, 0, 0.55) !important;
   transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease !important;
 }
 #mb2 .dr .btn:hover {
   transform: translateY(-2px) !important;
-  border-color: #deb568 !important;
-  color: #fff6e0 !important;
-  background: linear-gradient(180deg, #3b2c24 0%, #211713 100%) !important;
+  border-color: #d8b4fe !important;
+  color: #fff9eb !important;
 }
 #mb2 .dr .btn:active {
   transform: translateY(2px) !important;
 }
 
-/* Kolay: Dövme Demir & Yosunlu Tunç */
+/* Kolay: Zümrüt İksir & Yosunlu Taş */
 #mb2 .dr .btn[data-d="easy"] {
-  background: linear-gradient(180deg, #232e26 0%, #121814 100%) !important;
-  border-color: #6d8c74 !important;
-  color: #d8ebd9 !important;
+  background: linear-gradient(180deg, #1f3630 0%, #101d1a 100%) !important;
+  border-color: #55a88b !important;
+  color: #dcfaec !important;
 }
 #mb2 .dr .btn[data-d="easy"]:hover {
-  border-color: #95bd9e !important;
-  background: linear-gradient(180deg, #2d3d32 0%, #18211b 100%) !important;
+  border-color: #86efac !important;
+  background: linear-gradient(180deg, #28473f 0%, #152824 100%) !important;
+  box-shadow: 0 4px 0 #09070e, 0 0 16px rgba(74, 222, 128, 0.35) !important;
 }
 
-/* Orta: Antik Altın & Tunç */
+/* Orta: Vitray Ay Işığı & Safir Arduvaz */
 #mb2 .dr .btn[data-d="med"] {
-  background: linear-gradient(180deg, #332619 0%, #1a120b 100%) !important;
-  border-color: #a68246 !important;
-  color: #f0dec0 !important;
+  background: linear-gradient(180deg, #213047 0%, #111927 100%) !important;
+  border-color: #60a5fa !important;
+  color: #e0f2fe !important;
 }
 #mb2 .dr .btn[data-d="med"]:hover {
-  border-color: #d4ab62 !important;
-  background: linear-gradient(180deg, #423120 0%, #241910 100%) !important;
+  border-color: #93c5fd !important;
+  background: linear-gradient(180deg, #2b3f5c 0%, #172236 100%) !important;
+  box-shadow: 0 4px 0 #09070e, 0 0 16px rgba(96, 165, 250, 0.4) !important;
 }
 
-/* Zor: Koyu Kızıl Bakır */
+/* Zor: Ametist Rün & Kara Büyü Cildi */
 #mb2 .dr .btn[data-d="hard"] {
-  background: linear-gradient(180deg, #421a1e 0%, #210b0e 100%) !important;
-  border-color: #a8464e !important;
-  color: #f5d3d6 !important;
+  background: linear-gradient(180deg, #38224c 0%, #1c1029 100%) !important;
+  border-color: #c084fc !important;
+  color: #f3e8ff !important;
 }
 #mb2 .dr .btn[data-d="hard"]:hover {
-  border-color: #d4656e !important;
-  background: linear-gradient(180deg, #572227 0%, #2e1014 100%) !important;
+  border-color: #e9d5ff !important;
+  background: linear-gradient(180deg, #492c63 0%, #261538 100%) !important;
+  box-shadow: 0 4px 0 #09070e, 0 0 18px rgba(192, 132, 252, 0.45) !important;
 }
 
-/* İmkansız: Kan Mührü & Obsidyen */
+/* İmkansız: Demirci Kor Ateşi & Kan Mührü */
 #mb2 .dr .btn[data-d="imp"] {
-  background: linear-gradient(180deg, #6b1119 0%, #30060a 100%) !important;
-  border-color: #d93846 !important;
-  color: #ffe3e6 !important;
+  background: linear-gradient(180deg, #541724 0%, #290910 100%) !important;
+  border-color: #f43f5e !important;
+  color: #ffe4e6 !important;
   box-shadow:
-    0 4px 0 #070506,
-    0 0 16px rgba(207, 46, 60, 0.45),
-    inset 0 1px 0 rgba(255, 200, 200, 0.35),
+    0 4px 0 #09070e,
+    0 0 16px rgba(244, 63, 94, 0.42),
+    inset 0 1px 0 rgba(255, 210, 215, 0.35),
     inset 0 -3px 0 rgba(0, 0, 0, 0.6) !important;
 }
 #mb2 .dr .btn[data-d="imp"]:hover {
-  border-color: #ff6b78 !important;
-  background: linear-gradient(180deg, #851520 0%, #42080e 100%) !important;
+  border-color: #fda4af !important;
+  background: linear-gradient(180deg, #6e1d2e 0%, #380c16 100%) !important;
 }
 
-/* Çevrim İçi Düello Düğmeleri (Oda Oluştur & Odaya Katıl) */
+/* Çevrim İçi Düello Düğmeleri (Oda Oluştur & Odaya Katıl: Büyü Kitabı Deri & Altın Kilit) */
 #mb2 #b2,
 #mb2 #b3 {
-  font: 700 clamp(13px, 1.85dvh, 16px)/1.1 var(--mf) !important;
-  letter-spacing: 1.5px !important;
+  font: 700 clamp(14px, 1.9dvh, 17px)/1.1 var(--mf) !important;
+  letter-spacing: 1px !important;
   padding: clamp(9px, 1.6dvh, 13px) clamp(16px, 2.5vw, 24px) !important;
-  border-radius: 6px !important;
-  border: 2px solid #b8914c !important;
-  background: linear-gradient(180deg, #3b2816 0%, #1c1209 100%) !important;
-  color: #f5e4c3 !important;
-  text-transform: uppercase;
+  border-radius: 7px !important;
+  border: 1.5px solid #c89d58 !important;
+  background: linear-gradient(180deg, #3d2c28 0%, #211615 100%) !important;
+  color: #f7e8ca !important;
+  text-transform: none !important;
   box-shadow:
-    0 4px 0 #080504,
+    0 4px 0 #0a070c,
     0 6px 14px rgba(0, 0, 0, 0.85),
-    inset 0 1px 0 rgba(255, 235, 190, 0.32),
+    inset 0 1px 0 rgba(255, 235, 195, 0.32),
     inset 0 -3px 0 rgba(0, 0, 0, 0.5) !important;
 }
 #mb2 #b2 {
@@ -373,9 +380,10 @@ body:has(#menu:not([hidden])) #fl {
 }
 #mb2 #b2:hover,
 #mb2 #b3:hover {
-  border-color: #e6bf73 !important;
-  background: linear-gradient(180deg, #4d351d 0%, #291a0d 100%) !important;
-  color: #fff6e5 !important;
+  border-color: #f0ca78 !important;
+  background: linear-gradient(180deg, #4f3833 0%, #2b1d1b 100%) !important;
+  color: #fff9eb !important;
+  box-shadow: 0 4px 0 #0a070c, 0 0 18px rgba(212, 168, 85, 0.4) !important;
   transform: translateY(-2px);
 }
 
@@ -392,16 +400,16 @@ body:has(#menu:not([hidden])) #fl {
   padding: clamp(8px, 1.4dvh, 11px) 10px !important;
   font: 700 clamp(15px, 2dvh, 19px)/1 var(--mf) !important;
   letter-spacing: 3px !important;
-  border-radius: 6px !important;
-  border: 2px solid #755932 !important;
-  background: #090608 !important;
-  color: #ebd29b !important;
+  border-radius: 7px !important;
+  border: 1.5px solid #756394 !important;
+  background: rgba(12, 10, 19, 0.92) !important;
+  color: #f3dfb9 !important;
   text-align: center;
   text-transform: uppercase;
   box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.95) !important;
 }
 #mb2 #code::placeholder {
-  color: #5c4932 !important;
+  color: #7c6f94 !important;
   font-size: 12px;
   letter-spacing: 1.5px;
 }
@@ -416,27 +424,27 @@ body:has(#menu:not([hidden])) #fl {
   gap: clamp(6px, 1vw, 10px) !important;
   margin: 0 !important;
   padding-top: 6px;
-  border-top: 1px solid rgba(196, 154, 82, 0.25);
+  border-top: 1px solid rgba(192, 132, 252, 0.25);
 }
 
 #mb2 .hs-drawer .btn {
   padding: clamp(8px, 1.4dvh, 11px) 6px !important;
-  font: 700 clamp(11px, 1.55dvh, 14px)/1.15 var(--mf) !important;
-  letter-spacing: 1px !important;
-  border-radius: 6px !important;
-  border: 1.5px solid #6e542e !important;
-  background: linear-gradient(180deg, #211815 0%, #120c0b 100%) !important;
-  color: #d9c39e !important;
-  text-transform: uppercase;
+  font: 700 clamp(12px, 1.65dvh, 15px)/1.15 var(--mf) !important;
+  letter-spacing: 0.6px !important;
+  border-radius: 7px !important;
+  border: 1.5px solid #6c5d87 !important;
+  background: linear-gradient(180deg, #262033 0%, #14111d 100%) !important;
+  color: #e6d7f5 !important;
+  text-transform: none !important;
   box-shadow:
-    0 3px 0 #060405,
+    0 3px 0 #08060c,
     0 5px 12px rgba(0, 0, 0, 0.8),
-    inset 0 1px 0 rgba(255, 225, 165, 0.2) !important;
+    inset 0 1px 0 rgba(235, 220, 255, 0.2) !important;
 }
 #mb2 .hs-drawer .btn:hover {
-  border-color: #ba9250 !important;
-  color: #fff2d9 !important;
-  background: linear-gradient(180deg, #2e211c 0%, #1a110f 100%) !important;
+  border-color: #c084fc !important;
+  color: #fff7e6 !important;
+  background: linear-gradient(180deg, #332a45 0%, #1c1629 100%) !important;
   transform: translateY(-1px);
 }
 
@@ -445,8 +453,8 @@ body:has(#menu:not([hidden])) #fl {
   z-index: 1;
   min-height: 18px;
   margin: 0 !important;
-  font: 600 15px/1.2 var(--bf) !important;
-  color: #e5c378 !important;
+  font: 600 16px/1.2 var(--bf) !important;
+  color: #f3dfb9 !important;
 }
 
 /* ============================================================
@@ -454,38 +462,38 @@ body:has(#menu:not([hidden])) #fl {
    ============================================================ */
 .btn {
   font: 700 17px/1.1 var(--mf) !important;
-  letter-spacing: 1.2px !important;
-  text-transform: uppercase;
+  letter-spacing: 1px !important;
+  text-transform: none;
   color: #f5e6c8 !important;
   padding: 10px 22px 9px;
-  border: 2px solid #9c783e !important;
-  border-radius: 6px !important;
-  background: linear-gradient(180deg, #6e151e 0%, #38090e 100%) !important;
+  border: 1.5px solid #a88752 !important;
+  border-radius: 7px !important;
+  background: linear-gradient(180deg, #4a2338 0%, #26101e 100%) !important;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9) !important;
   box-shadow:
-    0 4px 0 #090506,
+    0 4px 0 #09060d,
     0 6px 16px rgba(0, 0, 0, 0.85),
-    inset 0 1px 0 rgba(255, 220, 180, 0.28),
+    inset 0 1px 0 rgba(255, 225, 195, 0.28),
     inset 0 -3px 0 rgba(0, 0, 0, 0.5) !important;
   cursor: pointer;
   transition: transform 0.15s ease, filter 0.15s ease, border-color 0.15s ease;
 }
 .btn:hover:not(:disabled) {
   filter: brightness(1.12);
-  border-color: #deb668 !important;
+  border-color: #e2be78 !important;
   transform: translateY(-1px);
 }
 .btn:active:not(:disabled) {
   transform: translateY(2px);
 }
 .btn.alt {
-  background: linear-gradient(180deg, #2b211b 0%, #140f0c 100%) !important;
-  border-color: #8a6c3b !important;
-  color: #e8d6b3 !important;
+  background: linear-gradient(180deg, #282236 0%, #14111d 100%) !important;
+  border-color: #756394 !important;
+  color: #ebe0f5 !important;
 }
 .btn.alt:hover:not(:disabled) {
-  background: linear-gradient(180deg, #3b2d24 0%, #1f1712 100%) !important;
-  border-color: #c9a159 !important;
+  background: linear-gradient(180deg, #352d47 0%, #1d1829 100%) !important;
+  border-color: #c084fc !important;
 }
 .btn.sm {
   padding: 7px 14px 6px;
@@ -496,7 +504,7 @@ body:has(#menu:not([hidden])) #fl {
   cursor: default;
 }
 
-/* Oyun İçi Pencereler (#m ve #mb): Gotik Kara Kitap / Röliker Penceresi */
+/* Oyun İçi Pencereler (#m ve #mb): Gotik Kara Kitap / Grimoire Penceresi */
 #m {
   position: fixed;
   inset: 0;
@@ -504,8 +512,8 @@ body:has(#menu:not([hidden])) #fl {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(6, 4, 7, 0.86);
-  backdrop-filter: blur(4px);
+  background: rgba(8, 6, 13, 0.84);
+  backdrop-filter: blur(5px);
   padding: 16px;
 }
 #m[hidden] {
@@ -518,14 +526,14 @@ body:has(#menu:not([hidden])) #fl {
   max-height: 90dvh;
   overflow: auto;
   padding: 24px 22px 20px;
-  border: 2.5px solid #9c783e;
-  border-radius: 10px;
+  border: 2px solid #8a739e;
+  border-radius: 12px;
   background:
-    radial-gradient(80% 50% at 50% 0%, rgba(155, 25, 35, 0.14), transparent 70%),
-    linear-gradient(180deg, #1a1316 0%, #0d090b 100%);
+    radial-gradient(80% 50% at 50% 0%, rgba(185, 115, 255, 0.14), transparent 70%),
+    linear-gradient(180deg, #1f1a2c 0%, #110e1a 100%);
   box-shadow:
-    0 0 0 3px #070506,
-    0 0 0 5px #4d381c,
+    0 0 0 3px #09070e,
+    0 0 0 5px #4e4263,
     0 24px 60px rgba(0, 0, 0, 0.96),
     inset 0 0 30px rgba(0, 0, 0, 0.85);
   font: 600 19px/1.4 var(--bf);
@@ -538,13 +546,13 @@ body:has(#menu:not([hidden])) #fl {
 }
 
 #mb::before {
-  content: "❖ NECRODICE ❖";
+  content: "ᛟ NECRODICE ᛟ";
   display: block;
   margin: -24px -22px 16px;
   padding: 7px 14px;
-  background: linear-gradient(90deg, #1a0c0e 0%, #4a1118 50%, #1a0c0e 100%);
-  border-bottom: 1.5px solid #9c783e;
-  color: #ebd5a7;
+  background: linear-gradient(90deg, #161221 0%, #3b2454 50%, #161221 100%);
+  border-bottom: 1.5px solid #8a739e;
+  color: #f3dfb9;
   font: 700 14px/1.2 var(--mf);
   text-align: center;
   letter-spacing: 3px;
@@ -959,24 +967,24 @@ main::before {
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  background: linear-gradient(180deg, rgba(24, 18, 20, 0.95), rgba(11, 8, 10, 0.97));
-  border: 2px solid #8a6b38;
+  background: linear-gradient(180deg, rgba(28, 24, 39, 0.92), rgba(14, 12, 22, 0.96));
+  border: 1.5px solid #756394;
   border-radius: 8px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 225, 165, 0.25);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(235, 215, 255, 0.22);
 }
 .sk {
-  color: #4f4238;
+  color: #534b68;
   font: 700 16px/1 var(--mf);
 }
 .sk small {
   font: 700 11px/1 var(--mf);
 }
 .sk.past {
-  color: #8c7b6a;
+  color: #968bb0;
 }
 .sk.cur {
-  color: var(--blood2);
-  text-shadow: 0 0 10px var(--blood2);
+  color: #e879f9;
+  text-shadow: 0 0 10px rgba(232, 121, 249, 0.85);
 }
 
 #hdr .hc {
@@ -987,43 +995,43 @@ main::before {
   align-items: center;
   gap: 10px;
   padding: 7px 14px;
-  background: linear-gradient(180deg, rgba(24, 18, 20, 0.95), rgba(11, 8, 10, 0.97));
-  border: 2px solid #8a6b38;
+  background: linear-gradient(180deg, rgba(28, 24, 39, 0.92), rgba(14, 12, 22, 0.96));
+  border: 1.5px solid #756394;
   border-radius: 8px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 225, 165, 0.25);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(235, 215, 255, 0.22);
 }
 #hdr .lab {
   display: inline !important;
   font: 700 14px/1 var(--mf) !important;
-  letter-spacing: 1.5px;
-  color: #ebd5a7 !important;
+  letter-spacing: 1.2px;
+  color: #f3dfb9 !important;
   text-transform: uppercase;
 }
 #hdr .pip {
   width: 14px;
   height: 14px;
   border-radius: 50% !important;
-  border: 2px solid #78603c;
-  background: #120e10;
+  border: 2px solid #6e5f8a;
+  background: #120f1c;
 }
 #hdr .pip.now {
-  border-color: #f0c35a;
-  background: radial-gradient(circle, #ffd978 20%, #8a5a10 100%);
-  box-shadow: 0 0 10px #f0c35a;
+  border-color: #c084fc;
+  background: radial-gradient(circle, #e9d5ff 20%, #6b21a8 100%);
+  box-shadow: 0 0 10px #c084fc;
 }
 #hdr .pip.w {
-  border-color: #65c982;
-  background: radial-gradient(circle, #82e69e 20%, #19592b 100%);
-  box-shadow: 0 0 8px rgba(101, 201, 130, 0.7);
+  border-color: #38bdf8;
+  background: radial-gradient(circle, #bae6fd 20%, #0369a1 100%);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.75);
 }
 #hdr .pip.l {
-  border-color: #d94654;
-  background: radial-gradient(circle, #ff6b78 20%, #6e0c16 100%);
-  box-shadow: 0 0 8px rgba(217, 70, 84, 0.7);
+  border-color: #f43f5e;
+  background: radial-gradient(circle, #fda4af 20%, #881337 100%);
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.75);
 }
 #hdr .pip.d {
-  background: #7c756d;
-  border-color: #aba297;
+  background: #6c667d;
+  border-color: #a39bb5;
 }
 
 #hdr .hg .gear {
@@ -1033,18 +1041,17 @@ main::before {
   margin: 0;
   padding: 7px 12px;
   font: 700 14px/1 var(--mf);
-  letter-spacing: 1px;
-  color: #ebd5a7;
-  background: linear-gradient(180deg, #261c18, #120d0b);
-  border: 2px solid #8a6b38;
+  letter-spacing: 0.8px;
+  color: #f3dfb9;
+  background: linear-gradient(180deg, rgba(32, 27, 45, 0.94), rgba(16, 13, 24, 0.97));
+  border: 1.5px solid #756394;
   border-radius: 8px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 225, 165, 0.25);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(235, 215, 255, 0.22);
   cursor: pointer;
-  text-transform: uppercase;
 }
 #hdr .hg .gear:hover {
-  border-color: #d4af5a;
-  color: #fff3d6;
+  border-color: #c084fc;
+  color: #fff6e0;
 }
 
 /* --- İKİYE BÖLÜNMÜŞ MERKEZİ SAVAŞ TAHTASI (#opp ÜST YARI, #me ALT YARI) --- */
@@ -1120,7 +1127,7 @@ body.drop-ready #fx {
     inset 0 0 28px rgba(212, 168, 85, 0.35) !important;
 }
 
-/* --- GOTİK KAHRAMAN PORTRELERİ (.who) --- */
+/* --- GOTİK OYMA TAŞ & RÜNİK KAHRAMAN PLAKALARI (.who) --- */
 .who {
   position: relative;
   z-index: 6;
@@ -1130,29 +1137,29 @@ body.drop-ready #fx {
   justify-content: center;
   gap: 0;
   padding: 6px 20px;
-  background: linear-gradient(180deg, #1c1517 0%, #0d090b 100%);
-  border: 2.5px solid #8c6b3a;
+  background: linear-gradient(180deg, rgba(28, 25, 40, 0.92) 0%, rgba(15, 13, 24, 0.96) 100%);
+  border: 2px solid #6e5f8c;
   border-radius: 48px;
   box-shadow:
     0 12px 28px rgba(0, 0, 0, 0.94),
-    0 0 0 2px #070506,
-    inset 0 1px 0 rgba(255, 230, 175, 0.3),
+    0 0 0 2px #09070e,
+    inset 0 1px 0 rgba(235, 215, 255, 0.28),
     inset 0 -3px 8px rgba(0, 0, 0, 0.88);
   min-height: 0 !important;
 }
 #opp.act .who {
-  border-color: #cf2e3c;
+  border-color: #c084fc;
   box-shadow:
     0 12px 30px rgba(0, 0, 0, 0.94),
-    0 0 26px rgba(207, 46, 60, 0.6),
-    inset 0 1px 0 rgba(255, 180, 180, 0.4);
+    0 0 26px rgba(192, 132, 252, 0.6),
+    inset 0 1px 0 rgba(243, 232, 255, 0.4);
 }
 #me.act .who {
-  border-color: #e6c36a;
+  border-color: #38bdf8;
   box-shadow:
     0 12px 30px rgba(0, 0, 0, 0.94),
-    0 0 26px rgba(230, 195, 106, 0.55),
-    inset 0 1px 0 rgba(255, 240, 195, 0.45);
+    0 0 26px rgba(56, 189, 248, 0.55),
+    inset 0 1px 0 rgba(224, 242, 254, 0.45);
 }
 
 .who .av {

@@ -1944,23 +1944,29 @@ on('#b2',hostRoom);on('#b3',joinRoom);
   requestAnimationFrame(render);
 })();
 
-/* ---------- GOTİK ORTA ÇAĞ KATEDRALİ & KARANLIK SANCak SALONU ANA MENÜ ARKA PLANI ---------- */
+/* ---------- GOTİK KATEDRAL ÇALIŞMA SALONU, VİTRAY AY IŞIĞI & BÜYÜ MASASI ANA MENÜ ARKA PLANI ---------- */
 (function initHearthstoneMenuCanvas(){
   const cvs=document.getElementById('hs-menu-bg');
   if(!cvs)return;
   const ctx=cvs.getContext('2d');
   let W=0,H=0,DPR=1;
 
-  const embers=[];
-  for(let i=0;i<46;i++){
-    embers.push({
+  const menuImg=new Image();
+  let menuImgLoaded=false;
+  menuImg.onload=()=>{menuImgLoaded=true;};
+  menuImg.src='menu_gothic.jpg?v=20261114_sanctum1';
+
+  const motes=[];
+  for(let i=0;i<52;i++){
+    const kind=i%3; // 0: mum/ocak altın kıvılcımı, 1: vitray ay ışığı tozu, 2: mor rün parıltısı
+    motes.push({
+      kind,
       x:Math.random(),
       y:Math.random(),
-      r:1.0+Math.random()*2.3,
+      r:1.1+Math.random()*2.3,
       vx:(Math.random()-0.5)*0.0003,
-      vy:-0.00025-Math.random()*0.0005,
-      phase:Math.random()*Math.PI*2,
-      crimson:Math.random()<0.35
+      vy:-0.00022-Math.random()*0.00045,
+      phase:Math.random()*Math.PI*2
     });
   }
 
@@ -1975,186 +1981,103 @@ on('#b2',hostRoom);on('#b3',joinRoom);
   window.addEventListener('resize',resize);
   resize();
 
-  function drawGothicArchWindow(cx,topY,w,h,t){
-    ctx.save();
-    const halfW=w*0.5;
-    const archH=w*0.65;
-    const botY=topY+h;
-
-    // Sivri gotik kemer yolu
-    ctx.beginPath();
-    ctx.moveTo(cx-halfW, botY);
-    ctx.lineTo(cx-halfW, topY+archH);
-    ctx.quadraticCurveTo(cx-halfW, topY+archH*0.25, cx, topY);
-    ctx.quadraticCurveTo(cx+halfW, topY+archH*0.25, cx+halfW, topY+archH);
-    ctx.lineTo(cx+halfW, botY);
-    ctx.closePath();
-
-    // Vitray iç parıltısı (koyu kızıl & kehribar ay ışığı)
-    const pulse=0.85+0.15*Math.sin(t*1.4+cx*0.01);
-    const wg=ctx.createLinearGradient(cx,topY,cx,botY);
-    wg.addColorStop(0,`rgba(145, 28, 38, ${0.38*pulse})`);
-    wg.addColorStop(0.45,`rgba(95, 58, 28, ${0.26*pulse})`);
-    wg.addColorStop(1,'rgba(12, 8, 12, 0.9)');
-    ctx.fillStyle=wg;
-    ctx.fill();
-
-    // Gotik taş söve ve iç kayıtlar (Tracery)
-    ctx.lineWidth=4;
-    ctx.strokeStyle='#2c2320';
-    ctx.stroke();
-    ctx.lineWidth=1.5;
-    ctx.strokeStyle='rgba(198, 156, 86, 0.35)';
-    ctx.stroke();
-
-    // İç dikey taş kayıtlar ve gül pencere çemberi
-    ctx.beginPath();
-    ctx.moveTo(cx, topY+archH*0.55);
-    ctx.lineTo(cx, botY);
-    ctx.moveTo(cx-halfW*0.5, topY+archH*0.75);
-    ctx.lineTo(cx-halfW*0.5, botY);
-    ctx.moveTo(cx+halfW*0.5, topY+archH*0.75);
-    ctx.lineTo(cx+halfW*0.5, botY);
-    ctx.stroke();
-
-    // Gül pencere rozeti
-    const ry=topY+archH*0.52;
-    const rr=halfW*0.36;
-    ctx.beginPath();
-    ctx.arc(cx,ry,rr,0,Math.PI*2);
-    ctx.stroke();
-    for(let a=0;a<6;a++){
-      const ang=(a*Math.PI)/3;
-      ctx.beginPath();
-      ctx.moveTo(cx,ry);
-      ctx.lineTo(cx+Math.cos(ang)*rr, ry+Math.sin(ang)*rr);
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
-  function drawCandelabra(x,baseY,scale,t,phase){
-    ctx.save();
-    ctx.translate(x,baseY);
-    ctx.scale(scale,scale);
-
-    // Dövme demir gövde ve kollar
-    ctx.strokeStyle='#231c19';
-    ctx.lineWidth=5;
-    ctx.beginPath();
-    ctx.moveTo(0,0);
-    ctx.lineTo(0,-150);
-    ctx.moveTo(-28,0);
-    ctx.lineTo(28,0);
-    // Sol ve sağ kıvrımlı demir kollar
-    ctx.moveTo(-38,-118);
-    ctx.quadraticCurveTo(-20,-90,0,-110);
-    ctx.quadraticCurveTo(20,-90,38,-118);
-    ctx.stroke();
-
-    ctx.strokeStyle='rgba(196, 154, 82, 0.45)';
-    ctx.lineWidth=1.5;
-    ctx.stroke();
-
-    // 3 adet eriyen balmumu mum ve titreyen alev
-    const candles=[{cx:-38,cy:-118,h:28,p:0},{cx:0,cy:-150,h:34,p:1.4},{cx:38,cy:-118,h:28,p:2.8}];
-    candles.forEach(c=>{
-      // Mum tablası
-      ctx.fillStyle='#3a2b1c';
-      ctx.fillRect(c.cx-9,c.cy-3,18,5);
-      // Mum gövdesi
-      const cg=ctx.createLinearGradient(c.cx-6,c.cy-c.h,c.cx+6,c.cy);
-      cg.addColorStop(0,'#e8d8b8');
-      cg.addColorStop(1,'#8c7450');
-      ctx.fillStyle=cg;
-      ctx.fillRect(c.cx-5,c.cy-c.h,10,c.h-3);
-
-      // Titreyen mum alevi ve sıcak hale
-      const flk=0.88+0.12*Math.sin(t*8+phase+c.p)+0.06*Math.cos(t*13+c.p);
-      const fy=c.cy-c.h-8;
-      const fx=c.cx+Math.sin(t*5.5+phase+c.p)*1.8;
-
-      const glow=ctx.createRadialGradient(fx,fy,2,fx,fy,68*flk);
-      glow.addColorStop(0,'rgba(255, 195, 90, 0.42)');
-      glow.addColorStop(0.45,'rgba(195, 75, 25, 0.16)');
-      glow.addColorStop(1,'rgba(0, 0, 0, 0)');
-      ctx.fillStyle=glow;
-      ctx.beginPath();
-      ctx.arc(fx,fy,68*flk,0,Math.PI*2);
-      ctx.fill();
-
-      ctx.fillStyle='#ffd268';
-      ctx.beginPath();
-      ctx.ellipse(fx,fy,3.8*flk,8.5*flk,0,0,Math.PI*2);
-      ctx.fill();
-      ctx.fillStyle='#fffbe8';
-      ctx.beginPath();
-      ctx.arc(fx,fy+2,1.8,0,Math.PI*2);
-      ctx.fill();
-    });
-    ctx.restore();
-  }
-
   function render(now){
     const menuEl=document.getElementById('menu');
     if(menuEl&&!menuEl.hidden){
       const t=now*0.001;
       ctx.clearRect(0,0,W,H);
 
-      // 1. GOTİK KATEDRAL / KALE SALONU TAŞ DUVAR ARKA PLANI
-      const bgGrad=ctx.createRadialGradient(W*0.5,H*0.42,30,W*0.5,H*0.5,Math.max(W,H)*0.8);
-      bgGrad.addColorStop(0,'#1e1416');
-      bgGrad.addColorStop(0.48,'#110c0e');
-      bgGrad.addColorStop(0.82,'#090608');
-      bgGrad.addColorStop(1,'#040304');
-      ctx.fillStyle=bgGrad;
-      ctx.fillRect(0,0,W,H);
+      if(menuImgLoaded && menuImg.naturalWidth>0){
+        const iw=menuImg.naturalWidth, ih=menuImg.naturalHeight;
+        const scale=Math.max(W/iw, H/ih);
+        const dw=iw*scale, dh=ih*scale;
+        const dx=(W-dw)*0.5, dy=(H-dh)*0.5;
+        ctx.drawImage(menuImg, dx, dy, dw, dh);
 
-      // Kesme taş duvar derzleri (Orta Çağ Kalesi / Mahzeni)
-      ctx.strokeStyle='rgba(0, 0, 0, 0.55)';
-      ctx.lineWidth=2;
-      const rowH=56;
-      const colW=110;
-      for(let r=0;r*rowH<H;r++){
-        const y=r*rowH;
+        // Görseldeki büyü kitabının üzerindeki sabit yazıyı ("Oyna / Koleksiyon / Macera") temiz deri dokusu ve parlayan rün mührüyle ört
+        ctx.save();
         ctx.beginPath();
-        ctx.moveTo(0,y);
-        ctx.lineTo(W,y);
+        ctx.moveTo(dx + dw*0.365, dy + dh*0.640);
+        ctx.lineTo(dx + dw*0.455, dy + dh*0.626);
+        ctx.lineTo(dx + dw*0.485, dy + dh*0.728);
+        ctx.lineTo(dx + dw*0.392, dy + dh*0.752);
+        ctx.closePath();
+        const bkGrad=ctx.createLinearGradient(dx+dw*0.37, dy+dh*0.63, dx+dw*0.48, dy+dh*0.75);
+        bkGrad.addColorStop(0,'#463532');
+        bkGrad.addColorStop(0.5,'#382928');
+        bkGrad.addColorStop(1,'#291d1e');
+        ctx.fillStyle=bkGrad;
+        ctx.fill();
+
+        // Kitap kapağına parlayan mor/altın rün amblemi işle
+        const bcx = dx + dw*0.426, bcy = dy + dh*0.688;
+        ctx.translate(bcx, bcy);
+        ctx.rotate(-0.18);
+        ctx.scale(1, 0.72);
+        const rPulse = 0.65 + 0.35*Math.sin(t*2.4);
+        ctx.strokeStyle = `rgba(216, 150, 255, ${0.65*rPulse})`;
+        ctx.shadowColor = '#c084fc';
+        ctx.shadowBlur = 12;
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.arc(0, 0, dw*0.024, 0, Math.PI*2);
         ctx.stroke();
-        const offset=(r%2)*(colW*0.5);
-        for(let c=-1;c*colW<W+colW;c++){
-          const x=c*colW+offset;
-          ctx.beginPath();
-          ctx.moveTo(x,y);
-          ctx.lineTo(x,y+rowH);
-          ctx.stroke();
-        }
-      }
+        ctx.font = `700 ${Math.round(dw*0.022)}px "Cinzel Decorative", serif`;
+        ctx.fillStyle = `rgba(235, 195, 255, ${0.8*rPulse})`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('ᛟ', 0, 0);
+        ctx.restore();
 
-      // 2. SOL VE SAĞ KANATTAKİ GOTİK SİVRİ KEMERLİ VİTRAY PENCERELER VE ŞAMDANLAR
-      if(W > 680){
-        const winW = Math.min(150, W*0.13);
-        const winH = Math.min(420, H*0.62);
-        drawGothicArchWindow(W*0.13, H*0.12, winW, winH, t);
-        drawGothicArchWindow(W*0.87, H*0.12, winW, winH, t);
+        // Ortadaki büyük Gotik vitray pencereden süzülen hareketli ay ışığı huzmeleri
+        ctx.save();
+        const rayPulse = 0.75 + 0.25*Math.sin(t*1.3);
+        const rayGrad = ctx.createLinearGradient(dx + dw*0.50, dy + dh*0.12, dx + dw*0.44, dy + dh*0.68);
+        rayGrad.addColorStop(0, `rgba(145, 210, 255, ${0.16*rayPulse})`);
+        rayGrad.addColorStop(0.5, `rgba(135, 175, 255, ${0.09*rayPulse})`);
+        rayGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = rayGrad;
+        ctx.beginPath();
+        ctx.moveTo(dx + dw*0.43, dy + dh*0.14);
+        ctx.lineTo(dx + dw*0.57, dy + dh*0.14);
+        ctx.lineTo(dx + dw*0.66, dy + dh*0.68);
+        ctx.lineTo(dx + dw*0.34, dy + dh*0.68);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
 
-        drawCandelabra(W*0.13, H*0.88, Math.min(1.05, H/780), t, 0.0);
-        drawCandelabra(W*0.87, H*0.88, Math.min(1.05, H/780), t, 2.4);
+        // Şamdanlar, meşaleler, şömineler, masa mumları ve fener için canlı titreyen ışık haleleri
+        const flk = 0.78 + 0.22*Math.sin(t*7.5)*Math.cos(t*4.3);
+        const addHalo = (u, v, rad, col) => {
+          const lx = dx + dw*u, ly = dy + dh*v, lr = Math.min(W,H)*rad;
+          const g = ctx.createRadialGradient(lx, ly, 2, lx, ly, lr);
+          g.addColorStop(0, col);
+          g.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = g;
+          ctx.fillRect(lx-lr, ly-lr, lr*2, lr*2);
+        };
+        // Üst asma demir şamdanlar
+        addHalo(0.315, 0.19, 0.14, `rgba(255, 185, 75, ${0.18*flk})`);
+        addHalo(0.685, 0.19, 0.14, `rgba(255, 185, 75, ${0.18*flk})`);
+        // Sol ve sağ şömine ateşleri
+        addHalo(0.088, 0.78, 0.18, `rgba(255, 115, 35, ${0.22*flk})`);
+        addHalo(0.845, 0.65, 0.16, `rgba(255, 120, 40, ${0.20*flk})`);
+        // Masa üstü mumlar, fener ve parlayan rün kartları
+        addHalo(0.305, 0.66, 0.13, `rgba(255, 205, 95, ${0.22*flk})`);
+        addHalo(0.703, 0.66, 0.13, `rgba(255, 195, 80, ${0.20*flk})`);
+        addHalo(0.585, 0.73, 0.12, `rgba(185, 105, 255, ${0.18*(0.75+0.25*Math.sin(t*2.8))})`);
+        addHalo(0.955, 0.53, 0.12, `rgba(75, 245, 225, ${0.16*(0.75+0.25*Math.cos(t*2.4))})`);
       } else {
-        drawCandelabra(36, H*0.92, 0.65, t, 0.0);
-        drawCandelabra(W-36, H*0.92, 0.65, t, 2.4);
+        const bgGrad=ctx.createRadialGradient(W*0.5,H*0.42,30,W*0.5,H*0.5,Math.max(W,H)*0.8);
+        bgGrad.addColorStop(0,'#1c1829');
+        bgGrad.addColorStop(0.5,'#100e18');
+        bgGrad.addColorStop(1,'#06050a');
+        ctx.fillStyle=bgGrad;
+        ctx.fillRect(0,0,W,H);
       }
 
-      // 3. MERKEZİ GOTİK SUNAK IŞIK HALESİ
-      const centerGlow=ctx.createRadialGradient(W*0.5,H*0.5,20,W*0.5,H*0.5,Math.min(W,H)*0.6);
-      centerGlow.addColorStop(0,'rgba(175, 32, 42, 0.18)');
-      centerGlow.addColorStop(0.5,'rgba(198, 145, 65, 0.08)');
-      centerGlow.addColorStop(1,'rgba(0, 0, 0, 0)');
-      ctx.fillStyle=centerGlow;
-      ctx.fillRect(0,0,W,H);
-
-      // 4. SÜZÜLEN MUM KIVILCIMLARI & KÜLLER
-      embers.forEach(e=>{
+      // Süzülen mum kıvılcımları, ay ışığı tozları ve mor rün parıltıları
+      motes.forEach(e=>{
         e.x+=e.vx;
         e.y+=e.vy;
         if(e.y<-0.05){e.y=1.05;e.x=Math.random()}
@@ -2162,10 +2085,14 @@ on('#b2',hostRoom);on('#b3',joinRoom);
         if(e.x>1)e.x=0;
         const ex=e.x*W + Math.sin(t*1.6+e.phase)*10;
         const ey=e.y*H;
-        const al=0.3+0.55*Math.abs(Math.sin(t*2.2+e.phase));
+        const al=0.32+0.55*Math.abs(Math.sin(t*2.2+e.phase));
+        let col=`rgba(255, 200, 105, ${al})`;
+        let sh='#f59e0b';
+        if(e.kind===1){ col=`rgba(165, 225, 255, ${al})`; sh='#38bdf8'; }
+        else if(e.kind===2){ col=`rgba(216, 140, 255, ${al})`; sh='#c084fc'; }
         ctx.save();
-        ctx.fillStyle=e.crimson?`rgba(225, 65, 75, ${al})`:`rgba(235, 185, 95, ${al})`;
-        ctx.shadowColor=e.crimson?'#d92b38':'#e5b558';
+        ctx.fillStyle=col;
+        ctx.shadowColor=sh;
         ctx.shadowBlur=8;
         ctx.beginPath();
         ctx.arc(ex,ey,e.r,0,Math.PI*2);
