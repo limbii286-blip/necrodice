@@ -749,3 +749,8 @@ body.view-3d #hdr,body.view-3d .zone{background:none!important;border-color:tran
 body.view-3d #hdr{background:linear-gradient(#000000aa,#0000)!important}
 body.view-3d #me{margin-top:auto}
 body.view-3d #prompt{text-shadow:0 2px 6px #000}
+
+/* 3D: zar sahnesi ve sonuç pencereleri masada */
+body.view-3d #m:has(.d20-box),body.view-3d #m:has(#mo),body.view-3d #m:has(#mx){pointer-events:none;background:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;align-items:flex-end;padding-bottom:10px}
+body.view-3d #m:has(.d20-box) #mb,body.view-3d #m:has(#mo) #mb,body.view-3d #m:has(#mx) #mb{pointer-events:auto;max-height:36vh;overflow:auto;background:#050407cc!important}
+body.view-3d #mb .bg3-roll-card,body.view-3d #mb #mo,body.view-3d #mb #mx{display:none!important}

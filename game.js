@@ -20,7 +20,7 @@ const ac=()=>{
   if(AC.state=='suspended')AC.resume();return AC;
 };
 /* Müzik: menüde menu.m4a, oyunda game1/game2 sırayla. Web Audio'ya bağlı olduğu için ses ayarı iOS'ta da çalışır. */
-(()=>{try{const h=document.createElement('script');h.src='hd.js?v=20261113_art';h.async=true;document.head.appendChild(h)}catch(e){}})(); // HD görseller (gömülü): HDJ jokerler, HDAV karakterler
+(()=>{try{if(typeof HDAV=='undefined'){const h=document.createElement('script');h.src='hd.js?v=20261113_art';h.async=true;document.head.appendChild(h)}}catch(e){}})(); // HD görseller (gömülü): HDJ jokerler, HDAV karakterler
 const FILE=location.protocol=='file:'; // çift tıkla açılınca Web Audio dosyaya erişemez: doğrudan <audio> kullan
 const AUD={mus:'?',sfx:'?',hd:'?'},MISS=[];const miss=u=>{try{u=new URL(u,location.href).href}catch(e){}if(!MISS.includes(u))MISS.push(u)}; // ayarlarda gösterilen dosya durumu
 const MU={menu:['music_gothic.wav'],game:['music_gothic.wav']};
@@ -140,7 +140,7 @@ function hiLoad(id,cb){let i=HC[id];if(i&&i._x&&typeof HDJ!='undefined'&&HDJ[id]
   i.onerror=()=>{if(++i._i<cs.length)i.src=cs[i._i];else if(!i._e&&typeof HDJ!='undefined'&&HDJ[id]){i._e=1;i.src=HDJ[id]}else{i._x=1;if(AUD.hd!='ok')AUD.hd='fb';miss(cs[0])}};i.src=cs[0]}
   if(cb){if(i.complete&&i.naturalWidth)cb(i.src);else i.addEventListener('load',()=>cb(i.src),{once:true})}}
 let hiPre=false;
-function hiPreload(){if(hiPre)return;hiPre=true;range(25).forEach((id,n)=>setTimeout(()=>hiLoad(id),400+n*120))} // tüm HD jokerler arka planda önceden yüklenir, tıklayınca anında hazır olur
+function hiPreload(){if(hiPre)return;hiPre=true;range(24).forEach((id,n)=>setTimeout(()=>hiLoad(id),400+n*120))} // tüm HD jokerler arka planda önceden yüklenir, tıklayınca anında hazır olur
 function hi(el,id){if(!el)return;const fb=IMG.j[id];el.onerror=()=>{el.onerror=null;if(fb)el.src=fb}; // HD açılmazsa gömülü görsele dön
   hiLoad(id,u=>{if(el.isConnected)el.src=u})}
 function tone(f,d,ty='sine',v=.12,w=0,sl=0){const a=ac(),t=a.currentTime+w,o=a.createOscillator(),g=a.createGain();o.type=ty;o.frequency.setValueAtTime(f,t);if(sl)o.frequency.linearRampToValueAtTime(Math.max(30,f+sl),t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(SG);o.start(t);o.stop(t+d)}
