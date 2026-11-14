@@ -1511,7 +1511,7 @@ on('#b2',hostRoom);on('#b3',joinRoom);
   });
 })();
 
-/* ---------- LEGENDS OF RUNETERRA VADİ & ORTADAN İKİYE YARILMIŞ TAHTA SAHNESİ ---------- */
+/* ---------- GOTİK TAŞLI RÜNİK DÜELLO MASASI & 4 KÖŞE ORTA ÇAĞ SAHNESİ ---------- */
 (function initLoRValleyCanvas(){
   const mainEl=document.querySelector('main');
   if(!mainEl)return;
@@ -1522,45 +1522,42 @@ on('#b2',hostRoom);on('#b3',joinRoom);
   const ctx=cvs.getContext('2d');
 
   let W=0,H=0,DPR=1;
-  const fireflies=[];
-  const leaves=[];
-  const chasmSparks=[];
+  const bgImg=new Image();
+  let bgLoaded=false;
+  bgImg.onload=()=>{bgLoaded=true;};
+  bgImg.src='board_gothic.jpg?v=20261114_stone1';
+
+  const particles=[];
+  const RUNES='ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ';
+
+  // Sabit kırık taş derz ağı (normalize koordinatlar -0.5..0.5)
+  const stonePolys=[
+    [[-0.48,-0.46],[-0.26,-0.46],[-0.23,-0.25],[-0.48,-0.22]],
+    [[-0.26,-0.46],[-0.02,-0.46],[-0.04,-0.24],[-0.23,-0.25]],
+    [[0.02,-0.46],[0.25,-0.46],[0.22,-0.23],[0.03,-0.25]],
+    [[0.25,-0.46],[0.48,-0.46],[0.48,-0.21],[0.22,-0.23]],
+    [[-0.48,-0.22],[-0.23,-0.25],[-0.20,-0.03],[-0.48,-0.02]],
+    [[0.22,-0.23],[0.48,-0.21],[0.48,-0.02],[0.20,-0.03]],
+    [[-0.48,0.02],[-0.20,0.03],[-0.24,0.25],[-0.48,0.23]],
+    [[0.20,0.03],[0.48,0.02],[0.48,0.24],[0.23,0.25]],
+    [[-0.48,0.23],[-0.24,0.25],[-0.27,0.46],[-0.48,0.46]],
+    [[-0.24,0.25],[-0.03,0.24],[-0.02,0.46],[-0.27,0.46]],
+    [[0.03,0.24],[0.23,0.25],[0.26,0.46],[0.02,0.46]],
+    [[0.23,0.25],[0.48,0.24],[0.48,0.46],[0.26,0.46]]
+  ];
 
   function seedParticles(){
-    fireflies.length=0;
-    leaves.length=0;
-    chasmSparks.length=0;
-    for(let i=0;i<44;i++){
-      fireflies.push({
-        side:i%2===0?'left':'right',
-        rx:Math.random(),
-        y:Math.random(),
-        r:1.4+Math.random()*2.6,
-        vx:(Math.random()-0.5)*0.0004,
-        vy:-0.00025-Math.random()*0.00045,
-        phase:Math.random()*Math.PI*2,
-        hue:Math.random()>0.28?142:(45+Math.random()*20)
-      });
-    }
-    for(let i=0;i<22;i++){
-      leaves.push({
-        side:i%2===0?'left':'right',
-        rx:Math.random(),
-        y:Math.random(),
-        sz:4+Math.random()*5,
-        vy:0.00035+Math.random()*0.00045,
-        sway:Math.random()*Math.PI*2,
-        rot:Math.random()*Math.PI*2
-      });
-    }
-    for(let i=0;i<32;i++){
-      chasmSparks.push({
+    particles.length=0;
+    for(let i=0;i<42;i++){
+      const zone=i%4; // 0: sol meşale/ocak, 1: sağ kazan/fener, 2: vitray ay ışığı, 3: orta taş rün
+      particles.push({
+        zone,
         x:Math.random(),
-        offsetY:(Math.random()-0.5)*34,
-        r:1.2+Math.random()*2.2,
-        vx:(Math.random()-0.5)*0.0012,
-        phase:Math.random()*Math.PI*2,
-        isRed:Math.random()<0.45
+        y:Math.random(),
+        r:1.3+Math.random()*2.3,
+        vx:(Math.random()-0.5)*0.0004,
+        vy:-0.0003-Math.random()*0.0005,
+        phase:Math.random()*Math.PI*2
       });
     }
   }
@@ -1577,59 +1574,20 @@ on('#b2',hostRoom);on('#b3',joinRoom);
   window.addEventListener('resize',resize);
   resize();
 
-  function drawFernCluster(cx,cy,scale,flipX,tint){
+  function drawCrackedLightning(points,color,glowColor,width,alpha){
     ctx.save();
-    ctx.translate(cx,cy);
-    ctx.scale(flipX?-scale:scale,scale);
-    for(let f=-2;f<=2;f++){
-      ctx.save();
-      ctx.rotate(f*0.32-0.25);
-      ctx.beginPath();
-      ctx.moveTo(0,0);
-      ctx.quadraticCurveTo(22,-14,48,-6);
-      ctx.quadraticCurveTo(24,8,0,0);
-      ctx.fillStyle=tint||(f%2===0?'#1b4d31':'#286b43');
-      ctx.fill();
-      ctx.restore();
-    }
-    ctx.restore();
-  }
-
-  function drawRunestone(x,y,s,glowColor){
-    ctx.save();
-    ctx.translate(x,y);
-    ctx.scale(s,s);
-    // Kaya gövdesi
-    ctx.beginPath();
-    ctx.moveTo(-18,28);
-    ctx.lineTo(-22,-10);
-    ctx.lineTo(-6,-36);
-    ctx.lineTo(12,-28);
-    ctx.lineTo(20,24);
-    ctx.closePath();
-    const g=ctx.createLinearGradient(-20,-36,20,28);
-    g.addColorStop(0,'#2e3d38');
-    g.addColorStop(0.5,'#1c2724');
-    g.addColorStop(1,'#0d1412');
-    ctx.fillStyle=g;
-    ctx.fill();
-    ctx.lineWidth=1.5;
-    ctx.strokeStyle='#49665a';
-    ctx.stroke();
-
-    // Parlayan rün oyması
+    ctx.globalAlpha=alpha;
+    ctx.strokeStyle=color;
     ctx.shadowColor=glowColor;
     ctx.shadowBlur=14;
-    ctx.strokeStyle=glowColor;
-    ctx.lineWidth=2.2;
+    ctx.lineWidth=width;
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
     ctx.beginPath();
-    ctx.moveTo(-2,-20);
-    ctx.lineTo(-2,12);
-    ctx.moveTo(-9,-8);
-    ctx.lineTo(-2,-16);
-    ctx.lineTo(6,-6);
-    ctx.moveTo(-8,4);
-    ctx.lineTo(5,-2);
+    points.forEach((pt,i)=>{
+      if(i===0)ctx.moveTo(pt[0],pt[1]);
+      else ctx.lineTo(pt[0],pt[1]);
+    });
     ctx.stroke();
     ctx.restore();
   }
@@ -1638,313 +1596,343 @@ on('#b2',hostRoom);on('#b3',joinRoom);
     const t=now*0.001;
     ctx.clearRect(0,0,W,H);
 
-    // Yan vadi genişliği: masaüstünde her iki yanda belirgin yeşil vadi (%15.5), dar ekranda %8
-    const flankRatio = W > 900 ? 0.155 : (W > 640 ? 0.115 : 0.065);
-    const flankW = Math.max(36, Math.round(W * flankRatio));
-    const boardL = flankW;
-    const boardR = W - flankW;
-    const boardW = boardR - boardL;
-    const midY = H * 0.5;
+    // 1. ARKA PLAN: Gotik Katedral Avlusu, Demirci Ocağı, Gargoyle Kulesi, Vitray Kütüphane ve Mezarlık
+    if(bgLoaded && bgImg.naturalWidth>0){
+      const iw=bgImg.naturalWidth, ih=bgImg.naturalHeight;
+      const scale=Math.max(W/iw, H/ih);
+      const dw=iw*scale, dh=ih*scale;
+      const dx=(W-dw)*0.5, dy=(H-dh)*0.5;
+      ctx.drawImage(bgImg, dx, dy, dw, dh);
 
-    // 1. SOL VE SAĞ VADİ ARKA PLANI (Legends of Runeterra Zümrüt Vadisi, Orman, Şelale ve Kayalıklar)
-    const valleyGrad = ctx.createLinearGradient(0,0,0,H);
-    valleyGrad.addColorStop(0,'#081c16');
-    valleyGrad.addColorStop(0.35,'#0f3022');
-    valleyGrad.addColorStop(0.7,'#153d29');
-    valleyGrad.addColorStop(1,'#071710');
-    ctx.fillStyle = valleyGrad;
-    ctx.fillRect(0,0,boardL+18,H);
-    ctx.fillRect(boardR-18,0,flankW+18,H);
-
-    // Vadi derinlik sisi ve güneş huzmeleri (sol ve sağ kanat)
-    const sunL = ctx.createRadialGradient(flankW*0.35, H*0.18, 10, flankW*0.4, H*0.45, H*0.65);
-    sunL.addColorStop(0,'rgba(130, 235, 175, 0.22)');
-    sunL.addColorStop(0.5,'rgba(62, 168, 110, 0.10)');
-    sunL.addColorStop(1,'rgba(10, 32, 22, 0)');
-    ctx.fillStyle = sunL;
-    ctx.fillRect(0,0,boardL+16,H);
-
-    const sunR = ctx.createRadialGradient(W - flankW*0.35, H*0.22, 10, W - flankW*0.4, H*0.5, H*0.65);
-    sunR.addColorStop(0,'rgba(130, 235, 175, 0.20)');
-    sunR.addColorStop(0.5,'rgba(62, 168, 110, 0.09)');
-    sunR.addColorStop(1,'rgba(10, 32, 22, 0)');
-    ctx.fillStyle = sunR;
-    ctx.fillRect(boardR-16,0,flankW+16,H);
-
-    // Sol Vadi: Katmanlı yosunlu uçurum basamakları + mistik şelale akıntısı
-    ctx.save();
-    const streamX = flankW * 0.36;
-    const streamGrad = ctx.createLinearGradient(streamX, 0, streamX, H);
-    streamGrad.addColorStop(0,'rgba(120, 235, 215, 0.08)');
-    streamGrad.addColorStop(0.5,'rgba(95, 225, 195, 0.26)');
-    streamGrad.addColorStop(1,'rgba(70, 180, 155, 0.08)');
-    ctx.fillStyle = streamGrad;
-    ctx.beginPath();
-    ctx.moveTo(streamX - 10, 0);
-    ctx.quadraticCurveTo(streamX - 22, H*0.5, streamX - 6, H);
-    ctx.lineTo(streamX + 16, H);
-    ctx.quadraticCurveTo(streamX + 4, H*0.5, streamX + 12, 0);
-    ctx.closePath();
-    ctx.fill();
-
-    // Şelale köpük çizgileri (hareketli)
-    ctx.strokeStyle = 'rgba(185, 255, 235, 0.28)';
-    ctx.lineWidth = 1.5;
-    for(let i=0;i<7;i++){
-      const sy = ((t*45 + i*140) % (H+80)) - 40;
-      ctx.beginPath();
-      ctx.moveTo(streamX - 4 + (i%3)*4, sy);
-      ctx.lineTo(streamX - 6 + (i%3)*4, sy + 28);
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    // Sol ve Sağ yamaçta katmanlı yosunlu kayalar ve sarmaşık/eğrelti otu kümeleri
-    const rockSteps = [0.12, 0.30, 0.48, 0.68, 0.86];
-    rockSteps.forEach((ry, idx) => {
-      const yPos = H * ry;
-      // Sol kaya terası
-      ctx.beginPath();
-      ctx.moveTo(0, yPos - 38);
-      ctx.lineTo(flankW * (0.72 + (idx%2)*0.16), yPos - 14);
-      ctx.lineTo(flankW * (0.58 + (idx%2)*0.12), yPos + 28);
-      ctx.lineTo(0, yPos + 46);
-      ctx.closePath();
-      ctx.fillStyle = idx%2===0 ? '#12291d' : '#173626';
-      ctx.fill();
-      ctx.strokeStyle = '#2d5e42';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      // Üzerindeki yeşil yosun örtüsü
-      ctx.beginPath();
-      ctx.moveTo(0, yPos - 38);
-      ctx.quadraticCurveTo(flankW*0.45, yPos - 30, flankW * (0.72 + (idx%2)*0.16), yPos - 14);
-      ctx.lineTo(flankW * (0.65 + (idx%2)*0.14), yPos - 2);
-      ctx.quadraticCurveTo(flankW*0.35, yPos - 14, 0, yPos - 18);
-      ctx.closePath();
-      ctx.fillStyle = '#2b6e44';
-      ctx.fill();
-
-      drawFernCluster(flankW * 0.55, yPos - 12, 0.65 + (idx%2)*0.18, false, idx%2===0?'#2e7d4b':'#3c945c');
-
-      // Sağ kaya terası
-      ctx.beginPath();
-      ctx.moveTo(W, yPos - 32);
-      ctx.lineTo(W - flankW * (0.74 + ((idx+1)%2)*0.15), yPos - 10);
-      ctx.lineTo(W - flankW * (0.60 + ((idx+1)%2)*0.12), yPos + 30);
-      ctx.lineTo(W, yPos + 48);
-      ctx.closePath();
-      ctx.fillStyle = idx%2===0 ? '#163324' : '#11261b';
-      ctx.fill();
-      ctx.strokeStyle = '#2d5e42';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(W, yPos - 32);
-      ctx.quadraticCurveTo(W - flankW*0.45, yPos - 24, W - flankW * (0.74 + ((idx+1)%2)*0.15), yPos - 10);
-      ctx.lineTo(W - flankW * (0.66 + ((idx+1)%2)*0.14), yPos + 2);
-      ctx.quadraticCurveTo(W - flankW*0.35, yPos - 10, W, yPos - 14);
-      ctx.closePath();
-      ctx.fillStyle = '#2b6e44';
-      ctx.fill();
-
-      drawFernCluster(W - flankW * 0.55, yPos - 8, 0.65 + ((idx+1)%2)*0.18, true, idx%2===0?'#3c945c':'#2e7d4b');
-    });
-
-    // Sol ve sağ vadide parlayan kadim Runeterra rün taşları
-    const runePulse = 0.75 + 0.25 * Math.sin(t * 2.2);
-    drawRunestone(flankW * 0.48, H * 0.28, 0.85, `rgba(90, 245, 175, ${runePulse})`);
-    drawRunestone(W - flankW * 0.46, H * 0.72, 0.9, `rgba(110, 230, 255, ${runePulse})`);
-    drawRunestone(W - flankW * 0.52, H * 0.24, 0.68, `rgba(240, 200, 95, ${runePulse})`);
-
-    // 2. MERKEZİ TAŞ SAVAŞ ALANI (Recessed Sanctuary Stone Board)
-    // Üst yarı (Rakip bölgesi: Koyu kızıl-obsidyen oyma taş)
-    const topBoardGrad = ctx.createLinearGradient(boardL, 0, boardL, midY);
-    topBoardGrad.addColorStop(0, '#181216');
-    topBoardGrad.addColorStop(0.65, '#21171c');
-    topBoardGrad.addColorStop(1, '#2b1820');
-    ctx.fillStyle = topBoardGrad;
-    ctx.fillRect(boardL, 0, boardW, midY);
-
-    // Alt yarı (Oyuncu bölgesi: Koyu zümrüt-arduvaz oyma taş)
-    const botBoardGrad = ctx.createLinearGradient(boardL, midY, boardL, H);
-    botBoardGrad.addColorStop(0, '#162820');
-    botBoardGrad.addColorStop(0.35, '#13201b');
-    botBoardGrad.addColorStop(1, '#0e1714');
-    ctx.fillStyle = botBoardGrad;
-    ctx.fillRect(boardL, midY, boardW, H - midY);
-
-    // Tahta üzerindeki geometrik Runeterra taş döşeme derzleri ve iç çerçeve
-    ctx.save();
-    ctx.strokeStyle = 'rgba(215, 180, 110, 0.13)';
-    ctx.lineWidth = 1.5;
-    const insetPad = Math.min(36, boardW * 0.04);
-    ctx.strokeRect(boardL + insetPad, 18, boardW - insetPad*2, midY - 46);
-    ctx.strokeRect(boardL + insetPad, midY + 28, boardW - insetPad*2, H - midY - 46);
-
-    // Taş karoların hafif perspektif çizgileri
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
-    ctx.lineWidth = 2;
-    for(let i=1;i<=3;i++){
-      const lx = boardL + (boardW * i / 4);
-      ctx.beginPath();
-      ctx.moveTo(lx, 0);
-      ctx.lineTo(lx, H);
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    // Sol ve Sağ Savaş Alanı Sınır Duvarları (Vadi ile Tahtayı Ayıran Kalın Yosunlu Taş Bordür)
-    const drawCliffWall = (x, isLeft) => {
-      const w = 18;
-      const wx = isLeft ? x - 6 : x - 12;
-      const wg = ctx.createLinearGradient(wx, 0, wx + w, 0);
-      if(isLeft){
-        wg.addColorStop(0, '#0a1711');
-        wg.addColorStop(0.35, '#3a4a40');
-        wg.addColorStop(0.75, '#6e5835');
-        wg.addColorStop(1, '#120d0a');
-      } else {
-        wg.addColorStop(0, '#120d0a');
-        wg.addColorStop(0.25, '#6e5835');
-        wg.addColorStop(0.65, '#3a4a40');
-        wg.addColorStop(1, '#0a1711');
-      }
-      ctx.fillStyle = wg;
-      ctx.fillRect(wx, 0, w, H);
-
-      // Duvar üzerine taş blok çentikleri ve yosun sarkıtları
-      ctx.fillStyle = 'rgba(56, 138, 82, 0.55)';
-      for(let y=30; y<H; y+=110){
+      // Görselin kendi içindeki sabit "Tur Bitir" yazılarını taş dokusuyla kapat (gerçek butonlarımız üstünde duracak)
+      [0.206, 0.795].forEach(uPos => {
+        const cx = dx + dw * uPos;
+        const cy = dy + dh * 0.472;
+        const rx = dw * 0.031;
+        const ry = dh * 0.048;
+        ctx.save();
         ctx.beginPath();
-        ctx.arc(isLeft ? wx+4 : wx+w-4, y, 9 + (y%7), 0, Math.PI*2);
+        ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI*2);
+        const og = ctx.createRadialGradient(cx, cy, 2, cx, cy, Math.max(rx, ry));
+        og.addColorStop(0, '#2a2636');
+        og.addColorStop(0.7, '#1b1824');
+        og.addColorStop(1, '#121018');
+        ctx.fillStyle = og;
         ctx.fill();
-      }
-    };
-    drawCliffWall(boardL, true);
-    drawCliffWall(boardR, false);
+        ctx.restore();
+      });
 
-    // 3. ORTADAN İKİYE YARILMIŞ DERİN KANYON / RÜN YARIĞI ("ortadan ikiye yar güzelce")
-    const chasmHalf = 42; // yarığın yarı yüksekliği
-    const chasmGrad = ctx.createLinearGradient(0, midY - chasmHalf, 0, midY + chasmHalf);
-    chasmGrad.addColorStop(0, '#040305');
-    chasmGrad.addColorStop(0.25, '#09181c');
-    chasmGrad.addColorStop(0.5, '#12383b');
-    chasmGrad.addColorStop(0.75, '#1c0c14');
-    chasmGrad.addColorStop(1, '#040305');
+      // Köşe ışık efektleri (Sol üst meşale, sol alt demirci ocağı, sağ alt yeşil kazan, sağ üst mumlar)
+      const flicker = 0.75 + 0.25*Math.sin(t*7.3)*Math.cos(t*4.1);
+      const drawLight = (u, v, rad, col) => {
+        const lx = dx + dw*u, ly = dy + dh*v, lr = Math.min(W,H)*rad;
+        const lg = ctx.createRadialGradient(lx, ly, 2, lx, ly, lr);
+        lg.addColorStop(0, col);
+        lg.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = lg;
+        ctx.fillRect(lx-lr, ly-lr, lr*2, lr*2);
+      };
+      drawLight(0.251, 0.135, 0.16, `rgba(255, 145, 45, ${0.22*flicker})`);
+      drawLight(0.085, 0.765, 0.20, `rgba(255, 110, 30, ${0.25*flicker})`);
+      drawLight(0.925, 0.815, 0.18, `rgba(80, 255, 120, ${0.18*(0.8+0.2*Math.sin(t*3.2))})`);
+      drawLight(0.895, 0.315, 0.14, `rgba(255, 200, 110, ${0.18*flicker})`);
+    } else {
+      const g=ctx.createRadialGradient(W*0.5,H*0.5,40,W*0.5,H*0.5,Math.max(W,H)*0.75);
+      g.addColorStop(0,'#1b222c');
+      g.addColorStop(0.55,'#0e131a');
+      g.addColorStop(1,'#05070a');
+      ctx.fillStyle=g;
+      ctx.fillRect(0,0,W,H);
+    }
 
-    // Boydan boya kırık taş yarık gövdesi
+    // 2. ORTADAKİ OYMA TAŞLI & RÜNİK ÇEMBERLİ SAVAŞ TAHTASI (Her çözünürlükte #opp, #fx ve #me ile birebir hizalı)
+    const boardW = Math.min(W - 36, Math.min(W * 0.74, 1160));
+    const boardH = Math.min(H - 116, H * 0.80);
+    const boardL = (W - boardW) * 0.5;
+    const boardR = boardL + boardW;
+    const midX = W * 0.5;
+    const midY = H * 0.5;
+    const boardT = midY - boardH * 0.5;
+    const boardB = midY + boardH * 0.5;
+
     ctx.save();
+    // Dış taş gölgesi
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.92)';
+    ctx.shadowBlur = 34;
+    ctx.shadowOffsetY = 12;
+
+    // Ana taş tabla gövdesi (koyu arduvaz/bazalt)
+    const slabGrad = ctx.createLinearGradient(boardL, boardT, boardL, boardB);
+    slabGrad.addColorStop(0, 'rgba(32, 31, 42, 0.92)');
+    slabGrad.addColorStop(0.48, 'rgba(24, 23, 33, 0.90)');
+    slabGrad.addColorStop(0.52, 'rgba(22, 23, 32, 0.90)');
+    slabGrad.addColorStop(1, 'rgba(28, 27, 37, 0.93)');
+    ctx.fillStyle = slabGrad;
     ctx.beginPath();
-    ctx.moveTo(0, midY - chasmHalf + 6);
-    const segs = 28;
-    for(let i=0;i<=segs;i++){
-      const px = (W * i) / segs;
-      const jag = Math.sin(i*1.9)*7 + Math.cos(i*3.1)*4;
-      ctx.lineTo(px, midY - chasmHalf + jag);
-    }
-    for(let i=segs;i>=0;i--){
-      const px = (W * i) / segs;
-      const jag = Math.sin(i*2.3 + 1.2)*7 + Math.cos(i*2.7)*4;
-      ctx.lineTo(px, midY + chasmHalf + jag);
-    }
-    ctx.closePath();
-    ctx.fillStyle = chasmGrad;
+    ctx.roundRect(boardL, boardT, boardW, boardH, 10);
     ctx.fill();
-
-    // Yarığın içindeki parlayan mistik nehir / enerji damarı
-    const riverPulse = 0.65 + 0.35 * Math.sin(t * 2.6);
-    const riverGrad = ctx.createLinearGradient(boardL, midY, boardR, midY);
-    riverGrad.addColorStop(0, `rgba(236, 68, 82, ${0.55 * riverPulse})`);
-    riverGrad.addColorStop(0.35, `rgba(90, 230, 200, ${0.65 * riverPulse})`);
-    riverGrad.addColorStop(0.5, `rgba(255, 215, 110, ${0.85 * riverPulse})`);
-    riverGrad.addColorStop(0.65, `rgba(90, 230, 200, ${0.65 * riverPulse})`);
-    riverGrad.addColorStop(1, `rgba(125, 255, 138, ${0.60 * riverPulse})`);
-
-    ctx.strokeStyle = riverGrad;
-    ctx.lineWidth = 5;
-    ctx.shadowColor = '#5eead4';
-    ctx.shadowBlur = 18;
-    ctx.beginPath();
-    for(let i=0;i<=segs;i++){
-      const px = (W * i) / segs;
-      const py = midY + Math.sin(i*0.8 + t*2)*4;
-      if(i===0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
-    }
-    ctx.stroke();
-
-    // Yarığın üst ve alt kırık kaya dudakları (3B derinlikli taş kenar)
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = '#8c6d3b';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    for(let i=0;i<=segs;i++){
-      const px = (W * i) / segs;
-      const jag = Math.sin(i*1.9)*7 + Math.cos(i*3.1)*4;
-      if(i===0) ctx.moveTo(px, midY - chasmHalf + jag);
-      else ctx.lineTo(px, midY - chasmHalf + jag);
-    }
-    ctx.stroke();
-
-    ctx.strokeStyle = '#6b8c6e';
-    ctx.beginPath();
-    for(let i=0;i<=segs;i++){
-      const px = (W * i) / segs;
-      const jag = Math.sin(i*2.3 + 1.2)*7 + Math.cos(i*2.7)*4;
-      if(i===0) ctx.moveTo(px, midY + chasmHalf + jag);
-      else ctx.lineTo(px, midY + chasmHalf + jag);
-    }
-    ctx.stroke();
     ctx.restore();
 
-    // Yarık içindeki kıvılcımlar
-    chasmSparks.forEach(sp => {
-      sp.x += sp.vx;
-      if(sp.x < 0) sp.x = 1;
-      if(sp.x > 1) sp.x = 0;
-      const sx = sp.x * W;
-      const sy = midY + sp.offsetY + Math.sin(t*3 + sp.phase)*5;
-      const alpha = 0.4 + 0.55 * Math.abs(Math.sin(t*2.4 + sp.phase));
-      ctx.fillStyle = sp.isRed ? `rgba(255, 110, 120, ${alpha})` : `rgba(125, 255, 195, ${alpha})`;
+    // Yanlardaki oyma taş kart yuvası kanalları (sol ve sağ taş bordürler)
+    const railW = Math.max(36, Math.min(68, boardW * 0.068));
+    const innerL = boardL + railW;
+    const innerR = boardR - railW;
+    const innerW = innerR - innerL;
+    const innerPadY = 14;
+    const innerT = boardT + innerPadY;
+    const innerB = boardB - innerPadY;
+    const innerH = innerB - innerT;
+
+    // Kırık taş döşeme karoları (İç saha)
+    ctx.save();
+    stonePolys.forEach((poly, idx) => {
       ctx.beginPath();
-      ctx.arc(sx, sy, sp.r, 0, Math.PI*2);
+      poly.forEach((pt, i) => {
+        const px = midX + pt[0] * innerW;
+        const py = midY + pt[1] * innerH;
+        if(i===0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      });
+      ctx.closePath();
+      ctx.fillStyle = idx%3===0 ? 'rgba(42, 41, 55, 0.65)' : (idx%2===0 ? 'rgba(31, 30, 42, 0.65)' : 'rgba(25, 24, 34, 0.65)');
       ctx.fill();
+      ctx.lineWidth = 2.2;
+      ctx.strokeStyle = 'rgba(9, 8, 13, 0.85)';
+      ctx.stroke();
     });
 
-    // 4. VADİ ATEŞBÖCEKLERİ VE SÜZÜLEN YAPRAKLAR (Sol ve Sağ Yeşillik Alanlarda)
-    fireflies.forEach(p => {
-      p.rx += p.vx;
-      p.y += p.vy;
-      if(p.y < -0.05) { p.y = 1.05; p.rx = Math.random(); }
-      if(p.rx < 0.05) p.rx = 0.95;
-      if(p.rx > 0.95) p.rx = 0.05;
-      const x = p.side === 'left' ? (p.rx * flankW) : (W - p.rx * flankW);
-      const y = p.y * H;
-      const glow = 0.35 + 0.65 * Math.abs(Math.sin(t * 2.1 + p.phase));
-      ctx.save();
-      ctx.fillStyle = `hsla(${p.hue}, 95%, 72%, ${glow})`;
-      ctx.shadowColor = `hsla(${p.hue}, 95%, 60%, 0.9)`;
-      ctx.shadowBlur = 10;
+    // Taş yüzeyindeki ince kırık çatlak çizgileri
+    ctx.strokeStyle = 'rgba(8, 7, 12, 0.78)';
+    ctx.lineWidth = 1.6;
+    for(let i=-3;i<=3;i++){
+      if(i===0) continue;
+      const gx = midX + (innerW * 0.14 * i);
       ctx.beginPath();
-      ctx.arc(x, y, p.r, 0, Math.PI*2);
-      ctx.fill();
+      ctx.moveTo(gx, innerT);
+      ctx.lineTo(gx + (i%2===0?12:-10), midY);
+      ctx.lineTo(gx - (i%2===0?8:-14), innerB);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Taş çatlaklarından sızan Mavi (Cyan) ve Mor (Arcane Violet) büyü enerjisi (referans görseldeki gibi)
+    const crackPulse = 0.72 + 0.28 * Math.sin(t * 2.4);
+    // Sağ üst mavi/camgöbeği parlayan taş çatlağı
+    drawCrackedLightning([
+      [midX + innerW*0.14, midY - innerH*0.36],
+      [midX + innerW*0.20, midY - innerH*0.28],
+      [midX + innerW*0.28, midY - innerH*0.31],
+      [midX + innerW*0.33, midY - innerH*0.22]
+    ], '#9bf4ff', '#00d9ff', 2.4, crackPulse);
+    drawCrackedLightning([
+      [midX + innerW*0.20, midY - innerH*0.28],
+      [midX + innerW*0.17, midY - innerH*0.19]
+    ], '#7ceaff', '#00d9ff', 1.6, crackPulse*0.85);
+
+    // Sol alt mor/eflatun parlayan taş çatlağı
+    drawCrackedLightning([
+      [midX - innerW*0.34, midY + innerH*0.33],
+      [midX - innerW*0.27, midY + innerH*0.26],
+      [midX - innerW*0.21, midY + innerH*0.30],
+      [midX - innerW*0.15, midY + innerH*0.21]
+    ], '#f0a6ff', '#c832ff', 2.4, crackPulse);
+    drawCrackedLightning([
+      [midX - innerW*0.09, midY + innerH*0.38],
+      [midX - innerW*0.06, midY + innerH*0.29]
+    ], '#7ceaff', '#00d9ff', 1.8, crackPulse*0.8);
+
+    // 3. MERKEZİ OYMA RÜNİK TAŞ ÇEMBER (4 Çeyreğe Bölünmüş Kadim Rün Halkası)
+    const rOut = Math.min(innerW * 0.24, innerH * 0.39);
+    const rMid = rOut * 0.76;
+    const rCore = rOut * 0.16;
+
+    ctx.save();
+    // Çemberin taş oyuk gölgesi
+    const ringGrad = ctx.createRadialGradient(midX, midY, rCore, midX, midY, rOut);
+    ringGrad.addColorStop(0, 'rgba(18, 17, 26, 0.55)');
+    ringGrad.addColorStop(0.74, 'rgba(26, 24, 38, 0.72)');
+    ringGrad.addColorStop(0.78, 'rgba(14, 12, 22, 0.92)');
+    ringGrad.addColorStop(1, 'rgba(16, 14, 24, 0.88)');
+    ctx.fillStyle = ringGrad;
+    ctx.beginPath();
+    ctx.arc(midX, midY, rOut, 0, Math.PI*2);
+    ctx.fill();
+
+    // Çember taş kenar olukları
+    [rOut, rOut*0.95, rMid, rMid*0.93].forEach((rad, i) => {
+      ctx.beginPath();
+      ctx.arc(midX, midY, rad, 0, Math.PI*2);
+      ctx.lineWidth = i%2===0 ? 2.5 : 1.2;
+      ctx.strokeStyle = i%2===0 ? '#09080e' : 'rgba(145, 135, 175, 0.32)';
+      ctx.stroke();
+    });
+
+    // Halka üzerindeki 24 parlayan rün harfi (Sol taraf mor, sağ taraf mavi/cyan)
+    const rText = (rOut * 0.95 + rMid) * 0.5;
+    ctx.font = `700 ${Math.max(11, Math.round(rOut * 0.11))}px "Cinzel", serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const runeCount = 24;
+    for(let i=0;i<runeCount;i++){
+      const ang = (i / runeCount) * Math.PI * 2;
+      // Yatay ve dikey taş yarıkların tam üstüne denk gelen yerleri boş bırak
+      if(Math.abs(Math.cos(ang)) > 0.96 || Math.abs(Math.sin(ang)) > 0.96) continue;
+      const rx = midX + Math.cos(ang) * rText;
+      const ry = midY + Math.sin(ang) * rText;
+      const isCyan = (Math.cos(ang) > 0 && Math.sin(ang) < 0) || (Math.cos(ang) < 0 && Math.sin(ang) < 0 && i%2===0) || (Math.cos(ang) > 0 && Math.sin(ang) > 0);
+      const glow = 0.65 + 0.35 * Math.sin(t * 2.8 + i * 0.7);
+      ctx.save();
+      ctx.translate(rx, ry);
+      ctx.rotate(ang + Math.PI * 0.5);
+      ctx.shadowColor = isCyan ? '#00e1ff' : '#d946ff';
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = isCyan ? `rgba(135, 245, 255, ${glow})` : `rgba(238, 145, 255, ${glow})`;
+      ctx.fillText(RUNES[i % RUNES.length], 0, 0);
+      ctx.restore();
+    }
+
+    // Çemberin 4 iç çeyreğindeki 4 büyük oyma rün sembolü (referans görseldeki gibi)
+    const quadRunes = [
+      { dx: -rMid*0.44, dy: -rMid*0.42, ch: 'ᛟ', cyan: true },
+      { dx:  rMid*0.44, dy: -rMid*0.42, ch: 'ᚲ', cyan: true },
+      { dx: -rMid*0.44, dy:  rMid*0.42, ch: 'ᛇ', cyan: false },
+      { dx:  rMid*0.44, dy:  rMid*0.42, ch: 'ᛋ', cyan: true }
+    ];
+    ctx.font = `900 ${Math.max(18, Math.round(rOut * 0.22))}px "Cinzel Decorative", serif`;
+    quadRunes.forEach((qr, qi) => {
+      const qGlow = 0.6 + 0.4 * Math.sin(t * 2.1 + qi * 1.4);
+      ctx.save();
+      ctx.shadowColor = qr.cyan ? '#00e1ff' : '#d946ff';
+      ctx.shadowBlur = 16;
+      ctx.fillStyle = qr.cyan ? `rgba(130, 242, 255, ${qGlow})` : `rgba(235, 140, 255, ${qGlow})`;
+      ctx.fillText(qr.ch, midX + qr.dx, midY + qr.dy);
       ctx.restore();
     });
+    ctx.restore();
 
-    leaves.forEach(lf => {
-      lf.y += lf.vy;
-      if(lf.y > 1.05) { lf.y = -0.05; lf.rx = Math.random(); }
-      const x = (lf.side === 'left' ? (lf.rx * flankW) : (W - lf.rx * flankW)) + Math.sin(t*1.6 + lf.sway)*10;
-      const y = lf.y * H;
+    // 4. TAHTAYI ORTADAN DÖRDE BÖLEN OYMA TAŞ KANALLAR (+ Haç Yarığı: Yatay ve Dikey Taş Bordür)
+    ctx.save();
+    // Dikey taş oluk (midX)
+    const vSeamGrad = ctx.createLinearGradient(midX - 6, innerT, midX + 6, innerT);
+    vSeamGrad.addColorStop(0, '#49455c');
+    vSeamGrad.addColorStop(0.5, '#09080e');
+    vSeamGrad.addColorStop(1, '#49455c');
+    ctx.fillStyle = vSeamGrad;
+    ctx.fillRect(midX - 5, innerT, 10, innerH);
+
+    // Yatay taş oluk (midY - Tahtayı Üst ve Alt olarak ikiye yaran ana taş yarık)
+    const hSeamGrad = ctx.createLinearGradient(innerL, midY - 7, innerL, midY + 7);
+    hSeamGrad.addColorStop(0, '#544e68');
+    hSeamGrad.addColorStop(0.3, '#120f1a');
+    hSeamGrad.addColorStop(0.5, '#a855f7');
+    hSeamGrad.addColorStop(0.7, '#120f1a');
+    hSeamGrad.addColorStop(1, '#544e68');
+    ctx.fillStyle = hSeamGrad;
+    ctx.fillRect(innerL, midY - 6, innerW, 12);
+
+    // Üst ve Alt merkezdeki mor kristal dikilitaş uçları (referans görseldeki mor kristalli taş kulecikler)
+    const drawCrystalSpire = (cx, cy, dirY) => {
       ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(lf.rot + t*0.8);
-      ctx.fillStyle = 'rgba(78, 185, 112, 0.55)';
       ctx.beginPath();
-      ctx.ellipse(0, 0, lf.sz, lf.sz*0.45, 0, 0, Math.PI*2);
+      ctx.moveTo(cx - 14, cy);
+      ctx.lineTo(cx, cy + dirY * 26);
+      ctx.lineTo(cx + 14, cy);
+      ctx.closePath();
+      ctx.fillStyle = '#383447';
+      ctx.fill();
+      ctx.strokeStyle = '#6c6587';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // İçindeki parlayan ametist/mor kristal
+      ctx.beginPath();
+      ctx.moveTo(cx - 6, cy + dirY * 3);
+      ctx.lineTo(cx, cy + dirY * 19);
+      ctx.lineTo(cx + 6, cy + dirY * 3);
+      ctx.closePath();
+      ctx.fillStyle = '#c054ff';
+      ctx.shadowColor = '#d946ff';
+      ctx.shadowBlur = 12;
+      ctx.fill();
+      ctx.restore();
+    };
+    drawCrystalSpire(midX, innerT, 1);
+    drawCrystalSpire(midX, innerB, -1);
+    ctx.restore();
+
+    // 5. DIŞ TAŞ ÇERÇEVE, SOL/SAĞ TAŞ KART YUVALARI VE ÜST/ALT GOTİK DEMİR PARMAKLIKLAR
+    ctx.save();
+    // Dış taş bordür çerçevesi
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#524e63';
+    ctx.strokeRect(boardL + 2, boardT + 2, boardW - 4, boardH - 4);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#262330';
+    ctx.strokeRect(innerL, innerT, innerW, innerH);
+
+    // Sol ve Sağ taş bordür üzerindeki oyma kart yuvaları (referans görseldeki yan taş bölmeler)
+    [boardL + 6, innerR + 4].forEach(rx => {
+      const rw = railW - 10;
+      const slotH = Math.min(76, innerH * 0.22);
+      // Üst ve alt oyma taş yuva
+      [innerT + 14, innerB - 14 - slotH].forEach(sy => {
+        ctx.fillStyle = 'rgba(14, 13, 20, 0.82)';
+        ctx.fillRect(rx, sy, rw, slotH);
+        ctx.strokeStyle = '#5b5670';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(rx, sy, rw, slotH);
+        // Spiral rün mührü
+        ctx.beginPath();
+        ctx.arc(rx + rw*0.5, sy + slotH*0.5, Math.min(rw, slotH)*0.24, 0, Math.PI*2);
+        ctx.strokeStyle = 'rgba(165, 155, 195, 0.35)';
+        ctx.stroke();
+      });
+    });
+
+    // Üst ve Alt Gotik Dövme Demir Parmaklık Mızrakları
+    const spikes = 22;
+    ctx.fillStyle = '#3c394a';
+    ctx.strokeStyle = '#191722';
+    ctx.lineWidth = 1;
+    for(let i=1;i<spikes;i++){
+      const sx = innerL + (innerW * i) / spikes;
+      // Üst parmaklık ucu
+      ctx.beginPath();
+      ctx.moveTo(sx - 3, boardT + 4);
+      ctx.lineTo(sx, boardT - 7);
+      ctx.lineTo(sx + 3, boardT + 4);
+      ctx.closePath();
+      ctx.fill();
+      // Alt parmaklık ucu
+      ctx.beginPath();
+      ctx.moveTo(sx - 3, boardB - 4);
+      ctx.lineTo(sx, boardB + 7);
+      ctx.lineTo(sx + 3, boardB - 4);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // 6. CANLI ATMOSFER PARÇACIKLARI (Ateş Kıvılcımları, Kazan Buharı, Rün Tozları)
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      if(p.y < -0.04) { p.y = 1.04; p.x = Math.random(); }
+      if(p.x < 0) p.x = 1;
+      if(p.x > 1) p.x = 0;
+      const px = p.x * W;
+      const py = p.y * H;
+      const alpha = 0.35 + 0.55 * Math.abs(Math.sin(t * 2.3 + p.phase));
+      let col = `rgba(140, 235, 255, ${alpha})`;
+      if(p.zone === 0) col = `rgba(255, 155, 55, ${alpha})`;
+      else if(p.zone === 1) col = `rgba(95, 255, 135, ${alpha})`;
+      else if(p.zone === 2) col = `rgba(215, 130, 255, ${alpha})`;
+      ctx.save();
+      ctx.fillStyle = col;
+      ctx.shadowColor = col;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(px, py, p.r, 0, Math.PI*2);
       ctx.fill();
       ctx.restore();
     });

@@ -1072,20 +1072,20 @@ main::before {
 #opp.zone {
   padding-top: max(8px, env(safe-area-inset-top, 8px)) !important;
   padding-bottom: 12px !important;
-  background: radial-gradient(65% 85% at 50% 100%, rgba(145, 25, 38, 0.16), transparent 72%) !important;
+  background: transparent !important;
 }
 #opp.zone.act {
-  background: radial-gradient(65% 90% at 50% 100%, rgba(205, 38, 52, 0.24), transparent 75%) !important;
+  background: radial-gradient(55% 75% at 50% 100%, rgba(192, 84, 255, 0.14), transparent 72%) !important;
 }
 
 #me.zone {
   flex-direction: column-reverse;
   padding-top: 12px !important;
   padding-bottom: clamp(78px, 13dvh, 122px) !important;
-  background: radial-gradient(65% 85% at 50% 0%, rgba(185, 140, 65, 0.14), transparent 72%) !important;
+  background: transparent !important;
 }
 #me.zone.act {
-  background: radial-gradient(65% 90% at 50% 0%, rgba(212, 168, 85, 0.22), transparent 75%) !important;
+  background: radial-gradient(55% 75% at 50% 0%, rgba(56, 189, 248, 0.14), transparent 72%) !important;
 }
 
 /* Joker ortaya sürüklenirken savaş alanının parlaması */
@@ -1349,49 +1349,40 @@ body.drop-ready #fx {
   100% { opacity: 1; transform: none; }
 }
 
-/* --- ORTADAN İKİYE YARILMIŞ MERKEZİ KANYON / SAVAŞ YARIĞI (#fx) --- */
+/* --- ORTADAN İKİYE YARILMIŞ TAŞLI RÜNİK MERKEZ HATTI (#fx) --- */
 #fx {
   position: relative;
   z-index: 9;
-  width: min(calc(100vw - 44px), 74vw) !important;
-  max-width: 1180px;
-  height: clamp(72px, 11dvh, 92px);
+  width: min(calc(100vw - 36px), 74vw) !important;
+  max-width: 1160px;
+  height: clamp(68px, 10.5dvh, 88px);
   margin: 0 auto !important;
-  padding: 0 clamp(10px, 1.8vw, 22px) !important;
+  padding: 0 clamp(6px, 1.2vw, 16px) !important;
   display: flex !important;
   align-items: center;
   justify-content: space-between;
-  border: 2.5px solid #8a6b38 !important;
-  border-radius: 52px !important;
-  background:
-    radial-gradient(50% 100% at 50% 50%, rgba(120, 28, 36, 0.35) 0%, transparent 70%),
-    linear-gradient(180deg,
-      rgba(10, 8, 10, 0.97) 0%,
-      rgba(26, 16, 20, 0.94) 48%,
-      rgba(18, 24, 20, 0.94) 52%,
-      rgba(8, 7, 9, 0.97) 100%) !important;
-  box-shadow:
-    0 14px 36px rgba(0, 0, 0, 0.96),
-    0 0 0 3px #0d0a0c,
-    inset 0 8px 18px rgba(0, 0, 0, 0.92),
-    inset 0 -8px 18px rgba(0, 0, 0, 0.92),
-    inset 0 0 24px rgba(196, 154, 82, 0.18) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 #fx::before {
   content: "" !important;
   display: block !important;
   position: absolute;
-  left: 96px;
-  right: 96px;
+  left: 84px;
+  right: 84px;
   top: 50%;
-  height: 2.5px;
+  height: 4px;
   transform: translateY(-50%);
   background: linear-gradient(90deg,
-    rgba(195, 42, 54, 0.85) 0%,
-    rgba(212, 168, 85, 0.95) 50%,
-    rgba(95, 175, 115, 0.85) 100%) !important;
-  box-shadow: 0 0 14px rgba(212, 168, 85, 0.75);
+    rgba(195, 110, 255, 0.85) 0%,
+    rgba(95, 225, 255, 0.95) 50%,
+    rgba(195, 110, 255, 0.85) 100%) !important;
+  box-shadow:
+    0 0 14px rgba(168, 85, 247, 0.85),
+    0 0 28px rgba(56, 189, 248, 0.55);
   z-index: 1;
   pointer-events: none;
 }
@@ -1402,7 +1393,7 @@ body.drop-ready #fx {
 #fx .ctl {
   position: absolute;
   inset: 0;
-  padding: 0 8px;
+  padding: 0 4px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1417,18 +1408,18 @@ body.drop-ready #fx {
 #fx .cl {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 #fx .deck {
   width: clamp(44px, 6.6dvh, 56px) !important;
   height: calc(clamp(44px, 6.6dvh, 56px) * 1.42) !important;
   margin: 0 !important;
   border-radius: 6px !important;
-  border: 2px solid #d4a855 !important;
+  border: 2px solid #8c7b9e !important;
   box-shadow:
-    3px 3px 0 #4a3319,
-    6px 6px 0 #26190b,
-    0 10px 22px rgba(0, 0, 0, 0.9) !important;
+    3px 3px 0 #2e2838,
+    6px 6px 0 #181420,
+    0 10px 22px rgba(0, 0, 0, 0.92) !important;
   cursor: pointer;
   transition: transform 0.16s ease;
 }
@@ -1437,15 +1428,15 @@ body.drop-ready #fx {
 }
 #fx .deck b {
   bottom: -10px !important;
-  background: #140d0a !important;
-  border: 1.5px solid #d4a855 !important;
-  color: #f5deb3 !important;
+  background: #14111c !important;
+  border: 1.5px solid #a78bfa !important;
+  color: #f3e8ff !important;
   border-radius: 8px !important;
   font: 700 13px/1.2 var(--mf) !important;
   padding: 1px 6px !important;
 }
 
-/* --- YUVARLAK ORTA ÇAĞ MÜHÜR / USTURLAB BUTONLARI (#draw "Kart çek" ve #pass "Pas / Turu bitir") --- */
+/* --- YAN TAŞ BORDÜR ÜZERİNDEKİ YUVARLAK OYMA TAŞ MÜHÜR BUTONLARI (#draw "Kart çek" ve #pass "Pas / Turu bitir") --- */
 #fx #draw,
 #fx #pass {
   width: clamp(68px, 10.6dvh, 86px) !important;
@@ -1467,59 +1458,61 @@ body.drop-ready #fx {
   transition: transform 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.2), box-shadow 0.18s ease, filter 0.18s ease !important;
 }
 
-/* Kart Çek Küresi (Gotik Kan Mührü & Altın Çember) */
+/* Kart Çek Küresi (Gotik Oyma Taş & Parlayan Mavi/Mor Rün Çemberi) */
 #fx #draw {
   background:
-    radial-gradient(circle at 35% 30%, #b82430 0%, #6e1119 55%, #2e060a 100%) !important;
-  border: 3px solid #d4a855 !important;
-  color: #f7e6c4 !important;
+    radial-gradient(circle at 38% 32%, #3a344c 0%, #221e2e 58%, #110e18 100%) !important;
+  border: 3px solid #7dd3fc !important;
+  color: #f1f5f9 !important;
+  text-shadow: 0 2px 6px #000, 0 0 10px rgba(56, 189, 248, 0.65) !important;
   box-shadow:
-    0 0 0 4px #120b0d,
-    0 0 0 6px #785a2e,
-    0 10px 24px rgba(0, 0, 0, 0.95),
-    0 0 18px rgba(184, 36, 48, 0.5),
-    inset 0 3px 8px rgba(255, 220, 180, 0.35),
-    inset 0 -6px 12px rgba(0, 0, 0, 0.75) !important;
+    0 0 0 4px #181522,
+    0 0 0 7px #524c66,
+    0 12px 26px rgba(0, 0, 0, 0.96),
+    0 0 22px rgba(56, 189, 248, 0.55),
+    inset 0 3px 8px rgba(186, 230, 253, 0.32),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.85) !important;
 }
 #fx #draw:hover:not(:disabled) {
   transform: scale(1.08) !important;
-  filter: brightness(1.12);
-  border-color: #f2d28b !important;
+  filter: brightness(1.15);
+  border-color: #bae6fd !important;
 }
 
-/* Pas Küresi (Gotik Zümrüt/Tunç Mührü) */
+/* Pas Küresi (Gotik Oyma Taş & Ametist Rün Mührü - Referans Görseldeki "Tur Bitir" Taş Küresi) */
 #fx #pass {
   background:
-    radial-gradient(circle at 35% 30%, #2d6e42 0%, #163d23 55%, #091c0f 100%) !important;
-  border: 3px solid #c8a258 !important;
-  color: #ebf7ee !important;
+    radial-gradient(circle at 38% 32%, #3d334c 0%, #231c2e 58%, #120e18 100%) !important;
+  border: 3px solid #c084fc !important;
+  color: #f5f3ff !important;
+  text-shadow: 0 2px 6px #000, 0 0 10px rgba(192, 132, 252, 0.65) !important;
   box-shadow:
-    0 0 0 4px #0e1410,
-    0 0 0 6px #6e5832,
-    0 10px 24px rgba(0, 0, 0, 0.95),
-    0 0 18px rgba(72, 168, 102, 0.45),
-    inset 0 3px 8px rgba(220, 255, 230, 0.32),
-    inset 0 -6px 12px rgba(0, 0, 0, 0.75) !important;
+    0 0 0 4px #181422,
+    0 0 0 7px #564d69,
+    0 12px 26px rgba(0, 0, 0, 0.96),
+    0 0 22px rgba(192, 132, 252, 0.55),
+    inset 0 3px 8px rgba(233, 213, 255, 0.32),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.85) !important;
 }
 #fx #pass:hover:not(:disabled) {
   transform: scale(1.08) !important;
-  filter: brightness(1.12);
-  border-color: #f2d28b !important;
+  filter: brightness(1.15);
+  border-color: #e9d5ff !important;
 }
 
-/* Turu Bitir Küresi (Parlayan Antik Altın / Kehribar Mührü) */
+/* Turu Bitir Küresi (Parlayan Ametist & Altın Rün Mührü) */
 #fx #pass:not(.alt) {
   background:
-    radial-gradient(circle at 35% 30%, #c98622 0%, #734409 55%, #331c03 100%) !important;
-  border-color: #f5d78e !important;
-  color: #fff8e6 !important;
+    radial-gradient(circle at 38% 32%, #582c7a 0%, #311547 58%, #160824 100%) !important;
+  border-color: #e879f9 !important;
+  color: #fae8ff !important;
   box-shadow:
-    0 0 0 4px #171008,
-    0 0 0 6px #9c7436,
-    0 10px 24px rgba(0, 0, 0, 0.95),
-    0 0 24px rgba(212, 168, 85, 0.65),
-    inset 0 3px 8px rgba(255, 245, 200, 0.45),
-    inset 0 -6px 12px rgba(0, 0, 0, 0.75) !important;
+    0 0 0 4px #1a1024,
+    0 0 0 7px #705887,
+    0 12px 26px rgba(0, 0, 0, 0.96),
+    0 0 28px rgba(217, 70, 239, 0.75),
+    inset 0 3px 8px rgba(245, 208, 254, 0.45),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.82) !important;
 }
 
 /* Orta Yarıktaki Kullanılmış Jokerler: Yuvarlak Madalyon (Sadece Kartın Üst İkonu Görünür) */
