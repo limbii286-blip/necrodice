@@ -6,7 +6,6 @@
 (function() {
   let scene, camera, renderer;
   let tableMesh, lampMesh, ceilingWire, pointLight, spotLight;
-  let cardMeshes = []; // { id, mesh, isClosed, targetPos, targetRot, p }
   let opponentMesh = null;
   let is3DActive = false;
   let mouse = { x: 0, y: 0, tx: 0, ty: 0 };
@@ -265,7 +264,7 @@
   function fitFov() {
     const a = window.innerWidth / window.innerHeight;
     camera.aspect = a;
-    camera.fov = Math.min(100, Math.max(48, 2 * Math.atan(Math.tan(0.62) / a) * 180 / Math.PI));
+    camera.fov = Math.min(100, Math.max(48, 2 * Math.atan(Math.tan(0.7) / a) * 180 / Math.PI));
     camera.updateProjectionMatrix();
   }
 
@@ -275,207 +274,464 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
-  // --- CARD TEXTURE & MESH CREATION ---
+  // ============================================================
+  // MASA NESNELERİ: kartlar, deste, jokerler, mühür, ok, PAS, menü
+  // Oyun mantığına dokunulmaz: tıklamalar ilgili DOM öğesine yönlendirilir.
+  // ============================================================
+  const CARD_W = 0.44, CARD_H = 0.64, CARD_T = 0.006, TABLE_Y = 0.53;
+  const DECK_POS = new THREE.Vector3(-1.8, TABLE_Y, 0.4);
+  const items = new Map();
+  let sealItem = null, arrowItem = null;
+  let hovered = null;
+  const V3 = THREE.Vector3;
+
   function getCardTexture(src) {
     if (textureCache[src]) return textureCache[src];
-    const loader = new THREE.TextureLoader();
-    const tex = loader.load(src);
+    let tex;
+    if (String(src).indexOf('num:') === 0) {
+      const v = String(src).slice(4);
+      const c = document.createElement('canvas');
+      c.width = 256; c.height = 372;
+      const x = c.getContext('2d');
+      x.fillStyle = '#c9c4b8'; x.fillRect(0, 0, 256, 372);
+      x.strokeStyle = '#6b1d12'; x.lineWidth = 8; x.strokeRect(10, 10, 236, 352);
+      x.fillStyle = '#b8381f'; x.font = 'bold 170px serif';
+      x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.fillText(v, 128, 190);
+      tex = new THREE.CanvasTexture(c);
+    } else {
+      tex = new THREE.TextureLoader().load(src);
+    }
     tex.anisotropy = 4;
     textureCache[src] = tex;
     return tex;
   }
 
-  function create3DCardMesh(card, isBack, isPlayer) {
-    // Standard playing card dimensions: ~0.42 x 0.63
-    const cardW = 0.44, cardH = 0.64, cardThickness = 0.006;
-    const geom = new THREE.BoxGeometry(cardW, cardThickness, cardH);
-
-    const frontSrc = (isBack || card.n === 0) ? (typeof HDBK !== 'undefined' ? HDBK : IMG.bn) : (typeof HDN !== 'undefined' && HDN[card.n] ? HDN[card.n] : IMG.n[card.n]);
-    const backSrc = typeof HDBK !== 'undefined' ? HDBK : IMG.bn;
-
-    const frontTex = getCardTexture(frontSrc);
-    const backTex = getCardTexture(backSrc);
-
-    // Box faces: [right, left, top(front), bottom(back), front_edge, back_edge]
-    const edgeMat = new THREE.MeshStandardMaterial({ color: 0x221a14, roughness: 0.8 });
-    const frontMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.65, metalness: 0.08 });
-    const backMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.65, metalness: 0.08 });
-
-    const materials = [
-      edgeMat, // right
-      edgeMat, // left
-      frontMat, // top (+Y, face up)
-      backMat,  // bottom (-Y, face down)
-      edgeMat, // front
-      edgeMat  // back
-    ];
-
-    const mesh = new THREE.Mesh(geom, materials);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
+  function createCard(frontSrc, backSrc, w, h) {
+    w = w || CARD_W; h = h || CARD_H;
+    const geom = new THREE.BoxGeometry(w, CARD_T, h);
+    const edge = new THREE.MeshStandardMaterial({ color: 0x221a14, roughness: 0.8 });
+    const front = new THREE.MeshStandardMaterial({ map: getCardTexture(frontSrc), roughness: 0.65, metalness: 0.08 });
+    const back = new THREE.MeshStandardMaterial({ map: getCardTexture(backSrc), roughness: 0.65, metalness: 0.08 });
+    const mesh = new THREE.Mesh(geom, [edge, edge, front, back, edge, edge]);
+    mesh.castShadow = true; mesh.receiveShadow = true;
+    mesh.userData.front = front; mesh.userData.back = back;
     return mesh;
   }
 
-  // --- SYNC 3D TABLE WITH GAME STATE ---
-  function sync3DTable(S) {
-    if (!scene || !is3DActive || !S) return;
+  // Yazılı yuvarlak plaka dokusu (PAS, +, −, mühür sayısı...)
+  function labelTexture(text, bg, fg, rim) {
+    const c = document.createElement('canvas');
+    c.width = c.height = 256;
+    const x = c.getContext('2d');
+    x.fillStyle = bg; x.fillRect(0, 0, 256, 256);
+    const g = x.createRadialGradient(128, 110, 20, 128, 128, 140);
+    g.addColorStop(0, 'rgba(255,255,255,.18)'); g.addColorStop(1, 'rgba(0,0,0,.35)');
+    x.fillStyle = g; x.fillRect(0, 0, 256, 256);
+    x.strokeStyle = rim || fg; x.globalAlpha = 0.55; x.lineWidth = 5;
+    x.beginPath(); x.arc(128, 128, 108, 0, Math.PI * 2); x.stroke();
+    x.globalAlpha = 1;
+    x.fillStyle = fg; x.textAlign = 'center'; x.textBaseline = 'middle';
+    const lines = String(text).split('\n');
+    let fs = lines.length > 1 ? 70 : 110;
+    const ff = '"Pirata One", "Pixelify Sans", serif';
+    do { x.font = 'bold ' + fs + 'px ' + ff; fs -= 4; }
+    while (fs > 18 && Math.max.apply(null, lines.map(l => x.measureText(l).width)) > 184);
+    const lh = fs * 1.15;
+    lines.forEach((l, i) => x.fillText(l, 128, 132 + (i - (lines.length - 1) / 2) * lh));
+    const tex = new THREE.CanvasTexture(c);
+    tex.anisotropy = 4;
+    return tex;
+  }
 
-    // Clear existing cards from table
-    cardMeshes.forEach(item => {
-      scene.remove(item.mesh);
-    });
-    cardMeshes = [];
+  // Masaya oturan yuvarlak plaka (silindir + üstte yazı düzlemi)
+  function createPlate(radius, height, text, bg, fg, rimColor) {
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(
+      new THREE.CylinderGeometry(radius, radius * 1.04, height, 40),
+      new THREE.MeshStandardMaterial({ color: rimColor || 0x2a1a10, roughness: 0.5, metalness: 0.5 }));
+    body.castShadow = true; body.receiveShadow = true;
+    g.add(body);
+    const topMat = new THREE.MeshStandardMaterial({ map: labelTexture(text, bg, fg), roughness: 0.55, metalness: 0.2 });
+    const top = new THREE.Mesh(new THREE.CircleGeometry(radius * 0.96, 40), topMat);
+    top.rotation.x = -Math.PI / 2; top.position.y = height / 2 + 0.001;
+    g.add(top);
+    g.userData.top = top; g.userData.topMat = topMat; g.userData.body = body;
+    g.userData.plate = true;
+    return g;
+  }
 
-    // Table coordinates:
-    // Center of table is z = 0.2, table surface y = 0.53
-    const tableSurfaceY = 0.53;
+  function setPlateText(group, text, bg, fg) {
+    const m = group.userData.topMat;
+    if (m.map) m.map.dispose();
+    m.map = labelTexture(text, bg, fg);
+    m.needsUpdate = true;
+  }
 
-    // 1. PLAYER OPEN & CLOSED CARDS (Near the player, z = 0.95)
-    const pOpen = S.pl[0].open || [];
-    const pClosed = S.pl[0].closed || [];
-    const totalP = pOpen.length + pClosed.length;
-    const spacing = 0.48;
-    const startX_P = -((totalP - 1) * spacing) / 2;
-
-    let idx = 0;
-    // Open cards
-    pOpen.forEach((c) => {
-      const mesh = create3DCardMesh(c, false, true);
-      const targetX = startX_P + (idx++) * spacing;
-      mesh.position.set(targetX, tableSurfaceY, 1.5);
-      mesh.rotation.set(0, 0, 0); // Face up
-      scene.add(mesh);
-      cardMeshes.push({ id: c.id, mesh, p: 0 });
-    });
-    // Closed cards
-    pClosed.forEach((c) => {
-      const isRevealed = S.rev || (typeof peek !== 'undefined' && peek.has(c.id));
-      const mesh = create3DCardMesh(c, !isRevealed, true);
-      const targetX = startX_P + (idx++) * spacing;
-      mesh.position.set(targetX, tableSurfaceY, 1.5);
-      // If closed, flipped face down (-PI on Z or rotated)
-      if (!isRevealed) {
-        mesh.rotation.set(0, 0, Math.PI);
-      } else {
-        mesh.rotation.set(0, 0, 0);
-      }
-      scene.add(mesh);
-      cardMeshes.push({ id: c.id, mesh, p: 0 });
-    });
-
-    // 2. OPPONENT OPEN & CLOSED CARDS (Across the table, z = -0.55)
-    const oppOpen = S.pl[1].open || [];
-    const oppClosed = S.pl[1].closed || [];
-    const totalOpp = oppOpen.length + oppClosed.length;
-    const startX_Opp = -((totalOpp - 1) * spacing) / 2;
-
-    let oppIdx = 0;
-    oppOpen.forEach((c) => {
-      const mesh = create3DCardMesh(c, false, false);
-      const targetX = startX_Opp + (oppIdx++) * spacing;
-      mesh.position.set(targetX, tableSurfaceY, -0.55);
-      mesh.rotation.set(0, Math.PI, 0); // Angled towards opponent
-      scene.add(mesh);
-      cardMeshes.push({ id: c.id, mesh, p: 1 });
-    });
-    oppClosed.forEach((c) => {
-      const isRevealed = S.rev;
-      const mesh = create3DCardMesh(c, !isRevealed, false);
-      const targetX = startX_Opp + (oppIdx++) * spacing;
-      mesh.position.set(targetX, tableSurfaceY, -0.55);
-      if (!isRevealed) {
-        mesh.rotation.set(0, 0, Math.PI);
-      } else {
-        mesh.rotation.set(0, Math.PI, 0);
-      }
-      scene.add(mesh);
-      cardMeshes.push({ id: c.id, mesh, p: 1 });
-    });
-
-    // 3. DECK OF CARDS ON THE TABLE
-    if (S.deck && S.deck.length > 0) {
-      const deckCount = Math.min(S.deck.length, 11);
-      for (let i = 0; i < deckCount; i++) {
-        const dMesh = create3DCardMesh({ n: 0 }, true, false);
-        dMesh.position.set(-1.8, tableSurfaceY + i * 0.007, 0.4);
-        dMesh.rotation.set(0, 0.05 * i, Math.PI);
-        scene.add(dMesh);
-        cardMeshes.push({ id: 'deck_' + i, mesh: dMesh });
+  function placeItem(it, x, y, z, rx, ry, rz, s) {
+    it.tp.set(x, y, z); it.tr.set(rx, ry, rz); it.ts = (s == null ? 1 : s);
+    if (!it.placed) {
+      it.placed = true;
+      if (!it.spawned) {
+        it.mesh.position.copy(it.tp); it.mesh.rotation.copy(it.tr); it.mesh.scale.setScalar(it.ts);
       }
     }
   }
 
-  // --- ANIMATION & RENDER LOOP ---
+  function ensureItem(key, kind, build, spawnFrom) {
+    let it = items.get(key);
+    if (!it) {
+      const mesh = build();
+      it = { key, kind, mesh, tp: new V3(), tr: new THREE.Euler(), ts: 1, dying: false, placed: false,
+             spawned: false, t0: clock.getElapsedTime(), arc: 0, dom: null, hl: false, dim: false, mod: false, seen: true, frontSrc: null };
+      mesh.userData.item = it;
+      if (spawnFrom) {
+        it.spawned = true; it.arc = 0.5;
+        mesh.position.copy(spawnFrom).add(new V3(0, 0.03, 0));
+        mesh.rotation.set(0, 0.25, Math.PI);
+        mesh.scale.setScalar(0.92);
+      }
+      scene.add(mesh);
+      items.set(key, it);
+    }
+    it.seen = true; it.dying = false;
+    return it;
+  }
+
+  function setFront(it, src) {
+    if (it.frontSrc === src) return;
+    it.frontSrc = src;
+    const m = it.mesh.userData.front;
+    m.map = getCardTexture(src); m.needsUpdate = true;
+  }
+
+  const backSrc = () => (typeof HDBK !== 'undefined' && HDBK) ? HDBK : IMG.bn;
+  function numSrc(c) { // kartın yüzü: sayı varsa onun görseli
+    const v = (c.o != null) ? c.o : c.n;
+    if (v == null || (v === 0 && c.o == null)) return null;
+    if (typeof HDN !== 'undefined' && HDN[v]) return HDN[v];
+    if (IMG.n && IMG.n[v]) return IMG.n[v];
+    return 'num:' + v;
+  }
+
+  function jokerSrc(id) { return IMG.j[id]; }
+
+  function domOK(sel) { const el = document.querySelector(sel); return !!el && !el.disabled; }
+
+  // --- MASAYI OYUN DURUMUYLA EŞLE ---
+  function sync3DTable(S) {
+    if (!scene || !is3DActive || !S) return;
+    items.forEach(it => { it.seen = false; });
+
+    const isSpec = typeof MODE !== 'undefined' && MODE === 'spectator';
+    const askP = (typeof P !== 'undefined') ? P : null;
+    const kind = askP ? askP.ks[askP.pk.length] : null;
+    const cn = askP ? cand() : [];
+
+    // 1) KART SIRALARI (rakip: -z, biz: +z)
+    const rows = [[1, -0.55], [0, 1.15]];
+    rows.forEach(([p, z]) => {
+      const pl = S.pl[p];
+      const list = pl.open.map(c => ({ c, closed: false })).concat(pl.closed.map(c => ({ c, closed: true })));
+      const a = pl.open.length, b = pl.closed.length, n = list.length;
+      const gap = (a > 0 && b > 0) ? 0.35 : 0;
+      const sp = Math.min(0.5, 3.8 / Math.max(n + gap, 1));
+      const span = (n - 1 + gap) * sp;
+      list.forEach((o, i) => {
+        const c = o.c;
+        const x = (i + (i >= a ? gap : 0)) * sp - span / 2;
+        const down = o.closed && !(p === 0 ? (S.rev || peek.has(c.id)) : S.rev);
+        const known = numSrc(c);
+        const it = ensureItem('c' + c.id, 'card', () => createCard(known || backSrc(), backSrc()), DECK_POS);
+        setFront(it, known || backSrc());
+        it.dom = '[data-c="' + c.id + '"]';
+        it.hl = kind !== 'eff' && cn.includes(c.id);
+        it.mod = c.o != null;
+        placeItem(it, x, TABLE_Y + (it.hl ? 0.07 : 0), z, 0, 0, down ? Math.PI : 0, 1);
+      });
+    });
+
+    // 2) BİZİM JOKER ELİMİZ (masanın ön kenarında yelpaze)
+    const keepIds = {};
+    if (!isSpec) {
+      const hand = S.hand[0] || [], n = hand.length, cnt = {};
+      const sp = Math.min(0.5, 3.4 / Math.max(n, 1));
+      hand.forEach((id, i) => {
+        cnt[id] = (cnt[id] || 0) + 1;
+        const key = 'h' + id + '_' + cnt[id];
+        const mid = i - (n - 1) / 2;
+        const it = ensureItem(key, 'hand', () => createCard(jokerSrc(id), jokerSrc(id)), DECK_POS);
+        it.dom = '#hand img[data-j="' + id + '"]';
+        const el = document.querySelector(it.dom);
+        it.dim = !!(el && el.classList.contains('dim'));
+        placeItem(it, mid * sp, TABLE_Y + 0.2, 2.05 + Math.abs(mid) * 0.05, 0.7, -mid * 0.07, 0, 0.9);
+      });
+    }
+
+    // 3) RAKİBİN JOKER ELİ (kapalı, masanın uzak köşesinde)
+    (S.hand[1] || []).forEach((_, i) => {
+      const it = ensureItem('oh' + i, 'static', () => createCard(IMG.bj, IMG.bj), DECK_POS);
+      placeItem(it, 1.15 + i * 0.2, TABLE_Y + 0.003 * i, -1.0, 0, 0.12 * (i % 2 ? 1 : -1), Math.PI, 0.55);
+    });
+
+    // 4) OYNANMIŞ ANLIK/KALICI JOKER ETKİLERİ (ortada, iki yanda)
+    const sideCnt = { 0: 0, 1: 0 };
+    (S.pj || []).forEach(x => {
+      const e = S.eff.find(y => y.uid == x.uid) || x;
+      const side = x.o == 1 ? 1 : 0;
+      const i = sideCnt[side]++;
+      const it = ensureItem('e' + x.uid, 'chip', () => createCard(jokerSrc(e.id), jokerSrc(e.id)), side ? new V3(1.15, TABLE_Y, -1.0) : new V3(0, TABLE_Y + 0.2, 2.05));
+      it.dom = '[data-e="' + x.uid + '"]';
+      it.hl = kind === 'eff' && cn.includes(e.uid);
+      it.mod = !!e.neg;
+      const sx = side ? -1 : 1;
+      placeItem(it, sx * (0.85 + i * 0.33), TABLE_Y + (it.hl ? 0.07 : 0), 0.2 + (side ? -0.1 : 0.1), 0, sx * 0.05, 0, 0.62);
+    });
+
+    // 5) DESTE (tıkla = kart çek)
+    const dc = Math.min((S.deck || []).length, 11);
+    for (let i = 0; i < 12; i++) {
+      const key = 'd' + i;
+      if (i < dc) {
+        const it = ensureItem(key, 'deck', () => createCard(backSrc(), backSrc()));
+        it.dom = '#draw';
+        placeItem(it, DECK_POS.x, TABLE_Y + i * 0.007, DECK_POS.z, 0, 0.05 * i, Math.PI, 1);
+      } else if (items.has(key)) {
+        items.get(key).seen = false;
+      }
+    }
+
+    // 6) HEDEF MÜHÜRÜ (masanın ortasında)
+    const T = tg(S), low = lowW(S);
+    const label = low ? 'EN AZ' : String(T);
+    const alt = (T != 21 || low);
+    const skey = label + '|' + alt;
+    if (!sealItem) {
+      const g = createPlate(0.4, 0.05, label, alt ? '#7a5a12' : '#8e1020', '#f3e3c3', 0x3a0a10);
+      g.position.set(0, TABLE_Y + 0.03, 0.2);
+      g.userData.item = { kind: 'static', dying: false };
+      scene.add(g);
+      sealItem = { mesh: g, key: skey, pulse: -9 };
+    } else if (sealItem.key !== skey) {
+      setPlateText(sealItem.mesh, label, alt ? '#7a5a12' : '#8e1020', '#f3e3c3');
+      sealItem.key = skey; sealItem.pulse = clock.getElapsedTime();
+    }
+
+    // 7) SIRA OKU
+    if (!arrowItem) {
+      const m = new THREE.Mesh(new THREE.ConeGeometry(0.075, 0.22, 3),
+        new THREE.MeshStandardMaterial({ color: 0x66ff88, emissive: 0x33aa55, emissiveIntensity: 0.9, roughness: 0.4 }));
+      m.castShadow = true;
+      scene.add(m);
+      arrowItem = { mesh: m, mode: 'off' };
+    }
+    arrowItem.mode = (S.wait || S.over) ? 'off' : (S.turn === 0 ? 'me' : 'op');
+
+    // 8) PAS / TURU BİTİR (masadaki pirinç plaka)
+    const passEl = document.getElementById('pass');
+    const passTxt = passEl ? passEl.textContent : 'Pas';
+    const ends = passTxt.toLowerCase().indexOf('bitir') >= 0;
+    const passKey = 'pass';
+    const pText = ends ? 'TURU\nBİTİR' : 'PAS';
+    let pit = items.get(passKey);
+    if (!pit) {
+      pit = ensureItem(passKey, 'plate', () => createPlate(0.27, 0.09, pText, '#1f5c33', '#e9ffe9', 0x15361f));
+      pit.label = pText;
+    }
+    if (pit.label !== pText) { setPlateText(pit.mesh, pText, ends ? '#7a5a12' : '#1f5c33', '#f6ffe9'); pit.label = pText; }
+    pit.dom = '#pass';
+    pit.dim = !passEl || passEl.disabled;
+    pit.mesh.visible = !isSpec && !(passEl && passEl.style.display === 'none');
+    placeItem(pit, 1.3, TABLE_Y + 0.06, 0.8, 0, 0, 0, 1);
+
+    // 9) MENÜ DEFTERİ (sol ön köşe)
+    let bit = items.get('book');
+    if (!bit) {
+      bit = ensureItem('book', 'book', () => {
+        const top = new THREE.MeshStandardMaterial({ map: bookTexture(), roughness: 0.8 });
+        const side = new THREE.MeshStandardMaterial({ color: 0x2b1810, roughness: 0.9 });
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.07, 0.36), [side, side, top, side, side, side]);
+        mesh.castShadow = true; mesh.receiveShadow = true;
+        return mesh;
+      });
+    }
+    bit.dom = '[data-g]';
+    placeItem(bit, -1.55, TABLE_Y + 0.045, 1.0, 0, 0.3, 0, 1);
+
+    // 10) SEÇİM JETONLARI (joker hedef seçerken: Ekle / Çıkar / Vazgeç)
+    const tokenDefs = [];
+    if (document.querySelector('#prompt [data-x]')) {
+      if (document.querySelector('#prompt [data-s]')) {
+        tokenDefs.push({ k: 'tkp', t: '+', dom: '#prompt [data-s="1"]', x: -0.5, bg: '#1f5c33' });
+        tokenDefs.push({ k: 'tkm', t: '−', dom: '#prompt [data-s="-1"]', x: 0.0, bg: '#8e1020' });
+      }
+      tokenDefs.push({ k: 'tkx', t: 'VAZ\nGEÇ', dom: '#prompt [data-x]', x: 0.5, bg: '#3a3a3a' });
+    }
+    const wantTok = {};
+    tokenDefs.forEach(d => {
+      wantTok[d.k] = 1;
+      const it = ensureItem(d.k, 'token', () => createPlate(0.2, 0.07, d.t, d.bg, '#ffeccc', 0x222222), new V3(0, TABLE_Y + 0.3, 0.9));
+      it.dom = d.dom;
+      placeItem(it, d.x, TABLE_Y + 0.05, 0.62, 0, 0, 0, 1);
+    });
+    ['tkp', 'tkm', 'tkx'].forEach(k => { if (!wantTok[k] && items.has(k)) items.get(k).seen = false; });
+
+    // Görülmeyenleri söndür
+    items.forEach(it => {
+      if (!it.seen && it.key !== 'pass' && it.key !== 'book') it.dying = true;
+    });
+  }
+
+  function bookTexture() {
+    const c = document.createElement('canvas');
+    c.width = 512; c.height = 368;
+    const x = c.getContext('2d');
+    x.fillStyle = '#3a2216'; x.fillRect(0, 0, 512, 368);
+    for (let i = 0; i < 400; i++) {
+      x.fillStyle = 'rgba(0,0,0,' + (Math.random() * 0.12) + ')';
+      x.fillRect(Math.random() * 512, Math.random() * 368, 2 + Math.random() * 6, 1);
+    }
+    x.strokeStyle = '#b8903a'; x.lineWidth = 6; x.strokeRect(22, 22, 468, 324);
+    x.fillStyle = '#d8b560'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.font = 'bold 96px "Pirata One", serif';
+    x.fillText('MENÜ', 256, 190);
+    const t = new THREE.CanvasTexture(c); t.anisotropy = 4;
+    return t;
+  }
+
+  // --- ETKİLEŞİM (üzerine gelme + tıklama) ---
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  function interactive(it) {
+    if (it.dying || !it.dom || !it.mesh.visible) return false;
+    return domOK(it.dom);
+  }
+  function pickItem(cx, cy) {
+    if (!camera) return null;
+    ndc.set((cx / innerWidth) * 2 - 1, -(cy / innerHeight) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    const meshes = [];
+    items.forEach(it => { if (interactive(it)) meshes.push(it.mesh); });
+    const hits = ray.intersectObjects(meshes, true);
+    if (!hits.length) return null;
+    let o = hits[0].object;
+    while (o && !(o.userData && o.userData.item)) o = o.parent;
+    return o ? o.userData.item : null;
+  }
+  const overlayOpen = t => !!(t.closest && t.closest('button,input,label,#menu,#m,#zm,#cast,#fl,[data-av]'));
+
+  function initPicking() {
+    document.addEventListener('click', function(e) {
+      if (!is3DActive || !e.isTrusted || overlayOpen(e.target)) return;
+      const it = pickItem(e.clientX, e.clientY);
+      if (!it) return;
+      const el = document.querySelector(it.dom);
+      if (el && !el.disabled) el.click();
+    });
+    document.addEventListener('mousemove', function(e) {
+      if (!is3DActive) return;
+      hovered = overlayOpen(e.target) ? null : pickItem(e.clientX, e.clientY);
+      document.body.style.cursor = hovered ? 'pointer' : '';
+    });
+  }
+
+  // --- ANİMASYON & RENDER ---
+  let lastT = 0;
   function animate() {
     requestAnimationFrame(animate);
     if (!renderer || !scene || !camera || !is3DActive) return;
 
     const time = clock.getElapsedTime();
+    const dt = Math.min(0.05, time - lastT); lastT = time;
+    const k = 1 - Math.exp(-dt * 10);
 
-    // 1. Subtle camera breathing / head-sway (First Person Immersive)
+    // Kamera: hafif nefes alma + fare paralaksı
     mouse.x += (mouse.tx - mouse.x) * 0.05;
     mouse.y += (mouse.ty - mouse.y) * 0.05;
-
     camera.position.x = mouse.x * 0.25;
     camera.position.y = 2.2 + Math.sin(time * 1.5) * 0.015 - mouse.y * 0.15;
     camera.rotation.y = -mouse.x * 0.08;
     camera.rotation.x = -0.52 - mouse.y * 0.06;
 
-    // 2. Realistic flickering lamp light (Unstable generator / candle feel)
+    // Lamba titremesi
     const flicker = 1.0 + (Math.sin(time * 12.0) * 0.04) + (Math.random() * 0.03 - 0.015);
     if (pointLight) pointLight.intensity = 1.8 * flicker;
     if (spotLight) spotLight.intensity = 4.2 * flicker;
-
-    // 3. Gentle swaying lamp
     if (lampMesh && ceilingWire) {
-      const swayAngle = Math.sin(time * 1.2) * 0.04;
-      lampMesh.rotation.z = swayAngle;
-      ceilingWire.rotation.z = swayAngle * 0.5;
+      const sw = Math.sin(time * 1.2) * 0.04;
+      lampMesh.rotation.z = sw; ceilingWire.rotation.z = sw * 0.5;
     }
+    if (opponentMesh) opponentMesh.position.y = 0.9 + Math.sin(time * 1.8) * 0.012;
 
-    // 4. Opponent subtle eerie breathing
-    if (opponentMesh) {
-      opponentMesh.position.y = 0.9 + Math.sin(time * 1.8) * 0.012;
+    // Nesneleri hedeflerine kaydır
+    const dead = [];
+    items.forEach(it => {
+      const m = it.mesh;
+      const hov = (hovered === it);
+      let ty = it.tp.y + (hov ? (it.kind === 'hand' ? 0.12 : 0.05) : 0);
+      let tz = it.tp.z + (hov && it.kind === 'hand' ? 0.1 : 0);
+      if (it.dying) { it.ts = 0; }
+      let yoff = 0;
+      if (it.arc) {
+        const u = (time - it.t0) / 0.75;
+        if (u < 1) yoff = Math.sin(Math.PI * Math.max(0, u)) * it.arc; else it.arc = 0;
+      }
+      m.position.x += (it.tp.x - m.position.x) * k;
+      if (it.by === undefined) it.by = m.position.y;
+      it.by += (ty - it.by) * k;
+      m.position.z += (tz - m.position.z) * k;
+      m.position.y = it.by + yoff;
+      m.rotation.x += (it.tr.x - m.rotation.x) * k;
+      m.rotation.y += (it.tr.y - m.rotation.y) * k;
+      m.rotation.z += (it.tr.z - m.rotation.z) * k;
+      const s = it.ts * (hov ? 1.06 : 1);
+      m.scale.setScalar(m.scale.x + (s - m.scale.x) * k);
+      if (it.dying && m.scale.x < 0.04) dead.push(it);
+
+      // Işıltı: seçilebilir aday kartlar / değiştirilmiş kartlar / sönük jokerler
+      const ud = m.userData;
+      if (ud.front) {
+        let ec = 0x000000, ei = 0;
+        if (it.hl) { ec = 0xffb830; ei = 0.35 + 0.2 * Math.sin(time * 6); }
+        else if (it.mod) { ec = it.kind === 'chip' ? 0x660000 : 0x5a2cff; ei = 0.35; }
+        ud.front.emissive.setHex(ec); ud.front.emissiveIntensity = ei;
+        ud.back.emissive.setHex(ec); ud.back.emissiveIntensity = ei;
+        const col = it.dim ? 0x6a6a6a : 0xffffff;
+        ud.front.color.setHex(col); ud.back.color.setHex(col);
+      } else if (ud.plate) {
+        const on = !it.dim;
+        const glow = on ? 0.25 + 0.18 * Math.sin(time * 4) : 0;
+        ud.topMat.emissive.setHex(on ? 0x335533 : 0x000000);
+        ud.topMat.emissiveIntensity = glow;
+        ud.topMat.color.setHex(on ? 0xffffff : 0x666666);
+      }
+    });
+    dead.forEach(it => { scene.remove(it.mesh); items.delete(it.key); });
+
+    // Mühür damgası (sayı değişince)
+    if (sealItem) {
+      const u = (time - sealItem.pulse) / 0.55;
+      const sc = u < 1 ? 1 + 0.4 * (1 - u) * (1 - u) : 1;
+      sealItem.mesh.scale.setScalar(sc);
+      sealItem.mesh.position.y = TABLE_Y + 0.03 + (u < 1 ? 0.15 * (1 - u) : 0);
+    }
+    // Sıra oku
+    if (arrowItem) {
+      const a = arrowItem;
+      const dirZ = a.mode === 'me' ? 1 : -1;
+      a.mesh.visible = a.mode !== 'off';
+      if (a.mesh.visible) {
+        a.mesh.rotation.set(dirZ * Math.PI / 2, 0, 0);
+        a.mesh.position.set(0, TABLE_Y + 0.11, 0.2 + dirZ * (0.27 + 0.03 * Math.sin(time * 4)));
+        const mat = a.mesh.material;
+        mat.color.setHex(a.mode === 'me' ? 0x66ff88 : 0xff4455);
+        mat.emissive.setHex(a.mode === 'me' ? 0x33aa55 : 0xaa2233);
+      }
     }
 
     renderer.render(scene, camera);
   }
 
-  // 3D kart tıklaması: ilgili DOM kartına yönlendir (oyun mantığı değişmez)
-  function initPicking() {
-    const ray = new THREE.Raycaster(), v = new THREE.Vector2();
-    document.addEventListener('click', function(e) {
-      if (!is3DActive || !camera || !e.isTrusted) return;
-      if (e.target.closest && e.target.closest('button,input,label,#menu,#m,#hand,[data-e],[data-j],[data-s],[data-x],[data-g],[data-av]')) return;
-      v.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
-      ray.setFromCamera(v, camera);
-      const hits = ray.intersectObjects(cardMeshes.map(c => c.mesh), true);
-      if (!hits.length) return;
-      const o = hits[0].object;
-      const item = cardMeshes.find(c => c.mesh === o || c.mesh.children.includes(o));
-      if (!item) return;
-      if (String(item.id).startsWith('deck_')) { // desteye tıkla = kart çek
-        const d = document.getElementById('draw');
-        if (d && !d.disabled) d.click();
-        return;
-      }
-      const el = document.querySelector('[data-c="' + item.id + '"]');
-      if (el) el.click();
-    });
-  }
-
-  // Desteye gelince el imleci
-  document.addEventListener('mousemove', function(e) {
-    if (!is3DActive || !camera) return;
-    const ray = new THREE.Raycaster();
-    ray.setFromCamera(new THREE.Vector2((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1), camera);
-    const decks = cardMeshes.filter(c => String(c.id).startsWith('deck_')).map(c => c.mesh);
-    const d = document.getElementById('draw');
-    const over = decks.length && ray.intersectObjects(decks, true).length && d && !d.disabled;
-    document.body.style.cursor = over ? 'pointer' : '';
-  });
-
-  // Global hooks for game.js
+  // Oyun için küresel kancalar
   window.Necro3D = {
     init: function() {
       init3DSetting();
@@ -488,21 +744,18 @@
         document.body.classList.remove('view-3d');
       }
     },
-    sync: function(S) {
-      sync3DTable(S);
-    },
+    sync: function(S) { sync3DTable(S); },
     toggle: function(active) {
       is3DActive = (active !== undefined) ? active : !is3DActive;
       localStorage.setItem('mode_3d', is3DActive ? '1' : '0');
       document.body.classList.toggle('view-3d', is3DActive);
+      document.body.style.cursor = '';
       if (is3DActive && G) sync3DTable(G);
     },
-    isActive: function() {
-      return is3DActive;
-    }
+    isActive: function() { return is3DActive; },
+    debug: function() { return { project: function(k) { const it = items.get(k); if (!it) return null; const v = it.mesh.position.clone().project(camera); return [Math.round((v.x + 1) / 2 * innerWidth), Math.round((1 - v.y) / 2 * innerHeight)]; }, vp: [innerWidth, innerHeight, devicePixelRatio], items: Array.from(items.keys()), pick: function(x, y) { const it = pickItem(x, y); return it ? it.key + ' ' + it.dom : null; }, dom: function(k) { const it = items.get(k); return it ? [it.dom, !!document.querySelector(it.dom), interactive(it)] : null; } }; }
   };
 
-  // Auto-init on DOM ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', window.Necro3D.init);
   } else {

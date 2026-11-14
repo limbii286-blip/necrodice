@@ -827,6 +827,7 @@ function cast(p,id,cb){ // joker sahnede büyür ve Kapat'a basılana kadar kal�
 }
 function count(el,a,b){if(!el)return;if(a==b||RM||typeof requestAnimationFrame=='undefined'){el.textContent=b;return}const t0=performance.now(),f=n=>{const x=Math.min(1,(n-t0)/450);el.textContent=Math.round(a+(b-a)*x*(2-x));if(x<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
 function fly(){ // yeni kartlar desteden uçarak gelir
+  if(document.body.classList.contains('view-3d'))return; // 3D'de kartlar masada uçar
   const d=$('#deck');if(!d||!d.getBoundingClientRect)return;const dr=d.getBoundingClientRect();let i=0;const F=FIT||1;
   const freshCards=document.querySelectorAll('.fresh');
   if(freshCards.length){
@@ -891,7 +892,6 @@ if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{fitSig=''
 function R(){
   if(!G)return;
   watch();fitSoon();
-  try{if(window.Necro3D)Necro3D.sync(G)}catch(e){console.warn('3D',e)}
   const S=G,low=lowW(S),cn=cand(),k=P&&P.ks[P.pk.length],bi=Math.min(S.bo,3),T=tg(S),res=S.res||[];
   let fresh=0;
   const cd=(c,back,fl,pk)=>{const nf=!seen.has(c.id);if(nf)fresh++;seen.add(c.id);
@@ -949,6 +949,7 @@ function R(){
   const mt0=S.turn==0&&!S.wait;if(mt0&&!prevT)snd('turn');prevT=mt0;
   const last=S.log[S.log.length-1],lk=S.log.length+JSON.stringify(last);if(lk!=lastLk){lastLk=lk;if(last&&last.t=='pas dedi')snd('pass')}
   fly();flipId=null;
+  try{if(window.Necro3D)Necro3D.sync(G)}catch(e){console.warn('3D',e)}
   if(MODE=='host'){
     if(conn&&conn.open)conn.send({k:'s',v:view(G)});
     if(spectators.length){
