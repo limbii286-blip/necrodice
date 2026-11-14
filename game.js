@@ -1898,7 +1898,7 @@ on('#b2',hostRoom);on('#b3',joinRoom);
   requestAnimationFrame(render);
 })();
 
-/* ---------- HEARTHSTONE TARZI TAM EKRAN TAVERNA MASASI & SANDIK ANA MENÜ ARKA PLANI ---------- */
+/* ---------- GOTİK ORTA ÇAĞ KATEDRALİ & KARANLIK SANCak SALONU ANA MENÜ ARKA PLANI ---------- */
 (function initHearthstoneMenuCanvas(){
   const cvs=document.getElementById('hs-menu-bg');
   if(!cvs)return;
@@ -1906,15 +1906,15 @@ on('#b2',hostRoom);on('#b3',joinRoom);
   let W=0,H=0,DPR=1;
 
   const embers=[];
-  for(let i=0;i<42;i++){
+  for(let i=0;i<46;i++){
     embers.push({
       x:Math.random(),
       y:Math.random(),
-      r:1.2+Math.random()*2.5,
-      vx:(Math.random()-0.5)*0.00035,
-      vy:-0.0003-Math.random()*0.00055,
+      r:1.0+Math.random()*2.3,
+      vx:(Math.random()-0.5)*0.0003,
+      vy:-0.00025-Math.random()*0.0005,
       phase:Math.random()*Math.PI*2,
-      gold:Math.random()>0.3
+      crimson:Math.random()<0.35
     });
   }
 
@@ -1929,146 +1929,123 @@ on('#b2',hostRoom);on('#b3',joinRoom);
   window.addEventListener('resize',resize);
   resize();
 
-  function drawCoin(x,y,r,rot){
+  function drawGothicArchWindow(cx,topY,w,h,t){
     ctx.save();
-    ctx.translate(x,y);
-    ctx.rotate(rot);
-    ctx.shadowColor='rgba(0,0,0,0.75)';
-    ctx.shadowBlur=8;
-    ctx.shadowOffsetY=4;
-    const g=ctx.createRadialGradient(-r*0.3,-r*0.3,1,0,0,r);
-    g.addColorStop(0,'#fff0a8');
-    g.addColorStop(0.55,'#d4a238');
-    g.addColorStop(1,'#6e4c10');
-    ctx.fillStyle=g;
+    const halfW=w*0.5;
+    const archH=w*0.65;
+    const botY=topY+h;
+
+    // Sivri gotik kemer yolu
     ctx.beginPath();
-    ctx.arc(0,0,r,0,Math.PI*2);
-    ctx.fill();
-    ctx.shadowBlur=0;
-    ctx.shadowOffsetY=0;
-    ctx.strokeStyle='#4a3006';
-    ctx.lineWidth=1.5;
-    ctx.beginPath();
-    ctx.arc(0,0,r*0.74,0,Math.PI*2);
-    ctx.stroke();
-    // İç rün/elmas damgası
-    ctx.fillStyle='#5c3d08';
-    ctx.beginPath();
-    ctx.moveTo(0,-r*0.38);
-    ctx.lineTo(r*0.38,0);
-    ctx.lineTo(0,r*0.38);
-    ctx.lineTo(-r*0.38,0);
+    ctx.moveTo(cx-halfW, botY);
+    ctx.lineTo(cx-halfW, topY+archH);
+    ctx.quadraticCurveTo(cx-halfW, topY+archH*0.25, cx, topY);
+    ctx.quadraticCurveTo(cx+halfW, topY+archH*0.25, cx+halfW, topY+archH);
+    ctx.lineTo(cx+halfW, botY);
     ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-  }
 
-  function drawTableCard(x,y,w,h,rot,isGold){
-    ctx.save();
-    ctx.translate(x,y);
-    ctx.rotate(rot);
-    ctx.shadowColor='rgba(0,0,0,0.85)';
-    ctx.shadowBlur=16;
-    ctx.shadowOffsetY=8;
-    // Kart gövdesi
-    const cg=ctx.createLinearGradient(-w/2,-h/2,w/2,h/2);
-    cg.addColorStop(0,isGold?'#3b2816':'#2c141c');
-    cg.addColorStop(0.5,isGold?'#1f150c':'#170a0e');
-    cg.addColorStop(1,'#0d080a');
-    ctx.fillStyle=cg;
-    ctx.beginPath();
-    ctx.roundRect(-w/2,-h/2,w,h,8);
+    // Vitray iç parıltısı (koyu kızıl & kehribar ay ışığı)
+    const pulse=0.85+0.15*Math.sin(t*1.4+cx*0.01);
+    const wg=ctx.createLinearGradient(cx,topY,cx,botY);
+    wg.addColorStop(0,`rgba(145, 28, 38, ${0.38*pulse})`);
+    wg.addColorStop(0.45,`rgba(95, 58, 28, ${0.26*pulse})`);
+    wg.addColorStop(1,'rgba(12, 8, 12, 0.9)');
+    ctx.fillStyle=wg;
     ctx.fill();
 
-    ctx.shadowBlur=0;
-    ctx.shadowOffsetY=0;
-    ctx.strokeStyle=isGold?'#d4a855':'#c4515c';
-    ctx.lineWidth=2.5;
+    // Gotik taş söve ve iç kayıtlar (Tracery)
+    ctx.lineWidth=4;
+    ctx.strokeStyle='#2c2320';
     ctx.stroke();
-
-    // Kart sırtı Hearthstone / Necrodice sarmal motifi
-    ctx.strokeStyle=isGold?'rgba(235,195,110,0.45)':'rgba(236,68,82,0.45)';
     ctx.lineWidth=1.5;
-    ctx.strokeRect(-w/2+7,-h/2+7,w-14,h-14);
-    ctx.beginPath();
-    ctx.arc(0,0,w*0.24,0,Math.PI*2);
+    ctx.strokeStyle='rgba(198, 156, 86, 0.35)';
     ctx.stroke();
-    ctx.fillStyle=isGold?'#f0c868':'#ec4452';
+
+    // İç dikey taş kayıtlar ve gül pencere çemberi
     ctx.beginPath();
-    ctx.arc(0,0,w*0.09,0,Math.PI*2);
-    ctx.fill();
+    ctx.moveTo(cx, topY+archH*0.55);
+    ctx.lineTo(cx, botY);
+    ctx.moveTo(cx-halfW*0.5, topY+archH*0.75);
+    ctx.lineTo(cx-halfW*0.5, botY);
+    ctx.moveTo(cx+halfW*0.5, topY+archH*0.75);
+    ctx.lineTo(cx+halfW*0.5, botY);
+    ctx.stroke();
+
+    // Gül pencere rozeti
+    const ry=topY+archH*0.52;
+    const rr=halfW*0.36;
+    ctx.beginPath();
+    ctx.arc(cx,ry,rr,0,Math.PI*2);
+    ctx.stroke();
+    for(let a=0;a<6;a++){
+      const ang=(a*Math.PI)/3;
+      ctx.beginPath();
+      ctx.moveTo(cx,ry);
+      ctx.lineTo(cx+Math.cos(ang)*rr, ry+Math.sin(ang)*rr);
+      ctx.stroke();
+    }
     ctx.restore();
   }
 
-  function drawManaCrystal(x,y,r,rot){
+  function drawCandelabra(x,baseY,scale,t,phase){
     ctx.save();
-    ctx.translate(x,y);
-    ctx.rotate(rot);
-    ctx.shadowColor='rgba(70,195,255,0.8)';
-    ctx.shadowBlur=18;
-    const g=ctx.createLinearGradient(-r,-r,r,r);
-    g.addColorStop(0,'#b8f2ff');
-    g.addColorStop(0.45,'#2892d6');
-    g.addColorStop(1,'#0c3559');
-    ctx.fillStyle=g;
+    ctx.translate(x,baseY);
+    ctx.scale(scale,scale);
+
+    // Dövme demir gövde ve kollar
+    ctx.strokeStyle='#231c19';
+    ctx.lineWidth=5;
     ctx.beginPath();
-    ctx.moveTo(0,-r*1.25);
-    ctx.lineTo(r*0.95,0);
-    ctx.lineTo(0,r*1.25);
-    ctx.lineTo(-r*0.95,0);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle='#dcf8ff';
+    ctx.moveTo(0,0);
+    ctx.lineTo(0,-150);
+    ctx.moveTo(-28,0);
+    ctx.lineTo(28,0);
+    // Sol ve sağ kıvrımlı demir kollar
+    ctx.moveTo(-38,-118);
+    ctx.quadraticCurveTo(-20,-90,0,-110);
+    ctx.quadraticCurveTo(20,-90,38,-118);
+    ctx.stroke();
+
+    ctx.strokeStyle='rgba(196, 154, 82, 0.45)';
     ctx.lineWidth=1.5;
     ctx.stroke();
-    ctx.restore();
-  }
 
-  function drawCandle(x,y,r,t,phase){
-    const flicker = 0.88 + 0.12*Math.sin(t*7.5 + phase) + 0.06*Math.cos(t*13.2 + phase);
-    // Sıcak mum ışığı halesi
-    const glow = ctx.createRadialGradient(x,y,4,x,y,r*4.2*flicker);
-    glow.addColorStop(0,'rgba(255, 200, 95, 0.45)');
-    glow.addColorStop(0.45,'rgba(235, 125, 35, 0.18)');
-    glow.addColorStop(1,'rgba(200, 70, 10, 0)');
-    ctx.fillStyle=glow;
-    ctx.beginPath();
-    ctx.arc(x,y,r*4.2*flicker,0,Math.PI*2);
-    ctx.fill();
+    // 3 adet eriyen balmumu mum ve titreyen alev
+    const candles=[{cx:-38,cy:-118,h:28,p:0},{cx:0,cy:-150,h:34,p:1.4},{cx:38,cy:-118,h:28,p:2.8}];
+    candles.forEach(c=>{
+      // Mum tablası
+      ctx.fillStyle='#3a2b1c';
+      ctx.fillRect(c.cx-9,c.cy-3,18,5);
+      // Mum gövdesi
+      const cg=ctx.createLinearGradient(c.cx-6,c.cy-c.h,c.cx+6,c.cy);
+      cg.addColorStop(0,'#e8d8b8');
+      cg.addColorStop(1,'#8c7450');
+      ctx.fillStyle=cg;
+      ctx.fillRect(c.cx-5,c.cy-c.h,10,c.h-3);
 
-    // Şamdan tabanı
-    ctx.save();
-    ctx.shadowColor='rgba(0,0,0,0.9)';
-    ctx.shadowBlur=14;
-    ctx.fillStyle='#241c18';
-    ctx.strokeStyle='#7a5c32';
-    ctx.lineWidth=2.5;
-    ctx.beginPath();
-    ctx.arc(x,y,r*1.18,0,Math.PI*2);
-    ctx.fill();
-    ctx.stroke();
+      // Titreyen mum alevi ve sıcak hale
+      const flk=0.88+0.12*Math.sin(t*8+phase+c.p)+0.06*Math.cos(t*13+c.p);
+      const fy=c.cy-c.h-8;
+      const fx=c.cx+Math.sin(t*5.5+phase+c.p)*1.8;
 
-    // Mum gövdesi
-    const cg=ctx.createRadialGradient(x-r*0.2,y-r*0.2,2,x,y,r*0.85);
-    cg.addColorStop(0,'#f7ebd2');
-    cg.addColorStop(0.7,'#cbb386');
-    cg.addColorStop(1,'#8a7048');
-    ctx.fillStyle=cg;
-    ctx.beginPath();
-    ctx.arc(x,y,r*0.82,0,Math.PI*2);
-    ctx.fill();
+      const glow=ctx.createRadialGradient(fx,fy,2,fx,fy,68*flk);
+      glow.addColorStop(0,'rgba(255, 195, 90, 0.42)');
+      glow.addColorStop(0.45,'rgba(195, 75, 25, 0.16)');
+      glow.addColorStop(1,'rgba(0, 0, 0, 0)');
+      ctx.fillStyle=glow;
+      ctx.beginPath();
+      ctx.arc(fx,fy,68*flk,0,Math.PI*2);
+      ctx.fill();
 
-    // Alev
-    ctx.shadowColor='#ff9d2e';
-    ctx.shadowBlur=16;
-    ctx.fillStyle='#ffd86b';
-    ctx.beginPath();
-    ctx.ellipse(x + Math.sin(t*6+phase)*1.5, y - 2, r*0.26*flicker, r*0.42*flicker, 0, 0, Math.PI*2);
-    ctx.fill();
-    ctx.fillStyle='#ffffff';
-    ctx.beginPath();
-    ctx.arc(x, y, r*0.11, 0, Math.PI*2);
-    ctx.fill();
+      ctx.fillStyle='#ffd268';
+      ctx.beginPath();
+      ctx.ellipse(fx,fy,3.8*flk,8.5*flk,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle='#fffbe8';
+      ctx.beginPath();
+      ctx.arc(fx,fy+2,1.8,0,Math.PI*2);
+      ctx.fill();
+    });
     ctx.restore();
   }
 
@@ -2078,102 +2055,72 @@ on('#b2',hostRoom);on('#b3',joinRoom);
       const t=now*0.001;
       ctx.clearRect(0,0,W,H);
 
-      // 1. TAVERNA AHŞAP MASA ARKA PLANI (Koyu Maun / Meşe Tahta Kalaslar)
-      const bgGrad=ctx.createRadialGradient(W*0.5,H*0.48,40,W*0.5,H*0.5,Math.max(W,H)*0.75);
-      bgGrad.addColorStop(0,'#3b2214');
-      bgGrad.addColorStop(0.45,'#24130b');
-      bgGrad.addColorStop(0.8,'#140a06');
-      bgGrad.addColorStop(1,'#090403');
+      // 1. GOTİK KATEDRAL / KALE SALONU TAŞ DUVAR ARKA PLANI
+      const bgGrad=ctx.createRadialGradient(W*0.5,H*0.42,30,W*0.5,H*0.5,Math.max(W,H)*0.8);
+      bgGrad.addColorStop(0,'#1e1416');
+      bgGrad.addColorStop(0.48,'#110c0e');
+      bgGrad.addColorStop(0.82,'#090608');
+      bgGrad.addColorStop(1,'#040304');
       ctx.fillStyle=bgGrad;
       ctx.fillRect(0,0,W,H);
 
-      // Yatay ahşap masa kalas derzleri ve sıcak vernik dokusu
-      const planks=7;
-      for(let i=0;i<planks;i++){
-        const py=(H/planks)*i;
-        ctx.strokeStyle='rgba(0,0,0,0.55)';
-        ctx.lineWidth=3;
+      // Kesme taş duvar derzleri (Orta Çağ Kalesi / Mahzeni)
+      ctx.strokeStyle='rgba(0, 0, 0, 0.55)';
+      ctx.lineWidth=2;
+      const rowH=56;
+      const colW=110;
+      for(let r=0;r*rowH<H;r++){
+        const y=r*rowH;
         ctx.beginPath();
-        ctx.moveTo(0,py);
-        ctx.lineTo(W,py);
+        ctx.moveTo(0,y);
+        ctx.lineTo(W,y);
         ctx.stroke();
-
-        ctx.strokeStyle='rgba(255,195,120,0.06)';
-        ctx.lineWidth=1.5;
-        ctx.beginPath();
-        ctx.moveTo(0,py+3);
-        ctx.lineTo(W,py+3);
-        ctx.stroke();
-      }
-
-      // Dikey kalas birleşim çizgileri ve pirinç perçin çivileri
-      const cols=[0.18,0.82];
-      cols.forEach(cx=>{
-        const x=W*cx;
-        ctx.strokeStyle='rgba(0,0,0,0.45)';
-        ctx.lineWidth=2.5;
-        ctx.beginPath();
-        ctx.moveTo(x,0);
-        ctx.lineTo(x,H);
-        ctx.stroke();
-        for(let i=0;i<planks;i++){
-          const ny=(H/planks)*i + 18;
-          ctx.fillStyle='#8c6a38';
+        const offset=(r%2)*(colW*0.5);
+        for(let c=-1;c*colW<W+colW;c++){
+          const x=c*colW+offset;
           ctx.beginPath();
-          ctx.arc(x-10,ny,3.2,0,Math.PI*2);
-          ctx.arc(x+10,ny,3.2,0,Math.PI*2);
-          ctx.fill();
+          ctx.moveTo(x,y);
+          ctx.lineTo(x,y+rowH);
+          ctx.stroke();
         }
-      });
-
-      // 2. MASA ÜZERİNDEKİ HEARTHSTONE TAVERNA OBJELERİ (Geniş ekranda yanlarda görünür)
-      if(W > 640){
-        // Sol masa kenarı: Taverna mumları, altın sikkeler ve kartlar
-        drawTableCard(W*0.11, H*0.64, 86, 126, -0.32, false);
-        drawTableCard(W*0.14, H*0.68, 86, 126, -0.08, true);
-        drawCoin(W*0.17, H*0.36, 16, 0.2);
-        drawCoin(W*0.14, H*0.40, 14, -0.5);
-        drawCoin(W*0.18, H*0.42, 15, 0.8);
-        drawManaCrystal(W*0.12, H*0.84, 15, 0.35);
-        drawCandle(W*0.09, H*0.24, 24, t, 0.0);
-
-        // Sağ masa kenarı: Yelpaze kartlar, mana kristalleri, altınlar ve mum
-        drawTableCard(W*0.88, H*0.30, 86, 126, 0.28, true);
-        drawTableCard(W*0.85, H*0.35, 86, 126, 0.06, false);
-        drawManaCrystal(W*0.86, H*0.66, 17, -0.25);
-        drawManaCrystal(W*0.89, H*0.71, 13, 0.45);
-        drawCoin(W*0.83, H*0.76, 15, -0.3);
-        drawCoin(W*0.86, H*0.80, 14, 0.6);
-        drawCandle(W*0.91, H*0.18, 22, t, 2.1);
-        drawCandle(W*0.90, H*0.84, 25, t, 4.2);
-      } else {
-        // Mobil / dar ekranda köşe mum ışıkları
-        drawCandle(28, 36, 16, t, 0.0);
-        drawCandle(W-28, 36, 16, t, 2.1);
       }
 
-      // 3. MERKEZİ HEARTHSTONE SANDIK / KUTU IŞIK HALESİ
-      const centerGlow=ctx.createRadialGradient(W*0.5,H*0.5,20,W*0.5,H*0.5,Math.min(W,H)*0.58);
-      centerGlow.addColorStop(0,'rgba(255, 195, 90, 0.22)');
-      centerGlow.addColorStop(0.55,'rgba(195, 95, 30, 0.08)');
+      // 2. SOL VE SAĞ KANATTAKİ GOTİK SİVRİ KEMERLİ VİTRAY PENCERELER VE ŞAMDANLAR
+      if(W > 680){
+        const winW = Math.min(150, W*0.13);
+        const winH = Math.min(420, H*0.62);
+        drawGothicArchWindow(W*0.13, H*0.12, winW, winH, t);
+        drawGothicArchWindow(W*0.87, H*0.12, winW, winH, t);
+
+        drawCandelabra(W*0.13, H*0.88, Math.min(1.05, H/780), t, 0.0);
+        drawCandelabra(W*0.87, H*0.88, Math.min(1.05, H/780), t, 2.4);
+      } else {
+        drawCandelabra(36, H*0.92, 0.65, t, 0.0);
+        drawCandelabra(W-36, H*0.92, 0.65, t, 2.4);
+      }
+
+      // 3. MERKEZİ GOTİK SUNAK IŞIK HALESİ
+      const centerGlow=ctx.createRadialGradient(W*0.5,H*0.5,20,W*0.5,H*0.5,Math.min(W,H)*0.6);
+      centerGlow.addColorStop(0,'rgba(175, 32, 42, 0.18)');
+      centerGlow.addColorStop(0.5,'rgba(198, 145, 65, 0.08)');
       centerGlow.addColorStop(1,'rgba(0, 0, 0, 0)');
       ctx.fillStyle=centerGlow;
       ctx.fillRect(0,0,W,H);
 
-      // 4. SÜZÜLEN SICAK OCAK KIVILCIMLARI (Tavern Hearth Embers)
+      // 4. SÜZÜLEN MUM KIVILCIMLARI & KÜLLER
       embers.forEach(e=>{
         e.x+=e.vx;
         e.y+=e.vy;
         if(e.y<-0.05){e.y=1.05;e.x=Math.random()}
         if(e.x<0)e.x=1;
         if(e.x>1)e.x=0;
-        const ex=e.x*W + Math.sin(t*1.8+e.phase)*12;
+        const ex=e.x*W + Math.sin(t*1.6+e.phase)*10;
         const ey=e.y*H;
-        const al=0.35+0.6*Math.abs(Math.sin(t*2.4+e.phase));
+        const al=0.3+0.55*Math.abs(Math.sin(t*2.2+e.phase));
         ctx.save();
-        ctx.fillStyle=e.gold?`rgba(255, 205, 95, ${al})`:`rgba(255, 110, 55, ${al})`;
-        ctx.shadowColor=e.gold?'#ffbe42':'#ff5a26';
-        ctx.shadowBlur=10;
+        ctx.fillStyle=e.crimson?`rgba(225, 65, 75, ${al})`:`rgba(235, 185, 95, ${al})`;
+        ctx.shadowColor=e.crimson?'#d92b38':'#e5b558';
+        ctx.shadowBlur=8;
         ctx.beginPath();
         ctx.arc(ex,ey,e.r,0,Math.PI*2);
         ctx.fill();
