@@ -1467,11 +1467,10 @@ on('#b2',hostRoom);on('#b3',joinRoom);
 
 /* ---------- ORTADAKİ YUVARLAK KULLANILMIŞ JOKER İKONLARI: ÜZERİNE GELİNCE BÜYÜK KART GÖSTERİMİ ---------- */
 (function initUsedJokerHoverInspect(){
-  let hoverTimer=null,activeChip=null;
+  let activeUid=null;
 
   function hideInspect(){
-    if(hoverTimer){clearTimeout(hoverTimer);hoverTimer=null}
-    activeChip=null;
+    activeUid=null;
     const old=document.getElementById('joker-inspect-pop');
     if(old)old.remove();
   }
@@ -1485,38 +1484,30 @@ on('#b2',hostRoom);on('#b3',joinRoom);
     if(!pop){
       pop=document.createElement('div');
       pop.id='joker-inspect-pop';
+      pop.style.cssText='position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;pointer-events:none!important;';
       document.body.appendChild(pop);
     }
     const statusTxt=`${x.o==0?'Senin Jokerin':'Rakibin Jokeri'}${x.neg?' · Etkisiz Kılındı':(BLOCK.has(x.id)?' · Aktif Blok Etkisi':' · Anlık Etki (Kullanıldı)')}${x.id==22?(x.s>0?' (Ekler)':' (Çıkarır)'):''}`;
-    pop.innerHTML=`<div class="jip-card"><img src="${IMG.j[x.id]}" alt="${J[x.id]||''}"><div class="jip-tag ${x.o==0?'mine':'opp'}">${statusTxt}</div></div>`;
+    pop.innerHTML=`<div class="jip-card" style="pointer-events:none!important"><img src="${IMG.j[x.id]}" alt="${J[x.id]||''}" style="pointer-events:none!important"><div class="jip-tag ${x.o==0?'mine':'opp'}" style="pointer-events:none!important">${statusTxt}</div></div>`;
     const im=pop.querySelector('img');
     if(im)hi(im,x.id);
   }
 
-  document.addEventListener('pointerover',e=>{
-    const chip=e.target.closest&&e.target.closest('#fx .e[data-e]');
+  document.addEventListener('pointermove',e=>{
+    const chip=e.target&&e.target.closest&&e.target.closest('#fx .e[data-e]');
     if(!chip){
-      if(activeChip)hideInspect();
+      if(activeUid!==null)hideInspect();
       return;
     }
-    if(chip===activeChip)return;
-    hideInspect();
-    activeChip=chip;
     const u=+chip.dataset.e;
-    hoverTimer=setTimeout(()=>{
-      if(activeChip===chip)showInspect(u);
-    },120);
-  });
-
-  document.addEventListener('pointerout',e=>{
-    if(!activeChip)return;
-    const rel=e.relatedTarget;
-    if(rel&&rel.closest&&rel.closest('#fx .e[data-e]')===activeChip)return;
-    hideInspect();
+    if(u!==activeUid){
+      activeUid=u;
+      showInspect(u);
+    }
   });
 
   document.addEventListener('pointerdown',()=>{
-    if(activeChip)hideInspect();
+    if(activeUid!==null)hideInspect();
   });
 })();
 

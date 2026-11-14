@@ -1324,7 +1324,7 @@ body.drop-ready #fx {
     0 0 18px rgba(230, 195, 106, 0.35) !important;
 }
 .cards .c:hover {
-  transform: translateY(-8px) scale(1.08) !important;
+  transform: scale(1.1) !important;
   z-index: 8;
   box-shadow:
     0 18px 34px rgba(0, 0, 0, 0.95),
@@ -1746,14 +1746,15 @@ body.drop-ready #fx {
 /* --- OYUNCUNUN JOKER ELİ (#hand: Üzerine Gelince Okunacak Kadar Büyüyen & Sürüklenebilen Kartlar) --- */
 #hand {
   position: fixed;
-  bottom: -12px;
+  bottom: 8px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 25;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding: 10px 24px max(12px, env(safe-area-inset-bottom, 12px)) !important;
+  gap: clamp(6px, 0.9vw, 12px);
+  padding: 10px 24px max(8px, env(safe-area-inset-bottom, 8px)) !important;
   min-height: 0 !important;
   pointer-events: none;
   overflow: visible !important;
@@ -1763,25 +1764,26 @@ body.drop-ready #fx {
   pointer-events: auto;
 }
 #hand .j {
-  width: clamp(72px, 11.8dvh, 108px) !important;
-  margin-left: clamp(-16px, -1.6vw, -8px) !important;
+  width: clamp(72px, 11.6dvh, 104px) !important;
+  margin-left: 0 !important;
   border-radius: 8px !important;
   border: 2px solid #d4af64 !important;
   box-shadow:
     0 -4px 18px rgba(0, 0, 0, 0.88),
     0 8px 24px rgba(0, 0, 0, 0.95),
     0 0 14px rgba(212, 168, 85, 0.32) !important;
-  transform-origin: 50% 100%;
-  transition: transform 0.22s cubic-bezier(0.18, 0.9, 0.25, 1.15), box-shadow 0.2s ease, filter 0.2s ease !important;
+  transform-origin: 50% 88% !important;
+  transition: transform 0.18s cubic-bezier(0.2, 0.9, 0.25, 1), box-shadow 0.18s ease, filter 0.18s ease !important;
   cursor: grab;
   touch-action: none;
+  will-change: transform;
 }
 #hand .j:first-child {
   margin-left: 0 !important;
 }
 
 #hand .j:not(.dim):not(.is-dragging):hover {
-  transform: translateY(-92px) scale(2.25) rotate(0deg) !important;
+  transform: scale(2.32) rotate(0deg) !important;
   z-index: 60 !important;
   border-color: #ffe89e !important;
   box-shadow:
@@ -1796,7 +1798,7 @@ body.drop-ready #fx {
   cursor: default;
 }
 #hand .j.dim:not(.is-dragging):hover {
-  transform: translateY(-86px) scale(2.12) rotate(0deg) !important;
+  transform: scale(2.18) rotate(0deg) !important;
   filter: brightness(0.92) saturate(0.85) !important;
   border-color: #c2a668 !important;
   z-index: 60 !important;
@@ -1939,6 +1941,6 @@ body.drop-ready #fx {
   }
   #hand .j:not(.dim):not(.is-dragging):hover,
   #hand .j.dim:not(.is-dragging):hover {
-    transform: translateY(-76px) scale(1.95) rotate(0deg) !important;
+    transform: scale(1.98) rotate(0deg) !important;
   }
 }
