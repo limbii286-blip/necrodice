@@ -55,17 +55,7 @@
     } catch (e) {}
   }
 
-  function propReact(msg) {
-    try {
-      const sr = document.querySelector('#opp .sayrow');
-      if (!sr) return;
-      sr.innerHTML = `<span class="say">${msg}</span>`;
-      clearTimeout(propToastTimer);
-      propToastTimer = setTimeout(() => {
-        if (typeof R === 'function' && typeof G !== 'undefined' && G) R();
-      }, 2800);
-    } catch (e) {}
-  }
+  function propReact() {}
 
   // ============================================================
   // 1) DOKU ÜRETİCİLERİ (Masif Kütük Masa, Karanlık Tuğla Mahzen, Parlayan Gözler)
