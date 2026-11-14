@@ -752,12 +752,24 @@ html, body {
   padding: 0;
   overflow: hidden;
   overscroll-behavior: none;
-  background: #060508;
+  background: #06140e;
 }
 
-/* Tam ekran Arena Tahtası */
+/* Legends of Runeterra Vadi & Yarılmış Taş Tapınak Arka Plan Kanvası */
+#lor-valley-bg {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  z-index: 0;
+  pointer-events: none;
+  display: block;
+}
+
+/* Tam ekran Arena Düzeni (Yanlarda Vadi Yeşilliği Görünür, Ortada Oymalı Taş Savaş Alanı) */
 main {
   position: relative;
+  z-index: 1;
   width: 100vw !important;
   max-width: none !important;
   height: 100dvh !important;
@@ -766,26 +778,14 @@ main {
   padding: 0 !important;
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
-  background:
-    radial-gradient(80% 45% at 50% 24%, rgba(92, 18, 28, 0.26) 0%, transparent 70%),
-    radial-gradient(80% 45% at 50% 76%, rgba(22, 68, 46, 0.24) 0%, transparent 70%),
-    radial-gradient(120% 100% at 50% 50%, #17131a 0%, #0d0a10 62%, #050407 100%);
-  box-shadow:
-    inset 0 0 0 4px #1f1712,
-    inset 0 0 0 6px rgba(196, 154, 72, 0.32),
-    inset 0 0 85px rgba(0, 0, 0, 0.92);
+  background: transparent !important;
+  box-shadow: inset 0 0 65px rgba(0, 0, 0, 0.72) !important;
   overflow: hidden;
   user-select: none;
 }
 
-/* Tahta köşelerinde gotik metal köşebent süslemeleri */
 main::before {
-  content: "";
-  position: fixed;
-  inset: 6px;
-  border: 1px solid rgba(210, 168, 88, 0.18);
-  pointer-events: none;
-  z-index: 5;
+  display: none !important;
 }
 
 /* Rakibin konuşma kutusu kaldırıldı (daha sonra sinematik olarak eklenecek) */
@@ -799,7 +799,7 @@ main::before {
   top: max(10px, env(safe-area-inset-top, 10px));
   left: 14px;
   right: 14px;
-  z-index: 12;
+  z-index: 15;
   display: flex !important;
   align-items: flex-start;
   justify-content: space-between;
@@ -822,10 +822,10 @@ main::before {
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  background: linear-gradient(180deg, rgba(24, 18, 22, 0.94), rgba(11, 8, 12, 0.96));
-  border: 2px solid #6b5230;
-  border-radius: 8px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 220, 150, 0.2);
+  background: linear-gradient(180deg, rgba(16, 28, 22, 0.94), rgba(8, 14, 11, 0.96));
+  border: 2px solid #756038;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 220, 150, 0.25);
 }
 
 /* Sağ üst köşe: Düello Sayacı ve Menü Düğmesi */
@@ -837,10 +837,10 @@ main::before {
   align-items: center;
   gap: 10px;
   padding: 7px 14px;
-  background: linear-gradient(180deg, rgba(24, 18, 22, 0.94), rgba(11, 8, 12, 0.96));
-  border: 2px solid #6b5230;
-  border-radius: 8px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 220, 150, 0.2);
+  background: linear-gradient(180deg, rgba(16, 28, 22, 0.94), rgba(8, 14, 11, 0.96));
+  border: 2px solid #756038;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 220, 150, 0.25);
 }
 
 #hdr .lab {
@@ -878,9 +878,9 @@ main::before {
   padding: 7px 12px;
   font: 700 15px/1 'Cinzel', var(--mf), serif;
   color: #ebd5a7;
-  background: linear-gradient(180deg, #281d16, #140e0b);
+  background: linear-gradient(180deg, #1b3024, #0d1812);
   border: 2px solid #8a6a36;
-  border-radius: 8px;
+  border-radius: 10px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 220, 150, 0.25);
   transition: transform 0.15s, border-color 0.15s;
 }
@@ -890,11 +890,15 @@ main::before {
   transform: translateY(-1px);
 }
 
-/* --- İKİYE BÖLÜNMÜŞ SAVAŞ ALANLARI (#opp ÜST YARI, #me ALT YARI) --- */
+/* --- İKİYE BÖLÜNMÜŞ MERKEZİ SAVAŞ TAHTASI (#opp ÜST YARI, #me ALT YARI) ---
+   Yanlarda (sol ve sağ %15.5) Legends of Runeterra vadisi ve yeşilliği görünür! */
 .zone {
   position: relative;
-  margin: 0 !important;
-  padding: 8px 20px !important;
+  z-index: 2;
+  width: min(calc(100vw - 72px), 69vw) !important;
+  max-width: 1120px;
+  margin: 0 auto !important;
+  padding: 8px 18px !important;
   border: none !important;
   border-radius: 0 !important;
   background: none !important;
@@ -906,35 +910,60 @@ main::before {
   justify-content: space-between;
   min-height: 0;
   overflow: visible;
+  transition: box-shadow 0.25s ease, background 0.25s ease;
 }
 
-/* Üst Yarı (Rakip Tahtası): Kahraman Üst-Ortada, Kartlar Ortadaki Çizgiye Yakın */
+/* Üst Yarı (Rakip Tahtası): Kahraman Üst-Ortada, Kartlar Ortadaki Yarığa Yakın */
 #opp.zone {
   padding-top: max(8px, env(safe-area-inset-top, 8px)) !important;
-  padding-bottom: 10px !important;
-  background:
-    radial-gradient(65% 80% at 50% 100%, rgba(120, 22, 32, 0.18), transparent 75%),
-    linear-gradient(180deg, rgba(10, 7, 12, 0.65) 0%, rgba(28, 14, 19, 0.35) 100%) !important;
+  padding-bottom: 12px !important;
+  background: radial-gradient(65% 85% at 50% 100%, rgba(165, 32, 48, 0.14), transparent 72%) !important;
 }
 #opp.zone.act {
-  background:
-    radial-gradient(60% 85% at 50% 100%, rgba(220, 45, 60, 0.25), transparent 75%),
-    linear-gradient(180deg, rgba(25, 10, 14, 0.7) 0%, rgba(48, 16, 22, 0.45) 100%) !important;
+  background: radial-gradient(65% 90% at 50% 100%, rgba(235, 50, 68, 0.24), transparent 75%) !important;
 }
 
-/* Alt Yarı (Oyuncu Tahtası): Kartlar Ortadaki Çizgiye Yakın, Kahraman Alt-Ortada */
+/* Alt Yarı (Oyuncu Tahtası): Kartlar Ortadaki Yarığa Yakın, Kahraman Alt-Ortada */
 #me.zone {
   flex-direction: column-reverse;
-  padding-top: 10px !important;
-  padding-bottom: clamp(74px, 12.5dvh, 118px) !important;
-  background:
-    radial-gradient(65% 80% at 50% 0%, rgba(30, 95, 58, 0.18), transparent 75%),
-    linear-gradient(0deg, rgba(8, 12, 10, 0.75) 0%, rgba(16, 28, 22, 0.35) 100%) !important;
+  padding-top: 12px !important;
+  padding-bottom: clamp(78px, 13dvh, 122px) !important;
+  background: radial-gradient(65% 85% at 50% 0%, rgba(42, 165, 98, 0.14), transparent 72%) !important;
 }
 #me.zone.act {
-  background:
-    radial-gradient(60% 85% at 50% 0%, rgba(85, 215, 120, 0.22), transparent 75%),
-    linear-gradient(0deg, rgba(10, 20, 14, 0.78) 0%, rgba(22, 46, 32, 0.45) 100%) !important;
+  background: radial-gradient(65% 90% at 50% 0%, rgba(90, 235, 145, 0.22), transparent 75%) !important;
+}
+
+/* Joker ortaya sürüklenirken savaş alanının parlaması (Drop Zone Highlight) */
+body.dragging-joker #fx::after {
+  content: "JOKERİ BURAYA BIRAK";
+  position: absolute;
+  left: 50%;
+  top: -44px;
+  transform: translateX(-50%);
+  padding: 5px 18px;
+  border-radius: 20px;
+  background: rgba(14, 34, 24, 0.94);
+  border: 2px solid #7dff8a;
+  color: #d4ffe0;
+  font: 700 14px/1.1 'Cinzel', var(--mf), serif;
+  letter-spacing: 2px;
+  box-shadow: 0 0 24px rgba(125, 255, 138, 0.75);
+  pointer-events: none;
+  z-index: 30;
+  display: block !important;
+  white-space: nowrap;
+}
+body.drop-ready #opp.zone,
+body.drop-ready #me.zone {
+  box-shadow: inset 0 0 48px rgba(125, 255, 138, 0.25) !important;
+}
+body.drop-ready #fx {
+  border-color: #7dff8a !important;
+  box-shadow:
+    0 0 42px rgba(125, 255, 138, 0.65),
+    0 14px 36px rgba(0, 0, 0, 0.95),
+    inset 0 0 28px rgba(125, 255, 138, 0.35) !important;
 }
 
 /* --- HEARTHSTONE / RUNETERRA TARZI ORTALANMIŞ KAHRAMAN PORTRELERİ (.who) --- */
@@ -946,41 +975,41 @@ main::before {
   align-items: center;
   justify-content: center;
   gap: 0;
-  padding: 6px 18px;
-  background: linear-gradient(180deg, #211819 0%, #110c0e 100%);
-  border: 2px solid #8a6b38;
-  border-radius: 46px;
+  padding: 6px 20px;
+  background: linear-gradient(180deg, #1e2420 0%, #0e1310 100%);
+  border: 2.5px solid #9c7a44;
+  border-radius: 48px;
   box-shadow:
-    0 10px 28px rgba(0, 0, 0, 0.92),
-    0 0 0 1px #000,
-    inset 0 1px 0 rgba(255, 225, 165, 0.28),
+    0 12px 28px rgba(0, 0, 0, 0.92),
+    0 0 0 2px #090d0b,
+    inset 0 1px 0 rgba(255, 230, 175, 0.32),
     inset 0 -3px 8px rgba(0, 0, 0, 0.85);
   min-height: 0 !important;
 }
 
 /* Sırası gelen kahramanın çerçevesi parlar */
 #opp.act .who {
-  border-color: #ec4452;
+  border-color: #ff5464;
   box-shadow:
-    0 10px 30px rgba(0, 0, 0, 0.92),
-    0 0 24px rgba(236, 68, 82, 0.55),
-    inset 0 1px 0 rgba(255, 180, 180, 0.4);
+    0 12px 30px rgba(0, 0, 0, 0.92),
+    0 0 26px rgba(236, 68, 82, 0.6),
+    inset 0 1px 0 rgba(255, 180, 180, 0.45);
 }
 #me.act .who {
   border-color: #7dff8a;
   box-shadow:
-    0 10px 30px rgba(0, 0, 0, 0.92),
-    0 0 24px rgba(125, 255, 138, 0.48),
-    inset 0 1px 0 rgba(200, 255, 210, 0.4);
+    0 12px 30px rgba(0, 0, 0, 0.92),
+    0 0 26px rgba(125, 255, 138, 0.55),
+    inset 0 1px 0 rgba(200, 255, 210, 0.45);
 }
 
-/* Kahraman Portresi (Hearthstone Kemer Çerçevesi — Tam Ortada) */
+/* Kahraman Portresi (Hearthstone/Runeterra Kemer Çerçevesi — Tam Ortada) */
 .who .av {
   order: 2;
   width: clamp(64px, 9.2dvh, 86px) !important;
   height: clamp(64px, 9.2dvh, 86px) !important;
   border-radius: 50% 50% 14px 14px !important;
-  border: 3px solid #d4af5a !important;
+  border: 3px solid #e0bc68 !important;
   box-shadow:
     0 0 0 2px #120c08,
     0 6px 18px rgba(0, 0, 0, 0.95),
@@ -989,10 +1018,7 @@ main::before {
   background: #0c080a;
   transition: transform 0.2s ease, border-color 0.2s ease;
   z-index: 2;
-}
-.who .av:hover {
-  transform: scale(1.07);
-  border-color: #ffe394 !important;
+  cursor: default;
 }
 
 /* Sol Kanat: İsim + Joker Mana Kristalleri */
@@ -1002,12 +1028,12 @@ main::before {
   flex-direction: column;
   align-items: flex-end;
   text-align: right;
-  min-width: clamp(105px, 16vw, 165px);
+  min-width: clamp(105px, 15vw, 165px);
   padding-right: 4px;
 }
 .who .nm b {
   font: 700 clamp(15px, 2.2dvh, 21px)/1.1 'Cinzel', var(--hf), serif !important;
-  color: #f2e3c2 !important;
+  color: #f5e6c8 !important;
   letter-spacing: 0.8px !important;
   text-shadow: 0 2px 4px #000 !important;
 }
@@ -1019,7 +1045,7 @@ main::before {
   margin-top: 4px;
 }
 
-/* Joker Hakları: Hearthstone Mana Kristali Elmasları */
+/* Joker Hakları: Runeterra / Hearthstone Mana Kristali Elmasları */
 .jpips {
   display: inline-flex;
   gap: 6px;
@@ -1039,7 +1065,7 @@ main::before {
   box-shadow: 0 0 8px rgba(90, 210, 255, 0.85) !important;
 }
 
-/* Sağ Kanat: Skor Küresi / Toplam Kristali (Hearthstone Can/Saldırı Rozeti Gibi) */
+/* Sağ Kanat: Skor Küresi / Toplam Kristali */
 .who .tot {
   order: 3;
   display: flex;
@@ -1087,7 +1113,7 @@ main::before {
 .zone .cards {
   flex: 1;
   width: 100%;
-  max-width: 1100px;
+  max-width: 1040px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1097,10 +1123,10 @@ main::before {
   perspective: 900px;
 }
 
-/* Masaya Atılan Sayı Kartları: Fiziksel Hearthstone/Runeterra Kart Hissi */
+/* Masaya Atılan Sayı Kartları: Fiziksel Runeterra/Hearthstone Kart Plakası Hissi */
 .cards .c {
-  width: clamp(62px, 11.2dvh, 102px) !important;
-  height: calc(clamp(62px, 11.2dvh, 102px) * 1.45) !important;
+  width: clamp(64px, 11.4dvh, 104px) !important;
+  height: calc(clamp(64px, 11.4dvh, 104px) * 1.45) !important;
   border-radius: 8px !important;
   border: 2px solid #c9a968 !important;
   box-shadow:
@@ -1108,6 +1134,7 @@ main::before {
     0 0 0 1px #0d0806,
     inset 0 0 0 1px rgba(255, 230, 175, 0.25) !important;
   transition: transform 0.2s cubic-bezier(0.2, 0.85, 0.3, 1.15), box-shadow 0.2s ease !important;
+  cursor: default;
 }
 .cards .c.n {
   border: 2px solid #9e7f46 !important;
@@ -1120,6 +1147,7 @@ main::before {
 }
 .cards .c.mc {
   border-color: #e6c36a !important;
+  cursor: pointer !important;
   box-shadow:
     0 12px 24px rgba(0, 0, 0, 0.9),
     0 0 0 2px rgba(230, 195, 106, 0.55),
@@ -1133,63 +1161,87 @@ main::before {
     0 0 22px rgba(230, 195, 110, 0.5) !important;
 }
 
-/* --- ORTA AYIRICI SAVAŞ HATTI (#fx: Sol Deste, Orta 21 Mührü & Aktif Jokerler, Sağ Pas/Tur Butonu) --- */
+/* --- ORTADAN İKİYE YARILMIŞ MERKEZİ KANYON / SAVAŞ YARIĞI (#fx) ---
+   Legends of Runeterra gibi sol ve sağ uçlarda yuvarlak mekanik buton yuvaları,
+   ortada derin taş yarık, enerji nehri ve kilit taşı (21 mührü) */
 #fx {
   position: relative;
   z-index: 9;
-  width: 100vw;
-  height: clamp(68px, 10.5dvh, 88px);
-  margin: 0 !important;
-  padding: 0 clamp(14px, 3vw, 36px) !important;
+  width: min(calc(100vw - 44px), 74vw) !important;
+  max-width: 1180px;
+  height: clamp(72px, 11dvh, 92px);
+  margin: 0 auto !important;
+  padding: 0 clamp(10px, 1.8vw, 22px) !important;
   display: flex !important;
   align-items: center;
   justify-content: space-between;
-  border: none !important;
-  border-top: 3px solid #6b502b !important;
-  border-bottom: 3px solid #6b502b !important;
-  border-radius: 0 !important;
+  border: 2.5px solid #7d6238 !important;
+  border-radius: 52px !important;
   background:
-    linear-gradient(90deg,
-      rgba(48, 12, 18, 0.95) 0%,
-      rgba(22, 14, 18, 0.98) 35%,
-      rgba(16, 12, 15, 0.98) 50%,
-      rgba(14, 28, 20, 0.98) 65%,
-      rgba(12, 42, 24, 0.95) 100%) !important;
+    radial-gradient(50% 100% at 50% 50%, rgba(25, 72, 68, 0.45) 0%, transparent 70%),
+    linear-gradient(180deg,
+      rgba(8, 12, 14, 0.96) 0%,
+      rgba(16, 36, 34, 0.92) 48%,
+      rgba(22, 12, 18, 0.92) 52%,
+      rgba(6, 9, 10, 0.97) 100%) !important;
   box-shadow:
-    0 0 35px rgba(0, 0, 0, 0.95),
-    inset 0 2px 0 rgba(255, 220, 150, 0.22),
-    inset 0 -2px 0 rgba(255, 220, 150, 0.22) !important;
-}
-#fx::before,
-#fx::after {
-  display: none !important;
+    0 14px 36px rgba(0, 0, 0, 0.95),
+    0 0 0 3px #111714,
+    inset 0 8px 18px rgba(0, 0, 0, 0.92),
+    inset 0 -8px 18px rgba(0, 0, 0, 0.92),
+    inset 0 0 28px rgba(72, 215, 185, 0.22) !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Sol (Deste + Kart Çek) ve Sağ (Pas / Turu Bitir) Kontrolleri */
+/* Yarığın tam ortasından geçen parlayan yatay çatlak çizgisi */
+#fx::before {
+  content: "" !important;
+  display: block !important;
+  position: absolute;
+  left: 96px;
+  right: 96px;
+  top: 50%;
+  height: 3px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg,
+    rgba(236, 68, 82, 0.85) 0%,
+    rgba(94, 234, 212, 0.95) 35%,
+    rgba(255, 220, 120, 1) 50%,
+    rgba(94, 234, 212, 0.95) 65%,
+    rgba(125, 255, 138, 0.85) 100%) !important;
+  box-shadow: 0 0 16px rgba(94, 234, 212, 0.85), 0 0 28px rgba(125, 255, 138, 0.55);
+  z-index: 1;
+  pointer-events: none;
+}
+#fx::after {
+  display: none;
+}
+
+/* Sol (Deste + Yuvarlak Kart Çek Küresi) ve Sağ (Yuvarlak Pas / Tur Küresi) Kontrolleri */
 #fx .ctl {
   position: absolute;
   inset: 0;
-  padding: 0 clamp(14px, 3vw, 36px);
+  padding: 0 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   pointer-events: none;
-  z-index: 4;
+  z-index: 5;
 }
 #fx .ctl .cl,
 #fx .ctl #pass {
   pointer-events: auto;
 }
 
-/* Sol Kanat: 3B Görünümlü Deste Yuvası + Kart Çek Butonu */
+/* Sol Kanat: Yuvarlak Kart Çek Küresi + 3B Deste Yuvası */
 #fx .cl {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 #fx .deck {
-  width: clamp(44px, 6.8dvh, 58px) !important;
-  height: calc(clamp(44px, 6.8dvh, 58px) * 1.42) !important;
+  width: clamp(44px, 6.6dvh, 56px) !important;
+  height: calc(clamp(44px, 6.6dvh, 56px) * 1.42) !important;
   margin: 0 !important;
   border-radius: 6px !important;
   border: 2px solid #d4a855 !important;
@@ -1201,7 +1253,7 @@ main::before {
   transition: transform 0.16s ease, box-shadow 0.16s ease;
 }
 #fx .deck:hover {
-  transform: translateY(-3px) scale(1.05);
+  transform: translateY(-3px) scale(1.06);
 }
 #fx .deck b {
   bottom: -10px !important;
@@ -1209,56 +1261,117 @@ main::before {
   border: 1.5px solid #d4a855 !important;
   color: #f5deb3 !important;
   border-radius: 8px !important;
-  font: 700 14px/1.2 'Cinzel', var(--mf), serif !important;
-  padding: 1px 7px !important;
+  font: 700 13px/1.2 'Cinzel', var(--mf), serif !important;
+  padding: 1px 6px !important;
 }
 
-/* Kart Çek ve Pas / Turu Bitir Düğmeleri (Runeterra / Hearthstone Mekanik Buton Stili) */
+/* --- YUVARLAK MEKANİK KÜRE BUTONLAR (#draw "Kart çek" ve #pass "Pas / Turu bitir") ---
+   Legends of Runeterra'daki yuvarlak mekanik tur/aksiyon düğmesi tasarımı */
 #fx #draw,
 #fx #pass {
-  font: 700 clamp(14px, 2.1dvh, 19px)/1 'Cinzel', var(--hf), serif !important;
-  letter-spacing: 1.5px !important;
-  padding: clamp(10px, 1.8dvh, 15px) clamp(16px, 2.4vw, 26px) !important;
-  border-radius: 28px !important;
+  width: clamp(68px, 10.6dvh, 86px) !important;
+  height: clamp(68px, 10.6dvh, 86px) !important;
+  min-width: 0 !important;
+  padding: 6px !important;
+  border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  white-space: normal !important;
+  word-spacing: 999px; /* iki kelimeli metinleri ("Kart çek", "Turu bitir") küre içinde temiz iki satıra böler */
+  font: 800 clamp(12px, 1.85dvh, 16px)/1.08 'Cinzel', var(--hf), serif !important;
+  letter-spacing: 0.8px !important;
   text-transform: uppercase;
-  box-shadow:
-    0 6px 18px rgba(0, 0, 0, 0.9),
-    inset 0 2px 0 rgba(255, 255, 255, 0.28),
-    inset 0 -4px 0 rgba(0, 0, 0, 0.45) !important;
-}
-#fx #draw {
-  background: linear-gradient(180deg, #b8232e 0%, #6e0e16 100%) !important;
-  border: 2px solid #f0a878 !important;
-  color: #fff2d8 !important;
-}
-#fx #draw:hover:not(:disabled) {
-  background: linear-gradient(180deg, #d42c38 0%, #87121c 100%) !important;
-  box-shadow: 0 0 20px rgba(236, 68, 82, 0.65), 0 6px 18px rgba(0, 0, 0, 0.9) !important;
-}
-#fx #pass {
-  min-width: clamp(105px, 14vw, 150px);
-  background: linear-gradient(180deg, #247842 0%, #114222 100%) !important;
-  border: 2px solid #8de6a3 !important;
-  color: #ecfff0 !important;
-}
-#fx #pass:not(.alt) {
-  background: linear-gradient(180deg, #d4881c 0%, #7d4608 100%) !important;
-  border-color: #ffe082 !important;
-  color: #fff8e6 !important;
-  box-shadow: 0 0 22px rgba(240, 175, 60, 0.65), 0 6px 18px rgba(0, 0, 0, 0.9) !important;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.2), box-shadow 0.18s ease, filter 0.18s ease !important;
 }
 
-/* Orta Hattaki Oynanmış Blok Joker Yuvaları (#jo sol-orta, #jm sağ-orta) */
+/* Kart Çek Küresi (Kızıl-Altın Mekanik Küre) */
+#fx #draw {
+  background:
+    radial-gradient(circle at 32% 28%, #ff6b78 0%, #c91e2c 48%, #690b13 88%, #380509 100%) !important;
+  border: 3px solid #f2c97d !important;
+  color: #fff6e0 !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95) !important;
+  box-shadow:
+    0 0 0 4px #17120e,
+    0 0 0 6px #8c6a38,
+    0 10px 24px rgba(0, 0, 0, 0.95),
+    0 0 18px rgba(236, 68, 82, 0.55),
+    inset 0 4px 8px rgba(255, 230, 210, 0.42),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.7) !important;
+}
+#fx #draw:hover:not(:disabled) {
+  transform: scale(1.08) !important;
+  filter: brightness(1.12);
+  box-shadow:
+    0 0 0 4px #17120e,
+    0 0 0 6px #c99b52,
+    0 12px 28px rgba(0, 0, 0, 0.95),
+    0 0 28px rgba(255, 84, 100, 0.85),
+    inset 0 4px 10px rgba(255, 240, 220, 0.55),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.7) !important;
+}
+#fx #draw:active:not(:disabled),
+#fx #pass:active:not(:disabled) {
+  transform: scale(0.95) !important;
+}
+
+/* Pas / Turu Bitir Küresi (Zümrüt / Kehribar Runeterra Mekanik Küresi) */
+#fx #pass {
+  background:
+    radial-gradient(circle at 32% 28%, #68f596 0%, #1d8a43 48%, #0c4520 88%, #052410 100%) !important;
+  border: 3px solid #d4f7dc !important;
+  color: #f2fff5 !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95) !important;
+  box-shadow:
+    0 0 0 4px #111c15,
+    0 0 0 6px #6b8c6e,
+    0 10px 24px rgba(0, 0, 0, 0.95),
+    0 0 20px rgba(101, 240, 142, 0.55),
+    inset 0 4px 8px rgba(220, 255, 230, 0.45),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.7) !important;
+}
+#fx #pass:hover:not(:disabled) {
+  transform: scale(1.08) !important;
+  filter: brightness(1.12);
+  box-shadow:
+    0 0 0 4px #111c15,
+    0 0 0 6px #8de6a3,
+    0 12px 28px rgba(0, 0, 0, 0.95),
+    0 0 30px rgba(125, 255, 138, 0.85),
+    inset 0 4px 10px rgba(230, 255, 235, 0.6),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Hamle yapıldıktan sonra "Turu bitir" moduna geçen kehribar-altın küre */
+#fx #pass:not(.alt) {
+  background:
+    radial-gradient(circle at 32% 28%, #ffe078 0%, #d98218 48%, #7a3e06 88%, #3d1d02 100%) !important;
+  border-color: #fff0b3 !important;
+  color: #fffdf5 !important;
+  box-shadow:
+    0 0 0 4px #1c140c,
+    0 0 0 6px #c99642,
+    0 10px 24px rgba(0, 0, 0, 0.95),
+    0 0 26px rgba(245, 185, 65, 0.75),
+    inset 0 4px 8px rgba(255, 250, 220, 0.5),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Orta Yarıktaki Oynanmış Blok Joker Yuvaları (#jo sol-orta, #jm sağ-orta) */
 #fx .jk {
   width: 100%;
-  max-width: 920px;
+  max-width: 820px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
   align-items: center;
   min-height: 0 !important;
   pointer-events: none;
-  z-index: 2;
+  z-index: 3;
 }
 #fx .jh {
   display: flex;
@@ -1277,11 +1390,14 @@ main::before {
 #fx .e {
   height: clamp(50px, 7.6dvh, 68px) !important;
   border-radius: 6px !important;
-  transition: transform 0.16s ease;
+  transition: transform 0.2s cubic-bezier(0.18, 0.9, 0.25, 1.15), box-shadow 0.2s ease;
+  cursor: default;
 }
+/* Masadaki aktif blok jokerlerin üzerine gelince okunabilecek kadar büyür */
 #fx .e:hover {
-  transform: scale(1.14) translateY(-4px);
-  z-index: 10;
+  transform: scale(2.5) translateY(-16px) !important;
+  z-index: 60 !important;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.95), 0 0 26px rgba(240, 200, 95, 0.8) !important;
 }
 
 /* Merkez Kilit Taşı: Hedef Mührü (21 / En az) */
@@ -1289,6 +1405,7 @@ main::before {
   width: clamp(74px, 11.2dvh, 96px) !important;
   height: clamp(74px, 11.2dvh, 96px) !important;
   border: 3px solid #f0ca78 !important;
+  z-index: 4 !important;
   box-shadow:
     0 0 0 4px #170e0c,
     0 0 0 6px #7a5c2e,
@@ -1303,55 +1420,99 @@ main::before {
   font: 700 clamp(20px, 3.1dvh, 28px)/1 'Cinzel', var(--mf), serif !important;
 }
 
-/* --- OYUNCUNUN JOKER ELİ (#hand: Hearthstone Tarzı Alt Yelpaze) --- */
+/* --- OYUNCUNUN JOKER ELİ (#hand: Üzerine Gelince Okunacak Kadar Büyüyen & Sürüklenebilen Kartlar) --- */
 #hand {
   position: fixed;
-  bottom: -14px;
+  bottom: -12px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 11;
+  z-index: 25;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding: 10px 20px max(12px, env(safe-area-inset-bottom, 12px)) !important;
+  padding: 10px 24px max(12px, env(safe-area-inset-bottom, 12px)) !important;
   min-height: 0 !important;
   pointer-events: none;
+  overflow: visible !important;
 }
 #hand .j,
 #hand .spec-notice {
   pointer-events: auto;
 }
 #hand .j {
-  width: clamp(68px, 11.5dvh, 106px) !important;
-  margin-left: clamp(-18px, -1.8vw, -10px) !important;
+  width: clamp(72px, 11.8dvh, 108px) !important;
+  margin-left: clamp(-16px, -1.6vw, -8px) !important;
   border-radius: 8px !important;
   border: 2px solid #d8be82 !important;
   box-shadow:
     0 -4px 18px rgba(0, 0, 0, 0.85),
     0 8px 24px rgba(0, 0, 0, 0.95),
     0 0 14px rgba(125, 255, 138, 0.35) !important;
+  transform-origin: 50% 100%;
   transition: transform 0.22s cubic-bezier(0.18, 0.9, 0.25, 1.15), box-shadow 0.2s ease, filter 0.2s ease !important;
+  cursor: grab;
+  touch-action: none;
 }
 #hand .j:first-child {
   margin-left: 0 !important;
 }
-#hand .j:not(.dim):hover {
-  transform: translateY(-36px) scale(1.24) rotate(0deg) !important;
-  z-index: 20 !important;
+
+/* Jokerin üzerine gelince yazıları rahatça okunacak kadar büyür ("okuyabilecek kadar büyüsün") */
+#hand .j:not(.dim):not(.is-dragging):hover {
+  transform: translateY(-92px) scale(2.25) rotate(0deg) !important;
+  z-index: 60 !important;
   border-color: #ffe89e !important;
   box-shadow:
-    0 16px 38px rgba(0, 0, 0, 0.95),
-    0 0 28px rgba(240, 200, 95, 0.85) !important;
+    0 22px 48px rgba(0, 0, 0, 0.96),
+    0 0 32px rgba(240, 200, 95, 0.9) !important;
 }
+
 #hand .j.dim {
   filter: brightness(0.48) saturate(0.45) !important;
   border-color: #4a3f35 !important;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9) !important;
+  cursor: default;
 }
-#hand .j.dim:hover {
-  transform: translateY(-24px) scale(1.15) rotate(0deg) !important;
-  filter: brightness(0.75) saturate(0.75) !important;
-  z-index: 18 !important;
+/* Oynanamayan (dim) jokerlerin de üzerine gelince ne işe yaradığı okunabilsin */
+#hand .j.dim:not(.is-dragging):hover {
+  transform: translateY(-86px) scale(2.12) rotate(0deg) !important;
+  filter: brightness(0.92) saturate(0.85) !important;
+  border-color: #c2a668 !important;
+  z-index: 60 !important;
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.96) !important;
+}
+
+/* Sürüklenen Joker Kartı (Ortaya Sürükleyerek Atma) */
+#hand .j.is-dragging {
+  transform: translate3d(var(--drag-x, 0px), var(--drag-y, 0px), 0) scale(1.48) rotate(-2deg) !important;
+  transition: none !important;
+  z-index: 100 !important;
+  cursor: grabbing !important;
+  border-color: #ffe89e !important;
+  box-shadow:
+    0 24px 50px rgba(0, 0, 0, 0.95),
+    0 0 28px rgba(240, 200, 95, 0.85) !important;
+}
+#hand .j.is-dragging.drop-hot {
+  border-color: #7dff8a !important;
+  box-shadow:
+    0 26px 56px rgba(0, 0, 0, 0.95),
+    0 0 36px rgba(125, 255, 138, 0.95),
+    0 0 70px rgba(255, 215, 90, 0.8) !important;
+}
+
+/* Rakip Joker Oynadığında Ortada Beliren Kart (Kapat Butonu Yok, Otomatik Geçer) */
+#cast {
+  pointer-events: auto;
+  background: radial-gradient(circle at 50% 50%, rgba(16, 36, 28, 0.72), rgba(4, 8, 6, 0.82)) !important;
+  z-index: 45 !important;
+}
+#cast img {
+  height: min(56dvh, 440px) !important;
+  width: auto !important;
+  border-radius: 10px !important;
+  border: 3px solid #f0ca78 !important;
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.95), 0 0 45px rgba(236, 68, 82, 0.8) !important;
 }
 
 /* --- HEDEF SEÇİM BANNER'I (#prompt: Joker Hedefi Seçerken Ortada Yüzen Rün Şeridi) --- */
@@ -1360,7 +1521,7 @@ main::before {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  z-index: 16;
+  z-index: 32;
   margin: 0 !important;
   padding: 10px 22px;
   background: linear-gradient(180deg, rgba(28, 18, 14, 0.97), rgba(12, 8, 6, 0.98));
@@ -1373,7 +1534,15 @@ main::before {
 }
 
 /* Mobil ve Dar Ekran Uyumluluğu */
-@media (max-width: 680px) {
+@media (max-width: 720px) {
+  .zone {
+    width: calc(100vw - 28px) !important;
+    padding: 6px 8px !important;
+  }
+  #fx {
+    width: calc(100vw - 16px) !important;
+    padding: 0 6px !important;
+  }
   #hdr {
     top: max(6px, env(safe-area-inset-top, 6px));
     left: 8px;
@@ -1416,25 +1585,26 @@ main::before {
   .who .jbs {
     display: none;
   }
-  #fx {
-    padding: 0 8px !important;
-  }
   #fx .ctl {
-    padding: 0 8px;
+    padding: 0 4px;
   }
   #fx .cl {
     gap: 6px;
   }
   #fx #draw,
   #fx #pass {
-    padding: 9px 12px !important;
-    font-size: 13px !important;
-    min-width: 0;
+    width: clamp(58px, 9.2dvh, 72px) !important;
+    height: clamp(58px, 9.2dvh, 72px) !important;
+    font-size: 11px !important;
   }
   #fx .jh.o {
     padding-right: 44px !important;
   }
   #fx .jh.m {
     padding-left: 44px !important;
+  }
+  #hand .j:not(.dim):not(.is-dragging):hover,
+  #hand .j.dim:not(.is-dragging):hover {
+    transform: translateY(-76px) scale(1.95) rotate(0deg) !important;
   }
 }
