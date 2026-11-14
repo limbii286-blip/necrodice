@@ -756,7 +756,7 @@ body.view-3d #cast{display:none!important}
 body.view-3d .zone{background:none!important;border-color:transparent!important;box-shadow:none!important;outline:none!important}
 /* Sadece rakibin konuşma cümlesi sinematik altyazı olarak kukuletasının altında süzülür */
 body.view-3d #opp{padding:0!important;margin:0!important;pointer-events:none}
-body.view-3d #opp .sayrow{position:fixed;top:16%;left:50%;transform:translateX(-50%);width:min(90vw,540px);text-align:center;z-index:4;pointer-events:none;justify-content:center}
+body.view-3d #opp .sayrow{position:fixed;top:25%;left:50%;transform:translateX(-50%);width:min(90vw,540px);text-align:center;z-index:4;pointer-events:none;justify-content:center}
 body.view-3d #opp .say{background:rgba(6,4,8,0.78);border:1px solid rgba(180,130,65,0.4);padding:6px 16px;border-radius:4px;color:#e8d6b3;text-shadow:0 2px 6px #000;box-shadow:0 6px 20px rgba(0,0,0,0.85)}
 
 /* 3D: zar sahnesi, sonuç pencereleri ve kart inceleme masada; sadece Ayarlar/Kodeks/Rehber (#pc ve .cdx/.gd/input) modal olarak açılır */
