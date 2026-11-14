@@ -1608,3 +1608,365 @@ body.drop-ready #fx {
     transform: translateY(-76px) scale(1.95) rotate(0deg) !important;
   }
 }
+
+/* ============================================================
+   HEARTHSTONE İLHAMLI TAM EKRAN ANA MENÜ ("THE TAVERN BOX")
+   - Tam ekran (100vw x 100dvh) taverna ahşap masası, mumlar, sikkeler ve kartlar (#hs-menu-bg)
+   - Ortada oymalı ahşap ve altın işlemeli Hearthstone Sandığı (#mb2)
+   - Üstte dönen rünlü Hearthstone Madalyonu, ortada kabartmalı oyun modu plakaları, altta çekmece düğmeleri
+   ============================================================ */
+#menu {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  padding: clamp(10px, 2.5dvh, 28px) clamp(12px, 3vw, 40px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #120905 !important;
+  overflow: hidden !important;
+  z-index: 35 !important;
+}
+#menu[hidden] {
+  display: none !important;
+}
+/* Eski dikey poster arka planını tamamen kaldır */
+#menu::before,
+#menu::after,
+#mb2::before {
+  display: none !important;
+  content: none !important;
+  background: none !important;
+}
+
+#hs-menu-bg {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  z-index: 0;
+  pointer-events: none;
+  display: block;
+}
+
+/* Merkezi Hearthstone Oymalı Ahşap & Altın Sandık Çerçevesi */
+#mb2 {
+  position: relative !important;
+  z-index: 2 !important;
+  width: min(94vw, 680px) !important;
+  max-width: 680px !important;
+  height: auto !important;
+  max-height: calc(100dvh - 24px) !important;
+  padding: clamp(18px, 3.2dvh, 32px) clamp(18px, 3.5vw, 38px) clamp(16px, 2.6dvh, 26px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: clamp(10px, 1.8dvh, 18px) !important;
+  border-radius: 28px !important;
+  border: 4px solid #c99b49 !important;
+  background:
+    radial-gradient(85% 65% at 50% 18%, rgba(255, 200, 105, 0.16) 0%, transparent 70%),
+    radial-gradient(90% 80% at 50% 50%, #382214 0%, #22130b 68%, #140b06 100%) !important;
+  box-shadow:
+    0 0 0 4px #170c06,
+    0 0 0 8px #6e4e22,
+    0 28px 70px rgba(0, 0, 0, 0.96),
+    0 0 65px rgba(235, 165, 60, 0.25),
+    inset 0 2px 0 rgba(255, 235, 180, 0.45),
+    inset 0 0 42px rgba(0, 0, 0, 0.85) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* Sandık İç Altın Telkari Çerçevesi */
+#mb2::after {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border: 1.5px solid rgba(235, 195, 115, 0.38);
+  border-radius: 20px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Üst Başlık: Hearthstone Sarmal Madalyonu + Kabartma NECRODICE Logosu + Parşömen Kuşak */
+.hs-header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 2px;
+}
+
+.hs-medallion {
+  position: relative;
+  width: clamp(64px, 9.8dvh, 86px);
+  height: clamp(64px, 9.8dvh, 86px);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #63e2ff 0%, #1668b8 48%, #09244f 85%, #041026 100%);
+  border: 4px solid #f0c86e;
+  box-shadow:
+    0 0 0 3px #1c1008,
+    0 0 0 6px #8c6730,
+    0 10px 26px rgba(0, 0, 0, 0.92),
+    0 0 32px rgba(80, 200, 255, 0.65),
+    inset 0 4px 10px rgba(255, 255, 255, 0.55),
+    inset 0 -6px 14px rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.hs-swirl {
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 240, 185, 0.75);
+  animation: hsSpin 18s linear infinite;
+}
+@keyframes hsSpin {
+  to { transform: rotate(360deg); }
+}
+
+.hs-rune {
+  position: relative;
+  z-index: 2;
+  font-size: clamp(28px, 4.4dvh, 38px);
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.85));
+}
+
+.hs-title {
+  margin: 0 !important;
+  font: 900 clamp(34px, 5.8dvh, 54px)/1 'Cinzel', var(--hf), serif !important;
+  letter-spacing: 4px !important;
+  background: linear-gradient(180deg, #fff7d6 0%, #f5c85c 45%, #c4821d 85%, #7a4608 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  filter: drop-shadow(0 4px 0 #1a0d05) drop-shadow(0 8px 18px rgba(0, 0, 0, 0.95));
+  text-shadow: none !important;
+}
+
+.hs-ribbon {
+  margin-top: 6px;
+  padding: 4px 22px;
+  background: linear-gradient(90deg, transparent 0%, #59141c 18%, #7d1924 50%, #59141c 82%, transparent 100%);
+  border-top: 1.5px solid #e0b45c;
+  border-bottom: 1.5px solid #e0b45c;
+}
+.hs-ribbon span {
+  font: 700 clamp(11px, 1.5dvh, 14px)/1.2 'Cinzel', serif;
+  letter-spacing: 2.5px;
+  color: #f7e6c4;
+  text-shadow: 0 2px 4px #000;
+}
+
+/* Orta Gövde: Hearthstone Oyun Modu Ahşap/Pirinç Plakaları */
+.hs-body {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.8dvh, 16px);
+}
+
+#mb2 .grp.hs-plaque {
+  margin: 0 !important;
+  padding: clamp(12px, 2dvh, 18px) clamp(14px, 2.4vw, 22px) !important;
+  background:
+    radial-gradient(80% 90% at 50% 0%, rgba(255, 210, 130, 0.08), transparent 70%),
+    linear-gradient(180deg, #1b110b 0%, #110a06 100%) !important;
+  border: 2.5px solid #8c6a38 !important;
+  border-radius: 18px !important;
+  box-shadow:
+    inset 0 4px 14px rgba(0, 0, 0, 0.92),
+    0 2px 0 rgba(255, 220, 150, 0.22) !important;
+}
+
+#mb2 .grp.hs-plaque > span {
+  font: 800 clamp(14px, 2.1dvh, 18px)/1.1 'Cinzel', var(--hf), serif !important;
+  letter-spacing: 2px !important;
+  color: #f3d285 !important;
+  text-shadow: 0 2px 4px #000 !important;
+  margin-bottom: clamp(8px, 1.4dvh, 12px) !important;
+  text-transform: uppercase;
+}
+#mb2 .grp.hs-plaque > span::before,
+#mb2 .grp.hs-plaque > span::after {
+  content: " ✦ ";
+  color: #c99b49;
+}
+
+/* Yapay Zeka Zorluk Düğmeleri (Hearthstone Mücevher Kakmalı 3B Butonlar) */
+#mb2 .dr {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(6px, 1.2vw, 12px) !important;
+  margin: 0 !important;
+}
+
+#mb2 .dr .btn {
+  padding: clamp(10px, 1.8dvh, 14px) 6px !important;
+  font: 800 clamp(13px, 1.9dvh, 17px)/1.1 'Cinzel', var(--hf), serif !important;
+  letter-spacing: 0.6px !important;
+  border-radius: 12px !important;
+  border-width: 2.5px !important;
+  text-transform: uppercase;
+  box-shadow:
+    0 5px 0 #0d0704,
+    0 8px 16px rgba(0, 0, 0, 0.85),
+    inset 0 2px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.45) !important;
+  transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease !important;
+}
+#mb2 .dr .btn:hover {
+  transform: translateY(-2px) scale(1.03) !important;
+  filter: brightness(1.14);
+}
+#mb2 .dr .btn:active {
+  transform: translateY(3px) !important;
+}
+
+/* Kolay: Zümrüt Taşı */
+#mb2 .dr .btn[data-d="easy"] {
+  background: linear-gradient(180deg, #2ca85a 0%, #155c2e 100%) !important;
+  border-color: #9df5b8 !important;
+  color: #f0fff4 !important;
+}
+/* Orta: Safir Taşı */
+#mb2 .dr .btn[data-d="med"] {
+  background: linear-gradient(180deg, #2b78c9 0%, #133e73 100%) !important;
+  border-color: #9ed4ff !important;
+  color: #f0f8ff !important;
+}
+/* Zor: Kehribar / Ametist */
+#mb2 .dr .btn[data-d="hard"] {
+  background: linear-gradient(180deg, #c97a22 0%, #6e3b08 100%) !important;
+  border-color: #ffde96 !important;
+  color: #fff9eb !important;
+}
+/* İmkansız: Parlayan Yakut Taşı */
+#mb2 .dr .btn[data-d="imp"] {
+  background: linear-gradient(180deg, #d42638 0%, #6e0b16 100%) !important;
+  border-color: #ff9ea8 !important;
+  color: #fff0f2 !important;
+  box-shadow:
+    0 5px 0 #0d0704,
+    0 0 18px rgba(236, 68, 82, 0.55),
+    inset 0 2px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Çevrim İçi Düello Düğmeleri (Oda Oluştur & Odaya Katıl) */
+#mb2 #b2,
+#mb2 #b3 {
+  font: 800 clamp(14px, 2dvh, 18px)/1.1 'Cinzel', var(--hf), serif !important;
+  letter-spacing: 1px !important;
+  padding: clamp(10px, 1.8dvh, 14px) clamp(18px, 3vw, 28px) !important;
+  border-radius: 14px !important;
+  border: 2.5px solid #f2ca78 !important;
+  background: linear-gradient(180deg, #d48c24 0%, #7d480a 100%) !important;
+  color: #fff8e6 !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9) !important;
+  box-shadow:
+    0 5px 0 #140a04,
+    0 8px 18px rgba(0, 0, 0, 0.85),
+    inset 0 2px 0 rgba(255, 245, 200, 0.45),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.45) !important;
+}
+#mb2 #b2 {
+  width: 100%;
+  max-width: 340px;
+}
+#mb2 #b2:hover,
+#mb2 #b3:hover {
+  filter: brightness(1.12);
+  transform: translateY(-2px);
+}
+
+.hs-join-row {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 10px !important;
+  margin-top: 8px !important;
+}
+
+#mb2 #code {
+  width: 150px !important;
+  padding: clamp(8px, 1.5dvh, 12px) 12px !important;
+  font: 700 clamp(16px, 2.3dvh, 22px)/1 'Cinzel', var(--mf), monospace !important;
+  letter-spacing: 3px !important;
+  border-radius: 12px !important;
+  border: 2px solid #8c6a38 !important;
+  background: #0c0704 !important;
+  color: #ffd978 !important;
+  text-shadow: 0 0 8px rgba(255, 210, 100, 0.45) !important;
+  box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.9) !important;
+}
+#mb2 #code::placeholder {
+  color: #6e5536 !important;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+}
+
+/* Alt Çekmece Düğmeleri (Hearthstone Alt Kutu Çekmecesi: Ayarlar, Kodeks, Nasıl Oynanır) */
+#mb2 .hs-drawer {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(6px, 1.2vw, 12px) !important;
+  margin: 0 !important;
+  padding-top: 6px;
+  border-top: 1.5px solid rgba(215, 175, 100, 0.25);
+}
+
+#mb2 .hs-drawer .btn {
+  padding: clamp(8px, 1.5dvh, 12px) 8px !important;
+  font: 700 clamp(12px, 1.7dvh, 15px)/1.15 'Cinzel', var(--hf), serif !important;
+  letter-spacing: 0.5px !important;
+  border-radius: 12px !important;
+  border: 2px solid #8c6d3e !important;
+  background: linear-gradient(180deg, #332015 0%, #1c1009 100%) !important;
+  color: #ebd5a7 !important;
+  box-shadow:
+    0 4px 0 #0a0503,
+    0 6px 14px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 225, 165, 0.28) !important;
+}
+#mb2 .hs-drawer .btn:hover {
+  border-color: #d4a855 !important;
+  color: #fff5dc !important;
+  background: linear-gradient(180deg, #422a1b 0%, #26160d 100%) !important;
+  transform: translateY(-1px);
+}
+
+#mb2 #st {
+  position: relative;
+  z-index: 1;
+  min-height: 20px;
+  font: 700 15px/1.2 'Cinzel', var(--mf), serif !important;
+  color: #ffd978 !important;
+}
+
+@media (max-width: 560px) {
+  #mb2 {
+    width: 96vw !important;
+    padding: 14px 12px !important;
+    border-radius: 22px !important;
+  }
+  #mb2 .dr {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  #mb2 .hs-drawer {
+    grid-template-columns: 1fr !important;
+  }
+}
