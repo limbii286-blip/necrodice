@@ -1087,8 +1087,8 @@ main::before {
 
 #me.zone {
   flex-direction: column-reverse;
-  padding-top: 12px !important;
-  padding-bottom: clamp(78px, 13dvh, 122px) !important;
+  padding-top: 8px !important;
+  padding-bottom: clamp(108px, 16.8dvh, 152px) !important;
   background: transparent !important;
 }
 #me.zone.act {
@@ -1164,15 +1164,15 @@ body.drop-ready #fx {
 
 .who .av {
   order: 2;
-  width: clamp(64px, 9.2dvh, 86px) !important;
-  height: clamp(64px, 9.2dvh, 86px) !important;
+  width: clamp(56px, 8.2dvh, 78px) !important;
+  height: clamp(56px, 8.2dvh, 78px) !important;
   border-radius: 50% 50% 12px 12px !important;
   border: 3px solid #d4af5a !important;
   box-shadow:
     0 0 0 2px #120c08,
     0 6px 18px rgba(0, 0, 0, 0.95),
     inset 0 0 14px rgba(0, 0, 0, 0.7) !important;
-  margin: -10px 14px -6px !important;
+  margin: -8px 14px -4px !important;
   background: #0c080a;
   object-fit: cover;
   object-position: 50% 50%;
@@ -1298,8 +1298,8 @@ body.drop-ready #fx {
 }
 
 .cards .c {
-  width: clamp(64px, 11.4dvh, 104px) !important;
-  height: calc(clamp(64px, 11.4dvh, 104px) * 1.45) !important;
+  width: clamp(56px, 9.6dvh, 92px) !important;
+  height: calc(clamp(56px, 9.6dvh, 92px) * 1.45) !important;
   border-radius: 8px !important;
   border: 2px solid #c9a968 !important;
   font: 800 38px/1 var(--mf) !important;
@@ -1743,10 +1743,10 @@ body.drop-ready #fx {
   display: none;
 }
 
-/* --- OYUNCUNUN JOKER ELİ (#hand: Üzerine Gelince Okunacak Kadar Büyüyen & Sürüklenebilen Kartlar) --- */
+/* --- OYUNCUNUN JOKER ELİ (#hand: Hearthstone Gibi Alt Kenarda, Karakter Portresini Kapatmaz) --- */
 #hand {
   position: fixed;
-  bottom: 8px;
+  bottom: 0;
   left: 50%;
   transform: translateX(-50%);
   z-index: 25;
@@ -1754,7 +1754,7 @@ body.drop-ready #fx {
   align-items: flex-end;
   justify-content: center;
   gap: clamp(6px, 0.9vw, 12px);
-  padding: 10px 24px max(8px, env(safe-area-inset-bottom, 8px)) !important;
+  padding: 4px 20px max(4px, env(safe-area-inset-bottom, 4px)) !important;
   min-height: 0 !important;
   pointer-events: none;
   overflow: visible !important;
@@ -1764,7 +1764,7 @@ body.drop-ready #fx {
   pointer-events: auto;
 }
 #hand .j {
-  width: clamp(72px, 11.6dvh, 104px) !important;
+  width: clamp(58px, 9.2dvh, 84px) !important;
   margin-left: 0 !important;
   border-radius: 8px !important;
   border: 2px solid #d4af64 !important;
@@ -1772,7 +1772,7 @@ body.drop-ready #fx {
     0 -4px 18px rgba(0, 0, 0, 0.88),
     0 8px 24px rgba(0, 0, 0, 0.95),
     0 0 14px rgba(212, 168, 85, 0.32) !important;
-  transform-origin: 50% 88% !important;
+  transform-origin: 50% 94% !important;
   transition: transform 0.18s cubic-bezier(0.2, 0.9, 0.25, 1), box-shadow 0.18s ease, filter 0.18s ease !important;
   cursor: grab;
   touch-action: none;
@@ -1783,7 +1783,7 @@ body.drop-ready #fx {
 }
 
 #hand .j:not(.dim):not(.is-dragging):hover {
-  transform: scale(2.32) rotate(0deg) !important;
+  transform: scale(2.45) rotate(0deg) !important;
   z-index: 60 !important;
   border-color: #ffe89e !important;
   box-shadow:
@@ -1798,7 +1798,7 @@ body.drop-ready #fx {
   cursor: default;
 }
 #hand .j.dim:not(.is-dragging):hover {
-  transform: scale(2.18) rotate(0deg) !important;
+  transform: scale(2.3) rotate(0deg) !important;
   filter: brightness(0.92) saturate(0.85) !important;
   border-color: #c2a668 !important;
   z-index: 60 !important;
@@ -1939,9 +1939,15 @@ body.drop-ready #fx {
   #fx .jh.m {
     padding-left: 44px !important;
   }
+  #me.zone {
+    padding-bottom: clamp(92px, 14.5dvh, 128px) !important;
+  }
+  #hand .j {
+    width: clamp(50px, 8.2dvh, 70px) !important;
+  }
   #hand .j:not(.dim):not(.is-dragging):hover,
   #hand .j.dim:not(.is-dragging):hover {
-    transform: scale(1.98) rotate(0deg) !important;
+    transform: scale(2.05) rotate(0deg) !important;
   }
 }
 
@@ -2312,7 +2318,7 @@ body.drop-ready #fx {
 }
 
 .zone-win-fx.mine {
-  bottom: clamp(134px, 21dvh, 186px);
+  bottom: clamp(160px, 24dvh, 212px);
 }
 
 .zone-win-fx.tie {
