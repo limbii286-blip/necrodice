@@ -322,17 +322,26 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı animas
 }
 
 /* ---------- MOTOR ---------- */
-const TURN_LIMIT=30; // Hearthstone tarzı sıra süresi (30 saniye)
-function resetTurnTimer(S){if(!S)return;S.tLeft=TURN_LIMIT;S.tMax=TURN_LIMIT;window._lastTickSec=0}
-function bumpTurnTimer(S){if(!S)return;if(S.tLeft!=null&&S.tLeft<8)S.tLeft=8}
-function newBO3(S){S.dj=[];S.jdeck=shuf(range(24));S.hand=[S.jdeck.splice(0,4),S.jdeck.splice(0,4)];S.pts=[0,0];S.rounds=0;S.res=[]}
+const DUEL_CLOCK_INIT=66; // Satranç saati: düello başında iki tarafın da 66 saniyesi vardır
+const GRACE_INIT=5;       // İlk düello ve geçişlerde jokerlere bakmak için 5 saniye hazırlık süresi
+function newBO3(S){
+  S.dj=[];S.jdeck=shuf(range(24));S.hand=[S.jdeck.splice(0,4),S.jdeck.splice(0,4)];
+  S.pts=[0,0];S.rounds=0;S.res=[];
+  S.clocks=[DUEL_CLOCK_INIT,DUEL_CLOCK_INIT];
+  S.clockMax=DUEL_CLOCK_INIT;
+  S.graceLeft=GRACE_INIT;
+}
 function deal(S){
   S.deck=shuf(range(11).map(n=>({id:++S.u,n})));
   S.pl=[0,1].map(()=>({open:[S.deck.pop()],closed:[S.deck.pop()]}));
   S.eff=[];S.pj=[];S.jUsed=[0,0];S.noJ=[false,false];S.acted=false;S.turns=0;
   S.turn=S.pl[0].open[0].n<S.pl[1].open[0].n?0:1;
-  S.wait=false;S.rev=false;S.winSide=null;S.dead=[];S.pa=[0,0];S.st={pb:0,ob:0,px:0};
-  resetTurnTimer(S);
+  S.wait=false;S.rev=false;S.winSide=null;S.timeOut=[false,false];S.hadTimeout=false;S.dead=[];S.pa=[0,0];S.st={pb:0,ob:0,px:0};
+  if(!Array.isArray(S.clocks)||S.clocks.length!==2){
+    S.clocks=[DUEL_CLOCK_INIT,DUEL_CLOCK_INIT];
+    S.clockMax=DUEL_CLOCK_INIT;
+  }
+  S.graceLeft=GRACE_INIT;
   S.log.push({p:-1,t:`— Tur ${S.rounds+1} —`},{p:S.turn,t:'başlıyor (küçük açık kart)'});
 }
 const act=(S,id)=>S.eff.some(e=>e.id==id&&!e.neg);
@@ -458,7 +467,7 @@ function bo3v(T,p,r){ // tur sonucu r (p açısından) -> düelloyu kazanma değ
   return Math.max(-.9,Math.min(.9,.55*(np-nq)+.03*(T.hand[p].length-T.hand[q].length)))}
 function rollout(T,p,a,pol){
   let actor=p,n=0;
-  const doPass=()=>{if(T.turns>0&&!T.acted)return true;(T.pa=T.pa||[0,0])[actor]++;T.turns++;T.acted=false;T.turn=1-T.turn;T.jUsed[T.turn]=0;actor=T.turn;n=0;return false};
+  const doPass=()=>{if((T.timeOut&&T.timeOut[1-T.turn])||(T.turns>0&&!T.acted))return true;(T.pa=T.pa||[0,0])[actor]++;T.turns++;T.acted=false;T.turn=1-T.turn;T.jUsed[T.turn]=0;actor=T.turn;n=0;return false};
   const doAct=(x,who)=>{if(x.t=='d')T.pl[who].open.push(T.deck.pop());else play(T,who,x.id,x.pk);T.acted=true};
   const fin=()=>pol.bo3?bo3v(T,p,outc(T,p)):outc(T,p);
   if(!a){if(doPass())return fin()}else{doAct(a,p);n=1}
@@ -510,7 +519,7 @@ let botGen=0,thinkOn=false;
 function bot(){
   const S=G,prm=DIFF=='imp'?impPrm():PR[DIFF],gen=++botGen;let n=0;
   let plan=null,held=0,pid=0;
-  const think=r=>{thinkOn=true;R();talk('think',1,.55);R();const d=rnd(r);plan=null;const my=++pid;
+  const think=r=>{thinkOn=true;R();talk('think',1,.55);R();const d=rnd(r)*(S.clocks&&S.clocks[1]<24?.42:.75);plan=null;const my=++pid;
     // karar, düşünme süresinin başında hesaplanır; hamle anında ekran donmaz
     setTimeout(()=>{if(gen!=botGen||S!=G||S.turn!=1||S.over)return;if(n++>=8){plan={a:null};return}
       const ok=a=>{if(my==pid&&gen==botGen&&S==G&&S.turn==1&&!S.over)plan={a}};
@@ -519,12 +528,12 @@ function bot(){
   const step=()=>{
     if(gen!=botGen||S!=G)return;
     if(S.turn!=1||S.over){thinkOn=false;return}
-    if(lock){held=1;return setTimeout(step,150)} // menü/pencere açık: oyun bekler
-    if(held){held=0;return setTimeout(step,700)} // kapanınca kısa bir nefes payı
+    if(lock||(S.graceLeft&&S.graceLeft>0)){held=1;return setTimeout(step,150)} // menü/pencere açık veya 5sn hazırlık süresi: oyun bekler
+    if(held){held=0;return setTimeout(step,500)} // kapanınca kısa bir nefes payı
     thinkOn=false;
     const a=plan?plan.a:(n++<8?(prm.mc?decideH:decide)(S,1,prm.mc?{...prm,K:90,ms:400}:prm):null);plan=null;pid++;
     if(!a){R();return pass()}
-    S.acted=true;bumpTurnTimer(S);
+    S.acted=true;
     if(a.t=='d'){const c=S.deck.pop();S.pl[1].open.push(c);S.log.push({p:1,t:`kart çekti (${c.n})`});R();talk('draw',0,.3);think(AFTER[DIFF])}
     else{play(S,1,a.id,a.pk);S.log.push({p:1,t:`joker oynadı: ${J[a.id]}`});note(1,a.id,()=>{R();think(AFTER[DIFF])})}
   };
@@ -532,10 +541,14 @@ function bot(){
 }
 
 /* ---------- AKIŞ ---------- */
-function pass(){
-  const S=G;P=null;S.log.push({p:S.turn,t:'pas dedi'});if(S.turn==1)talk('pass',0,.35);
-  if(S.turns>0&&!S.acted)return endRound();
-  (S.pa=S.pa||[0,0])[S.turn]++;S.turns++;S.acted=false;S.turn=1-S.turn;S.jUsed[S.turn]=0;resetTurnTimer(S);R();next();
+function pass(fromTimeout=false){
+  const S=G;P=null;S.graceLeft=0;
+  S.log.push({p:S.turn,t:fromTimeout?'süresi bitti — sıra rakibe geçti':'pas dedi'});
+  if(S.turn==1&&!fromTimeout)talk('pass',0,.35);
+  const opp=1-S.turn;
+  // Karşı tarafın süresi zaten bittiyse (sıra tekrar süresi bitene geçmez!) veya normal iki pas olduysa tur biter:
+  if((S.timeOut&&S.timeOut[opp])||(!fromTimeout&&S.turns>0&&!S.acted))return endRound();
+  (S.pa=S.pa||[0,0])[S.turn]++;S.turns++;S.acted=false;S.turn=opp;S.jUsed[S.turn]=0;R();next();
 }
 function next(){if(MODE=='bot'&&G.turn==1&&!lock&&!G.over)bot()}
 function M(html,btn,cb,end){lock=true;$('#mb').innerHTML=html+(btn?`<br><br><button id="mo" class="btn">${btn}</button>`:end?'':'<br><i>Oda sahibinin devam etmesi bekleniyor…</i>')+(end?'<br><br><button id="mx" class="btn alt">Ana menüye dön</button>':'');$('#m').hidden=false;
@@ -673,7 +686,15 @@ function endRound(){
   },1150);
   function fin(){
     S.winSide=null;
-    if(!(S.pts.some(x=>x>=2)||S.rounds>=3)){
+    const duelEnds=S.pts.some(x=>x>=2)||S.rounds>=3;
+    if(!duelEnds){
+      // Bu turda bir oyuncunun süresi bittiyse ve düello devam ediyorsa:
+      // İlk turda olduysa (S.rounds===1) iki taraf da 55 sn, ikinci turdan sonra olduysa 44 sn ile başlar
+      if(S.hadTimeout||(S.timeOut&&(S.timeOut[0]||S.timeOut[1]))){
+        const nextSec=S.rounds===1?55:44;
+        S.clocks=[nextSec,nextSec];
+        S.clockMax=nextSec;
+      }
       deal(S);R();next();
       return;
     }
@@ -926,8 +947,12 @@ function R(){
   const p1Name=isSpec?'Yozlaşmış Tüccar (Misafir)':(MODE=='guest'?'Yozlaşmış Tüccar (Sen)':(MODE=='host'?'Yozlaşmış Tüccar (Rakip)':(MODE=='bot'||S.av?oppName():'Rakip')));
   const oppWinHtml=S.winSide!=null&&S.winSide<0?`<div class="zone-win-fx opp"><div class="zw-shockwave"></div><div class="zw-sparks"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="zw-banner"><span class="zw-ico">⚔</span><div class="zw-txt"><b>${p1Name} Kazandı</b><small>Toplam: ${ot} · Hedef: ${low?'En Az':T}</small></div><span class="zw-ico">⚔</span></div></div>`:'';
   const meWinHtml=S.winSide!=null&&S.winSide>0?`<div class="zone-win-fx mine"><div class="zw-shockwave"></div><div class="zw-sparks"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="zw-banner"><span class="zw-ico">♛</span><div class="zw-txt"><b>${isSpec?p0Name+' Kazandı':'Turu Sen Kazandın'}</b><small>Toplam: ${mt} · Hedef: ${low?'En Az':T}</small></div><span class="zw-ico">♛</span></div></div>`:(S.winSide===0?`<div class="zone-win-fx tie"><div class="zw-shockwave"></div><div class="zw-banner"><span class="zw-ico">⚖</span><div class="zw-txt"><b>Tur Berabere</b><small>${mt} – ${ot} · Hedef: ${low?'En Az':T}</small></div><span class="zw-ico">⚖</span></div></div>`:'');
+  const oppTimeOut=!!(S.timeOut&&S.timeOut[1]),meTimeOut=!!(S.timeOut&&S.timeOut[0]);
+  const c0=Math.ceil(S.clocks?S.clocks[0]:66),c1=Math.ceil(S.clocks?S.clocks[1]:66);
+  const cc0=`<span class="who-clock mine${S.turn==0&&!S.wait&&!(S.graceLeft>0)&&!meTimeOut?' ticking':''}${meTimeOut?' out':c0<=10?' low':''}" id="wc-0" title="Senin Satranç Saatin">⏳<b id="wc-sec-0">${c0}</b><small>s</small></span>`;
+  const cc1=`<span class="who-clock opp${S.turn==1&&!S.wait&&!(S.graceLeft>0)&&!oppTimeOut?' ticking':''}${oppTimeOut?' out':c1<=10?' low':''}" id="wc-1" title="Rakibin Satranç Saati">⏳<b id="wc-sec-1">${c1}</b><small>s</small></span>`;
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'')+(S.winSide!=null?(S.winSide<0?' round-win':S.winSide>0?' round-lose':' round-tie'):'');
-  setH('#opp',`<div class="who">${av1}<div class="nm"><b>${p1Name}</b><span class="meta">${MODE=='bot'?IC.dif.repeat(DN[DIFF]):'Online'}${jp(1-S.jUsed[1])}</span></div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot${obust?' bust':oexact?' exact':''}"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${S.rev?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>${oppWinHtml}`);
+  setH('#opp',`<div class="who">${av1}<div class="nm"><b>${p1Name}</b><span class="meta">${MODE=='bot'?IC.dif.repeat(DN[DIFF]):'Online'}${jp(1-S.jUsed[1])}${cc1}</span></div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot${obust?' bust':oexact?' exact':''}"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${S.rev?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>${oppWinHtml}`);
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<span class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}"><img src="${IMG.j[e.id]}" alt=""></span>`};
   $('#deck b').textContent=S.deck.length;
   setH('#jo',(S.pj||[]).filter(x=>x.o==1).map(chip).join(''));
@@ -939,10 +964,10 @@ function R(){
   if(prevSeal&&prevSeal!=seal){sl.classList.remove('stamp');void sl.offsetWidth;sl.classList.add('stamp')}
   $('#arr').className='arr '+(S.wait||S.over?'off':S.turn==0?'me':'op');
   $('#me').className='zone'+(my?' act':'')+(S.winSide!=null?(S.winSide>0?' round-win':S.winSide<0?' round-lose':' round-tie'):'');
-  setH('#me',`<div class="who">${av0}<div class="nm"><b>${p0Name}</b><span class="meta">${jp(1-S.jUsed[0])}</span></div><div class="tot${bust?' bust':exact?' exact':''}"><small>Toplam</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>${meWinHtml}`);
+  setH('#me',`<div class="who">${av0}<div class="nm"><b>${p0Name}</b><span class="meta">${jp(1-S.jUsed[0])}${cc0}</span></div><div class="tot${bust?' bust':exact?' exact':''}"><small>Toplam</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>${meWinHtml}`);
   $('#prompt').className=P?'ask':'';
   setH('#prompt',P?`${J[P.id]}: ${KTXT[k]} ${k=='sign'?'<button class="btn sm" data-s="1">Ekle</button><button class="btn sm" data-s="-1">Çıkar</button>':''}<button class="btn sm alt" data-x="1">Vazgeç</button>`:'');
-  const ends=S.turns>0&&!S.acted; // şimdi pas dersem tur biter
+  const ends=(S.turns>0&&!S.acted)||oppTimeOut; // rakibin süresi bittiyse veya karşı taraf pas dediyse şimdi pas dersem tur biter
   $('#draw').disabled=isSpec||!(my&&!P&&canDraw(S,0));$('#pass').disabled=isSpec||!(my&&!P);
   if(isSpec){
     $('#draw').style.display='none';$('#pass').style.display='none';
@@ -972,7 +997,7 @@ function R(){
     }
   }
 }
-function doPlay(id,pk){const S=G;P=null;if(MODE=='guest'){conn.send({k:'play',id,pk});return R()}lrnAct(S,'j',id);play(S,0,id,pk);S.acted=true;bumpTurnTimer(S);S.log.push({p:0,t:`joker oynadı: ${J[id]}`});note(0,id,()=>{if(MODE=='bot')talk('react',1,.5);R()})}
+function doPlay(id,pk){const S=G;P=null;if(MODE=='guest'){conn.send({k:'play',id,pk});return R()}S.graceLeft=0;lrnAct(S,'j',id);play(S,0,id,pk);S.acted=true;S.log.push({p:0,t:`joker oynadı: ${J[id]}`});note(0,id,()=>{if(MODE=='bot')talk('react',1,.5);R()})}
 function pick(v){P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
 function startJoker(id){const ks=NEED[id]||[];if(ks.length){P={id,ks,pk:[]};R()}else doPlay(id,[])}
 function box(html,close=true){lock=true;$('#mb').innerHTML=html+(close?'<div class="row"><button id="pc" class="btn">Kapat</button></div>':'');$('#m').hidden=false;if(close)$('#pc').onclick=()=>{$('#m').hidden=true;lock=false;if(G)R()}}
@@ -1119,7 +1144,7 @@ document.addEventListener('click',e=>{
     return;
   }
 });
-$('#draw').onclick=()=>{const S=G;if(S.turn||lock||P||!canDraw(S,0))return;if(MODE=='guest')return conn.send({k:'draw'});lrnAct(S,'d');const c=S.deck.pop();S.pl[0].open.push(c);S.acted=true;bumpTurnTimer(S);S.log.push({p:0,t:`kart çekti (${c.n})`});R()};
+$('#draw').onclick=()=>{const S=G;if(S.turn||lock||P||!canDraw(S,0))return;if(MODE=='guest')return conn.send({k:'draw'});S.graceLeft=0;lrnAct(S,'d');const c=S.deck.pop();S.pl[0].open.push(c);S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R()};
 $('#deck').onclick=()=>{const d=$('#draw');if(d&&!d.disabled)d.click()};
 $('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE=='guest')conn.send({k:'pass'});else{lrnAct(G,'p');pass()}}};
 
@@ -1128,14 +1153,14 @@ let MODE='bot',peer,conn,spectators=[],specCount=0,waitM=false;
 const MAX_SPECTATORS = 5;
 function view(S){ // rakibe gidecek, gizli bilgisi temizlenmiş ve aynalanmış durum
   const f=a=>[a[1],a[0]];
-  return {av:[S.av[1],S.av[0]],mast:[S.mast[1],S.mast[0]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:1-S.turn,tLeft:S.tLeft,tMax:S.tMax,pts:f(S.pts),rev:S.rev,winSide:S.winSide==null?null:-S.winSide,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),noJ:f(S.noJ),
+  return {av:[S.av[1],S.av[0]],mast:[S.mast[1],S.mast[0]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:1-S.turn,clocks:S.clocks?f(S.clocks):[66,66],clockMax:S.clockMax||66,graceLeft:S.graceLeft||0,timeOut:S.timeOut?f(S.timeOut):[false,false],hadTimeout:!!S.hadTimeout,pts:f(S.pts),rev:S.rev,winSide:S.winSide==null?null:-S.winSide,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),noJ:f(S.noJ),
     hand:[S.hand[1],S.hand[0].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
     pl:[S.pl[1],{open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:S.rev?c.o:undefined}))}],
     eff:S.eff.map(e=>({...e,o:1-e.o})),pj:(S.pj||[]).map(e=>({...e,o:1-e.o})),log:S.log.slice(-6).map(l=>({...l,p:l.p<0?-1:1-l.p}))};
 }
 function specView(S){ // izleyicilere gidecek durum (0 = host/oda sahibi, 1 = misafir oyuncu, kapalı kartlar rev olmadan görünmez)
   return {
-    av:[S.av[0],S.av[1]],mast:[S.mast[0],S.mast[1]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:S.turn,tLeft:S.tLeft,tMax:S.tMax,pts:S.pts,rev:S.rev,winSide:S.winSide,res:S.res,jUsed:S.jUsed,noJ:S.noJ,
+    av:[S.av[0],S.av[1]],mast:[S.mast[0],S.mast[1]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:S.turn,clocks:S.clocks?[...S.clocks]:[66,66],clockMax:S.clockMax||66,graceLeft:S.graceLeft||0,timeOut:S.timeOut?[...S.timeOut]:[false,false],hadTimeout:!!S.hadTimeout,pts:S.pts,rev:S.rev,winSide:S.winSide,res:S.res,jUsed:S.jUsed,noJ:S.noJ,
     hand:[S.hand[0].map(()=>0),S.hand[1].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
     pl:[
       {open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:S.rev?c.o:undefined}))},
@@ -1200,12 +1225,12 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
 
   const S=G;if(!S||S.over||S.wait||S.turn!=1)return;
   if(fromConn !== conn) return; // Hamleleri sadece aktif rakip (conn) yapabilir!
-  if(m.k=='draw'){if(!canDraw(S,1))return;const c=S.deck.pop();S.pl[1].open.push(c);S.acted=true;bumpTurnTimer(S);S.log.push({p:1,t:`kart çekti (${c.n})`});R()}
+  if(m.k=='draw'){if(!canDraw(S,1))return;S.graceLeft=0;const c=S.deck.pop();S.pl[1].open.push(c);S.acted=true;S.log.push({p:1,t:`kart çekti (${c.n})`});R()}
   else if(m.k=='pass')pass();
   else if(m.k=='play'){
     const id=m.id,ks=NEED[id]||[],pk=m.pk||[];
     if(!playable(S,1,id)||pk.length!=ks.length||!ks.every((k,i)=>opts(S,1,k).includes(pk[i])))return;
-    play(S,1,id,pk);S.acted=true;bumpTurnTimer(S);S.log.push({p:1,t:`joker oynadı: ${J[id]}`});note(1,id,R);
+    S.graceLeft=0;play(S,1,id,pk);S.acted=true;S.log.push({p:1,t:`joker oynadı: ${J[id]}`});note(1,id,R);
   }
 }
 function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
@@ -2137,7 +2162,7 @@ on('#b2',hostRoom);on('#b3',joinRoom);
   requestAnimationFrame(render);
 })();
 
-/* ---------- HEARTHSTONE HAMLE SÜRESİ & YANAN FİTİL (TURN TIMER & ROPE) ---------- */
+/* ---------- SATRANÇ SAATİ (CHESS CLOCK 66s / 55s / 44s) & 5 SN HAZIRLIK & YANAN FİTİL ---------- */
 (function initHearthstoneTurnTimer(){
   let lastTickSec=-1;
   setInterval(()=>{
@@ -2145,23 +2170,93 @@ on('#b2',hostRoom);on('#b3',joinRoom);
     const rope=$('#turn-rope');
     const fill=rope?rope.querySelector('.rope-fill'):null;
     const badge=$('#turn-timer');
-    const secEl=$('#tt-sec');
+    const sec0El=$('#tt-sec-0');
+    const sec1El=$('#tt-sec-1');
+    const graceEl=$('#tt-grace');
+    const side0=$('#tt-mine');
+    const side1=$('#tt-opp');
+    const wc0=$('#wc-0');
+    const wc1=$('#wc-1');
+    const wcSec0=$('#wc-sec-0');
+    const wcSec1=$('#wc-sec-1');
     const menu=$('#menu');
     const active=!!(G && !G.over && !G.wait && !lock && (!menu || menu.hidden));
     if(!active){
       if(fx) fx.classList.remove('roping');
-      if(badge) badge.classList.remove('low');
+      if(badge) badge.classList.remove('low','grace');
+      if(graceEl) graceEl.hidden=true;
       lastTickSec=-1;
       return;
     }
-    if(typeof G.tLeft!=='number') resetTurnTimer(G);
-    G.tLeft=Math.max(0, G.tLeft - 0.1);
-    const maxT=G.tMax||TURN_LIMIT;
-    const sec=Math.ceil(G.tLeft);
-    const isLow=G.tLeft<=10 && G.tLeft>0;
-    const myTurn=G.turn===MY;
+    if(!Array.isArray(G.clocks)||G.clocks.length!==2){
+      G.clocks=[DUEL_CLOCK_INIT,DUEL_CLOCK_INIT];
+      G.clockMax=DUEL_CLOCK_INIT;
+    }
+    if(!Array.isArray(G.timeOut)) G.timeOut=[false,false];
 
-    if(secEl) secEl.textContent=String(sec);
+    // 5 saniyelik hazırlık süresi: iki tarafın da jokerlere/kartlara bakması için saatler başlamaz
+    if(G.graceLeft && G.graceLeft > 0){
+      G.graceLeft=Math.max(0, G.graceLeft - 0.1);
+      const gSec=Math.ceil(G.graceLeft);
+      const s0=Math.ceil(G.clocks[0]), s1=Math.ceil(G.clocks[1]);
+      if(sec0El) sec0El.textContent=String(s0);
+      if(sec1El) sec1El.textContent=String(s1);
+      if(wcSec0) wcSec0.textContent=String(s0);
+      if(wcSec1) wcSec1.textContent=String(s1);
+      if(graceEl){
+        graceEl.hidden=false;
+        graceEl.textContent=`HAZIRLIK ${gSec}s`;
+      }
+      if(badge){
+        badge.classList.add('grace');
+        badge.classList.remove('mine','opp','low');
+      }
+      if(side0) side0.classList.remove('active','low');
+      if(side1) side1.classList.remove('active','low');
+      if(wc0) wc0.classList.remove('ticking');
+      if(wc1) wc1.classList.remove('ticking');
+      if(fx) fx.classList.remove('roping');
+      lastTickSec=-1;
+      return;
+    }
+
+    if(graceEl) graceEl.hidden=true;
+    if(badge) badge.classList.remove('grace');
+
+    const t=G.turn===1?1:0;
+    G.clocks[t]=Math.max(0, G.clocks[t] - 0.1);
+    const curLeft=G.clocks[t];
+    const s0=Math.ceil(G.clocks[0]), s1=Math.ceil(G.clocks[1]);
+    const sec=Math.ceil(curLeft);
+    const isLow=curLeft<=10 && curLeft>0;
+    const myTurn=(t===0);
+
+    if(sec0El) sec0El.textContent=String(s0);
+    if(sec1El) sec1El.textContent=String(s1);
+    if(wcSec0) wcSec0.textContent=String(s0);
+    if(wcSec1) wcSec1.textContent=String(s1);
+
+    if(side0){
+      side0.classList.toggle('active', myTurn && !G.timeOut[0]);
+      side0.classList.toggle('low', G.clocks[0]<=10 && G.clocks[0]>0);
+      side0.classList.toggle('out', !!G.timeOut[0] || G.clocks[0]<=0);
+    }
+    if(side1){
+      side1.classList.toggle('active', !myTurn && !G.timeOut[1]);
+      side1.classList.toggle('low', G.clocks[1]<=10 && G.clocks[1]>0);
+      side1.classList.toggle('out', !!G.timeOut[1] || G.clocks[1]<=0);
+    }
+    if(wc0){
+      wc0.classList.toggle('ticking', myTurn && !G.timeOut[0]);
+      wc0.classList.toggle('low', G.clocks[0]<=10 && G.clocks[0]>0);
+      wc0.classList.toggle('out', !!G.timeOut[0] || G.clocks[0]<=0);
+    }
+    if(wc1){
+      wc1.classList.toggle('ticking', !myTurn && !G.timeOut[1]);
+      wc1.classList.toggle('low', G.clocks[1]<=10 && G.clocks[1]>0);
+      wc1.classList.toggle('out', !!G.timeOut[1] || G.clocks[1]<=0);
+    }
+
     if(badge){
       badge.classList.toggle('mine', myTurn);
       badge.classList.toggle('opp', !myTurn);
@@ -2169,11 +2264,11 @@ on('#b2',hostRoom);on('#b3',joinRoom);
     }
     if(fx) fx.classList.toggle('roping', isLow);
     if(fill){
-      const pct=isLow ? Math.max(0, Math.min(100, (G.tLeft/10)*100)) : 100;
+      const pct=isLow ? Math.max(0, Math.min(100, (curLeft/10)*100)) : 100;
       fill.style.width=pct.toFixed(1)+'%';
     }
 
-    if(G.tLeft<=5 && G.tLeft>0){
+    if(curLeft<=5 && curLeft>0){
       if(sec!==lastTickSec){
         lastTickSec=sec;
         snd('tick');
@@ -2182,11 +2277,13 @@ on('#b2',hostRoom);on('#b3',joinRoom);
       lastTickSec=-1;
     }
 
-    if(G.tLeft<=0 && MODE!=='guest' && MODE!=='spectator'){
+    if(curLeft<=0 && MODE!=='guest' && MODE!=='spectator'){
       lastTickSec=-1;
+      G.clocks[t]=0;
+      G.timeOut[t]=true;
+      G.hadTimeout=true;
       P=null;
-      G.log.push({p:G.turn,t:'süre doldu — otomatik pas'});
-      pass();
+      pass(true);
     }
   },100);
 })();

@@ -2022,34 +2022,103 @@ body.drop-ready #fx {
 #turn-timer {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: calc(50% + clamp(42px, 6.2dvh, 54px));
   transform: translate(-50%, -50%);
   z-index: 34;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 11px;
+  gap: 7px;
+  padding: 3px 12px;
   border-radius: 999px;
   background:
-    radial-gradient(circle at 50% 25%, rgba(44, 34, 64, 0.96) 0%, rgba(16, 12, 24, 0.98) 100%);
+    radial-gradient(circle at 50% 25%, rgba(36, 28, 54, 0.96) 0%, rgba(14, 10, 22, 0.98) 100%);
   border: 1.5px solid rgba(168, 148, 198, 0.65);
   box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.85),
-    0 0 12px rgba(56, 189, 248, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    0 4px 12px rgba(0, 0, 0, 0.88),
+    0 0 12px rgba(56, 189, 248, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
   font-family: 'Cinzel', serif;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   color: #e2e8f0;
   letter-spacing: 0.04em;
   pointer-events: none;
   user-select: none;
+  white-space: nowrap;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, color 0.2s ease;
+}
+
+#turn-timer .tt-side {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  opacity: 0.48;
+  transition: opacity 0.2s ease, color 0.2s ease, text-shadow 0.2s ease;
+}
+
+#turn-timer .tt-side small {
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  margin: 0 2px;
+}
+
+#turn-timer .tt-side b {
+  font-size: 13px;
+  font-weight: 900;
+  min-width: 18px;
+  text-align: center;
+}
+
+#turn-timer .tt-side.mine.active {
+  opacity: 1;
+  color: #7dd3fc;
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.75);
+}
+
+#turn-timer .tt-side.opp.active {
+  opacity: 1;
+  color: #d8b4fe;
+  text-shadow: 0 0 10px rgba(192, 132, 252, 0.75);
+}
+
+#turn-timer .tt-side.low {
+  opacity: 1;
+  color: #fde047 !important;
+  text-shadow: 0 0 12px rgba(245, 158, 11, 0.9) !important;
+}
+
+#turn-timer .tt-side.out {
+  opacity: 0.35;
+  color: #f87171 !important;
+  text-decoration: line-through;
+}
+
+#turn-timer .tt-mid {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 3px;
+}
+
+#turn-timer .tt-mid em {
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 800;
+  color: #fde047;
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 10px rgba(250, 204, 21, 0.75);
+}
+
+#turn-timer.grace {
+  border-color: #facc15;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.88),
+    0 0 16px rgba(250, 204, 21, 0.55);
 }
 
 #turn-timer.mine {
   border-color: rgba(56, 189, 248, 0.78);
-  color: #f0f9ff;
   box-shadow:
     0 4px 12px rgba(0, 0, 0, 0.85),
     0 0 14px rgba(56, 189, 248, 0.45),
@@ -2058,7 +2127,6 @@ body.drop-ready #fx {
 
 #turn-timer.opp {
   border-color: rgba(192, 132, 252, 0.68);
-  color: #f3e8ff;
   box-shadow:
     0 4px 12px rgba(0, 0, 0, 0.85),
     0 0 14px rgba(192, 132, 252, 0.38),
@@ -2067,7 +2135,6 @@ body.drop-ready #fx {
 
 #turn-timer.low {
   border-color: #fbbf24 !important;
-  color: #fef08a !important;
   background:
     radial-gradient(circle at 50% 30%, rgba(127, 29, 29, 0.96) 0%, rgba(40, 10, 14, 0.98) 100%) !important;
   box-shadow:
@@ -2085,6 +2152,66 @@ body.drop-ready #fx {
 
 #turn-timer.low .tt-icon {
   animation: hourglassShake 0.35s infinite alternate ease-in-out;
+}
+
+/* Oyuncu Plakalarındaki Satranç Saati (.who-clock) */
+.who-clock {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(12, 9, 18, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 800;
+  color: #94a3b8;
+  opacity: 0.65;
+  transition: opacity 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.who-clock b {
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  color: inherit !important;
+  margin-left: 2px;
+}
+
+.who-clock small {
+  font-size: 9px !important;
+  color: inherit !important;
+  opacity: 0.85;
+}
+
+.who-clock.mine.ticking {
+  opacity: 1;
+  color: #bae6fd;
+  border-color: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.55);
+}
+
+.who-clock.opp.ticking {
+  opacity: 1;
+  color: #e9d5ff;
+  border-color: #c084fc;
+  box-shadow: 0 0 10px rgba(192, 132, 252, 0.55);
+}
+
+.who-clock.low {
+  opacity: 1;
+  color: #fef08a !important;
+  border-color: #f59e0b !important;
+  background: rgba(127, 29, 29, 0.92) !important;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.85) !important;
+}
+
+.who-clock.out {
+  opacity: 0.42;
+  color: #f87171 !important;
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  text-decoration: line-through;
 }
 
 @keyframes timerLowPulse {
