@@ -827,7 +827,6 @@ function cast(p,id,cb){ // joker sahnede büyür ve Kapat'a basılana kadar kal�
 }
 function count(el,a,b){if(!el)return;if(a==b||RM||typeof requestAnimationFrame=='undefined'){el.textContent=b;return}const t0=performance.now(),f=n=>{const x=Math.min(1,(n-t0)/450);el.textContent=Math.round(a+(b-a)*x*(2-x));if(x<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
 function fly(){ // yeni kartlar desteden uçarak gelir
-  if(document.body.classList.contains('view-3d'))return; // 3D'de kartlar masada uçar
   const d=$('#deck');if(!d||!d.getBoundingClientRect)return;const dr=d.getBoundingClientRect();let i=0;const F=FIT||1;
   const freshCards=document.querySelectorAll('.fresh');
   if(freshCards.length){
@@ -858,33 +857,7 @@ if(window.visualViewport)visualViewport.addEventListener('resize',satUpdate);
 [0,150,500,1500,3500].forEach(t=>setTimeout(satUpdate,t));
 function fit(){document.documentElement.classList.add('fitm');try{fit0()}finally{document.documentElement.classList.remove('fitm')}} // ölçüm sırasında sıra bildirimi gizlenir
 function fit0(){
-  fitQ=0;const m=document.querySelector('main');if(!m)return;
-  const pr=document.querySelector('#prompt'),sig=[innerWidth,innerHeight,m.getElementsByTagName('*').length,sayT.length,thinkOn?1:0,pr?pr.textContent.length:0,G&&G.turn,G?G.bo+':'+G.rounds+':'+(G.rev?1:0):''].join();
-  if(sig==fitSig)return;fitSig=sig;
-  const css=['transform','transformOrigin','width','maxWidth','marginLeft','marginRight','minHeight','height'];
-  const reset=()=>css.forEach(k=>m.style[k]='');
-  reset();FIT=1;document.documentElement.classList.remove('fit');
-  if(innerWidth>700)return;
-  const kids=[...m.children].filter(e=>e.offsetHeight&&getComputedStyle(e).position!='fixed');
-  const bot=()=>Math.max(...kids.map(e=>{const cs=e.id=='hand'?[...e.children]:[];return cs.length?Math.max(...cs.map(c=>c.getBoundingClientRect().bottom)):e.getBoundingClientRect().bottom})); // içeriğin gerçek alt kenarı (main'in boş alt dolgusu sayılmaz)
-  m.style.minHeight='0';m.style.height='auto';
-  const r0=m.getBoundingClientRect(),w=r0.width,top=r0.top,av=innerHeight-2;
-  const nat=bot()-top; // ölçeksiz içerik yüksekliği
-  if(top+nat<=av+1){m.style.minHeight='';m.style.height='';fitK=0;return}
-  const put=k=>{FIT=k;m.style.maxWidth='none';m.style.width=(w/k)+'px';m.style.marginLeft='0';m.style.marginRight='0';
-    m.style.transformOrigin='0 0';m.style.transform=`scale(${k})`;m.style.height='auto';m.style.minHeight='0'};
-  const key=G?G.bo+':'+G.rounds+':'+(G.rev?1:0):''; // ölçek tur boyunca sabit; kartlar sarkarsa bir kez küçülür, yeni turda eski haline döner
-  let k=Math.max(.45,Math.min(1,(av-top)/nat));
-  if(key==fitKey&&fitK)k=Math.min(k,fitK); // aynı tur içinde ekran büyüyüp küçülüp zıplamasın
-  for(let i=0;i<4;i++){ // genişlik değişince satırlar kayabilir; alt kenar ekrana oturana kadar birkaç kez düzelt
-    put(k);const vb=bot();
-    if(Math.abs(vb-av)<=1||k<=.45&&vb>av)break;
-    const kn=Math.max(.45,Math.min(1,k*(av-top)/(vb-top)));
-    if(Math.abs(kn-k)<.002)break;k=kn;
-  }
-  if(key==fitKey&&fitK&&FIT>fitK+.003)put(fitK);
-  fitK=FIT;fitKey=key;
-  document.documentElement.classList.add('fit');
+  fitQ=0;FIT=1;
 }
 const fitSoon=()=>{if(!fitQ)fitQ=requestAnimationFrame(()=>fit())};
 addEventListener('resize',()=>{fitSig='';fitSoon()});addEventListener('orientationchange',()=>setTimeout(()=>{fitSig='';fitSoon()},250));
@@ -949,7 +922,6 @@ function R(){
   const mt0=S.turn==0&&!S.wait;if(mt0&&!prevT)snd('turn');prevT=mt0;
   const last=S.log[S.log.length-1],lk=S.log.length+JSON.stringify(last);if(lk!=lastLk){lastLk=lk;if(last&&last.t=='pas dedi')snd('pass')}
   fly();flipId=null;
-  try{if(window.Necro3D)Necro3D.sync(G)}catch(e){console.warn('3D',e)}
   if(MODE=='host'){
     if(conn&&conn.open)conn.send({k:'s',v:view(G)});
     if(spectators.length){
@@ -1032,12 +1004,11 @@ function guide(){box(`<h3>Nasıl oynanır</h3>
 <p class="gd">Hepsini Joker Kodeksi'nde görebilirsin.</p>`)}
 function settings(){
   const inGame=$('#menu').hidden&&!!G;
-  box(`<h3>Ayarlar</h3><label>Müzik<input type="range" id="sm" min="0" max="1" step=".05" value="${VM}"></label><label>Efektler<input type="range" id="ss" min="0" max="1" step=".05" value="${VS}"></label><label class="chk"><input type="checkbox" id="sr" ${RM?'checked':''}> Hareketi azalt</label><label class="chk"><input type="checkbox" id="sv" ${VB?'checked':''}> Titreşim</label><label class="chk"><input type="checkbox" id="s3" ${window.Necro3D&&Necro3D.isActive()?'checked':''}> 3D masa görünümü</label>${inGame?`<div class="row"><button class="btn alt sm" id="sk">Joker Kodeksi</button><button class="btn alt sm" id="sg">Nasıl oynanır</button></div>`:''}${inGame?`<div class="row">${MODE=='bot'?'<button class="btn alt sm" id="sa">Tekrar oyna</button>':''}</div><div class="row"><button class="btn alt sm" id="sx">Ana menüye dön</button></div>`:''}`);
+  box(`<h3>Ayarlar</h3><label>Müzik<input type="range" id="sm" min="0" max="1" step=".05" value="${VM}"></label><label>Efektler<input type="range" id="ss" min="0" max="1" step=".05" value="${VS}"></label><label class="chk"><input type="checkbox" id="sr" ${RM?'checked':''}> Hareketi azalt</label><label class="chk"><input type="checkbox" id="sv" ${VB?'checked':''}> Titreşim</label>${inGame?`<div class="row"><button class="btn alt sm" id="sk">Joker Kodeksi</button><button class="btn alt sm" id="sg">Nasıl oynanır</button></div>`:''}${inGame?`<div class="row">${MODE=='bot'?'<button class="btn alt sm" id="sa">Tekrar oyna</button>':''}</div><div class="row"><button class="btn alt sm" id="sx">Ana menüye dön</button></div>`:''}`);
   $('#sm').oninput=e=>{VM=+e.target.value;LS('vm',VM);ac();MG.gain.value=VM*.8;if(FILE&&mel)mel.volume=Math.min(1,VM*.8)};
   $('#ss').oninput=e=>{VS=+e.target.value;LS('vs',VS);ac();SG.gain.value=VS};$('#ss').onchange=()=>snd('draw');
   $('#sr').onchange=e=>{RM=e.target.checked;LS('rm',RM?1:0);document.body.classList.toggle('rm',RM)};
   $('#sv').onchange=e=>{VB=e.target.checked;LS('vb',VB?1:0)};
-  if($('#s3'))$('#s3').onchange=e=>{if(window.Necro3D){Necro3D.toggle(e.target.checked);R()}};
   if($('#sk'))$('#sk').onclick=codex;if($('#sg'))$('#sg').onclick=guide;
   if($('#sa'))$('#sa').onclick=()=>{ // aynı botla baştan başla, mevcut oyun iptal
     botGen++;thinkOn=false;const c=$('#cast');if(c)c.remove();$('#m').hidden=true;lock=false;P=null;
@@ -1097,6 +1068,7 @@ document.addEventListener('click',e=>{
   if(t.dataset.j){const id=+t.dataset.j;preview(id,S.turn==0&&!S.wait&&playable(S,0,id))}
 });
 $('#draw').onclick=()=>{const S=G;if(S.turn||lock||P||!canDraw(S,0))return;if(MODE=='guest')return conn.send({k:'draw'});lrnAct(S,'d');const c=S.deck.pop();S.pl[0].open.push(c);S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R()};
+$('#deck').onclick=()=>{const d=$('#draw');if(d&&!d.disabled)d.click()};
 $('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE=='guest')conn.send({k:'pass'});else{lrnAct(G,'p');pass()}}};
 
 /* ---------- ONLINE (PeerJS) ---------- */
