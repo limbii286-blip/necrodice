@@ -1583,7 +1583,10 @@ function createSmoothDragLoop(onFrame){
   }
 
   document.addEventListener('dragstart',e=>{
-    if(e.target.closest&&e.target.closest('#deck, #hand .j'))e.preventDefault();
+    if(!e.target.closest||!e.target.closest('input, textarea'))e.preventDefault();
+  });
+  document.addEventListener('selectstart',e=>{
+    if(!e.target.closest||!e.target.closest('input, textarea'))e.preventDefault();
   });
 
   document.addEventListener('pointerdown',e=>{
