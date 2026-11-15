@@ -2943,9 +2943,6 @@ body.dragging-joker #fx::after {
     0 16px 32px rgba(0, 0, 0, 0.96),
     0 0 24px rgba(234, 179, 84, 0.52);
 }
-.hero-pick-card.sel {
-  border-color: #d4a64a;
-}
 .hpc-art {
   position: relative;
   width: 100%;
