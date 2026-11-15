@@ -1290,7 +1290,7 @@ body.dragging-joker #fx::after {
   box-shadow: 0 0 8px rgba(212, 168, 85, 0.85) !important;
 }
 
-/* Sağ Kanat: Hearthstone Tarzı Kabartmalı Skor Kalkanı / Madalyonu */
+/* Sağ Kanat: Skor / Toplam (Kutu içi kutu olmadan temiz hizalı) */
 .who .tot {
   order: 3;
   justify-self: center;
@@ -1299,18 +1299,14 @@ body.dragging-joker #fx::after {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 5px;
   text-align: center;
-  min-width: clamp(68px, 8.5dvh, 92px);
-  padding: 5px 12px 7px;
-  background: radial-gradient(circle at 50% 25%, #5c1f1b 0%, #2b0f0d 72%, #180807 100%);
-  border: 2px solid #c99d4c;
-  border-radius: 10px 10px 24px 24px;
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.88),
-    0 0 0 1.5px #120906,
-    inset 0 1px 0 rgba(255, 224, 150, 0.35),
-    inset 0 -3px 8px rgba(0, 0, 0, 0.85);
+  min-width: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
   max-width: none !important;
 }
 .who .tot small {
@@ -1649,19 +1645,32 @@ body.dragging-joker #fx::after {
   border-color: #fde68a !important;
 }
 
-/* Pas Küresi (Oyma Bazalt Taş & Antik Bronz Madalyon - Bekleme / Pas Durumu) */
+/* Pas Küresi (3D Küre Görünümlü Oyma Bronz/Taş Orb - Bekleme / Pas Durumu) */
 #fx #pass {
+  overflow: hidden;
   background:
-    radial-gradient(circle at 36% 28%, #3b3129 0%, #221c17 58%, #110e0c 100%) !important;
-  border: 3px solid #8c6d42 !important;
-  color: #e8dcc4 !important;
-  text-shadow: 0 2px 5px #000 !important;
+    radial-gradient(circle at 30% 24%, rgba(255, 238, 198, 0.38) 0%, #63513d 17%, #30251c 48%, #110c09 82%, #291f16 100%) !important;
+  border: 2.5px solid #967546 !important;
+  color: #f3e6cc !important;
+  text-shadow: 0 2px 5px #000, 0 0 8px rgba(0, 0, 0, 0.9) !important;
   box-shadow:
-    0 0 0 4px #120e0b,
-    0 0 0 7px #4a3a26,
-    0 12px 26px rgba(0, 0, 0, 0.96),
-    inset 0 3px 8px rgba(255, 224, 170, 0.2),
-    inset 0 -6px 12px rgba(0, 0, 0, 0.88) !important;
+    0 0 0 3.5px #120d09,
+    0 0 0 6px #574229,
+    0 14px 28px rgba(0, 0, 0, 0.96),
+    inset 5px 7px 14px rgba(255, 235, 190, 0.25),
+    inset -10px -14px 22px rgba(0, 0, 0, 0.92) !important;
+}
+#fx #pass::before {
+  content: "";
+  position: absolute;
+  top: 7%;
+  left: 15%;
+  width: 40%;
+  height: 22%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(255, 248, 225, 0.42) 0%, transparent 72%);
+  transform: rotate(-24deg);
+  pointer-events: none;
 }
 #fx #pass:hover:not(:disabled) {
   transform: scale(1.07) !important;
@@ -1672,20 +1681,20 @@ body.dragging-joker #fx::after {
   transform: translateY(2px) scale(0.97) !important;
 }
 
-/* Turu Bitir Küresi (Hearthstone Tarzı Parlayan Eskitilmiş Altın & Kehribar Mührü) */
+/* Turu Bitir Küresi (3D Parlayan Altın-Kehribar Küre) */
 #fx #pass:not(.alt) {
   background:
-    radial-gradient(circle at 36% 28%, #9b6a21 0%, #5c3a0e 58%, #291705 100%) !important;
-  border-color: #f3c669 !important;
-  color: #fff8e1 !important;
-  text-shadow: 0 2px 5px #000, 0 0 10px rgba(255, 210, 110, 0.55) !important;
+    radial-gradient(circle at 30% 24%, #fff7d6 0%, #e6ab3e 18%, #965712 50%, #381b03 83%, #6b3f0f 100%) !important;
+  border-color: #f5cc70 !important;
+  color: #fff9e6 !important;
+  text-shadow: 0 2px 6px #000, 0 0 10px rgba(80, 35, 0, 0.95) !important;
   box-shadow:
-    0 0 0 4px #181109,
-    0 0 0 7px #75582d,
-    0 12px 26px rgba(0, 0, 0, 0.96),
+    0 0 0 3.5px #171008,
+    0 0 0 6px #826130,
+    0 14px 30px rgba(0, 0, 0, 0.96),
     0 0 26px rgba(234, 179, 84, 0.62),
-    inset 0 3px 9px rgba(255, 240, 190, 0.48),
-    inset 0 -6px 12px rgba(0, 0, 0, 0.82) !important;
+    inset 5px 7px 14px rgba(255, 245, 205, 0.48),
+    inset -10px -14px 22px rgba(35, 14, 0, 0.88) !important;
 }
 
 /* Orta Yarıktaki Kullanılmış Jokerler: Yuvarlak Madalyon (Sadece Kartın Üst İkonu Görünür) */
