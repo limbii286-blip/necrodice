@@ -1510,6 +1510,7 @@ body.dragging-joker #fx::after {
   margin-left: clamp(14px, 1.8vw, 24px);
 }
 #fx .deck {
+  overflow: visible !important;
   width: clamp(64px, 9.8dvh, 86px) !important;
   height: calc(clamp(64px, 9.8dvh, 86px) * 1.42) !important;
   margin: 0 !important;
@@ -1552,13 +1553,27 @@ body.dragging-joker #fx::after {
   50% { filter: brightness(1.16); }
 }
 #fx .deck b {
-  bottom: -10px !important;
-  background: #14111c !important;
-  border: 1.5px solid #a78bfa !important;
-  color: #f3e8ff !important;
-  border-radius: 8px !important;
-  font: 700 13px/1.2 var(--mf) !important;
-  padding: 1px 6px !important;
+  position: absolute !important;
+  top: calc(100% + 10px) !important;
+  bottom: auto !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  background: radial-gradient(circle at 32% 28%, #ffd27d 0%, #d97706 44%, #7c2d12 88%, #451a03 100%) !important;
+  border: 2px solid #f59e0b !important;
+  color: #fff8e7 !important;
+  text-shadow: 0 1px 3px #000 !important;
+  font: 800 13px/1 var(--mf) !important;
+  box-shadow:
+    0 0 0 2px #160c05,
+    0 4px 10px rgba(0, 0, 0, 0.92),
+    inset 0 1px 3px rgba(255, 240, 200, 0.55) !important;
 }
 
 .deck-drag-ghost {
