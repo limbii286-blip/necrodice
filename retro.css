@@ -2514,11 +2514,10 @@ body.dragging-joker #fx::after {
 }
 
 /* ==========================================================================
-   TUR SONU: KAYBEDEN YARI SAHA DEPREM + KIRMIZI TON & KARTLARIN TOZLAŞMASI
+   TUR SONU: KAZANAN KAHRAMAN SALDIRISI + KAYBEDEN VURUŞ TEPKİSİ & TOZLAŞMA
    ========================================================================== */
 .zone.round-lose {
-  background: radial-gradient(75% 90% at 50% 50%, rgba(220, 38, 38, 0.36), rgba(127, 29, 29, 0.22) 60%, transparent 88%) !important;
-  animation: zoneQuake 0.52s cubic-bezier(0.36, 0.07, 0.19, 0.97) 4;
+  background: radial-gradient(75% 90% at 50% 50%, rgba(220, 38, 38, 0.28), rgba(127, 29, 29, 0.14) 60%, transparent 88%) !important;
 }
 .zone.round-lose .who {
   border-color: #ef4444 !important;
@@ -2527,7 +2526,7 @@ body.dragging-joker #fx::after {
     0 0 26px rgba(220, 38, 38, 0.72) !important;
 }
 .zone.round-lose .cards .c {
-  filter: sepia(0.38) hue-rotate(-36deg) saturate(1.55) brightness(0.84);
+  filter: sepia(0.32) hue-rotate(-32deg) saturate(1.4) brightness(0.86);
   border-color: #dc2626 !important;
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.9), 0 0 16px rgba(220, 38, 38, 0.45) !important;
   transition: filter 0.35s ease, border-color 0.35s ease;
@@ -2535,36 +2534,96 @@ body.dragging-joker #fx::after {
 
 .zone.round-tie {
   background: radial-gradient(75% 90% at 50% 50%, rgba(220, 38, 38, 0.14), rgba(127, 29, 29, 0.08) 60%, transparent 88%) !important;
-  animation: zoneQuakeSoft 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97) 1;
 }
-.zone.round-tie .who {
-  border-color: rgba(239, 68, 68, 0.55) !important;
+
+/* Hearthstone Tarzı Saldıran Kahraman Portresi ve Darbe Efekti */
+.av-attacker {
+  position: fixed;
+  z-index: 95;
+  margin: 0 !important;
+  border-radius: 50% 50% 14px 14px;
+  border: 3px solid #f5cc70;
+  object-fit: cover;
+  pointer-events: none;
   box-shadow:
-    0 12px 28px rgba(0, 0, 0, 0.94),
-    0 0 12px rgba(220, 38, 38, 0.32) !important;
+    0 18px 42px rgba(0, 0, 0, 0.95),
+    0 0 28px rgba(242, 210, 139, 0.85);
+  will-change: transform;
 }
-.zone.round-tie .cards .c {
-  filter: sepia(0.16) hue-rotate(-24deg) saturate(1.2) brightness(0.95);
-  border-color: rgba(220, 38, 38, 0.52) !important;
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.9), 0 0 8px rgba(220, 38, 38, 0.22) !important;
-  transition: filter 0.35s ease, border-color 0.35s ease;
+.who .av.av-hit {
+  animation: avHitRecoil 0.48s cubic-bezier(0.2, 0.9, 0.3, 1) both;
 }
-
-@keyframes zoneQuakeSoft {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  20% { transform: translate3d(-2.5px, -1px, 0) rotate(-0.12deg); }
-  45% { transform: translate3d(2.5px, 1px, 0) rotate(0.12deg); }
-  70% { transform: translate3d(-1.5px, 1px, 0); }
+@keyframes avHitRecoil {
+  0% { transform: scale(1); filter: none; }
+  20% { transform: scale(0.88) translateY(4px); filter: brightness(1.45) sepia(0.6) hue-rotate(-38deg) saturate(2.2); }
+  50% { transform: scale(1.06) translateX(-4px); filter: brightness(1.15) sepia(0.35) hue-rotate(-25deg); }
+  75% { transform: scale(0.98) translateX(3px); }
+  100% { transform: scale(1); filter: none; }
 }
-
-@keyframes zoneQuake {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  15% { transform: translate3d(-8px, -3px, 0) rotate(-0.4deg); }
-  30% { transform: translate3d(8px, 4px, 0) rotate(0.4deg); }
-  45% { transform: translate3d(-6px, 3px, 0) rotate(-0.3deg); }
-  60% { transform: translate3d(6px, -3px, 0) rotate(0.3deg); }
-  75% { transform: translate3d(-4px, 2px, 0); }
-  90% { transform: translate3d(3px, -2px, 0); }
+.av-impact {
+  position: fixed;
+  z-index: 96;
+  width: 110px;
+  height: 110px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.av-impact::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid rgba(239, 68, 68, 0.95);
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.9), inset 0 0 18px rgba(251, 191, 36, 0.65);
+  animation: avShockwave 0.52s cubic-bezier(0.15, 0.85, 0.35, 1) forwards;
+}
+.av-impact::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 96px;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #fff3c4 35%, #ef4444 65%, transparent);
+  box-shadow: 0 0 16px #ef4444;
+  transform: translate(-50%, -50%) rotate(-32deg) scaleX(0.2);
+  animation: avSlash 0.38s ease-out forwards;
+}
+.av-dmg {
+  position: fixed;
+  z-index: 97;
+  transform: translate(-50%, -50%);
+  min-width: 44px;
+  height: 44px;
+  padding: 0 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ef4444 0%, #991b1b 70%, #450a0a 100%);
+  border: 2.5px solid #fde68a;
+  color: #fff8e7;
+  font: 900 20px/1 var(--mf);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-shadow: 0 2px 4px #000;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.92), 0 0 18px rgba(239, 68, 68, 0.85);
+  pointer-events: none;
+  animation: avDmgPop 0.95s cubic-bezier(0.18, 0.9, 0.25, 1) forwards;
+}
+@keyframes avShockwave {
+  0% { transform: scale(0.35); opacity: 1; }
+  100% { transform: scale(1.65); opacity: 0; }
+}
+@keyframes avSlash {
+  0% { transform: translate(-50%, -50%) rotate(-32deg) scaleX(0.2); opacity: 1; }
+  45% { transform: translate(-50%, -50%) rotate(-32deg) scaleX(1.2); opacity: 1; }
+  100% { transform: translate(-50%, -50%) rotate(-32deg) scaleX(1.35); opacity: 0; }
+}
+@keyframes avDmgPop {
+  0% { transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
+  22% { transform: translate(-50%, -62%) scale(1.22); opacity: 1; }
+  55% { transform: translate(-50%, -74%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -95%) scale(0.9); opacity: 0; }
 }
 
 .cards .c.dust-out {

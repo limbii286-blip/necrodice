@@ -743,6 +743,54 @@ function dustTableCards(){
     setTimeout(()=>motes.forEach(m=>m.remove()),950);
   }
 }
+function heroAttack(winIdx){
+  const srcAv=document.querySelector((winIdx===0?'#me':'#opp')+' .who .av');
+  const dstAv=document.querySelector((winIdx===0?'#opp':'#me')+' .who .av');
+  if(!srcAv||!dstAv)return;
+  const r1=srcAv.getBoundingClientRect(),r2=dstAv.getBoundingClientRect();
+  if(!r1.width||!r2.width)return;
+  const dx=(r2.left+r2.width/2)-(r1.left+r1.width/2);
+  const dy=(r2.top+r2.height/2)-(r1.top+r1.height/2);
+  const clone=document.createElement('img');
+  clone.src=srcAv.src;
+  clone.className='av-attacker';
+  clone.style.left=r1.left+'px';
+  clone.style.top=r1.top+'px';
+  clone.style.width=r1.width+'px';
+  clone.style.height=r1.height+'px';
+  document.body.appendChild(clone);
+  srcAv.style.opacity='0';
+
+  const anim=clone.animate([
+    {transform:'translate3d(0,0,0) scale(1)',offset:0},
+    {transform:`translate3d(${(-dx*0.08).toFixed(1)}px,${(-dy*0.08).toFixed(1)}px,0) scale(1.18)`,offset:0.24},
+    {transform:`translate3d(${(dx*0.92).toFixed(1)}px,${(dy*0.92).toFixed(1)}px,0) scale(1.24)`,offset:0.50},
+    {transform:'translate3d(0,0,0) scale(1)',offset:1}
+  ],{duration:680,easing:'cubic-bezier(0.22,0.85,0.32,1)',fill:'forwards'});
+
+  setTimeout(()=>{
+    if(!dstAv.isConnected)return;
+    snd('stamp');vib([60,40,120]);
+    dstAv.classList.remove('av-hit');void dstAv.offsetWidth;dstAv.classList.add('av-hit');
+    const imp=document.createElement('div');
+    imp.className='av-impact';
+    imp.style.left=(r2.left+r2.width/2)+'px';
+    imp.style.top=(r2.top+r2.height/2)+'px';
+    const dmg=document.createElement('div');
+    dmg.className='av-dmg';
+    dmg.textContent='-1';
+    dmg.style.left=(r2.left+r2.width/2)+'px';
+    dmg.style.top=(r2.top+r2.height/2)+'px';
+    document.body.appendChild(imp);
+    document.body.appendChild(dmg);
+    setTimeout(()=>{imp.remove();dmg.remove()},980);
+  },330);
+
+  anim.onfinish=()=>{
+    clone.remove();
+    if(srcAv.isConnected)srcAv.style.opacity='';
+  };
+}
 function endRound(){
   const S=G,a=[total(S,0),total(S,1)],T=tg(S),r=outc(S,0);
   if(MODE=='bot'){profRec(S,a[0],T);lrnRound(r)}
@@ -750,7 +798,7 @@ function endRound(){
   R();snd('flip');lock=true; // 1) Kapalı kartlar açılır ve masada açık kalır
   setTimeout(()=>{
     if(S!==G)return;
-    // 2) Kaybeden tarafın yarı sahası deprem gibi sallanır ve kırmızıya boyanır (kazandı kutucuğu/yazısı yok)
+    // 2) Kazanan kahraman ikonu kalkıp kaybedenin ikonuna Hearthstone tarzı saldırı vuruşu yapar
     S.winSide=r;
     if(MODE=='bot'){talk(r==0?'tie':r<0?'win':(a[1]>T&&!lowW(S)?'bust':'lose'),2)}
     if(!(S.pts.some(x=>x>=2)||S.rounds>=3)&&r==0){
@@ -758,6 +806,7 @@ function endRound(){
     }
     snd(r>0?'win':r<0?'lose':'ok');
     R();
+    if(r!==0)heroAttack(r>0?0:1);
     setTimeout(()=>{
       if(S!==G)return;
       // 3) Yerdeki bütün sayı kartları tozlaşır gibi yok olur, sonra diğer tura geçilir
