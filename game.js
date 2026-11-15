@@ -709,6 +709,29 @@ function hmove(T,a,pol){ // simülasyonda oyuncunun hamlesi: öğrendiği alış
   if(canDraw(T,a)&&Math.random()<(e[0]+.3)/(n+.6))return{t:'d'};
   if((!T.jTurn||T.jTurn[a]<1)&&T.jUsed[a]<2&&!T.noJ[a]&&T.hand[a].length&&Math.random()<hjr()){const x=decide(T,a,{...pol,jp:1});if(x&&x.t=='j')return x}
   return null}
+function dustTableCards(){
+  const cards=[...document.querySelectorAll('#opp .cards .c, #me .cards .c')];
+  cards.forEach((c,idx)=>{
+    const r=c.getBoundingClientRect();
+    c.style.animationDelay=(idx*28)+'ms';
+    c.classList.add('dust-out');
+    if(r.width>0&&r.height>0){
+      for(let i=0;i<10;i++){
+        const m=document.createElement('span');
+        m.className='dust-mote';
+        const px=r.left+Math.random()*r.width;
+        const py=r.top+Math.random()*r.height;
+        m.style.left=px+'px';
+        m.style.top=py+'px';
+        m.style.setProperty('--dx',((Math.random()-0.5)*70).toFixed(1)+'px');
+        m.style.setProperty('--dy',(-20-Math.random()*65).toFixed(1)+'px');
+        m.style.animationDelay=(idx*25+Math.random()*160)+'ms';
+        document.body.appendChild(m);
+        setTimeout(()=>m.remove(),950);
+      }
+    }
+  });
+}
 function endRound(){
   const S=G,a=[total(S,0),total(S,1)],T=tg(S),r=outc(S,0);
   if(MODE=='bot'){profRec(S,a[0],T);lrnRound(r)}
@@ -716,7 +739,7 @@ function endRound(){
   R();snd('flip');lock=true; // 1) Kapalı kartlar açılır ve masada açık kalır
   setTimeout(()=>{
     if(S!==G)return;
-    // 2) Kapalı kartlar açıldıktan sonra kutucuk açılmaz, kazanan tarafta zafer animasyonu oynar
+    // 2) Kaybeden tarafın yarı sahası deprem gibi sallanır ve kırmızıya boyanır (kazandı kutucuğu/yazısı yok)
     S.winSide=r;
     if(MODE=='bot'){talk(r==0?'tie':r<0?'win':(a[1]>T&&!lowW(S)?'bust':'lose'),2)}
     if(!(S.pts.some(x=>x>=2)||S.rounds>=3)&&r==0){
@@ -724,7 +747,12 @@ function endRound(){
     }
     snd(r>0?'win':r<0?'lose':'ok');
     R();
-    setTimeout(()=>{if(S!==G)return;lock=false;fin()},2300);
+    setTimeout(()=>{
+      if(S!==G)return;
+      // 3) Yerdeki bütün sayı kartları tozlaşır gibi yok olur, sonra diğer tura geçilir
+      dustTableCards();
+      setTimeout(()=>{if(S!==G)return;lock=false;fin()},820);
+    },1450);
   },1150);
   function fin(){
     S.winSide=null;
@@ -987,8 +1015,6 @@ function R(){
   const av0=avh(0),av1=avh(1);
   const p0Name=isSpec?'Tüccar (Oda Sahibi)':(MODE=='host'?'Tüccar (Sen)':'Sen');
   const p1Name=isSpec?'Yozlaşmış Tüccar (Misafir)':(MODE=='guest'?'Yozlaşmış Tüccar (Sen)':(MODE=='host'?'Yozlaşmış Tüccar (Rakip)':(MODE=='bot'||S.av?oppName():'Rakip')));
-  const oppWinHtml=S.winSide!=null&&S.winSide<0?`<div class="zone-win-fx opp"><div class="zw-shockwave"></div><div class="zw-sparks"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="zw-banner"><span class="zw-ico">⚔</span><div class="zw-txt"><b>${p1Name} Kazandı</b><small>Toplam: ${ot} · Hedef: ${low?'En Az':T}</small></div><span class="zw-ico">⚔</span></div></div>`:'';
-  const meWinHtml=S.winSide!=null&&S.winSide>0?`<div class="zone-win-fx mine"><div class="zw-shockwave"></div><div class="zw-sparks"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="zw-banner"><span class="zw-ico">♛</span><div class="zw-txt"><b>${isSpec?p0Name+' Kazandı':'Turu Sen Kazandın'}</b><small>Toplam: ${mt} · Hedef: ${low?'En Az':T}</small></div><span class="zw-ico">♛</span></div></div>`:(S.winSide===0?`<div class="zone-win-fx tie"><div class="zw-shockwave"></div><div class="zw-banner"><span class="zw-ico">⚖</span><div class="zw-txt"><b>Tur Berabere</b><small>${mt} – ${ot} · Hedef: ${low?'En Az':T}</small></div><span class="zw-ico">⚖</span></div></div>`:'');
   const oppTimeOut=!!(S.timeOut&&S.timeOut[1]),meTimeOut=!!(S.timeOut&&S.timeOut[0]);
   const c0=Math.ceil(S.clocks?S.clocks[0]:66),c1=Math.ceil(S.clocks?S.clocks[1]:66);
   const sc0=$('#sc-0'),sc1=$('#sc-1'),scSec0=$('#sc-sec-0'),scSec1=$('#sc-sec-1');
@@ -997,8 +1023,8 @@ function R(){
   if(sc0){sc0.classList.toggle('ticking',S.turn==0&&!S.wait&&!(S.graceLeft>0)&&!meTimeOut);sc0.classList.toggle('low',c0<=10&&c0>0);sc0.classList.toggle('out',meTimeOut||c0<=0)}
   if(sc1){sc1.classList.toggle('ticking',S.turn==1&&!S.wait&&!(S.graceLeft>0)&&!oppTimeOut);sc1.classList.toggle('low',c1<=10&&c1>0);sc1.classList.toggle('out',oppTimeOut||c1<=0)}
   const oppHandHtml=`<div class="opp-jhand" title="Rakibin elindeki kapalı jokerler (${S.hand[1].length})">${S.hand[1].map((_,i)=>`<img class="oj" style="--r:${((i-(S.hand[1].length-1)/2)*4.5).toFixed(1)}deg" src="${IMG.bj}" alt="">`).join('')}</div>`;
-  $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'')+(S.winSide!=null?(S.winSide<0?' round-win':S.winSide>0?' round-lose':' round-tie'):'');
-  setH('#opp',`${oppHandHtml}<div class="who">${av1}<div class="nm"><b>${p1Name}</b><span class="meta">${MODE=='bot'?IC.dif.repeat(DN[DIFF]):'Online'}</span></div><div class="tot${obust?' bust':oexact?' exact':''}"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${S.rev?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>${oppWinHtml}`);
+  $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'')+(S.winSide!=null&&S.winSide>0?' round-lose':'');
+  setH('#opp',`${oppHandHtml}<div class="who">${av1}<div class="nm"><b>${p1Name}</b><span class="meta">${MODE=='bot'?IC.dif.repeat(DN[DIFF]):'Online'}</span></div><div class="tot${obust?' bust':oexact?' exact':''}"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${S.rev?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>`);
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<span class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}"><img src="${IMG.j[e.id]}" alt=""></span>`};
   $('#deck b').textContent=S.deck.length;
   $('#deck').classList.toggle('can-draw',!isSpec&&my&&!P&&canDraw(S,0));
@@ -1010,8 +1036,8 @@ function R(){
   setH('#seal',`<b>${low?'En az':T}</b>`);
   if(prevSeal&&prevSeal!=seal){sl.classList.remove('stamp');void sl.offsetWidth;sl.classList.add('stamp')}
   $('#arr').className='arr '+(S.wait||S.over?'off':S.turn==0?'me':'op');
-  $('#me').className='zone'+(my?' act':'')+(S.winSide!=null?(S.winSide>0?' round-win':S.winSide<0?' round-lose':' round-tie'):'');
-  setH('#me',`<div class="who">${av0}<div class="nm"><b>${p0Name}</b><span class="meta">${jp(Math.max(0,2-S.jUsed[0]))}</span></div><div class="tot${bust?' bust':exact?' exact':''}"><small>Toplam</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>${meWinHtml}`);
+  $('#me').className='zone'+(my?' act':'')+(S.winSide!=null&&S.winSide<0?' round-lose':'');
+  setH('#me',`<div class="who">${av0}<div class="nm"><b>${p0Name}</b><span class="meta">${jp(Math.max(0,2-S.jUsed[0]))}</span></div><div class="tot${bust?' bust':exact?' exact':''}"><small>Toplam</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`);
   $('#prompt').className=P?'ask':'';
   setH('#prompt',P?`${J[P.id]}: ${KTXT[k]} ${k=='sign'?'<button class="btn sm" data-s="1">Ekle</button><button class="btn sm" data-s="-1">Çıkar</button>':''}<button class="btn sm alt" data-x="1">Vazgeç</button>`:'');
   const ends=(S.turns>0&&!S.acted)||oppTimeOut; // rakibin süresi bittiyse veya karşı taraf pas dediyse şimdi pas dersem tur biter
