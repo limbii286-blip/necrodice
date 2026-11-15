@@ -1186,7 +1186,7 @@ function chooseHero(onPick){
       <p class="hpc-desc">${h.desc}</p>
     </div>
   </button>`).join('');
-  $('#mb').innerHTML=`<h3>Kahramanını Seç</h3><p class="hpc-sub">Her kahramanın kendine özgü <b>aktif</b> veya <b>pasif</b> bir Hero Power'ı vardır.</p><div class="hero-grid">${cards}</div><div class="row"><button id="hp-cancel" class="btn alt sm">Geri</button></div>`;
+  $('#mb').innerHTML=`<h3>Kahramanını Seç</h3><div class="hero-grid">${cards}</div><div class="row"><button id="hp-cancel" class="btn alt sm">Geri</button></div>`;
   $('#m').hidden=false;
   $('#mb').querySelectorAll('[data-pick-hero]').forEach(btn=>btn.onclick=()=>{
     const hid=btn.dataset.pickHero;
