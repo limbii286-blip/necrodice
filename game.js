@@ -1490,8 +1490,8 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     fromConn.send({
       k: 'slots_info',
       slots: {
-        p0: { name: NAMES[MY_HERO]||'Tüccar', hero: MY_HERO||'t', role: 'Oda Sahibi', busy: true },
-        p1: { name: guestBusy?(NAMES[OPP_HERO]||'Misafir'):'Boş Slot', hero: guestBusy?(OPP_HERO||'c'):'c', role: 'Misafir Oyuncu', busy: guestBusy }
+        p0: { name: '1. Oyuncu', hero: MY_HERO||'t', role: 'Oda Sahibi', busy: true },
+        p1: { name: '2. Oyuncu', hero: guestBusy?(OPP_HERO||'c'):'c', role: 'Misafir Oyuncu', busy: guestBusy }
       },
       specCount: spectators.length
     });
@@ -1702,7 +1702,7 @@ function showJoinModal(slots, specCount){
             <img class="slot-av" src="${avSrc(p0.hero||'t')}" alt="${p0.name}">
             <div class="slot-names">
               <b>${p0.name}</b>
-              <small>1. Oyuncu · ${p0.role}</small>
+              <small>${p0.role}</small>
             </div>
           </div>
           <span class="slot-status busy">DOLU</span>
@@ -1713,7 +1713,7 @@ function showJoinModal(slots, specCount){
             <img class="slot-av" src="${avSrc(p1.hero||'c')}" alt="${p1.name}">
             <div class="slot-names">
               <b>${p1.name}</b>
-              <small>2. Oyuncu · ${p1.role}</small>
+              <small>${p1.role}</small>
             </div>
           </div>
           <span class="slot-status ${p1Free?'free':'busy'}">${p1Free?'BOŞ':'DOLU'}</span>
