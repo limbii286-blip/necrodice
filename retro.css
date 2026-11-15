@@ -1165,6 +1165,7 @@ html::after {
 }
 #opp.zone .cards {
   margin-top: auto;
+  margin-bottom: -6px;
 }
 #opp.zone .who {
   margin-top: 0 !important;
@@ -1204,6 +1205,9 @@ html::after {
   padding-top: 0 !important;
   padding-bottom: clamp(78px, 11.8dvh, 110px) !important;
   background: transparent !important;
+}
+#me.zone .cards {
+  margin-top: -6px;
 }
 #me.zone.act {
   background: radial-gradient(68% 92% at 50% 35%, rgba(234, 179, 84, 0.19), rgba(168, 112, 34, 0.07) 52%, transparent 78%) !important;
