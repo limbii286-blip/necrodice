@@ -1127,9 +1127,13 @@ main::before {
 }
 
 #opp.zone {
+  justify-content: flex-start;
   padding-top: max(6px, env(safe-area-inset-top, 6px)) !important;
   padding-bottom: 0 !important;
   background: transparent !important;
+}
+#opp.zone .cards {
+  margin-top: auto;
 }
 #opp.zone .who {
   margin-top: 0 !important;
