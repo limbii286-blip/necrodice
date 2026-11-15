@@ -1736,6 +1736,20 @@ function joinRoom(){
 const on=(id,f)=>{const e=document.querySelector(id);if(e)e.onclick=f}; // bir öğe yoksa diğer düğmeler yine de çalışır
 document.querySelectorAll('.d').forEach(b=>b.onclick=()=>{DIFF=b.dataset.d;MODE='bot';chooseHero(h=>{MY_HERO=h;enter(start)})});
 on('#b4',codex);on('#b5',guide);on('#b6',settings);
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  const menu=$('#menu');
+  if(!menu||!menu.hidden||!G)return;
+  const zm=$('#zm');
+  if(zm){zm.remove();return;}
+  const m=$('#m');
+  if(m&&!m.hidden){
+    const pc=$('#pc');
+    if(pc)pc.click();
+    return;
+  }
+  settings();
+});
 try{if(RM)document.body.classList.add('rm');if(!CRT)document.documentElement.classList.add('nocrt')}catch(e){}
 try{$('#slogo').src=IMG.logo}catch(e){}setTimeout(()=>{const s=$('#splash');s&&s.remove()},2900);
 on('#b2',hostRoom);on('#b3',joinRoom);
@@ -2422,7 +2436,9 @@ function createSmoothDragLoop(onFrame){
     const scSec0=$('#sc-sec-0');
     const scSec1=$('#sc-sec-1');
     const menu=$('#menu');
-    const active=!!(G && !G.over && !G.wait && !lock && (!menu || menu.hidden));
+    const modalEl=$('#m'),mbEl=$('#mb');
+    const isMenuModal=!!(modalEl&&!modalEl.hidden&&mbEl&&!mbEl.querySelector('.d20-box,.scry-row,#hp-p2,.hero-grid'));
+    const active=!!(G && !G.over && !G.wait && (!lock || (MODE!=='bot' && isMenuModal)) && (!menu || menu.hidden));
     if(!active){
       if(sc0) sc0.classList.remove('ticking','low');
       if(sc1) sc1.classList.remove('ticking','low');
