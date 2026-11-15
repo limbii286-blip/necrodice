@@ -150,7 +150,7 @@
         const upX = (s0[0] - (s1[0] + s2[0])/2);
         const upY = (s0[1] - (s1[1] + s2[1])/2);
         const ang = Math.atan2(upY, upX) + Math.PI / 2;
-        ctx.rotate(ang * 0.3); // subtle natural perspective tilt
+        ctx.rotate(Math.sin(ang) * 0.28); // continuous periodic perspective tilt (no atan2 wrap snap)
 
         const fontSz = Math.max(16, baseScale * (numStr.length > 1 ? 0.36 : 0.42) * norm[2] * (fi === 0 ? textPop : 1.0));
         ctx.font = `900 ${fontSz|0}px 'Cinzel', 'Times New Roman', serif`;
