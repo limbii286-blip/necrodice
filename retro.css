@@ -1732,11 +1732,11 @@ body.dragging-joker #fx::after {
 }
 #fx .jh.o {
   justify-content: flex-end;
-  padding-right: 68px !important;
+  padding-right: clamp(92px, 8.5vw, 128px) !important;
 }
 #fx .jh.m {
   justify-content: flex-start;
-  padding-left: 68px !important;
+  padding-left: clamp(92px, 8.5vw, 128px) !important;
 }
 
 /* Sağ Kenardaki Rakip & Oyuncu Yuvarlak Satranç Saatleri (Sağdaki simetrik taş boşluklarda) */
@@ -2368,10 +2368,10 @@ body.dragging-joker #fx::after {
     font-size: clamp(22px, 3.4dvh, 30px) !important;
   }
   #fx .jh.o {
-    padding-right: 42px !important;
+    padding-right: 54px !important;
   }
   #fx .jh.m {
-    padding-left: 42px !important;
+    padding-left: 54px !important;
   }
   #fx .e {
     width: 28px !important;
