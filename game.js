@@ -164,6 +164,7 @@ const SND={
   info(){sfx('info',.85)},
   play(){sfx('play',1)},
   click(){sfx('click',.8)},
+  stone(){tone(145,.045,'triangle',.16,0,-55);noise(.028,.12,1800)},
   tick(){tone(920,.045,'triangle',.09);noise(.03,.08,3200)},
   pass(){sfx('click',.9);tone(110,.18,'sine',.25)},
   turn(){sfx('tap',.7);tone(587,.12,'sine',.08);tone(880,.16,'sine',.06,.05)},
@@ -334,7 +335,7 @@ function newBO3(S){
 function deal(S){
   S.deck=shuf(range(11).map(n=>({id:++S.u,n})));
   S.pl=[0,1].map(()=>({open:[S.deck.pop()],closed:[S.deck.pop()]}));
-  S.eff=[];S.pj=[];S.jUsed=[0,0];S.noJ=[false,false];S.acted=false;S.turns=0;
+  S.eff=[];S.pj=[];S.jUsed=[0,0];S.jTurn=[0,0];S.noJ=[false,false];S.acted=false;S.turns=0;
   S.turn=S.pl[0].open[0].n<S.pl[1].open[0].n?0:1;
   S.wait=false;S.rev=false;S.winSide=null;S.timeOut=[false,false];S.hadTimeout=false;S.dead=[];S.pa=[0,0];S.st={pb:0,ob:0,px:0};
   if(!Array.isArray(S.clocks)||S.clocks.length!==2){
@@ -367,12 +368,12 @@ function opts(S,p,k){
   if(k=='eff')return S.eff.filter(e=>!e.neg&&BLOCK.has(e.id)).map(e=>e.uid);
   if(k=='sign')return [1,-1];
 }
-const playable=(S,p,id)=>S.jUsed[p]<1&&!S.noJ[p]&&S.hand[p].includes(id)&&(NEED[id]||[]).every(k=>opts(S,p,k).length)&&(id!=5||S.deck.length>0);
+const playable=(S,p,id)=>(!S.jTurn||S.jTurn[p]<1)&&S.jUsed[p]<2&&!S.noJ[p]&&S.hand[p].includes(id)&&(NEED[id]||[]).every(k=>opts(S,p,k).length)&&(id!=5||S.deck.length>0);
 function play(S,p,id,pk){
   const q=1-p;
   const find=cid=>{for(const x of S.pl)for(const z of ['open','closed']){const i=x[z].findIndex(c=>c.id==cid);if(i>=0)return[x[z],i]}};
   const take=cid=>{const[a,i]=find(cid);return a.splice(i,1)[0]};
-  S.hand[p].splice(S.hand[p].indexOf(id),1);S.used=(S.used||[]).concat(id);(S.dj=S.dj||[]).push(id);S.jUsed[p]++;
+  S.hand[p].splice(S.hand[p].indexOf(id),1);S.used=(S.used||[]).concat(id);(S.dj=S.dj||[]).push(id);S.jUsed[p]++;S.jTurn=S.jTurn||[0,0];S.jTurn[p]++;
   const uid=++S.u;(S.pj=S.pj||[]).push({id,o:p,uid});
   if(BLOCK.has(id))S.eff.push({id,o:p,uid,neg:false,s:pk[0]});
   if(id==5)S.pl[q].open.push(S.deck.pop());
@@ -421,7 +422,7 @@ function decide(S,p,prm){ // en iyi hamleyi seç; null = pas
     let v=0;pool.forEach(x=>{const T=clone(S);T.deck.pop();T.pl[p].open.push({id:++T.u,n:x});v+=look(T,p,d)});
     v=v/pool.length+nz();if(v>bs){bs=v;best={t:'d'}}
   }
-  if(S.jUsed[p]<1&&!S.noJ[p])new Set(S.hand[p]).forEach(id=>{
+  if((!S.jTurn||S.jTurn[p]<1)&&S.jUsed[p]<2&&!S.noJ[p])new Set(S.hand[p]).forEach(id=>{
     if(id==16||!playable(S,p,id)||Math.random()>prm.jp)return;
     combos((NEED[id]||[]).map(k=>opts(S,p,k))).forEach(pk=>{
       if(id==15&&pk[0]==pk[1])return;
@@ -441,7 +442,7 @@ function listC(S,p,prm){
   out.push({a:null,v:evalS(clone(S),p)+prm.dm});
   if(canDraw(S,p)&&pool.length){let v=0;pool.forEach(x=>{const T=clone(S);T.log=[];T.deck.pop();T.pl[p].open.push({id:++T.u,n:x});v+=look(T,p,d)});out.push({a:{t:'d'},v:v/pool.length})}
   const cost=S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc;
-  if(S.jUsed[p]<1&&!S.noJ[p])new Set(S.hand[p]).forEach(id=>{
+  if((!S.jTurn||S.jTurn[p]<1)&&S.jUsed[p]<2&&!S.noJ[p])new Set(S.hand[p]).forEach(id=>{
     if(!playable(S,p,id))return;
     if(id==16){const c=S.pl[p].closed[0],cv=c.o??c.n;if(cv<=5)out.push({a:{t:'j',id,pk:[]},v:-9});return}
     combos((NEED[id]||[]).map(k=>opts(S,p,k))).forEach(pk=>{
@@ -467,7 +468,7 @@ function bo3v(T,p,r){ // tur sonucu r (p açısından) -> düelloyu kazanma değ
   return Math.max(-.9,Math.min(.9,.55*(np-nq)+.03*(T.hand[p].length-T.hand[q].length)))}
 function rollout(T,p,a,pol){
   let actor=p,n=0;
-  const doPass=()=>{if((T.timeOut&&T.timeOut[1-T.turn])||(T.turns>0&&!T.acted))return true;(T.pa=T.pa||[0,0])[actor]++;T.turns++;T.acted=false;T.turn=1-T.turn;T.jUsed[T.turn]=0;actor=T.turn;n=0;return false};
+  const doPass=()=>{if((T.timeOut&&T.timeOut[1-T.turn])||(T.turns>0&&!T.acted))return true;(T.pa=T.pa||[0,0])[actor]++;T.turns++;T.acted=false;T.turn=1-T.turn;(T.jTurn=T.jTurn||[0,0])[T.turn]=0;actor=T.turn;n=0;return false};
   const doAct=(x,who)=>{if(x.t=='d')T.pl[who].open.push(T.deck.pop());else play(T,who,x.id,x.pk);T.acted=true};
   const fin=()=>pol.bo3?bo3v(T,p,outc(T,p)):outc(T,p);
   if(!a){if(doPass())return fin()}else{doAct(a,p);n=1}
@@ -548,7 +549,7 @@ function pass(fromTimeout=false){
   const opp=1-S.turn;
   // Karşı tarafın süresi zaten bittiyse (sıra tekrar süresi bitene geçmez!) veya normal iki pas olduysa tur biter:
   if((S.timeOut&&S.timeOut[opp])||(!fromTimeout&&S.turns>0&&!S.acted))return endRound();
-  (S.pa=S.pa||[0,0])[S.turn]++;S.turns++;S.acted=false;S.turn=opp;S.jUsed[S.turn]=0;R();next();
+  (S.pa=S.pa||[0,0])[S.turn]++;S.turns++;S.acted=false;S.turn=opp;(S.jTurn=S.jTurn||[0,0])[S.turn]=0;R();next();
 }
 function next(){if(MODE=='bot'&&G.turn==1&&!lock&&!G.over)bot()}
 function M(html,btn,cb,end){lock=true;$('#mb').innerHTML=html+(btn?`<br><br><button id="mo" class="btn">${btn}</button>`:end?'':'<br><i>Oda sahibinin devam etmesi bekleniyor…</i>')+(end?'<br><br><button id="mx" class="btn alt">Ana menüye dön</button>':'');$('#m').hidden=false;
@@ -665,7 +666,7 @@ function hmove(T,a,pol){ // simülasyonda oyuncunun hamlesi: öğrendiği alış
   const d=Math.max(-6,Math.min(12,tg(T)-total(T,a)))+6,e=LRN.dp[d],n=e[0]+e[1];
   if(n<5)return decide(T,a,pol); // bu durumda yeterli veri yok: güçlü oyuncu varsay
   if(canDraw(T,a)&&Math.random()<(e[0]+.3)/(n+.6))return{t:'d'};
-  if(T.jUsed[a]<1&&!T.noJ[a]&&T.hand[a].length&&Math.random()<hjr()){const x=decide(T,a,{...pol,jp:1});if(x&&x.t=='j')return x}
+  if((!T.jTurn||T.jTurn[a]<1)&&T.jUsed[a]<2&&!T.noJ[a]&&T.hand[a].length&&Math.random()<hjr()){const x=decide(T,a,{...pol,jp:1});if(x&&x.t=='j')return x}
   return null}
 function endRound(){
   const S=G,a=[total(S,0),total(S,1)],T=tg(S),r=outc(S,0);
@@ -939,7 +940,7 @@ function R(){
   setH('#hdr',`<div class="hs sks">${sk}</div><div class="hc"><span class="lab">Düello ${S.bo+1}</span><span class="pips">${pips}</span>${specHdr}</div><div class="hg"><button class="gear" data-g="1" aria-label="Ayarlar">${IC.gear}<span>MENÜ</span></button></div>`);
   const my=!isSpec&&S.turn==0&&!lock&&!S.wait,mt=total(S,0),ot=total(S,1,!!S.rev),bust=!low&&mt>T,obust=!!S.rev&&!low&&ot>T,seal=T+(low?'L':'');
   const exact=!low&&mt===T,oexact=!!S.rev&&!low&&ot===T;
-  const jp=n=>`<span class="jpips" title="Bu sıradaki joker hakkı ${n}/1"><i${n>0?' class="on"':''}></i></span>`;
+  const jp=n=>`<span class="jpips" title="Bu tur kalan joker hakkı ${n}/2">${[0,1].map(i=>`<i${i<n?' class="on"':''}></i>`).join('')}</span>`;
   const avh=p=>{const k=avKey(S,p),now=performance.now();if(prevAv[p]!==undefined&&prevAv[p]!==k)morphT[p]=now;prevAv[p]=k;
     const el=(now-morphT[p])/1000,mo=morphT[p]&&el<1.1;return `<img class="av${mo?' morph':''}" data-av="${p}"${mo?` style="animation-delay:-${el.toFixed(2)}s"`:''} src="${avSrc(k)}" alt="">`};
   const av0=avh(0),av1=avh(1);
@@ -954,8 +955,9 @@ function R(){
   if(scSec1)scSec1.textContent=String(c1);
   if(sc0){sc0.classList.toggle('ticking',S.turn==0&&!S.wait&&!(S.graceLeft>0)&&!meTimeOut);sc0.classList.toggle('low',c0<=10&&c0>0);sc0.classList.toggle('out',meTimeOut||c0<=0)}
   if(sc1){sc1.classList.toggle('ticking',S.turn==1&&!S.wait&&!(S.graceLeft>0)&&!oppTimeOut);sc1.classList.toggle('low',c1<=10&&c1>0);sc1.classList.toggle('out',oppTimeOut||c1<=0)}
+  const oppHandHtml=`<div class="opp-jhand" title="Rakibin elindeki kapalı jokerler (${S.hand[1].length})">${S.hand[1].map((_,i)=>`<img class="oj" style="--r:${((i-(S.hand[1].length-1)/2)*4.5).toFixed(1)}deg" src="${IMG.bj}" alt="">`).join('')}</div>`;
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'')+(S.winSide!=null?(S.winSide<0?' round-win':S.winSide>0?' round-lose':' round-tie'):'');
-  setH('#opp',`<div class="who">${av1}<div class="nm"><b>${p1Name}</b><span class="meta">${MODE=='bot'?IC.dif.repeat(DN[DIFF]):'Online'}${jp(1-S.jUsed[1])}</span></div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot${obust?' bust':oexact?' exact':''}"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${S.rev?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>${oppWinHtml}`);
+  setH('#opp',`${oppHandHtml}<div class="who">${av1}<div class="nm"><b>${p1Name}</b><span class="meta">${MODE=='bot'?IC.dif.repeat(DN[DIFF]):'Online'}</span></div><div class="tot${obust?' bust':oexact?' exact':''}"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${S.rev?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>${oppWinHtml}`);
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<span class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}"><img src="${IMG.j[e.id]}" alt=""></span>`};
   $('#deck b').textContent=S.deck.length;
   $('#deck').classList.toggle('can-draw',!isSpec&&my&&!P&&canDraw(S,0));
@@ -968,7 +970,7 @@ function R(){
   if(prevSeal&&prevSeal!=seal){sl.classList.remove('stamp');void sl.offsetWidth;sl.classList.add('stamp')}
   $('#arr').className='arr '+(S.wait||S.over?'off':S.turn==0?'me':'op');
   $('#me').className='zone'+(my?' act':'')+(S.winSide!=null?(S.winSide>0?' round-win':S.winSide<0?' round-lose':' round-tie'):'');
-  setH('#me',`<div class="who">${av0}<div class="nm"><b>${p0Name}</b><span class="meta">${jp(1-S.jUsed[0])}</span></div><div class="tot${bust?' bust':exact?' exact':''}"><small>Toplam</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>${meWinHtml}`);
+  setH('#me',`<div class="who">${av0}<div class="nm"><b>${p0Name}</b><span class="meta">${jp(Math.max(0,2-S.jUsed[0]))}</span></div><div class="tot${bust?' bust':exact?' exact':''}"><small>Toplam</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>${meWinHtml}`);
   $('#prompt').className=P?'ask':'';
   setH('#prompt',P?`${J[P.id]}: ${KTXT[k]} ${k=='sign'?'<button class="btn sm" data-s="1">Ekle</button><button class="btn sm" data-s="-1">Çıkar</button>':''}<button class="btn sm alt" data-x="1">Vazgeç</button>`:'');
   const ends=(S.turns>0&&!S.acted)||oppTimeOut; // rakibin süresi bittiyse veya karşı taraf pas dediyse şimdi pas dersem tur biter
@@ -983,7 +985,7 @@ function R(){
   if(isSpec){
     setH('#hand',`<div class="spec-notice">👁️ Canlı Maç Yayını · İzleyici Modundasın</div>`);
   }else{
-    setH('#hand',S.hand[0].map((id,i)=>`<img class="j${my&&!P&&playable(S,0,id)?'':' dim'}" style="--r:${((i-(n-1)/2)*5).toFixed(1)}deg" data-j="${id}" src="${IMG.j[id]}" alt="">`).join(''));
+    setH('#hand',S.hand[0].map((id,i)=>`<span class="jslot"><img class="j${my&&!P&&playable(S,0,id)?'':' dim'}" style="--r:${((i-(n-1)/2)*5).toFixed(1)}deg" data-j="${id}" src="${IMG.j[id]}" alt=""></span>`).join(''));
     document.querySelectorAll('#hand .j[data-j]').forEach(im=>hi(im,+im.dataset.j));
   }
   count(document.querySelector('#me .tot b'),lastTot[0],mt);count(document.querySelector('#opp .tot b'),lastTot[1],ot);lastTot=[mt,ot];
@@ -1160,14 +1162,14 @@ let MODE='bot',peer,conn,spectators=[],specCount=0,waitM=false;
 const MAX_SPECTATORS = 5;
 function view(S){ // rakibe gidecek, gizli bilgisi temizlenmiş ve aynalanmış durum
   const f=a=>[a[1],a[0]];
-  return {av:[S.av[1],S.av[0]],mast:[S.mast[1],S.mast[0]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:1-S.turn,clocks:S.clocks?f(S.clocks):[66,66],clockMax:S.clockMax||66,graceLeft:S.graceLeft||0,timeOut:S.timeOut?f(S.timeOut):[false,false],hadTimeout:!!S.hadTimeout,pts:f(S.pts),rev:S.rev,winSide:S.winSide==null?null:-S.winSide,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),noJ:f(S.noJ),
+  return {av:[S.av[1],S.av[0]],mast:[S.mast[1],S.mast[0]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:1-S.turn,clocks:S.clocks?f(S.clocks):[66,66],clockMax:S.clockMax||66,graceLeft:S.graceLeft||0,timeOut:S.timeOut?f(S.timeOut):[false,false],hadTimeout:!!S.hadTimeout,pts:f(S.pts),rev:S.rev,winSide:S.winSide==null?null:-S.winSide,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),jTurn:S.jTurn?f(S.jTurn):[0,0],noJ:f(S.noJ),
     hand:[S.hand[1],S.hand[0].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
     pl:[S.pl[1],{open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:S.rev?c.o:undefined}))}],
     eff:S.eff.map(e=>({...e,o:1-e.o})),pj:(S.pj||[]).map(e=>({...e,o:1-e.o})),log:S.log.slice(-6).map(l=>({...l,p:l.p<0?-1:1-l.p}))};
 }
 function specView(S){ // izleyicilere gidecek durum (0 = host/oda sahibi, 1 = misafir oyuncu, kapalı kartlar rev olmadan görünmez)
   return {
-    av:[S.av[0],S.av[1]],mast:[S.mast[0],S.mast[1]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:S.turn,clocks:S.clocks?[...S.clocks]:[66,66],clockMax:S.clockMax||66,graceLeft:S.graceLeft||0,timeOut:S.timeOut?[...S.timeOut]:[false,false],hadTimeout:!!S.hadTimeout,pts:S.pts,rev:S.rev,winSide:S.winSide,res:S.res,jUsed:S.jUsed,noJ:S.noJ,
+    av:[S.av[0],S.av[1]],mast:[S.mast[0],S.mast[1]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:S.turn,clocks:S.clocks?[...S.clocks]:[66,66],clockMax:S.clockMax||66,graceLeft:S.graceLeft||0,timeOut:S.timeOut?[...S.timeOut]:[false,false],hadTimeout:!!S.hadTimeout,pts:S.pts,rev:S.rev,winSide:S.winSide,res:S.res,jUsed:S.jUsed,jTurn:S.jTurn?[...S.jTurn]:[0,0],noJ:S.noJ,
     hand:[S.hand[0].map(()=>0),S.hand[1].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
     pl:[
       {open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:S.rev?c.o:undefined}))},
@@ -1467,10 +1469,16 @@ on('#b2',hostRoom);on('#b3',joinRoom);
     dragging=false;pointerId=null;
   }
 
+  document.addEventListener('dragstart',e=>{
+    if(e.target.closest&&e.target.closest('#deck, #hand .j'))e.preventDefault();
+  });
+
   document.addEventListener('pointerdown',e=>{
     if(e.button!=null&&e.button!==0)return;
     const dk=e.target.closest&&e.target.closest('#deck');
     if(!dk||!canDrawNow())return;
+    e.preventDefault();
+    try{window.getSelection&&window.getSelection().removeAllRanges&&window.getSelection().removeAllRanges()}catch(err){}
     dragging=false;
     pointerId=e.pointerId;
     startX=e.clientX;
@@ -1930,13 +1938,11 @@ on('#b2',hostRoom);on('#b3',joinRoom);
     const sc1=$('#sc-1');
     const scSec0=$('#sc-sec-0');
     const scSec1=$('#sc-sec-1');
-    const graceEl=$('#tt-grace');
     const menu=$('#menu');
     const active=!!(G && !G.over && !G.wait && !lock && (!menu || menu.hidden));
     if(!active){
       if(sc0) sc0.classList.remove('ticking','low');
       if(sc1) sc1.classList.remove('ticking','low');
-      if(graceEl) graceEl.hidden=true;
       lastTickSec=-1;
       return;
     }
@@ -1946,24 +1952,17 @@ on('#b2',hostRoom);on('#b3',joinRoom);
     }
     if(!Array.isArray(G.timeOut)) G.timeOut=[false,false];
 
-    // 5 saniyelik hazırlık süresi: iki tarafın da jokerlere/kartlara bakması için saatler başlamaz
+    // 5 saniyelik sessiz hazırlık süresi: iki tarafın da jokerlere/kartlara bakması için saatler hemen başlamaz
     if(G.graceLeft && G.graceLeft > 0){
       G.graceLeft=Math.max(0, G.graceLeft - 0.1);
-      const gSec=Math.ceil(G.graceLeft);
       const s0=Math.ceil(G.clocks[0]), s1=Math.ceil(G.clocks[1]);
       if(scSec0) scSec0.textContent=String(s0);
       if(scSec1) scSec1.textContent=String(s1);
-      if(graceEl){
-        graceEl.hidden=false;
-        graceEl.textContent=`HAZIRLIK ${gSec}s`;
-      }
       if(sc0) sc0.classList.remove('ticking','low');
       if(sc1) sc1.classList.remove('ticking','low');
       lastTickSec=-1;
       return;
     }
-
-    if(graceEl) graceEl.hidden=true;
 
     const t=G.turn===1?1:0;
     G.clocks[t]=Math.max(0, G.clocks[t] - 0.1);
@@ -2004,4 +2003,21 @@ on('#b2',hostRoom);on('#b3',joinRoom);
       pass(true);
     }
   },100);
+})();
+
+/* ---------- HEARTHSTONE TARZI TIKLANABİLİR TAŞ ARKA PLAN (PIT PIT SES + DALGA) ---------- */
+(function initBoardStoneTap(){
+  document.addEventListener('pointerdown',e=>{
+    if(e.button!=null&&e.button!==0)return;
+    const menu=$('#menu'),modal=$('#m');
+    if((menu&&!menu.hidden)||(modal&&!modal.hidden))return;
+    if(e.target.closest&&e.target.closest('button, a, input, select, .c, .j, .e, #deck, #pass, .who, #hdr .hs, #hdr .hc, #hdr .hg, .side-clock, .seal'))return;
+    snd('stone');
+    const r=document.createElement('div');
+    r.className='stone-ripple';
+    r.style.left=e.clientX+'px';
+    r.style.top=e.clientY+'px';
+    document.body.appendChild(r);
+    setTimeout(()=>r.remove(),480);
+  });
 })();

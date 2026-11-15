@@ -56,13 +56,31 @@ body::after {
   display: none !important;
 }
 html::after {
-  content: "";
+  display: none !important;
+  box-shadow: none !important;
+  background: none !important;
+}
+
+body.dragging-deck,
+body.dragging-deck * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+@keyframes stoneRipple {
+  0% { transform: translate(-50%, -50%) scale(0.35); opacity: 0.75; }
+  100% { transform: translate(-50%, -50%) scale(2.1); opacity: 0; }
+}
+.stone-ripple {
   position: fixed;
-  inset: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid rgba(212, 168, 85, 0.72);
+  box-shadow: 0 0 12px rgba(212, 168, 85, 0.45), inset 0 0 6px rgba(255, 235, 180, 0.35);
   pointer-events: none;
-  z-index: 50;
-  box-shadow: inset 0 0 110px 24px rgba(0, 0, 0, 0.78);
-  background: radial-gradient(ellipse at center, transparent 62%, rgba(0, 0, 0, 0.55) 100%);
+  z-index: 4;
+  animation: stoneRipple 0.44s ease-out forwards;
 }
 
 /* Ana menü açıkken arkadaki savaş alanı gizlenir */
@@ -968,51 +986,52 @@ main::before {
 #hdr .hs.sks {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
+  gap: 12px;
+  padding: 9px 16px;
   background: linear-gradient(180deg, rgba(28, 24, 39, 0.92), rgba(14, 12, 22, 0.96));
-  border: 1.5px solid #756394;
-  border-radius: 8px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(235, 215, 255, 0.22);
+  border: 2px solid #8671ab;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(235, 215, 255, 0.25);
 }
 .sk {
-  color: #534b68;
-  font: 700 16px/1 var(--mf);
+  color: #5a5172;
+  font: 700 22px/1 var(--mf);
 }
 .sk small {
-  font: 700 11px/1 var(--mf);
+  font: 800 14px/1 var(--mf);
+  margin-top: 2px;
 }
 .sk.past {
   color: #968bb0;
 }
 .sk.cur {
   color: #e879f9;
-  text-shadow: 0 0 10px rgba(232, 121, 249, 0.85);
+  text-shadow: 0 0 12px rgba(232, 121, 249, 0.9);
 }
 
 #hdr .hc {
   position: fixed;
   top: max(10px, env(safe-area-inset-top, 10px));
-  right: 116px;
+  right: 124px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 7px 14px;
+  gap: 12px;
+  padding: 10px 18px;
   background: linear-gradient(180deg, rgba(28, 24, 39, 0.92), rgba(14, 12, 22, 0.96));
-  border: 1.5px solid #756394;
-  border-radius: 8px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(235, 215, 255, 0.22);
+  border: 2px solid #8671ab;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(235, 215, 255, 0.25);
 }
 #hdr .lab {
   display: inline !important;
-  font: 700 14px/1 var(--mf) !important;
-  letter-spacing: 1.2px;
+  font: 800 17px/1 var(--mf) !important;
+  letter-spacing: 1.4px;
   color: #f3dfb9 !important;
   text-transform: uppercase;
 }
 #hdr .pip {
-  width: 14px;
-  height: 14px;
+  width: 17px;
+  height: 17px;
   border-radius: 50% !important;
   border: 2px solid #6e5f8a;
   background: #120f1c;
@@ -1082,7 +1101,7 @@ main::before {
 }
 
 #opp.zone {
-  padding-top: max(8px, env(safe-area-inset-top, 8px)) !important;
+  padding-top: max(4px, env(safe-area-inset-top, 4px)) !important;
   padding-bottom: 12px !important;
   background: transparent !important;
 }
@@ -1090,10 +1109,35 @@ main::before {
   background: radial-gradient(55% 75% at 50% 100%, rgba(192, 84, 255, 0.14), transparent 72%) !important;
 }
 
+/* Rakibin Üstte Kapalı & Stackli Joker Kartları */
+.opp-jhand {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: clamp(36px, 5.4dvh, 52px);
+  margin-top: -6px;
+  margin-bottom: 4px;
+  pointer-events: none;
+  z-index: 5;
+}
+.opp-jhand .oj {
+  height: clamp(46px, 7.2dvh, 66px);
+  width: auto;
+  border-radius: 6px;
+  border: 1.5px solid #a67c38;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.6);
+  transform: rotate(var(--r, 0deg));
+  transform-origin: 50% 0%;
+  margin-left: -18px;
+}
+.opp-jhand .oj:first-child {
+  margin-left: 0;
+}
+
 #me.zone {
   flex-direction: column-reverse;
-  padding-top: 8px !important;
-  padding-bottom: clamp(108px, 16.8dvh, 152px) !important;
+  padding-top: 12px !important;
+  padding-bottom: clamp(104px, 16dvh, 144px) !important;
   background: transparent !important;
 }
 #me.zone.act {
@@ -1110,11 +1154,12 @@ body.dragging-joker #fx::after {
   position: relative;
   z-index: 6;
   margin: 0 auto !important;
-  display: inline-flex !important;
+  display: grid !important;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: center;
-  gap: 0;
-  padding: 6px 20px;
+  gap: 18px;
+  min-width: clamp(310px, 34vw, 440px);
+  padding: 6px 24px;
   background: linear-gradient(180deg, rgba(28, 25, 40, 0.92) 0%, rgba(15, 13, 24, 0.96) 100%);
   border: 2px solid #6e5f8c;
   border-radius: 48px;
@@ -1142,6 +1187,7 @@ body.dragging-joker #fx::after {
 
 .who .av {
   order: 2;
+  justify-self: center;
   width: clamp(56px, 8.2dvh, 78px) !important;
   height: clamp(56px, 8.2dvh, 78px) !important;
   border-radius: 50% 50% 12px 12px !important;
@@ -1150,7 +1196,7 @@ body.dragging-joker #fx::after {
     0 0 0 2px #120c08,
     0 6px 18px rgba(0, 0, 0, 0.95),
     inset 0 0 14px rgba(0, 0, 0, 0.7) !important;
-  margin: -8px 14px -4px !important;
+  margin: -8px 0 -4px !important;
   background: #0c080a;
   object-fit: cover;
   object-position: 50% 50%;
@@ -1160,12 +1206,13 @@ body.dragging-joker #fx::after {
 
 .who .nm {
   order: 1;
+  justify-self: center;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  text-align: right;
-  min-width: clamp(105px, 15vw, 165px);
-  padding-right: 4px;
+  align-items: center;
+  text-align: center;
+  min-width: 0;
+  padding-right: 0;
 }
 .who .nm b {
   font: 700 clamp(15px, 2.1dvh, 20px)/1.1 var(--mf) !important;
@@ -1176,7 +1223,7 @@ body.dragging-joker #fx::after {
 .who .meta {
   display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 4px;
   margin-top: 4px;
 }
@@ -1209,12 +1256,13 @@ body.dragging-joker #fx::after {
 /* Sağ Kanat: Skor / Toplam */
 .who .tot {
   order: 3;
+  justify-self: center;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  min-width: clamp(95px, 14vw, 150px);
-  padding-left: 4px;
+  align-items: center;
+  text-align: center;
+  min-width: 0;
+  padding-left: 0;
   max-width: none !important;
 }
 .who .tot small {
@@ -1451,7 +1499,7 @@ body.dragging-joker #fx::after {
   letter-spacing: 0.8px !important;
   text-transform: uppercase;
   position: relative;
-  margin-right: 78px;
+  margin-right: 8px;
   cursor: pointer;
   transition: transform 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.2), box-shadow 0.18s ease, filter 0.18s ease !important;
 }
@@ -1545,14 +1593,14 @@ body.dragging-joker #fx::after {
   padding-left: 68px !important;
 }
 
-/* Sağ Kenardaki Rakip & Oyuncu Satranç Saatleri (Pas mührünün sağındaki dikey taş çerçeve) */
+/* Sağ Kenardaki Rakip & Oyuncu Yuvarlak Satranç Saatleri (Sağdaki simetrik taş boşluklarda) */
 .side-clocks {
   position: absolute;
-  right: 4px;
+  right: clamp(-104px, -7.2vw, -56px);
   top: 50%;
   transform: translateY(-50%);
-  width: 66px;
-  height: 156px;
+  width: clamp(66px, 9.8dvh, 84px);
+  height: clamp(176px, 28dvh, 240px);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1561,28 +1609,33 @@ body.dragging-joker #fx::after {
   z-index: 6;
 }
 .side-clock {
-  width: 100%;
-  padding: 6px 4px;
-  border-radius: 8px;
-  background: linear-gradient(180deg, rgba(24, 18, 32, 0.94) 0%, rgba(12, 9, 18, 0.96) 100%);
-  border: 1.5px solid #594b3e;
-  box-shadow: inset 0 1px 0 rgba(255, 232, 180, 0.12), 0 4px 12px rgba(0, 0, 0, 0.85);
+  width: clamp(64px, 9.4dvh, 80px);
+  height: clamp(64px, 9.4dvh, 80px);
+  padding: 4px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 30%, rgba(36, 28, 48, 0.96) 0%, rgba(14, 10, 20, 0.98) 100%);
+  border: 2.5px solid #6b5a48;
+  box-shadow:
+    0 0 0 3px #14101a,
+    0 8px 18px rgba(0, 0, 0, 0.9),
+    inset 0 2px 6px rgba(255, 232, 180, 0.14);
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 .side-clock .sc-lbl {
-  font: 700 8px/1 var(--sf);
+  font: 700 9px/1 var(--mf);
   letter-spacing: 0.9px;
   text-transform: uppercase;
-  color: #a99b86;
+  color: #b8a88e;
 }
 .side-clock .sc-val {
-  font: 800 16px/1.1 var(--mf);
-  color: #e8dcc4;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+  font: 800 clamp(17px, 2.5dvh, 21px)/1 var(--mf);
+  color: #f3e6cc;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95);
   font-variant-numeric: tabular-nums;
 }
 .side-clock.opp.ticking {
@@ -1844,12 +1897,23 @@ body.dragging-joker #fx::after {
   pointer-events: none;
   overflow: visible !important;
 }
+#hand .jslot {
+  position: relative;
+  flex: none;
+  width: clamp(58px, 9.2dvh, 84px);
+  height: calc(clamp(58px, 9.2dvh, 84px) * 1.5);
+  pointer-events: none;
+}
 #hand .j,
 #hand .spec-notice {
   pointer-events: auto;
 }
 #hand .j {
-  width: clamp(58px, 9.2dvh, 84px) !important;
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 100% !important;
+  height: auto;
   margin-left: 0 !important;
   border-radius: 8px !important;
   border: 2px solid #d4af64 !important;
@@ -1857,11 +1921,11 @@ body.dragging-joker #fx::after {
     0 -4px 18px rgba(0, 0, 0, 0.88),
     0 8px 24px rgba(0, 0, 0, 0.95),
     0 0 14px rgba(212, 168, 85, 0.32) !important;
+  transform: translateX(-50%) rotate(var(--r));
   transform-origin: 50% 94% !important;
-  transition: transform 0.18s cubic-bezier(0.2, 0.9, 0.25, 1), box-shadow 0.18s ease, filter 0.18s ease !important;
+  transition: width 0.18s cubic-bezier(0.2, 0.9, 0.25, 1), transform 0.18s cubic-bezier(0.2, 0.9, 0.25, 1), box-shadow 0.18s ease, filter 0.18s ease !important;
   cursor: grab;
   touch-action: none;
-  will-change: transform;
 }
 #hand .j:first-child {
   margin-left: 0 !important;
@@ -1869,7 +1933,8 @@ body.dragging-joker #fx::after {
 
 #hand .j:not(.dim):not(.is-dragging):hover,
 #hand .j.pinned:not(.is-dragging) {
-  transform: translateY(-34px) scale(2.85) rotate(0deg) !important;
+  width: clamp(165px, 26dvh, 236px) !important;
+  transform: translateX(-50%) translateY(-28px) rotate(0deg) !important;
   z-index: 60 !important;
   border-color: #ffe89e !important;
   box-shadow:
@@ -1885,7 +1950,8 @@ body.dragging-joker #fx::after {
 }
 #hand .j.dim:not(.is-dragging):hover,
 #hand .j.dim.pinned:not(.is-dragging) {
-  transform: translateY(-34px) scale(2.7) rotate(0deg) !important;
+  width: clamp(156px, 24.5dvh, 222px) !important;
+  transform: translateX(-50%) translateY(-28px) rotate(0deg) !important;
   filter: brightness(0.92) saturate(0.85) !important;
   border-color: #c2a668 !important;
   z-index: 60 !important;
@@ -1893,7 +1959,8 @@ body.dragging-joker #fx::after {
 }
 
 #hand .j.is-dragging {
-  transform: translate3d(var(--drag-x, 0px), var(--drag-y, 0px), 0) scale(1.48) rotate(-2deg) !important;
+  width: clamp(92px, 14dvh, 126px) !important;
+  transform: translate3d(calc(-50% + var(--drag-x, 0px)), var(--drag-y, 0px), 0) rotate(-2deg) !important;
   transition: none !important;
   z-index: 100 !important;
   cursor: grabbing !important;
@@ -1992,21 +2059,20 @@ body.dragging-joker #fx::after {
     padding-top: calc(max(6px, env(safe-area-inset-top, 6px)) + 34px) !important;
   }
   .who {
-    padding: 4px 12px;
+    min-width: clamp(240px, 72vw, 340px);
+    padding: 4px 14px;
+    gap: 10px;
   }
   .who .av {
     width: clamp(50px, 7.6dvh, 66px) !important;
     height: clamp(50px, 7.6dvh, 66px) !important;
-    margin: -6px 8px -4px !important;
+    margin: -6px 0 -4px !important;
   }
   .who .nm {
-    min-width: 82px;
+    min-width: 0;
   }
   .who .tot {
-    min-width: 78px;
-  }
-  .who .jbs {
-    display: none;
+    min-width: 0;
   }
   #fx .ctl {
     padding: 0 4px;
@@ -2017,7 +2083,7 @@ body.dragging-joker #fx::after {
   #fx #pass {
     width: clamp(56px, 8.8dvh, 70px) !important;
     height: clamp(56px, 8.8dvh, 70px) !important;
-    margin-right: 60px;
+    margin-right: 4px;
     font-size: 11px !important;
   }
   #fx .deck {
@@ -2027,7 +2093,11 @@ body.dragging-joker #fx::after {
   .side-clocks {
     width: 54px;
     height: 132px;
-    right: 2px;
+    right: -46px;
+  }
+  .side-clock {
+    width: 52px;
+    height: 52px;
   }
   .side-clock .sc-val {
     font-size: 13px;
@@ -2041,14 +2111,16 @@ body.dragging-joker #fx::after {
   #me.zone {
     padding-bottom: clamp(92px, 14.5dvh, 128px) !important;
   }
-  #hand .j {
-    width: clamp(50px, 8.2dvh, 70px) !important;
+  #hand .jslot {
+    width: clamp(50px, 8.2dvh, 70px);
+    height: calc(clamp(50px, 8.2dvh, 70px) * 1.5);
   }
   #hand .j:not(.dim):not(.is-dragging):hover,
   #hand .j.pinned:not(.is-dragging),
   #hand .j.dim:not(.is-dragging):hover,
   #hand .j.dim.pinned:not(.is-dragging) {
-    transform: translateY(-24px) scale(2.2) rotate(0deg) !important;
+    width: clamp(120px, 18dvh, 160px) !important;
+    transform: translateX(-50%) translateY(-24px) rotate(0deg) !important;
   }
 }
 
