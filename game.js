@@ -1037,7 +1037,6 @@ function R(){
   if(sl._c!==sc){sl._c=sc;sl.className='seal'+sc+(sl.classList.contains('stamp')?' stamp':'')}
   setH('#seal',`<b>${low?'En az':T}</b>`);
   if(prevSeal&&prevSeal!=seal){sl.classList.remove('stamp');void sl.offsetWidth;sl.classList.add('stamp')}
-  $('#arr').className='arr '+(S.wait||S.over?'off':S.turn==0?'me':'op');
   $('#me').className='zone'+(my?' act':'')+(S.winSide!=null?(S.winSide<0?' round-lose':S.winSide===0?' round-tie':''):'');
   setH('#me',`<div class="who">${av0}<div class="nm"><b>${p0Name}</b><span class="meta">${jp(Math.max(0,2-S.jUsed[0]))}</span></div><div class="tot${bust?' bust':exact?' exact':''}"><small>Toplam</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`);
   $('#prompt').className=P?'ask':'';
