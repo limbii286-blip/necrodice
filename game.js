@@ -1077,7 +1077,8 @@ function R(){
   const avh=p=>{const k=avKey(S,p),now=performance.now();if(prevAv[p]!==undefined&&prevAv[p]!==k)morphT[p]=now;prevAv[p]=k;
     const el=(now-morphT[p])/1000,mo=morphT[p]&&el<1.1;return `<img class="av${mo?' morph':''}" data-av="${p}"${mo?` style="animation-delay:-${el.toFixed(2)}s"`:''} src="${avSrc(k)}" alt="">`};
   const av0=avh(0),av1=avh(1);
-  const p0Name=isSpec?'Tüccar (Oda Sahibi)':(MODE=='host'?'Tüccar (Sen)':'Sen');
+  const p0Char=NAMES[avKey(S,0)]||'Tüccar';
+  const p0Name=isSpec?`${p0Char} (Oda Sahibi)`:p0Char;
   const p1Name=isSpec?'Yozlaşmış Tüccar (Misafir)':(MODE=='guest'?'Yozlaşmış Tüccar (Sen)':(MODE=='host'?'Yozlaşmış Tüccar (Rakip)':(MODE=='bot'||S.av?oppName():'Rakip')));
   const oppTimeOut=!!(S.timeOut&&S.timeOut[1]),meTimeOut=!!(S.timeOut&&S.timeOut[0]);
   const c0=Math.ceil(S.clocks?S.clocks[0]:66),c1=Math.ceil(S.clocks?S.clocks[1]:66);
@@ -1102,7 +1103,7 @@ function R(){
   setH('#seal',`<b>${low?'En az':T}</b>`);
   if(prevSeal&&prevSeal!=seal){sl.classList.remove('stamp');void sl.offsetWidth;sl.classList.add('stamp')}
   $('#me').className='zone'+(my?' act':'')+(S.winSide!=null?(S.winSide<0?' round-lose':S.winSide===0?' round-tie':''):'');
-  setH('#me',`<div class="who">${av0}<div class="nm">${isSpec?`<b>${p0Name}</b>`:''}</div><div class="tot${bust?' bust':exact?' exact':''}"><small>Toplam</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`);
+  setH('#me',`<div class="who">${av0}<div class="nm"><b>${p0Name}</b></div><div class="tot${bust?' bust':exact?' exact':''}"><small>Toplam</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`);
   $('#prompt').className=P?'ask':'';
   setH('#prompt',P?`${J[P.id]}: ${KTXT[k]} ${k=='sign'?'<button class="btn sm" data-s="1">Ekle</button><button class="btn sm" data-s="-1">Çıkar</button>':''}<button class="btn sm alt" data-x="1">Vazgeç</button>`:'');
   const ends=(S.turns>0&&!S.acted)||oppTimeOut; // rakibin süresi bittiyse veya karşı taraf pas dediyse şimdi pas dersem tur biter
