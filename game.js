@@ -1179,12 +1179,14 @@ function startJoker(id){const ks=NEED[id]||[];if(ks.length){P={id,ks,pk:[]};R()}
 function chooseHero(onPick){
   lock=true;
   const cards=HEROES.map(h=>`<button class="hero-pick-card${MY_HERO===h.id?' sel':''}" data-pick-hero="${h.id}">
-    <img class="hpc-av" src="${avSrc(h.id)}" alt="${h.name}">
-    <div class="hpc-name">${h.name}</div>
-    <div class="hpc-pw"><span class="hpc-ic">${HP_IC[h.id]}</span><b>${h.hpName}</b></div>
-    <p class="hpc-desc">${h.desc}</p>
+    <div class="hpc-art"><img class="hpc-av" src="${avSrc(h.id)}" alt="${h.name}"></div>
+    <div class="hpc-body">
+      <div class="hpc-name">${h.name}</div>
+      <div class="hpc-pw"><span class="hpc-ic">${HP_IC[h.id]}</span><b>${h.hpName}</b></div>
+      <p class="hpc-desc">${h.desc}</p>
+    </div>
   </button>`).join('');
-  $('#mb').innerHTML=`<h3>Kahramanını Seç</h3><p class="hpc-sub">Her düelloda <b>1 kez</b> kullanabileceğin özel bir Hero Power kazanırsın.</p><div class="hero-grid">${cards}</div><div class="row"><button id="hp-cancel" class="btn alt sm">Geri</button></div>`;
+  $('#mb').innerHTML=`<h3>Kahramanını Seç</h3><p class="hpc-sub">Her kahramanın kendine özgü <b>aktif</b> veya <b>pasif</b> bir Hero Power'ı vardır.</p><div class="hero-grid">${cards}</div><div class="row"><button id="hp-cancel" class="btn alt sm">Geri</button></div>`;
   $('#m').hidden=false;
   $('#mb').querySelectorAll('[data-pick-hero]').forEach(btn=>btn.onclick=()=>{
     const hid=btn.dataset.pickHero;
