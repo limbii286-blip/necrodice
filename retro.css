@@ -1437,6 +1437,7 @@ body.dragging-joker #fx::after {
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-left: clamp(14px, 1.8vw, 24px);
 }
 #fx .deck {
   width: clamp(64px, 9.8dvh, 86px) !important;
