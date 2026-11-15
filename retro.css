@@ -1053,28 +1053,30 @@ main::before {
   width: 17px;
   height: 17px;
   border-radius: 50% !important;
-  border: 2px solid #755b36;
-  background: radial-gradient(circle at 35% 35%, #241b15, #0e0a08);
+  border: 2px solid #6b5332;
+  background: radial-gradient(circle at 35% 35%, #201813, #0e0a08);
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.85);
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 #hdr .pip.now {
-  border-color: #ffffff;
-  background: #f8fafc;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.85);
+  border-color: #b5a792;
+  background: transparent;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.65);
 }
 #hdr .pip.w {
-  border-color: #4ade80;
-  background: #22c55e;
-  box-shadow: 0 0 10px rgba(34, 197, 94, 0.8);
+  border-color: #3f6b49;
+  background: #264d32;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 #hdr .pip.l {
-  border-color: #f87171;
-  background: #dc2626;
-  box-shadow: 0 0 10px rgba(220, 38, 38, 0.8);
+  border-color: #7c3535;
+  background: #5c1f22;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 #hdr .pip.d {
-  background: #6b7280;
-  border-color: #9ca3af;
+  background: #4b4744;
+  border-color: #6b655f;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
 #hdr .hg .gear {
