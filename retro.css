@@ -1573,15 +1573,16 @@ body.dragging-joker #fx::after {
   align-items: center !important;
   justify-content: center !important;
   border-radius: 50% !important;
-  background: radial-gradient(circle at 32% 28%, #ffd27d 0%, #d97706 44%, #7c2d12 88%, #451a03 100%) !important;
-  border: 2px solid #f59e0b !important;
-  color: #fff8e7 !important;
-  text-shadow: 0 1px 3px #000 !important;
-  font: 800 13px/1 var(--mf) !important;
+  background: radial-gradient(circle at 35% 32%, #4a2a12 0%, #2b1608 58%, #140903 100%) !important;
+  border: 2px solid #b5863c !important;
+  color: #fff4d6 !important;
+  -webkit-text-stroke: 0.5px #0c0602;
+  text-shadow: 0 1px 2px #000, 0 0 5px #000 !important;
+  font: 800 14px/1 var(--mf) !important;
   box-shadow:
-    0 0 0 2px #160c05,
+    0 0 0 2px #120904,
     0 4px 10px rgba(0, 0, 0, 0.92),
-    inset 0 1px 3px rgba(255, 240, 200, 0.55) !important;
+    inset 0 1px 3px rgba(255, 224, 165, 0.22) !important;
 }
 
 .deck-drag-ghost {
