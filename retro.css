@@ -1491,6 +1491,18 @@ body.dragging-joker #fx::after {
     0 12px 26px rgba(0, 0, 0, 0.94) !important;
   animation: deckDrawPulse 1.6s ease-in-out infinite;
 }
+#fx .deck.draw-locked {
+  filter: brightness(0.42) saturate(0.35) !important;
+  border-color: #4a3f35 !important;
+  box-shadow:
+    3px 3px 0 #1b1722,
+    6px 6px 0 #0f0d14,
+    0 8px 18px rgba(0, 0, 0, 0.9) !important;
+  cursor: not-allowed !important;
+}
+#fx .deck.draw-locked:hover {
+  transform: none !important;
+}
 @keyframes deckDrawPulse {
   0%, 100% { filter: brightness(1); }
   50% { filter: brightness(1.16); }
@@ -2028,6 +2040,11 @@ body.dragging-joker #fx::after {
   border-color: #4a3f35 !important;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9) !important;
   cursor: pointer;
+}
+#hand.joker-locked .j:not(.hovered):not(.pinned) {
+  filter: brightness(0.32) saturate(0.25) !important;
+  border-color: #3d322c !important;
+  cursor: not-allowed !important;
 }
 #hand .j.dim:not(.is-dragging).hovered,
 #hand .j.dim.pinned:not(.is-dragging) {

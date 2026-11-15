@@ -1035,7 +1035,9 @@ function R(){
   setH('#opp',`${oppHandHtml}<div class="who">${av1}<div class="nm"><b>${p1Name}</b><span class="meta">${MODE=='bot'?IC.dif.repeat(DN[DIFF]):'Online'}</span></div><div class="tot${obust?' bust':oexact?' exact':''}"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${S.rev?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>`);
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<span class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}"><img src="${IMG.j[e.id]}" alt=""></span>`};
   $('#deck b').textContent=S.deck.length;
+  const drawLocked=S.eff.some(e=>e.id==23&&!e.neg&&e.o!=0);
   $('#deck').classList.toggle('can-draw',!isSpec&&my&&!P&&canDraw(S,0));
+  $('#deck').classList.toggle('draw-locked',drawLocked);
   setH('#jo',(S.pj||[]).filter(x=>x.o==1).map(chip).join(''));
   setH('#jm',(S.pj||[]).filter(x=>x.o==0).map(chip).join(''));
   const sl=$('#seal'),sc=(T!=21||low?' alt':'')+(low?' low':'')+(S.turn==0?' turn-me':' turn-op');
@@ -1056,6 +1058,7 @@ function R(){
     $('#pass').textContent=ends?'Turu bitir':'Pas';$('#pass').className='btn sm'+(ends?'':' alt');
   }
   const n=S.hand[0].length;
+  $('#hand').classList.toggle('joker-locked',!!(S.noJ&&S.noJ[0]));
   if(isSpec){
     setH('#hand',`<div class="spec-notice">Canlı Maç Yayını · İzleyici Modundasın</div>`);
   }else{
