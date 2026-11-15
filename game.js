@@ -907,8 +907,8 @@ function endRound(){
     </div><div class="after"><b>Zar Sonucu: ${roll}${hpB?` (${rawRoll}+${hpB} Kader Mühürü)`:''}</b><br>`+(surv?(L==v?'Kurtuldun! Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
     const full=v=>mk(v,roll,surv),rig=MODE=='bot'&&DIFF=='imp'&&L==1&&!surv&&!S.rigDone; // sahne oyun başına bir kez; ikinci ölümde gerçekten ölür
     const uRev=L===0&&avKey(S,0)==='u'&&!surv&&!(S.uRevived&&S.uRevived[0]);
-    if(surv||rig||uRev){const n=S.bo+2,ek=['a','e','ye','e','e','e','ya','ye','e','a'][n%10];
-      const lb=`Düello ${n}'${ek} geç`,go=()=>{try{document.body.classList.remove('dead')}catch(e){}S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()};
+    if(surv||rig||uRev){const n=S.bo+2;
+      const lb=`Düello ${n} ile devam et`,go=()=>{try{document.body.classList.remove('dead')}catch(e){}S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()};
       if(rig){S.rigDone=true;S.hpUsed[1]=true;impSave(mk(0,1,false),()=>M(mk(0,20,true),lb,go))}
       else if(uRev){S.uRevived=S.uRevived||[false,false];S.uRevived[0]=true;S.hpUsed[0]=true;impSave(mk(0,roll,false),()=>M(mk(0,20,true),lb,go),'Hiçlik seni geri çevirdi… Bir kez daha ölümden döndün!')}
       else MM(full,lb,go)}
