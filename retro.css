@@ -2024,8 +2024,8 @@ body.dragging-joker #fx::after {
   margin-left: 0 !important;
 }
 
-#hand .j:not(.dim):not(.is-dragging).hovered,
-#hand .j.pinned:not(.is-dragging) {
+#hand .j:not(.dim):not(.drag-source-hidden).hovered,
+#hand .j.pinned:not(.drag-source-hidden) {
   width: clamp(165px, 26dvh, 236px) !important;
   transform: translateX(-50%) translateY(-28px) rotate(0deg) !important;
   z-index: 60 !important;
@@ -2046,8 +2046,8 @@ body.dragging-joker #fx::after {
   border-color: #3d322c !important;
   cursor: not-allowed !important;
 }
-#hand .j.dim:not(.is-dragging).hovered,
-#hand .j.dim.pinned:not(.is-dragging) {
+#hand .j.dim:not(.drag-source-hidden).hovered,
+#hand .j.dim.pinned:not(.drag-source-hidden) {
   width: clamp(156px, 24.5dvh, 222px) !important;
   transform: translateX(-50%) translateY(-28px) rotate(0deg) !important;
   filter: brightness(0.92) saturate(0.85) !important;
@@ -2212,10 +2212,10 @@ body.dragging-joker #fx::after {
     width: clamp(50px, 8.2dvh, 70px);
     height: calc(clamp(50px, 8.2dvh, 70px) * 1.5);
   }
-  #hand .j:not(.dim):not(.is-dragging):hover,
-  #hand .j.pinned:not(.is-dragging),
-  #hand .j.dim:not(.is-dragging):hover,
-  #hand .j.dim.pinned:not(.is-dragging) {
+  #hand .j:not(.dim):not(.drag-source-hidden):hover,
+  #hand .j.pinned:not(.drag-source-hidden),
+  #hand .j.dim:not(.drag-source-hidden):hover,
+  #hand .j.dim.pinned:not(.drag-source-hidden) {
     width: clamp(120px, 18dvh, 160px) !important;
     transform: translateX(-50%) translateY(-24px) rotate(0deg) !important;
   }
