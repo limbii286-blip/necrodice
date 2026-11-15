@@ -1603,7 +1603,12 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
     const prevRev=G&&G.rev,prevWin=G?G.winSide:null;
     G=m.v;if(!G.over){try{document.body.classList.remove('dead')}catch(e){}}
     if(G.rev&&!prevRev)snd('flip');
-    if(G.winSide!=null&&prevWin==null)snd(G.winSide>0?'win':G.winSide<0?'lose':'ok');
+    if(G.winSide!=null&&prevWin==null){
+      snd(G.winSide>0?'win':G.winSide<0?'lose':'ok');
+      const winW=G.winSide;
+      setTimeout(()=>{if(G&&G.winSide===winW){if(winW!==0)heroAttack(winW>0?0:1);else heroClash();}},1000);
+      setTimeout(()=>{if(G&&G.winSide===winW)dustTableCards();},3400);
+    }
     if(waitM){$('#m').hidden=true;lock=false;waitM=false}
     if(MODE!='spectator'&&(G.turn!=0||G.wait))P=null;
     if(!$('#menu').hidden)setTimeout(()=>{$('#menu').hidden=true},1500);
