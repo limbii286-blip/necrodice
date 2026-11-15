@@ -582,8 +582,6 @@ function bot(){
       const bh=avKey(S,1),bt=total(S,1),bT=tg(S),low=lowW(S);
       if(bh==='c'&&!low&&(bt===bT-2||bt===bT+2||bt>bT)){
         const dlt=bt>bT?-2:2;S.hpMod[1]=(S.hpMod[1]||0)+dlt;S.hpUsed[1]=true;S.acted=true;S.log.push({p:1,t:`Hileli Dokunuş kullandı (${dlt>0?'+2':'−2'})`});snd('play');R();return think(AFTER[DIFF]);
-      }else if(bh==='m'&&S.rounds>=1){
-        S.d20Bonus[1]=(S.d20Bonus[1]||0)+3;S.hpUsed[1]=true;S.log.push({p:1,t:'Kader Mühürü mühürlendi (+3 D20)'});snd('stamp');R();
       }
     }
     const a=plan?plan.a:(n++<8?(prm.mc?decideH:decide)(S,1,prm.mc?{...prm,K:90,ms:400}:prm):null);plan=null;pid++;
@@ -847,7 +845,7 @@ function endRound(){
       if(j[0]!=j[1]){L=j[0]<j[1]?0:1;how='joker'}
       else{let x,y;do{x=d6()+d6();y=d6()+d6()}while(x==y);L=x<y?0:1;hx=[x,y];how='zar'}
     }
-    const th=TH[Math.min(S.bo,3)],rawRoll=d20(),hpB=(S.d20Bonus&&S.d20Bonus[L])||0,roll=Math.min(20,rawRoll+hpB),surv=roll>=th;
+    const th=TH[Math.min(S.bo,3)],rawRoll=d20(),hpB=avKey(S,L)==='m'?2:0,roll=Math.min(20,rawRoll+hpB),surv=roll>=th;
     const mk=(v,roll,surv)=>{return `Düelloyu ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısına göre)':how=='zar'?` (beraberlik zarı: ${hx[v]}–${hx[1-v]})`:''}.<br>Ölüm zarını ${L==v?'sen atıyorsun':'rakip atıyor'}:<div class="d20-box" data-roll="${roll}" data-dc="${th}" data-m="${L==v?1:0}" data-s="${surv?'ok':L==v?'death':'win'}">
       <div class="bg3-roll-card">
         <div class="bg3-card-border"></div>
@@ -896,7 +894,7 @@ const HEROES=[
   {id:'t',name:'Tüccar',hpName:'Pazarlık',desc:'Destedeki en üst 2 karta gizlice bak; istersen yerlerini değiştir.'},
   {id:'c',name:'Yozlaşmış Tüccar',hpName:'Hileli Dokunuş',desc:'Bu turda toplamına +2 veya −2 uygula.'},
   {id:'p',name:'Veba Doktoru',hpName:'Kuzgun Gözü',desc:'Rakibin kapalı sayı kartına gizlice bak.'},
-  {id:'m',name:'Ölümün Efendisi',hpName:'Kader Mühürü',desc:'Bu düelloda D20 ölüm zarına +3 bonus kazan.'},
+  {id:'m',name:'Ölümün Efendisi',passive:true,hpName:'Kader Mühürü',desc:'Pasif: Her D20 ölüm zarına +2 bonus kazanırsın.'},
   {id:'u',name:'Bilinmeyen',passive:true,hpName:'Hiçlikten Dönüş',desc:'Pasif: Ölüm zarında ölürsen oyun başına 1 kez ölümden dönersin.'}
 ];
 const HERO_MAP=Object.fromEntries(HEROES.map(h=>[h.id,h]));
@@ -1119,11 +1117,13 @@ function R(){
   if(sc1){sc1.classList.toggle('ticking',S.turn==1&&!S.wait&&!(S.graceLeft>0)&&!oppTimeOut);sc1.classList.toggle('low',c1<=10&&c1>0);sc1.classList.toggle('out',oppTimeOut||c1<=0)}
   const oppHandHtml=`<div class="opp-jhand" title="Rakibin elindeki kapalı jokerler (${S.hand[1].length})">${S.hand[1].map((_,i)=>`<img class="oj" style="--r:${((i-(S.hand[1].length-1)/2)*4.5).toFixed(1)}deg" src="${IMG.bj}" alt="">`).join('')}</div>`;
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'')+(S.winSide!=null?(S.winSide>0?' round-lose':S.winSide===0?' round-tie':''):'');
-  const myHId=avKey(S,0),oppHId=avKey(S,1),hpUsed0=myHId==='u'?!!(S.uRevived&&S.uRevived[0]):!!(S.hpUsed&&S.hpUsed[0]),hpUsed1=oppHId==='u'?!!S.rigDone:!!(S.hpUsed&&S.hpUsed[1]);
+  const myHId=avKey(S,0),oppHId=avKey(S,1);
+  const hpUsed0=myHId==='u'?!!(S.uRevived&&S.uRevived[0]):myHId==='m'?false:!!(S.hpUsed&&S.hpUsed[0]);
+  const hpUsed1=oppHId==='u'?!!S.rigDone:oppHId==='m'?false:!!(S.hpUsed&&S.hpUsed[1]);
   const hpObj0=HERO_MAP[myHId]||HEROES[0],hpObj1=HERO_MAP[oppHId]||HEROES[0];
   const canHp=!isSpec&&!hpObj0.passive&&my&&!P&&!hpUsed0&&MODE!=='guest';
-  const hpBtn0=isSpec?'':`<button id="hp-btn" class="hp-btn${hpObj0.passive?' passive':''}${hpUsed0?' used':(canHp||(hpObj0.passive&&!hpUsed0))?' ready':''}" data-hp="1" title="${hpObj0.hpName}: ${hpObj0.desc}"${canHp?'':' disabled'}>${HP_IC[myHId]||HP_IC.t}</button>`;
-  const hpBtn1=`<span class="hp-btn opp-hp${hpUsed1?' used':''}" title="${hpObj1.hpName}: ${hpObj1.desc}">${HP_IC[oppHId]||HP_IC.t}</span>`;
+  const hpBtn0=isSpec?'':`<button id="hp-btn" class="hp-btn${hpObj0.passive?' passive':''}${hpUsed0?' used':(canHp||(hpObj0.passive&&!hpUsed0))?' ready':''}" data-hp="1" data-hp-id="${myHId}" data-hp-side="0"${canHp?'':' disabled'}>${HP_IC[myHId]||HP_IC.t}</button>`;
+  const hpBtn1=`<span class="hp-btn opp-hp${hpObj1.passive?' passive':''}${hpUsed1?' used':''}" data-hp-id="${oppHId}" data-hp-side="1">${HP_IC[oppHId]||HP_IC.t}</span>`;
   setH('#opp',`${oppHandHtml}<div class="who">${av1}${hpBtn1}<div class="nm"><b>${p1Name}</b>${MODE=='bot'?'':'<span class="meta">Online</span>'}</div><div class="tot${obust?' bust':oexact?' exact':''}"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${oppClosedKnown?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!(S.rev||c.o!=null||(S.oppPeek&&S.oppPeek.includes(c.id))),S.rev)).join('')}</div>`);
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<span class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}"><img src="${IMG.j[e.id]}" alt=""></span>`};
   $('#deck b').textContent=S.deck.length;
@@ -1228,14 +1228,8 @@ function useHeroPower(){
     S.hpUsed[0]=true;S.graceLeft=0;
     S.log.push({p:0,t:'Kuzgun Gözü ile rakibin kapalı kartına baktı'});
     snd('flip');R();
-  }else if(hid==='m'){
-    S.d20Bonus[0]=(S.d20Bonus[0]||0)+3;
-    S.hpUsed[0]=true;S.graceLeft=0;
-    S.log.push({p:0,t:'Kader Mühürü mühürlendi (+3 D20)'});
-    snd('stamp');R();
-  }else if(hid==='u'){
-    if(!S.pl[0].open.length||!S.deck.length)return;
-    P={hp:'u',ks:['my'],pk:[]};R();
+  }else{
+    return;
   }
 }
 function box(html,close=true){lock=true;$('#mb').innerHTML=html+(close?'<div class="row"><button id="pc" class="btn">Kapat</button></div>':'');$('#m').hidden=false;if(close)$('#pc').onclick=()=>{$('#m').hidden=true;lock=false;if(G)R()}}
@@ -2007,6 +2001,61 @@ function createSmoothDragLoop(onFrame){
   document.addEventListener('pointerdown',()=>{
     if(activeUid!==null)hideInspect();
   });
+})();
+
+/* ---------- HERO POWER MADALYONU: ÜZERİNE GELİNCE AÇIKLAMA KUTUSU ---------- */
+(function initHeroPowerHover(){
+  let activeKey=null;
+
+  function hideHpTip(){
+    activeKey=null;
+    const old=document.getElementById('hp-tip');
+    if(old)old.remove();
+  }
+
+  function showHpTip(btn){
+    const hid=btn.dataset.hpId,side=+btn.dataset.hpSide;
+    const h=HERO_MAP[hid];
+    if(!h)return;
+    const isUsed=btn.classList.contains('used');
+    const tagTxt=h.passive?(isUsed?'Pasif · Tükendi':'Pasif Güç'):(isUsed?'Düelloda Kullanıldı':'Düelloda 1 Kez');
+    let tip=document.getElementById('hp-tip');
+    if(!tip){
+      tip=document.createElement('div');
+      tip.id='hp-tip';
+      tip.className='hp-tip';
+      document.body.appendChild(tip);
+    }
+    tip.className=`hp-tip ${side===1?'opp':'mine'}${h.passive?' passive':''}${isUsed?' used':''}`;
+    tip.innerHTML=`<div class="hp-tip-head"><span class="hp-tip-ic">${HP_IC[hid]||HP_IC.t}</span><div class="hp-tip-meta"><div class="hp-tip-title">${h.hpName}</div><div class="hp-tip-tag">${tagTxt}</div></div></div><div class="hp-tip-desc">${h.desc}</div>`;
+    const r=btn.getBoundingClientRect();
+    const tw=tip.offsetWidth||220,th=tip.offsetHeight||96;
+    const left=Math.max(10,Math.min(window.innerWidth-tw-10,r.left+r.width/2-tw/2));
+    let top=side===1?(r.bottom+10):(r.top-th-10);
+    if(top<10)top=r.bottom+10;
+    if(top+th>window.innerHeight-10)top=Math.max(10,r.top-th-10);
+    tip.style.left=`${Math.round(left)}px`;
+    tip.style.top=`${Math.round(top)}px`;
+  }
+
+  document.addEventListener('pointermove',e=>{
+    const btn=e.target&&e.target.closest&&e.target.closest('.who .hp-btn[data-hp-id]');
+    if(!btn){
+      if(activeKey!==null)hideHpTip();
+      return;
+    }
+    const key=`${btn.dataset.hpSide}:${btn.dataset.hpId}:${btn.classList.contains('used')?1:0}`;
+    if(key!==activeKey){
+      activeKey=key;
+      showHpTip(btn);
+    }
+  });
+
+  document.addEventListener('pointerdown',()=>{
+    if(activeKey!==null)hideHpTip();
+  });
+
+  document.addEventListener('pointerleave',hideHpTip);
 })();
 
 /* ---------- GOTİK TAŞLI RÜNİK DÜELLO MASASI & 4 KÖŞE ORTA ÇAĞ SAHNESİ ---------- */
