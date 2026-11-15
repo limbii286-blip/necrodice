@@ -2003,11 +2003,16 @@ function createSmoothDragLoop(onFrame){
   });
 })();
 
-/* ---------- HERO POWER MADALYONU: ÜZERİNE GELİNCE AÇIKLAMA KUTUSU ---------- */
+/* ---------- HERO POWER MADALYONU: ÜZERİNDE 0.7 SN DURUNCA AÇIKLAMA KUTUSU ---------- */
 (function initHeroPowerHover(){
-  let activeKey=null;
+  let activeKey=null,hoverTimer=null;
+
+  function clearTimer(){
+    if(hoverTimer){clearTimeout(hoverTimer);hoverTimer=null;}
+  }
 
   function hideHpTip(){
+    clearTimer();
     activeKey=null;
     const old=document.getElementById('hp-tip');
     if(old)old.remove();
@@ -2041,18 +2046,22 @@ function createSmoothDragLoop(onFrame){
   document.addEventListener('pointermove',e=>{
     const btn=e.target&&e.target.closest&&e.target.closest('.who .hp-btn[data-hp-id]');
     if(!btn){
-      if(activeKey!==null)hideHpTip();
+      if(activeKey!==null||hoverTimer)hideHpTip();
       return;
     }
     const key=`${btn.dataset.hpSide}:${btn.dataset.hpId}:${btn.classList.contains('used')?1:0}`;
     if(key!==activeKey){
+      hideHpTip();
       activeKey=key;
-      showHpTip(btn);
+      hoverTimer=setTimeout(()=>{
+        hoverTimer=null;
+        if(activeKey===key&&btn.isConnected)showHpTip(btn);
+      },700);
     }
   });
 
   document.addEventListener('pointerdown',()=>{
-    if(activeKey!==null)hideHpTip();
+    if(activeKey!==null||hoverTimer)hideHpTip();
   });
 
   document.addEventListener('pointerleave',hideHpTip);
