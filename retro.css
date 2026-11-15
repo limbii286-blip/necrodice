@@ -1469,17 +1469,24 @@ body.dragging-joker #fx::after {
 
 .deck-drag-ghost {
   position: fixed;
+  left: 0;
+  top: 0;
   width: clamp(64px, 9.8dvh, 86px);
   height: calc(clamp(64px, 9.8dvh, 86px) * 1.42);
   border-radius: 8px;
   border: 2px solid #f3c86b;
-  background:
-    radial-gradient(circle at 50% 48%, rgba(243, 200, 107, 0.22), transparent 62%),
-    linear-gradient(155deg, #2b2238 0%, #16111e 100%);
+  background-color: #16111e;
+  background-position: center;
+  background-size: cover;
   box-shadow: 0 18px 36px rgba(0, 0, 0, 0.92), 0 0 24px rgba(243, 200, 107, 0.55);
   pointer-events: none;
   z-index: 9999;
-  transform: translate(-50%, -50%) scale(1.06);
+  will-change: transform;
+  transition: box-shadow 0.14s ease, border-color 0.14s ease;
+}
+.deck-drag-ghost.ready {
+  border-color: #ffe89e;
+  box-shadow: 0 22px 44px rgba(0, 0, 0, 0.95), 0 0 34px rgba(94, 194, 126, 0.85);
 }
 
 /* --- YAN TAŞ BORDÜR ÜZERİNDEKİ YUVARLAK OYMA TAŞ MÜHÜR BUTONU (#pass "Pas / Turu bitir") --- */
@@ -1891,7 +1898,7 @@ body.dragging-joker #fx::after {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: clamp(6px, 0.9vw, 12px);
+  gap: clamp(10px, 1.35vw, 18px);
   padding: 4px 20px max(4px, env(safe-area-inset-bottom, 4px)) !important;
   min-height: 0 !important;
   pointer-events: none;
@@ -1931,7 +1938,7 @@ body.dragging-joker #fx::after {
   margin-left: 0 !important;
 }
 
-#hand .j:not(.dim):not(.is-dragging):hover,
+#hand .j:not(.dim):not(.is-dragging).hovered,
 #hand .j.pinned:not(.is-dragging) {
   width: clamp(165px, 26dvh, 236px) !important;
   transform: translateX(-50%) translateY(-28px) rotate(0deg) !important;
@@ -1948,7 +1955,7 @@ body.dragging-joker #fx::after {
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9) !important;
   cursor: pointer;
 }
-#hand .j.dim:not(.is-dragging):hover,
+#hand .j.dim:not(.is-dragging).hovered,
 #hand .j.dim.pinned:not(.is-dragging) {
   width: clamp(156px, 24.5dvh, 222px) !important;
   transform: translateX(-50%) translateY(-28px) rotate(0deg) !important;
@@ -1960,8 +1967,9 @@ body.dragging-joker #fx::after {
 
 #hand .j.is-dragging {
   width: clamp(92px, 14dvh, 126px) !important;
-  transform: translate3d(calc(-50% + var(--drag-x, 0px)), var(--drag-y, 0px), 0) rotate(-2deg) !important;
-  transition: none !important;
+  transform: translate3d(calc(-50% + var(--drag-x, 0px)), var(--drag-y, 0px), 0) rotate(var(--drag-rot, -2deg)) !important;
+  transition: width 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease !important;
+  will-change: transform;
   z-index: 100 !important;
   cursor: grabbing !important;
   border-color: #ffe89e !important;

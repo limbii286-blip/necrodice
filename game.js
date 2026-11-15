@@ -1148,6 +1148,11 @@ document.addEventListener('click',e=>{
   }
   if(t.dataset.j){
     if(window._suppressJokerClick)return;
+    const id=+t.dataset.j;
+    if(S.turn==0&&!S.wait&&MODE!=='spectator'&&playable(S,0,id)){
+      document.querySelectorAll('#hand .j.pinned,#hand .j.hovered').forEach(el=>el.classList.remove('pinned','hovered'));
+      return startJoker(id);
+    }
     const wasPinned=t.classList.contains('pinned');
     document.querySelectorAll('#hand .j.pinned').forEach(el=>el.classList.remove('pinned'));
     if(!wasPinned){t.classList.add('pinned');snd('info')}
@@ -1454,16 +1459,29 @@ try{if(RM)document.body.classList.add('rm');if(!CRT)document.documentElement.cla
 try{$('#slogo').src=IMG.logo}catch(e){}setTimeout(()=>{const s=$('#splash');s&&s.remove()},2900);
 on('#b2',hostRoom);on('#b3',joinRoom);
 
-/* ---------- DESTEDEN BASILI TUTUP ÖNÜMÜZE KART ÇEKME ---------- */
+/* ---------- DESTEDEN TIKLAYARAK VEYA SÜRÜKLEYEREK KART ÇEKME (SMOOTH LERP) ---------- */
 (function initDeckDragDraw(){
-  let dragging=false,pointerId=null,startX=0,startY=0,ghost=null;
+  let dragging=false,pointerId=null,startX=0,startY=0,ghost=null,rafId=0;
+  let targetX=0,targetY=0,curX=0,curY=0,velX=0;
 
   function canDrawNow(){
     const S=G;
     return !!(S&&!S.over&&!lock&&!P&&S.turn==0&&!S.wait&&MODE!=='spectator'&&canDraw(S,0));
   }
 
+  function step(){
+    if(!dragging||!ghost){rafId=0;return}
+    const dx=targetX-curX, dy=targetY-curY;
+    curX+=dx*0.38;
+    curY+=dy*0.38;
+    velX=velX*0.65+dx*0.35;
+    const tilt=Math.max(-14,Math.min(14,velX*0.35));
+    ghost.style.transform=`translate3d(${curX.toFixed(1)}px, ${curY.toFixed(1)}px, 0) translate(-50%, -50%) rotate(${tilt.toFixed(2)}deg) scale(1.08)`;
+    rafId=requestAnimationFrame(step);
+  }
+
   function cleanup(){
+    if(rafId){cancelAnimationFrame(rafId);rafId=0}
     if(ghost){ghost.remove();ghost=null}
     document.body.classList.remove('dragging-deck');
     dragging=false;pointerId=null;
@@ -1481,32 +1499,35 @@ on('#b2',hostRoom);on('#b3',joinRoom);
     try{window.getSelection&&window.getSelection().removeAllRanges&&window.getSelection().removeAllRanges()}catch(err){}
     dragging=false;
     pointerId=e.pointerId;
-    startX=e.clientX;
-    startY=e.clientY;
+    startX=curX=targetX=e.clientX;
+    startY=curY=targetY=e.clientY;
+    velX=0;
     try{dk.setPointerCapture(e.pointerId)}catch(err){}
   });
 
   document.addEventListener('pointermove',e=>{
     if(pointerId==null||e.pointerId!==pointerId)return;
-    const dx=e.clientX-startX,dy=e.clientY-startY;
+    targetX=e.clientX;
+    targetY=e.clientY;
+    const dx=targetX-startX,dy=targetY-startY;
     if(!dragging&&Math.hypot(dx,dy)>8){
       dragging=true;
       document.body.classList.add('dragging-deck');
       ghost=document.createElement('div');
       ghost.className='deck-drag-ghost';
       ghost.style.backgroundImage=`url("${IMG.bn}")`;
+      ghost.style.transform=`translate3d(${curX.toFixed(1)}px, ${curY.toFixed(1)}px, 0) translate(-50%, -50%) scale(1.08)`;
       document.body.appendChild(ghost);
+      if(!rafId)rafId=requestAnimationFrame(step);
     }
     if(dragging&&ghost){
-      ghost.style.left=e.clientX+'px';
-      ghost.style.top=e.clientY+'px';
       ghost.classList.toggle('ready',e.clientY > window.innerHeight*0.50);
     }
   });
 
   function finish(e,cancelled){
     if(pointerId==null||e.pointerId!==pointerId)return;
-    const ok=!cancelled&&dragging&&e.clientY > window.innerHeight*0.50&&canDrawNow();
+    const ok=!cancelled&&canDrawNow()&&(!dragging||e.clientY > window.innerHeight*0.50);
     cleanup();
     if(ok)drawFromDeck();
   }
@@ -1515,9 +1536,10 @@ on('#b2',hostRoom);on('#b3',joinRoom);
   document.addEventListener('pointercancel',e=>finish(e,true));
 })();
 
-/* ---------- JOKER SÜRÜKLE-BIRAK (SADECE SÜRÜKLEYEREK OYNAMA, TIKLAYINCA BÜYÜME) ---------- */
+/* ---------- JOKER SÜRÜKLE-BIRAK & TIKLAYINCA OYNAMA (SMOOTH LERP) ---------- */
 (function initJokerDragAndDrop(){
-  let dragEl=null,dragId=0,startX=0,startY=0,isDragging=false,pointerId=null;
+  let dragEl=null,dragId=0,startX=0,startY=0,isDragging=false,pointerId=null,rafId=0;
+  let targetDx=0,targetDy=0,curDx=0,curDy=0,velX=0;
 
   function canPlayJoker(id){
     const S=G;
@@ -1528,11 +1550,26 @@ on('#b2',hostRoom);on('#b3',joinRoom);
     return clientY < window.innerHeight * 0.72;
   }
 
+  function step(){
+    if(!dragEl||!isDragging){rafId=0;return}
+    const ddx=targetDx-curDx, ddy=targetDy-curDy;
+    curDx+=ddx*0.42;
+    curDy+=ddy*0.42;
+    velX=velX*0.65+ddx*0.35;
+    const rot=Math.max(-14,Math.min(14,velX*0.35));
+    dragEl.style.setProperty('--drag-x',curDx.toFixed(1)+'px');
+    dragEl.style.setProperty('--drag-y',curDy.toFixed(1)+'px');
+    dragEl.style.setProperty('--drag-rot',rot.toFixed(2)+'deg');
+    rafId=requestAnimationFrame(step);
+  }
+
   function cleanupDrag(){
+    if(rafId){cancelAnimationFrame(rafId);rafId=0}
     if(dragEl){
       dragEl.classList.remove('is-dragging','drop-hot');
       dragEl.style.removeProperty('--drag-x');
       dragEl.style.removeProperty('--drag-y');
+      dragEl.style.removeProperty('--drag-rot');
     }
     document.body.classList.remove('dragging-joker','drop-ready');
     dragEl=null;dragId=0;isDragging=false;pointerId=null;
@@ -1548,6 +1585,9 @@ on('#b2',hostRoom);on('#b3',joinRoom);
     dragId=id;
     startX=e.clientX;
     startY=e.clientY;
+    targetDx=curDx=0;
+    targetDy=curDy=0;
+    velX=0;
     isDragging=false;
     pointerId=e.pointerId;
     try{jEl.setPointerCapture(e.pointerId)}catch(err){}
@@ -1555,17 +1595,16 @@ on('#b2',hostRoom);on('#b3',joinRoom);
 
   document.addEventListener('pointermove',e=>{
     if(!dragEl||e.pointerId!==pointerId)return;
-    const dx=e.clientX-startX;
-    const dy=e.clientY-startY;
-    if(!isDragging&&Math.hypot(dx,dy)>8){
+    targetDx=e.clientX-startX;
+    targetDy=e.clientY-startY;
+    if(!isDragging&&Math.hypot(targetDx,targetDy)>8){
       isDragging=true;
-      dragEl.classList.remove('pinned');
+      dragEl.classList.remove('pinned','hovered');
       dragEl.classList.add('is-dragging');
       document.body.classList.add('dragging-joker');
+      if(!rafId)rafId=requestAnimationFrame(step);
     }
     if(isDragging){
-      dragEl.style.setProperty('--drag-x',dx+'px');
-      dragEl.style.setProperty('--drag-y',dy+'px');
       const hot=isOverDropZone(e.clientY);
       dragEl.classList.toggle('drop-hot',hot);
       document.body.classList.toggle('drop-ready',hot);
@@ -1589,6 +1628,46 @@ on('#b2',hostRoom);on('#b3',joinRoom);
 
   document.addEventListener('pointerup',e=>finishPointer(e,false));
   document.addEventListener('pointercancel',e=>finishPointer(e,true));
+})();
+
+/* ---------- ELDEKİ JOKERLERDE İMLEÇ ALTI KOLAY GEÇİŞ (SLOT BAZLI HOVER) ---------- */
+(function initHandSlotHover(){
+  function clearHover(){
+    document.querySelectorAll('#hand .j.hovered').forEach(el=>el.classList.remove('hovered'));
+  }
+
+  document.addEventListener('pointermove',e=>{
+    if(e.pointerType==='touch')return;
+    if(document.body.classList.contains('dragging-joker')||document.body.classList.contains('dragging-deck')){
+      clearHover();return;
+    }
+    const hand=document.getElementById('hand');
+    if(!hand)return;
+    const slots=[...hand.querySelectorAll('.jslot')];
+    if(!slots.length)return;
+    const handRect=hand.getBoundingClientRect();
+    const overHand=(e.clientX>=handRect.left-30 && e.clientX<=handRect.right+30 && e.clientY>=handRect.top-190 && e.clientY<=window.innerHeight);
+    if(!overHand){clearHover();return}
+
+    let matchedSlot=null;
+    for(const sl of slots){
+      const r=sl.getBoundingClientRect();
+      if(e.clientX>=r.left-4 && e.clientX<=r.right+4){
+        matchedSlot=sl;break;
+      }
+    }
+    if(matchedSlot){
+      const j=matchedSlot.querySelector('.j');
+      if(j&&!j.classList.contains('is-dragging')){
+        slots.forEach(s=>{const c=s.querySelector('.j');if(c&&c!==j)c.classList.remove('hovered')});
+        j.classList.add('hovered');
+      }
+    }else if(!(e.target.closest&&e.target.closest('#hand .j'))){
+      clearHover();
+    }
+  });
+
+  document.addEventListener('pointerleave',clearHover);
 })();
 
 /* ---------- ORTADAKİ YUVARLAK KULLANILMIŞ JOKER İKONLARI: ÜZERİNE GELİNCE BÜYÜK KART GÖSTERİMİ ---------- */
