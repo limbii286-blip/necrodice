@@ -584,9 +584,6 @@ function bot(){
         const dlt=bt>bT?-2:2;S.hpMod[1]=(S.hpMod[1]||0)+dlt;S.hpUsed[1]=true;S.acted=true;S.log.push({p:1,t:`Hileli Dokunuş kullandı (${dlt>0?'+2':'−2'})`});snd('play');R();return think(AFTER[DIFF]);
       }else if(bh==='m'&&S.rounds>=1){
         S.d20Bonus[1]=(S.d20Bonus[1]||0)+3;S.hpUsed[1]=true;S.log.push({p:1,t:'Kader Mühürü mühürlendi (+3 D20)'});snd('stamp');R();
-      }else if(bh==='u'&&!low&&bt>bT&&S.pl[1].open.length&&S.deck.length){
-        const hiC=S.pl[1].open.reduce((a,b)=>b.n>a.n?b:a,S.pl[1].open[0]);
-        execSwapDeckHeroPower(1,hiC.id);return think(AFTER[DIFF]);
       }
     }
     const a=plan?plan.a:(n++<8?(prm.mc?decideH:decide)(S,1,prm.mc?{...prm,K:90,ms:400}:prm):null);plan=null;pid++;
@@ -867,9 +864,12 @@ function endRound(){
       </div>
     </div><div class="after"><b>Zar Sonucu: ${roll}${hpB?` (${rawRoll}+${hpB} Kader Mühürü)`:''}</b><br>`+(surv?(L==v?'Kurtuldun! Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
     const full=v=>mk(v,roll,surv),rig=MODE=='bot'&&DIFF=='imp'&&L==1&&!surv&&!S.rigDone; // sahne oyun başına bir kez; ikinci ölümde gerçekten ölür
-    if(surv||rig){const n=S.bo+2,ek=['a','e','ye','e','e','e','ya','ye','e','a'][n%10];
+    const uRev=L===0&&avKey(S,0)==='u'&&!surv&&!(S.uRevived&&S.uRevived[0]);
+    if(surv||rig||uRev){const n=S.bo+2,ek=['a','e','ye','e','e','e','ya','ye','e','a'][n%10];
       const lb=`Düello ${n}'${ek} geç`,go=()=>{try{document.body.classList.remove('dead')}catch(e){}S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()};
-      if(rig){S.rigDone=true;impSave(mk(0,1,false),()=>M(mk(0,20,true),lb,go))}else MM(full,lb,go)}
+      if(rig){S.rigDone=true;S.hpUsed[1]=true;impSave(mk(0,1,false),()=>M(mk(0,20,true),lb,go))}
+      else if(uRev){S.uRevived=S.uRevived||[false,false];S.uRevived[0]=true;S.hpUsed[0]=true;impSave(mk(0,roll,false),()=>M(mk(0,20,true),lb,go),'Hiçlik seni geri çevirdi… Bir kez daha ölümden döndün!')}
+      else MM(full,lb,go)}
     else{S.over=true;lrnGame(L==0);MM(full,'Yeniden oyna',start,null,true)}
   }
 }
@@ -882,11 +882,11 @@ function cutscene(txt,done){ // BİLİNMEYEN: ikonu ve konuşma balonu
   setTimeout(()=>{tm=setInterval(()=>{sp.textContent=txt.slice(0,++i);if(i>=txt.length){clearInterval(tm);setTimeout(out,2800)}},48)},500);
   el.onclick=()=>{if(i<txt.length){i=txt.length;clearInterval(tm);sp.textContent=txt;setTimeout(out,2200)}else out()};
 }
-function impSave(html,cont){ // BİLİNMEYEN ölecekken: zar düşer, sahne girer, zar yeniden atılır (Nat 20)
+function impSave(html,cont,msg='Bu kadar kolay olacağını mı sandın? Bu oyunun yaratıcısı benim.'){ // BİLİNMEYEN ölecekken: zar düşer, sahne girer, zar yeniden atılır (Nat 20)
   M(html,'.',()=>{});$('#mb').classList.add('rig');
   const d=document.querySelector('#mb .d20-box');let n=0;
   const w=setInterval(()=>{if(!d||!d.isConnected||++n>600){clearInterval(w);return}
-    if(d.classList.contains('finished')){clearInterval(w);setTimeout(()=>cutscene('Bu kadar kolay olacağını mı sandın? Bu oyunun yaratıcısı benim.',()=>{$('#mb').classList.remove('rig');cont()}),1000)}},120);
+    if(d.classList.contains('finished')){clearInterval(w);setTimeout(()=>cutscene(msg,()=>{$('#mb').classList.remove('rig');cont()}),1000)}},120);
 }
 let entering=false;
 function veil(ms=2000){const v=document.createElement('div');v.className='veil';v.style.animationDuration=ms+'ms';v.style.setProperty('--ms',ms*.9+'ms');v.innerHTML=`<img alt="" src="${IMG.logo}"><b>limbigames</b><span class="ldb"><i></i></span>`;document.body.appendChild(v);setTimeout(()=>v.remove(),ms+100)}
@@ -897,7 +897,7 @@ const HEROES=[
   {id:'c',name:'Yozlaşmış Tüccar',hpName:'Hileli Dokunuş',desc:'Bu turda toplamına +2 veya −2 uygula.'},
   {id:'p',name:'Veba Doktoru',hpName:'Kuzgun Gözü',desc:'Rakibin kapalı sayı kartına gizlice bak.'},
   {id:'m',name:'Ölümün Efendisi',hpName:'Kader Mühürü',desc:'Bu düelloda D20 ölüm zarına +3 bonus kazan.'},
-  {id:'u',name:'Bilinmeyen',hpName:'Hiçlik Değişimi',desc:'Açık bir kartını desteden rastgele bir kartla değiştir.'}
+  {id:'u',name:'Bilinmeyen',passive:true,hpName:'Hiçlikten Dönüş',desc:'Pasif: Ölüm zarında ölürsen oyun başına 1 kez ölümden dönersin.'}
 ];
 const HERO_MAP=Object.fromEntries(HEROES.map(h=>[h.id,h]));
 const HP_IC={
@@ -907,7 +907,7 @@ const HP_IC={
   m:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 21 8.5 18 19 6 19 3 8.5"/><path d="M12 2v17M3 8.5h18"/></svg>',
   u:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 3l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 21l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>'
 };
-function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}const oppH=MODE=='bot'?({easy:'t',med:'c',hard:'m',imp:'u'}[DIFF]||'c'):'c';G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],mast:[0,0]};prevAv[0]=prevAv[1]=undefined;newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
+function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}const oppH=MODE=='bot'?({easy:'t',med:'c',hard:'m',imp:'u'}[DIFF]||'c'):'c';G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],mast:[0,0]};prevAv[0]=prevAv[1]=undefined;newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
 
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
@@ -1119,10 +1119,10 @@ function R(){
   if(sc1){sc1.classList.toggle('ticking',S.turn==1&&!S.wait&&!(S.graceLeft>0)&&!oppTimeOut);sc1.classList.toggle('low',c1<=10&&c1>0);sc1.classList.toggle('out',oppTimeOut||c1<=0)}
   const oppHandHtml=`<div class="opp-jhand" title="Rakibin elindeki kapalı jokerler (${S.hand[1].length})">${S.hand[1].map((_,i)=>`<img class="oj" style="--r:${((i-(S.hand[1].length-1)/2)*4.5).toFixed(1)}deg" src="${IMG.bj}" alt="">`).join('')}</div>`;
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'')+(S.winSide!=null?(S.winSide>0?' round-lose':S.winSide===0?' round-tie':''):'');
-  const myHId=avKey(S,0),oppHId=avKey(S,1),hpUsed0=!!(S.hpUsed&&S.hpUsed[0]),hpUsed1=!!(S.hpUsed&&S.hpUsed[1]);
+  const myHId=avKey(S,0),oppHId=avKey(S,1),hpUsed0=myHId==='u'?!!(S.uRevived&&S.uRevived[0]):!!(S.hpUsed&&S.hpUsed[0]),hpUsed1=oppHId==='u'?!!S.rigDone:!!(S.hpUsed&&S.hpUsed[1]);
   const hpObj0=HERO_MAP[myHId]||HEROES[0],hpObj1=HERO_MAP[oppHId]||HEROES[0];
-  const canHp=!isSpec&&my&&!P&&!hpUsed0&&MODE!=='guest';
-  const hpBtn0=isSpec?'':`<button id="hp-btn" class="hp-btn${hpUsed0?' used':canHp?' ready':''}" data-hp="1" title="${hpObj0.hpName}: ${hpObj0.desc}"${canHp?'':' disabled'}>${HP_IC[myHId]||HP_IC.t}</button>`;
+  const canHp=!isSpec&&!hpObj0.passive&&my&&!P&&!hpUsed0&&MODE!=='guest';
+  const hpBtn0=isSpec?'':`<button id="hp-btn" class="hp-btn${hpObj0.passive?' passive':''}${hpUsed0?' used':(canHp||(hpObj0.passive&&!hpUsed0))?' ready':''}" data-hp="1" title="${hpObj0.hpName}: ${hpObj0.desc}"${canHp?'':' disabled'}>${HP_IC[myHId]||HP_IC.t}</button>`;
   const hpBtn1=`<span class="hp-btn opp-hp${hpUsed1?' used':''}" title="${hpObj1.hpName}: ${hpObj1.desc}">${HP_IC[oppHId]||HP_IC.t}</span>`;
   setH('#opp',`${oppHandHtml}<div class="who">${av1}${hpBtn1}<div class="nm"><b>${p1Name}</b>${MODE=='bot'?'':'<span class="meta">Online</span>'}</div><div class="tot${obust?' bust':oexact?' exact':''}"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${oppClosedKnown?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!(S.rev||c.o!=null||(S.oppPeek&&S.oppPeek.includes(c.id))),S.rev)).join('')}</div>`);
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<span class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}"><img src="${IMG.j[e.id]}" alt=""></span>`};
