@@ -94,12 +94,18 @@
     // Painter's algorithm: sort by depth
     faceData.sort((a, b) => a.zDepth - b.zDepth);
 
-    // Ambient shadow under die
+    // Ambient shadow under die (radial gradient instead of slow ctx.filter blur on mobile)
     ctx.save();
+    ctx.translate(cx, cy + baseScale * 0.95);
+    ctx.scale(1, 0.30);
+    const shR = baseScale * 0.85;
+    const shG = ctx.createRadialGradient(0, 0, shR * 0.12, 0, 0, shR);
+    shG.addColorStop(0, 'rgba(0, 0, 0, 0.58)');
+    shG.addColorStop(0.6, 'rgba(0, 0, 0, 0.28)');
+    shG.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = shG;
     ctx.beginPath();
-    ctx.ellipse(cx, cy + baseScale * 0.95, baseScale * 0.75, baseScale * 0.22, 0, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
-    ctx.filter = 'blur(10px)';
+    ctx.arc(0, 0, shR, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 

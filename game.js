@@ -711,17 +711,21 @@ function hmove(T,a,pol){ // simülasyonda oyuncunun hamlesi: öğrendiği alış
   if(canDraw(T,a)&&Math.random()<(e[0]+.3)/(n+.6))return{t:'d'};
   if((!T.jTurn||T.jTurn[a]<1)&&T.jUsed[a]<2&&!T.noJ[a]&&T.hand[a].length&&Math.random()<hjr()){const x=decide(T,a,{...pol,jp:1});if(x&&x.t=='j')return x}
   return null}
+function isMobilePerf(){
+  return window.innerWidth<=760||(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches);
+}
 function dustTableCards(){
   const cards=[...document.querySelectorAll('#opp .cards .c, #me .cards .c')];
   const rects=cards.map(c=>c.getBoundingClientRect());
   const frag=document.createDocumentFragment();
   const motes=[];
+  const perCard=isMobilePerf()?5:10;
   cards.forEach((c,idx)=>{
     const r=rects[idx];
     c.style.animationDelay=(idx*28)+'ms';
     c.classList.add('dust-out');
     if(r.width>0&&r.height>0){
-      for(let i=0;i<10;i++){
+      for(let i=0;i<perCard;i++){
         const m=document.createElement('span');
         m.className='dust-mote';
         m.style.left=(r.left+Math.random()*r.width)+'px';
@@ -1845,7 +1849,7 @@ function createSmoothDragLoop(onFrame){
   seedParticles();
 
   function resize(){
-    DPR=Math.min(window.devicePixelRatio||1,2);
+    DPR=isMobilePerf()?1:Math.min(window.devicePixelRatio||1,2);
     W=window.innerWidth;
     H=window.innerHeight;
     cvs.width=Math.round(W*DPR);
@@ -1873,64 +1877,70 @@ function createSmoothDragLoop(onFrame){
     ctx.restore();
   }
 
+  let lastRender=0;
   function render(now){
-    const t=now*0.001;
-    ctx.clearRect(0,0,W,H);
+    const mob=isMobilePerf();
+    const mn=document.getElementById('menu');
+    const menuOpen=mn&&!mn.hidden;
+    if(!menuOpen&&(!mob||now-lastRender>=36)){
+      lastRender=now;
+      const t=now*0.001;
+      ctx.clearRect(0,0,W,H);
 
-    // 1. ARKA PLAN: Üstten Görünümlü Gotik Taş Arena, 4 Çeyrekli Rünik Çember ve Orta Rün Yarığı
-    if(bgLoaded && bgImg.naturalWidth>0){
-      const iw=bgImg.naturalWidth, ih=bgImg.naturalHeight;
-      const scale=Math.max(W/iw, H/ih);
-      const dw=iw*scale, dh=ih*scale;
-      const dx=(W-dw)*0.5, dy=(H-dh)*0.5;
-      ctx.drawImage(bgImg, dx, dy, dw, dh);
+      // 1. ARKA PLAN: Üstten Görünümlü Gotik Taş Arena, 4 Çeyrekli Rünik Çember ve Orta Rün Yarığı
+      if(bgLoaded && bgImg.naturalWidth>0){
+        const iw=bgImg.naturalWidth, ih=bgImg.naturalHeight;
+        const scale=Math.max(W/iw, H/ih);
+        const dw=iw*scale, dh=ih*scale;
+        const dx=(W-dw)*0.5, dy=(H-dh)*0.5;
+        ctx.drawImage(bgImg, dx, dy, dw, dh);
 
-      // 4 köşedeki simetrik ateş kaseleri için titreyen sıcak meşale parıltıları
-      const flicker = 0.78 + 0.22*Math.sin(t*7.1)*Math.cos(t*4.3);
-      const drawLight = (u, v, rad, col) => {
-        const lx = dx + dw*u, ly = dy + dh*v, lr = Math.min(W,H)*rad;
-        const lg = ctx.createRadialGradient(lx, ly, 2, lx, ly, lr);
-        lg.addColorStop(0, col);
-        lg.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = lg;
-        ctx.fillRect(lx-lr, ly-lr, lr*2, lr*2);
-      };
-      drawLight(0.155, 0.045, 0.19, `rgba(255, 155, 55, ${0.26*flicker})`);
-      drawLight(0.845, 0.045, 0.19, `rgba(255, 155, 55, ${0.26*flicker})`);
-      drawLight(0.155, 0.955, 0.19, `rgba(255, 145, 45, ${0.26*flicker})`);
-      drawLight(0.845, 0.955, 0.19, `rgba(255, 145, 45, ${0.26*flicker})`);
-    } else {
-      const g=ctx.createRadialGradient(W*0.5,H*0.5,40,W*0.5,H*0.5,Math.max(W,H)*0.75);
-      g.addColorStop(0,'#1b222c');
-      g.addColorStop(0.55,'#0e131a');
-      g.addColorStop(1,'#05070a');
-      ctx.fillStyle=g;
-      ctx.fillRect(0,0,W,H);
+        // 4 köşedeki simetrik ateş kaseleri için titreyen sıcak meşale parıltıları
+        const flicker = 0.78 + 0.22*Math.sin(t*7.1)*Math.cos(t*4.3);
+        const drawLight = (u, v, rad, col) => {
+          const lx = dx + dw*u, ly = dy + dh*v, lr = Math.min(W,H)*rad;
+          const lg = ctx.createRadialGradient(lx, ly, 2, lx, ly, lr);
+          lg.addColorStop(0, col);
+          lg.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = lg;
+          ctx.fillRect(lx-lr, ly-lr, lr*2, lr*2);
+        };
+        drawLight(0.155, 0.045, 0.19, `rgba(255, 155, 55, ${0.26*flicker})`);
+        drawLight(0.845, 0.045, 0.19, `rgba(255, 155, 55, ${0.26*flicker})`);
+        drawLight(0.155, 0.955, 0.19, `rgba(255, 145, 45, ${0.26*flicker})`);
+        drawLight(0.845, 0.955, 0.19, `rgba(255, 145, 45, ${0.26*flicker})`);
+      } else {
+        const g=ctx.createRadialGradient(W*0.5,H*0.5,40,W*0.5,H*0.5,Math.max(W,H)*0.75);
+        g.addColorStop(0,'#1b222c');
+        g.addColorStop(0.55,'#0e131a');
+        g.addColorStop(1,'#05070a');
+        ctx.fillStyle=g;
+        ctx.fillRect(0,0,W,H);
+      }
+
+      // 2. CANLI ATMOSFER PARÇACIKLARI (Meşale Kıvılcımları ve Rün Tozları)
+      particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if(p.y < -0.04) { p.y = 1.04; p.x = Math.random(); }
+        if(p.x < 0) p.x = 1;
+        if(p.x > 1) p.x = 0;
+        const px = p.x * W;
+        const py = p.y * H;
+        const alpha = 0.35 + 0.55 * Math.abs(Math.sin(t * 2.3 + p.phase));
+        let col = `rgba(140, 235, 255, ${alpha})`;
+        if(p.zone === 0) col = `rgba(255, 155, 55, ${alpha})`;
+        else if(p.zone === 1) col = `rgba(95, 255, 135, ${alpha})`;
+        else if(p.zone === 2) col = `rgba(215, 130, 255, ${alpha})`;
+        ctx.save();
+        ctx.fillStyle = col;
+        if(!mob){ctx.shadowColor = col;ctx.shadowBlur = 8;}
+        ctx.beginPath();
+        ctx.arc(px, py, p.r, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+      });
     }
-
-    // 2. CANLI ATMOSFER PARÇACIKLARI (Meşale Kıvılcımları ve Rün Tozları)
-    particles.forEach(p => {
-      p.x += p.vx;
-      p.y += p.vy;
-      if(p.y < -0.04) { p.y = 1.04; p.x = Math.random(); }
-      if(p.x < 0) p.x = 1;
-      if(p.x > 1) p.x = 0;
-      const px = p.x * W;
-      const py = p.y * H;
-      const alpha = 0.35 + 0.55 * Math.abs(Math.sin(t * 2.3 + p.phase));
-      let col = `rgba(140, 235, 255, ${alpha})`;
-      if(p.zone === 0) col = `rgba(255, 155, 55, ${alpha})`;
-      else if(p.zone === 1) col = `rgba(95, 255, 135, ${alpha})`;
-      else if(p.zone === 2) col = `rgba(215, 130, 255, ${alpha})`;
-      ctx.save();
-      ctx.fillStyle = col;
-      ctx.shadowColor = col;
-      ctx.shadowBlur = 8;
-      ctx.beginPath();
-      ctx.arc(px, py, p.r, 0, Math.PI*2);
-      ctx.fill();
-      ctx.restore();
-    });
 
     if(!document.body.classList.contains('rm')){
       requestAnimationFrame(render);
@@ -1966,7 +1976,7 @@ function createSmoothDragLoop(onFrame){
   }
 
   function resize(){
-    DPR=Math.min(window.devicePixelRatio||1,2);
+    DPR=isMobilePerf()?1:Math.min(window.devicePixelRatio||1,2);
     W=window.innerWidth;
     H=window.innerHeight;
     cvs.width=Math.round(W*DPR);
