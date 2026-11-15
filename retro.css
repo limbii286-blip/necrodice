@@ -17,10 +17,11 @@
   --lime: #5ec27e;
   --bone: #e6d7b8;
   --txt: #e8dcc4;
-  --gf: 'UnifrakturMaguntia', 'Cinzel Decorative', Georgia, serif;
-  --hf: 'Cinzel Decorative', 'Cinzel', Georgia, serif;
-  --mf: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
-  --bf: 'Cormorant Garamond', Georgia, serif;
+  --gf: 'Grenze Gotisch', 'MedievalSharp', Georgia, serif;
+  --hf: 'Grenze Gotisch', 'MedievalSharp', Georgia, serif;
+  --mf: 'MedievalSharp', 'Almendra', Georgia, serif;
+  --bf: 'Almendra', Georgia, serif;
+  --sf: 'MedievalSharp', 'Almendra', Georgia, serif;
 }
 
 * {

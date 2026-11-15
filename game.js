@@ -1052,7 +1052,7 @@ function R(){
   }
   const n=S.hand[0].length;
   if(isSpec){
-    setH('#hand',`<div class="spec-notice">👁️ Canlı Maç Yayını · İzleyici Modundasın</div>`);
+    setH('#hand',`<div class="spec-notice">Canlı Maç Yayını · İzleyici Modundasın</div>`);
   }else{
     setH('#hand',S.hand[0].map((id,i)=>`<span class="jslot"><img class="j${my&&!P&&playable(S,0,id)?'':' dim'}" draggable="false" style="--r:${((i-(n-1)/2)*5).toFixed(1)}deg" data-j="${id}" src="${IMG.j[id]}" alt=""></span>`).join(''));
     document.querySelectorAll('#hand .j[data-j]').forEach(im=>hi(im,+im.dataset.j));
@@ -1376,8 +1376,8 @@ function hostRoom(){
   const showLobby=()=>{
     box(`
       <div class="lobby-box">
-        <h3 style="margin-bottom:8px">Çevrim İçi Lobi</h3>
-        <p style="color:var(--bone);font-size:20px;margin-bottom:14px">Rakip bekleniyor… Bu kodu arkadaşına ilet:</p>
+        <h3 style="margin-bottom:8px">Çevrimiçi Lobi</h3>
+        <p style="color:var(--bone);font-size:20px;margin-bottom:14px">Bu kodu arkadaşına ilet:</p>
         <div class="lobby-code-badge" id="lobbyCodeBox" title="Kodu Kopyala">
           <span class="lobby-lbl">ODA KODU</span>
           <b class="lobby-code">${code}</b>
