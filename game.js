@@ -235,12 +235,14 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı animas
   const cv=d.querySelector('#d20cv');
   if(!cv)return;
 
-  // Face 0 directly pointing at camera angle
-  const targetRx = Math.atan(1 / Math.sqrt(2)); // ~0.61548
-  const targetRy = Math.PI / 4;                // ~0.78539
-  const targetRz = 0;
+  // Hedef zar değerine göre gerçek D20 yüzünün iniş açısını al
+  const initAng = (typeof getD20FaceAngles === 'function') ? getD20FaceAngles(20) : { rx: Math.atan(1 / Math.sqrt(2)), ry: Math.PI / 4, rz: 0 };
+  const targetAng = (typeof getD20FaceAngles === 'function') ? getD20FaceAngles(target) : initAng;
+  const targetRx = targetAng.rx;
+  const targetRy = targetAng.ry;
+  const targetRz = targetAng.rz;
 
-  let rx = targetRx, ry = targetRy, rz = targetRz;
+  let rx = initAng.rx, ry = initAng.ry, rz = initAng.rz;
   let rolling = false, finished = false;
   let animId = null;
 

@@ -27,6 +27,26 @@
     11, 17, 5, 13, 8
   ];
 
+  // Precompute target (rx, ry, rz) for each face so its normal points at camera [0, 0, 1]
+  const FACE_ANGLES = F.map(f => {
+    const p0 = V[f[0]], p1 = V[f[1]], p2 = V[f[2]];
+    const ax = p1[0] - p0[0], ay = p1[1] - p0[1], az = p1[2] - p0[2];
+    const bx = p2[0] - p0[0], by = p2[1] - p0[1], bz = p2[2] - p0[2];
+    const nx = ay * bz - az * by, ny = az * bx - ax * bz, nz = ax * by - ay * bx;
+    const nl = Math.hypot(nx, ny, nz);
+    const ux = nx / nl, uy = ny / nl, uz = nz / nl;
+    return {
+      rx: Math.atan2(uy, Math.hypot(ux, uz)),
+      ry: Math.atan2(-ux, uz),
+      rz: 0
+    };
+  });
+
+  window.getD20FaceAngles = function(num) {
+    const fi = FACE_NUMS.indexOf(Number(num));
+    return FACE_ANGLES[fi >= 0 ? fi : 0];
+  };
+
   window.draw3DD20 = function(cv, rx, ry, rz, targetNum, isRolling, isCrit, isFail, scaleMult, textPopMult) {
     if (!cv) return;
     const ctx = cv.getContext('2d');
@@ -82,6 +102,9 @@
     ctx.filter = 'blur(10px)';
     ctx.fill();
     ctx.restore();
+
+    const isQuestion = (targetNum === '?');
+    const targetFi = isQuestion ? 0 : FACE_NUMS.indexOf(Number(targetNum));
 
     faceData.forEach(fd => {
       // Backface culling
@@ -141,7 +164,8 @@
       if (norm[2] > 0.42) {
         const f_cx = (s0[0] + s1[0] + s2[0]) / 3;
         const f_cy = (s0[1] + s1[1] + s2[1]) / 3;
-        const numStr = (fi === 0) ? String(targetNum) : String(FACE_NUMS[fi]);
+        const isTargetFace = (fi === targetFi);
+        const numStr = (isQuestion && fi === 0) ? '?' : String(FACE_NUMS[fi]);
 
         ctx.save();
         ctx.translate(f_cx, f_cy);
@@ -152,13 +176,13 @@
         const ang = Math.atan2(upY, upX) + Math.PI / 2;
         ctx.rotate(Math.sin(ang) * 0.28); // continuous periodic perspective tilt (no atan2 wrap snap)
 
-        const fontSz = Math.max(16, baseScale * (numStr.length > 1 ? 0.36 : 0.42) * norm[2] * (fi === 0 ? textPop : 1.0));
+        const fontSz = Math.max(16, baseScale * (numStr.length > 1 ? 0.36 : 0.42) * norm[2] * (isTargetFace ? textPop : 1.0));
         ctx.font = `900 ${fontSz|0}px 'Cinzel', 'Times New Roman', serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
         // Gold relief text with engraving shadow & subtle burst glow when popping
-        if (fi === 0 && textPop > 1.05) {
+        if (isTargetFace && textPop > 1.05) {
           ctx.shadowColor = isCrit ? 'rgba(255, 235, 120, 0.95)' : isFail ? 'rgba(255, 60, 60, 0.85)' : 'rgba(255, 215, 90, 0.85)';
           ctx.shadowBlur = 10 * textPop;
         } else {
@@ -167,10 +191,10 @@
         }
         ctx.shadowOffsetX = 1;
         ctx.shadowOffsetY = 2;
-        ctx.fillStyle = isCrit ? '#ffffff' : (fi === 0 && textPop > 1.05) ? '#fff8db' : '#ffea9f';
+        ctx.fillStyle = isCrit ? '#ffffff' : (isTargetFace && textPop > 1.05) ? '#fff8db' : '#ffea9f';
         ctx.fillText(numStr, 0, 0);
 
-        if (isCrit || (fi === 0 && textPop > 1.05)) {
+        if (isCrit || (isTargetFace && textPop > 1.05)) {
           ctx.strokeStyle = isCrit ? '#ffd700' : 'rgba(255, 215, 120, 0.6)';
           ctx.lineWidth = 1.2;
           ctx.strokeText(numStr, 0, 0);
