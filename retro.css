@@ -1629,19 +1629,20 @@ body.dragging-joker #fx::after {
   bottom: auto !important;
   left: 50% !important;
   transform: translateX(-50%) !important;
-  width: 28px !important;
-  height: 28px !important;
+  width: 32px !important;
+  height: 32px !important;
   padding: 0 !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   border-radius: 50% !important;
   background: radial-gradient(circle at 35% 32%, #4a2a12 0%, #2b1608 58%, #140903 100%) !important;
-  border: 2px solid #b5863c !important;
-  color: #fff4d6 !important;
-  -webkit-text-stroke: 0.5px #0c0602;
-  text-shadow: 0 1px 2px #000, 0 0 5px #000 !important;
-  font: 800 14px/1 var(--mf) !important;
+  border: 2px solid #c99a4a !important;
+  color: #fffbeb !important;
+  -webkit-text-stroke: 0 !important;
+  text-shadow: 0 1px 2px #000 !important;
+  font: 800 16px/1 system-ui, -apple-system, 'Segoe UI', sans-serif !important;
+  font-variant-numeric: tabular-nums !important;
   box-shadow:
     0 0 0 2px #120904,
     0 4px 10px rgba(0, 0, 0, 0.92),
