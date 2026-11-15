@@ -1122,7 +1122,7 @@ function R(){
   const myHId=avKey(S,0),oppHId=avKey(S,1),hpUsed0=!!(S.hpUsed&&S.hpUsed[0]),hpUsed1=!!(S.hpUsed&&S.hpUsed[1]);
   const hpObj0=HERO_MAP[myHId]||HEROES[0],hpObj1=HERO_MAP[oppHId]||HEROES[0];
   const canHp=!isSpec&&my&&!P&&!hpUsed0&&MODE!=='guest';
-  const hpBtn0=isSpec?'':`<button id="hp-btn" class="hp-btn${hpUsed0?' used':canHp?' ready':''}" data-hp="1" title="${hpObj0.hpName}: ${hpObj0.desc}"${canHp?'':' disabled'}>${HP_IC[myHId]||HP_IC.t}<span class="hp-b">${hpUsed0?'✓':'1'}</span></button>`;
+  const hpBtn0=isSpec?'':`<button id="hp-btn" class="hp-btn${hpUsed0?' used':canHp?' ready':''}" data-hp="1" title="${hpObj0.hpName}: ${hpObj0.desc}"${canHp?'':' disabled'}>${HP_IC[myHId]||HP_IC.t}</button>`;
   const hpBtn1=`<span class="hp-btn opp-hp${hpUsed1?' used':''}" title="${hpObj1.hpName}: ${hpObj1.desc}">${HP_IC[oppHId]||HP_IC.t}</span>`;
   setH('#opp',`${oppHandHtml}<div class="who">${av1}${hpBtn1}<div class="nm"><b>${p1Name}</b>${MODE=='bot'?'':'<span class="meta">Online</span>'}</div><div class="tot${obust?' bust':oexact?' exact':''}"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${oppClosedKnown?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!(S.rev||c.o!=null||(S.oppPeek&&S.oppPeek.includes(c.id))),S.rev)).join('')}</div>`);
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<span class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}"><img src="${IMG.j[e.id]}" alt=""></span>`};
