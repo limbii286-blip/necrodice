@@ -323,7 +323,7 @@ body:has(#menu:not([hidden])) #fl {
   border: 1.5px solid #8a6432 !important;
   background:
     linear-gradient(rgba(16, 10, 5, 0.24), rgba(10, 6, 3, 0.38)),
-    url('wood_plank.jpg?v=20261115_w1') center / 100% 100% no-repeat !important;
+    url('wood_plank.jpg?v=20261116_w2') center / 100% 100% no-repeat !important;
   color: #fae8c8 !important;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.96), 0 1px 1px rgba(0, 0, 0, 0.9) !important;
   text-transform: none !important;
@@ -431,7 +431,7 @@ body:has(#menu:not([hidden])) #fl {
   border-radius: 7px !important;
   background:
     linear-gradient(rgba(16, 10, 5, 0.24), rgba(10, 6, 3, 0.38)),
-    url('wood_plank.jpg?v=20261115_w1') center / 100% 100% no-repeat !important;
+    url('wood_plank.jpg?v=20261116_w2') center / 100% 100% no-repeat !important;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.96) !important;
   box-shadow:
     0 4px 0 #140b04,
@@ -451,7 +451,7 @@ body:has(#menu:not([hidden])) #fl {
 .btn.alt {
   background:
     linear-gradient(rgba(16, 10, 5, 0.32), rgba(10, 6, 3, 0.46)),
-    url('wood_plank.jpg?v=20261115_w1') center / 100% 100% no-repeat !important;
+    url('wood_plank.jpg?v=20261116_w2') center / 100% 100% no-repeat !important;
   border-color: #8a6432 !important;
   color: #fae8c8 !important;
 }
@@ -494,7 +494,7 @@ body:has(#menu:not([hidden])) #fl {
   border-radius: 12px;
   background:
     linear-gradient(rgba(14, 9, 5, 0.72), rgba(10, 6, 3, 0.82)),
-    url('wood_plank.jpg?v=20261115_w1') center / cover no-repeat;
+    url('wood_plank.jpg?v=20261116_w2') center / cover no-repeat;
   box-shadow:
     0 0 0 3px #0c0704,
     0 0 0 5px #573d1d,
@@ -935,7 +935,7 @@ html::after {
   padding: 8px 16px;
   background:
     linear-gradient(rgba(16, 10, 5, 0.42), rgba(10, 6, 3, 0.56)),
-    url('wood_plank.jpg?v=20261115_w1') center / 100% 100% no-repeat;
+    url('wood_plank.jpg?v=20261116_w2') center / 100% 100% no-repeat;
   border: 2px solid #8f6e3b;
   border-radius: 12px;
   box-shadow:
@@ -996,7 +996,7 @@ html::after {
   padding: 10px 18px;
   background:
     linear-gradient(rgba(16, 10, 5, 0.42), rgba(10, 6, 3, 0.56)),
-    url('wood_plank.jpg?v=20261115_w1') center / 100% 100% no-repeat;
+    url('wood_plank.jpg?v=20261116_w2') center / 100% 100% no-repeat;
   border: 2px solid #8f6e3b;
   border-radius: 10px;
   box-shadow:
@@ -1054,7 +1054,7 @@ html::after {
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.96);
   background:
     linear-gradient(rgba(16, 10, 5, 0.28), rgba(10, 6, 3, 0.44)),
-    url('wood_plank.jpg?v=20261115_w1') center / 100% 100% no-repeat;
+    url('wood_plank.jpg?v=20261116_w2') center / 100% 100% no-repeat;
   border: 1.5px solid #8a6432;
   border-radius: 7px;
   box-shadow:
@@ -1175,7 +1175,7 @@ body.dragging-joker #fx::after {
   padding: 6px 24px;
   background:
     linear-gradient(rgba(16, 10, 5, 0.45), rgba(10, 6, 3, 0.60)),
-    url('wood_plank.jpg?v=20261115_w1') center / 100% 100% no-repeat;
+    url('wood_plank.jpg?v=20261116_w2') center / 100% 100% no-repeat;
   border: 2px solid #7d6238;
   border-radius: 18px;
   box-shadow:
@@ -2890,7 +2890,7 @@ body.dragging-joker #fx::after {
   border-radius: 14px;
   background:
     linear-gradient(rgba(16, 10, 5, 0.62), rgba(10, 6, 3, 0.76)),
-    url('wood_plank.jpg?v=20261115_w1') center / cover no-repeat;
+    url('wood_plank.jpg?v=20261116_w2') center / cover no-repeat;
   border: 2.5px solid #d4a64a;
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.95),
