@@ -1240,7 +1240,7 @@ body.dragging-joker #fx::after {
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 18px;
-  min-width: clamp(410px, 44vw, 540px);
+  min-width: clamp(430px, 46vw, 560px);
   padding: 6px 24px;
   background:
     radial-gradient(ellipse at 50% 0%, rgba(110, 82, 48, 0.22) 0%, transparent 65%),
@@ -2062,6 +2062,7 @@ body.dragging-joker #fx::after {
 
 /* Merkez Kilit Taşı: Dönen Üçgen Hedef Mührü (Sıra Kimdeyse O Tarafa Bakar) */
 #fx .seal {
+  display: none !important;
   position: absolute;
   left: 50%;
   top: 50%;
@@ -2812,7 +2813,7 @@ body.dragging-joker #fx::after {
    ========================================================================== */
 .who .hp-btn {
   position: absolute;
-  left: calc(50% + clamp(28px, 4.2dvh, 40px));
+  left: calc(50% + clamp(40px, 5.5dvh, 52px));
   top: 50%;
   transform: translateY(-50%);
   z-index: 4;
@@ -3109,7 +3110,7 @@ body.dragging-joker #fx::after {
   }
   .who .hp-btn,
   .who .hp-btn.opp-hp {
-    left: calc(50% + 26px);
+    left: calc(50% + 33px);
     width: 32px;
     height: 32px;
   }
@@ -3142,7 +3143,7 @@ body.dragging-joker #fx::after {
 
 @media (max-width: 760px) {
   .who .hp-btn {
-    left: calc(50% + 26px);
+    left: calc(50% + 33px);
     width: 32px;
     height: 32px;
   }
