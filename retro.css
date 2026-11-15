@@ -2110,8 +2110,27 @@ body.dragging-joker #fx::after {
     0 0 18px rgba(242, 210, 139, 0.95) !important;
 }
 
+/* Tablet & Orta Dar Ekranlarda Saatlerin Taşmasını Önle */
+@media (max-width: 960px) {
+  .side-clocks {
+    right: 6px;
+    width: 56px;
+    height: clamp(148px, 24dvh, 200px);
+  }
+  .side-clock {
+    width: 54px;
+    height: 54px;
+  }
+  .side-clock .sc-val {
+    font-size: 20px;
+  }
+  #fx #pass {
+    margin-right: 64px;
+  }
+}
+
 /* Mobil ve Dar Ekran Uyumluluğu */
-@media (max-width: 720px) {
+@media (max-width: 760px) {
   #mb2 {
     width: 95vw !important;
     padding: 14px 12px !important;
@@ -2122,102 +2141,170 @@ body.dragging-joker #fx::after {
   #mb2 .hs-drawer {
     grid-template-columns: repeat(3, 1fr) !important;
   }
+  #mb {
+    max-width: 94vw !important;
+    max-height: 88dvh !important;
+    overflow-y: auto !important;
+    padding: 14px 12px !important;
+  }
   .zone {
-    width: calc(100vw - 24px) !important;
-    padding: 6px 8px !important;
+    width: calc(100vw - 12px) !important;
+    padding: 4px 6px !important;
   }
   #fx {
-    width: calc(100vw - 16px) !important;
-    padding: 0 6px !important;
+    width: calc(100vw - 10px) !important;
+    height: clamp(64px, 10.5dvh, 84px) !important;
+    padding: 0 4px !important;
   }
   #hdr {
     top: max(6px, env(safe-area-inset-top, 6px));
-    left: 8px;
-    right: 8px;
+    left: 6px;
+    right: 6px;
+    gap: 6px;
+    align-items: center;
   }
   #hdr .hs.sks {
-    padding: 4px 8px;
-    gap: 4px;
+    padding: 4px 7px;
+    gap: 5px;
+  }
+  .sk {
+    font-size: 13px !important;
+  }
+  .sk small {
+    font-size: 10px !important;
   }
   #hdr .hc {
-    top: max(6px, env(safe-area-inset-top, 6px));
-    right: 92px;
-    padding: 5px 8px;
-    gap: 6px;
+    position: static !important;
+    margin-left: auto;
+    padding: 4px 8px;
+    gap: 5px;
   }
   #hdr .lab {
     font-size: 11px !important;
+    letter-spacing: 0.6px;
+  }
+  #hdr .pip {
+    width: 12px !important;
+    height: 12px !important;
   }
   #hdr .hg .gear {
     padding: 5px 8px;
-    font-size: 12px;
+    font-size: 11px;
   }
   #opp.zone {
     padding-top: calc(max(6px, env(safe-area-inset-top, 6px)) + 34px) !important;
   }
+  .opp-jhand {
+    top: 2px !important;
+  }
+  .opp-jhand .oj {
+    width: 24px !important;
+    height: 36px !important;
+  }
   .who {
-    min-width: clamp(240px, 72vw, 340px);
-    padding: 4px 14px;
-    gap: 10px;
+    min-width: 0 !important;
+    width: min(92vw, 340px);
+    padding: 4px 10px;
+    gap: 8px;
   }
   .who .av {
-    width: clamp(50px, 7.6dvh, 66px) !important;
-    height: clamp(50px, 7.6dvh, 66px) !important;
-    margin: -6px 0 -4px !important;
+    width: clamp(44px, 6.8dvh, 58px) !important;
+    height: clamp(44px, 6.8dvh, 58px) !important;
+    margin: -4px 0 -2px !important;
   }
   .who .nm {
     min-width: 0;
   }
+  .who .nm b {
+    font-size: clamp(13px, 3.4vw, 16px) !important;
+  }
   .who .tot {
-    min-width: 0;
+    min-width: 54px !important;
+    padding: 3px 8px !important;
+  }
+  .who .tot b,
+  .who .tot .pq {
+    font-size: clamp(20px, 3.2dvh, 26px) !important;
+  }
+  .cards .c {
+    width: clamp(40px, 11vw, 56px) !important;
+    height: calc(clamp(40px, 11vw, 56px) * 1.44) !important;
+    font-size: clamp(18px, 4.6vw, 26px) !important;
   }
   #fx .ctl {
-    padding: 0 4px;
+    padding: 0 2px;
   }
   #fx .cl {
-    gap: 6px;
-  }
-  #fx #pass {
-    width: clamp(56px, 8.8dvh, 70px) !important;
-    height: clamp(56px, 8.8dvh, 70px) !important;
-    margin-right: 4px;
-    font-size: 11px !important;
+    gap: 4px;
+    margin-left: 2px;
   }
   #fx .deck {
-    width: clamp(50px, 8.2dvh, 66px) !important;
-    height: calc(clamp(50px, 8.2dvh, 66px) * 1.42) !important;
+    width: clamp(44px, 7.2dvh, 58px) !important;
+    height: calc(clamp(44px, 7.2dvh, 58px) * 1.42) !important;
+  }
+  #fx #pass {
+    width: clamp(48px, 7.6dvh, 60px) !important;
+    height: clamp(48px, 7.6dvh, 60px) !important;
+    margin-right: 50px !important;
+    font-size: 10px !important;
+    padding: 3px !important;
   }
   .side-clocks {
-    width: 54px;
-    height: 132px;
-    right: -46px;
+    width: 44px;
+    height: 100px;
+    right: 4px;
   }
   .side-clock {
-    width: 52px;
-    height: 52px;
+    width: 42px;
+    height: 42px;
+    padding: 2px;
   }
   .side-clock .sc-val {
-    font-size: 13px;
+    font-size: 16px !important;
+  }
+  #fx .seal {
+    width: clamp(72px, 10.8dvh, 92px) !important;
+    height: clamp(72px, 10.8dvh, 92px) !important;
+  }
+  #fx .seal b {
+    font-size: clamp(22px, 3.4dvh, 30px) !important;
   }
   #fx .jh.o {
-    padding-right: 44px !important;
+    padding-right: 42px !important;
   }
   #fx .jh.m {
-    padding-left: 44px !important;
+    padding-left: 42px !important;
+  }
+  #fx .e {
+    width: 28px !important;
+    height: 28px !important;
   }
   #me.zone {
-    padding-bottom: clamp(92px, 14.5dvh, 128px) !important;
+    padding-bottom: clamp(78px, 12.5dvh, 108px) !important;
+  }
+  #hand {
+    gap: 6px !important;
+    padding: 4px 8px max(4px, env(safe-area-inset-bottom, 4px)) !important;
   }
   #hand .jslot {
-    width: clamp(50px, 8.2dvh, 70px);
-    height: calc(clamp(50px, 8.2dvh, 70px) * 1.5);
+    width: clamp(46px, 12vw, 64px);
+    height: calc(clamp(46px, 12vw, 64px) * 1.5);
   }
   #hand .j:not(.dim):not(.drag-source-hidden):hover,
   #hand .j.pinned:not(.drag-source-hidden),
   #hand .j.dim:not(.drag-source-hidden):hover,
   #hand .j.dim.pinned:not(.drag-source-hidden) {
-    width: clamp(120px, 18dvh, 160px) !important;
-    transform: translateX(-50%) translateY(-24px) rotate(0deg) !important;
+    width: clamp(118px, 17dvh, 156px) !important;
+    transform: translateX(-50%) translateY(-22px) rotate(0deg) !important;
+  }
+  #prompt.ask {
+    white-space: normal !important;
+    max-width: 92vw !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    padding: 8px 14px !important;
+    font-size: 14px !important;
+    text-align: center;
   }
 }
 
