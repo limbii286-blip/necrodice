@@ -754,7 +754,7 @@ function endRound(){
       // 3) Yerdeki bütün sayı kartları tozlaşır gibi yok olur, sonra diğer tura geçilir
       dustTableCards();
       setTimeout(()=>{if(S!==G)return;lock=false;fin()},820);
-    },1450);
+    },r!==0?2450:1450);
   },1150);
   function fin(){
     S.winSide=null;
@@ -1732,14 +1732,12 @@ function createSmoothDragLoop(onFrame){
     const slots=[...hand.querySelectorAll('.jslot')];
     if(!slots.length)return;
 
-    let targetJ=e.target.closest&&e.target.closest('#hand .j');
-    if(!targetJ){
-      for(const sl of slots){
-        const r=sl.getBoundingClientRect();
-        if(e.clientX>=r.left && e.clientX<=r.right && e.clientY>=r.top && e.clientY<=r.bottom){
-          targetJ=sl.querySelector('.j');
-          break;
-        }
+    let targetJ=null;
+    for(const sl of slots){
+      const r=sl.getBoundingClientRect();
+      if(e.clientX>=r.left && e.clientX<=r.right && e.clientY>=r.top && e.clientY<=r.bottom){
+        targetJ=sl.querySelector('.j');
+        break;
       }
     }
     if(targetJ&&!targetJ.classList.contains('drag-source-hidden')){
