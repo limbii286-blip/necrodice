@@ -86,7 +86,7 @@ body.dragging-joker,
 body.dragging-joker * {
   user-select: none !important;
   -webkit-user-select: none !important;
-  cursor: grabbing !important;
+  cursor: var(--cur-grab), grabbing !important;
 }
 
 @keyframes stoneRipple {
@@ -3157,7 +3157,7 @@ body.dragging-joker #fx::after {
    OYUN İÇİ ÖZEL EL İMLECİ (GOTİK ELDİVEN / KIZIL MÜCEVHERLİ)
    ========================================================================== */
 html, body, body * {
-  cursor: var(--cur-hand), auto;
+  cursor: var(--cur-hand), auto !important;
 }
 input, textarea, select {
   cursor: text !important;
@@ -3182,8 +3182,11 @@ label,
 .j:not(.dim),
 .c.mc,
 .c.mc *,
+.cards .c,
+.cards .c *,
 #fx .e,
 #fx .e *,
+.who .av,
 .cdx img,
 .gear,
 #mute,
@@ -3192,11 +3195,11 @@ label,
 [data-c] {
   cursor: var(--cur-point), pointer !important;
 }
-.deck:not(.empty),
-.deck:not(.empty) * {
-  cursor: var(--cur-grab), grab !important;
-}
+.deck:not(.empty):not(.draw-locked),
+.deck:not(.empty):not(.draw-locked) *,
+body.dragging-deck,
+body.dragging-deck *,
 body.dragging-joker,
 body.dragging-joker * {
-  cursor: var(--cur-grab), grabbing !important;
+  cursor: var(--cur-grab), grab !important;
 }
