@@ -939,7 +939,7 @@ const HEROES=[
   {id:'s',name:'Kızıl Kâhin',hpName:'Kader Kehaneti',desc:'Elindeki rastgele 1 Joker kartını yeni bir Joker ile değiştir.'},
   {id:'e',name:'Demir Cellat',passive:true,hpName:'İnfaz Hükmü',desc:'Rakip ölüm zarı attığında ölüm eşiği +2 artar.'},
   {id:'m',name:'Ölümün Efendisi',passive:true,hpName:'Kader Mühürü',desc:'Her D20 ölüm zarına +2 bonus kazanırsın.'},
-  {id:'u',name:'Bilinmeyen',passive:true,hpName:'Hiçlikten Dönüş',desc:'Ölüm zarında hedeflenenden düşük atarsan, bir kereliğine hayata geri dönersin.'}
+  {id:'u',name:'Bilinmeyen',passive:true,bossOnly:true,hpName:'Hiçlikten Dönüş',desc:'Ölüm zarında hedeflenenden düşük atarsan, bir kereliğine hayata geri dönersin.'}
 ];
 const HERO_MAP=Object.fromEntries(HEROES.map(h=>[h.id,h]));
 const HP_IC={
@@ -953,13 +953,13 @@ const HP_IC={
   m:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 21 8.5 18 19 6 19 3 8.5"/><path d="M12 2v17M3 8.5h18"/></svg>',
   u:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 3l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 21l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>'
 };
-function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}const oppH=MODE=='bot'?({easy:'c',med:'n',hard:'m',imp:'u'}[DIFF]||'c'):(OPP_HERO||'n');G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],mast:[0,0]};prevAv[0]=prevAv[1]=undefined;newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
+function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}const oppH=MODE=='bot'?({easy:'c',med:'p',hard:'m',imp:'u'}[DIFF]||'c'):(OPP_HERO||'n');G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],mast:[0,0]};prevAv[0]=prevAv[1]=undefined;newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
 
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
 let prevT=false,lastLk='',flipId=null,lastTot=[0,0],lastBust=false,prevSeal='',sayT='';
 const NAMES={c:'Yozlaşmış Tüccar',p:'Veba Doktoru',k:'Lanetli Kral',n:'Karanlık Şövalye',a:'Gölge Simyacı',s:'Kızıl Kâhin',e:'Demir Cellat',m:'Ölümün Efendisi',u:'BİLİNMEYEN'};
-const avKey=(S,p)=>{if(p===0)return (S.hero&&S.hero[0])||MY_HERO||'c';if(MODE=='bot')return (S.hero&&S.hero[1])||{easy:'c',med:'n',hard:'m',imp:'u'}[DIFF];return (S.hero&&S.hero[p])||(S.av&&S.av[p])||'c'};
+const avKey=(S,p)=>{if(p===0)return (S.hero&&S.hero[0])||MY_HERO||'c';if(MODE=='bot')return (S.hero&&S.hero[1])||{easy:'c',med:'p',hard:'m',imp:'u'}[DIFF];return (S.hero&&S.hero[p])||(S.av&&S.av[p])||'c'};
 const HD_PORTRAITS={
   c:'corrupted_merchant.jpg?v=20261116_hd1',
   p:'plague_doctor.jpg?v=20261115_p1',
@@ -1247,7 +1247,7 @@ function pick(v){if(P&&P.hp==='u'){const id=v;P=null;return execSwapDeckHeroPowe
 function startJoker(id){const ks=NEED[id]||[];if(ks.length){P={id,ks,pk:[]};R()}else doPlay(id,[])}
 function chooseHero(onPick,onCancel){
   lock=true;
-  const cards=HEROES.map(h=>`<button class="hero-pick-card${MY_HERO===h.id?' sel':''}" data-pick-hero="${h.id}">
+  const cards=HEROES.filter(h=>!h.bossOnly).map(h=>`<button class="hero-pick-card${MY_HERO===h.id?' sel':''}" data-pick-hero="${h.id}">
     <div class="hpc-art"><img class="hpc-av" src="${avSrc(h.id)}" alt="${h.name}"></div>
     <div class="hpc-body">
       <div class="hpc-name">${h.name}</div>
