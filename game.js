@@ -802,6 +802,50 @@ function heroAttack(winIdx){
     if(srcAv.isConnected)srcAv.style.opacity='';
   };
 }
+function heroClash(){
+  const av0=document.querySelector('#me .who .av');
+  const av1=document.querySelector('#opp .who .av');
+  if(!av0||!av1)return;
+  const r0=av0.getBoundingClientRect(),r1=av1.getBoundingClientRect();
+  if(!r0.width||!r1.width)return;
+  const cx0=r0.left+r0.width/2,cy0=r0.top+r0.height/2;
+  const cx1=r1.left+r1.width/2,cy1=r1.top+r1.height/2;
+  const mx=(cx0+cx1)/2,my=(cy0+cy1)/2;
+  const dx0=mx-cx0,dy0=(my-cy0)+r0.height*0.32;
+  const dx1=mx-cx1,dy1=(my-cy1)-r1.height*0.32;
+  const mkClone=(av,r)=>{
+    const c=document.createElement('img');
+    c.src=av.src;c.className='av-attacker';
+    c.style.left=r.left+'px';c.style.top=r.top+'px';
+    c.style.width=r.width+'px';c.style.height=r.height+'px';
+    document.body.appendChild(c);
+    av.style.opacity='0';
+    return c;
+  };
+  const c0=mkClone(av0,r0),c1=mkClone(av1,r1);
+  const dur=2100;
+  const run=(c,dx,dy,tilt)=>c.animate([
+    {transform:'translate3d(0,0,0) scale(1) rotate(0deg)',offset:0},
+    {transform:`translate3d(${(-dx*0.10).toFixed(1)}px,${(-dy*0.14).toFixed(1)}px,0) scale(1.18) rotate(${-tilt}deg)`,offset:0.24},
+    {transform:`translate3d(${(dx*0.45).toFixed(1)}px,${(dy*0.45).toFixed(1)}px,0) scale(1.24) rotate(${tilt*0.6}deg)`,offset:0.40},
+    {transform:`translate3d(${dx.toFixed(1)}px,${dy.toFixed(1)}px,0) scale(1.22) rotate(0deg)`,offset:0.50},
+    {transform:`translate3d(${(dx*0.80).toFixed(1)}px,${(dy*0.80).toFixed(1)}px,0) scale(1.14) rotate(${-tilt*0.4}deg)`,offset:0.58},
+    {transform:'translate3d(0,0,0) scale(1) rotate(0deg)',offset:1}
+  ],{duration:dur,easing:'cubic-bezier(0.22,1,0.36,1)',fill:'forwards'});
+  const a0=run(c0,dx0,dy0,5),a1=run(c1,dx1,dy1,-5);
+  setTimeout(()=>{
+    if(!av0.isConnected)return;
+    snd('stamp');vib([50,35,90]);
+    const imp=document.createElement('div');
+    imp.className='av-impact';
+    imp.style.left=mx+'px';
+    imp.style.top=my+'px';
+    document.body.appendChild(imp);
+    setTimeout(()=>imp.remove(),1100);
+  },1050);
+  a0.onfinish=()=>{c0.remove();if(av0.isConnected)av0.style.opacity='';};
+  a1.onfinish=()=>{c1.remove();if(av1.isConnected)av1.style.opacity='';};
+}
 function endRound(){
   const S=G,a=[total(S,0),total(S,1)],T=tg(S),r=outc(S,0);
   if(MODE=='bot'){profRec(S,a[0],T);lrnRound(r)}
@@ -817,13 +861,13 @@ function endRound(){
     }
     snd(r>0?'win':r<0?'lose':'ok');
     R();
-    if(r!==0)setTimeout(()=>{if(S===G)heroAttack(r>0?0:1);},1000);
+    setTimeout(()=>{if(S===G){if(r!==0)heroAttack(r>0?0:1);else heroClash();}},1000);
     setTimeout(()=>{
       if(S!==G)return;
       // 3) Yerdeki bütün sayı kartları tozlaşır gibi yok olur, sonra diğer tura geçilir
       dustTableCards();
       setTimeout(()=>{if(S!==G)return;lock=false;fin()},820);
-    },r!==0?3400:1800);
+    },3400);
   },750);
   function fin(){
     S.winSide=null;
