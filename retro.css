@@ -2465,11 +2465,11 @@ body.dragging-joker #fx::after {
     font-size: 19px !important;
   }
   #fx .seal {
-    width: clamp(72px, 10.8dvh, 92px) !important;
-    height: clamp(72px, 10.8dvh, 92px) !important;
+    width: clamp(50px, 7.6dvh, 62px) !important;
+    height: clamp(50px, 7.6dvh, 62px) !important;
   }
   #fx .seal b {
-    font-size: clamp(22px, 3.4dvh, 30px) !important;
+    font-size: clamp(18px, 2.8dvh, 24px) !important;
   }
   #fx .jh.o {
     padding-right: 54px !important;
