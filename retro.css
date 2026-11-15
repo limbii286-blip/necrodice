@@ -1163,7 +1163,6 @@ html::after {
 }
 #opp.zone .cards {
   margin-top: auto;
-  margin-bottom: -6px;
 }
 #opp.zone .who {
   margin-top: 0 !important;
@@ -1203,9 +1202,6 @@ html::after {
   padding-top: 0 !important;
   padding-bottom: clamp(78px, 11.8dvh, 110px) !important;
   background: transparent !important;
-}
-#me.zone .cards {
-  margin-top: -6px;
 }
 #me.zone.act {
   background: radial-gradient(68% 92% at 50% 35%, rgba(234, 179, 84, 0.19), rgba(168, 112, 34, 0.07) 52%, transparent 78%) !important;
@@ -1438,17 +1434,17 @@ body.dragging-joker #fx::after {
 #opp .cards {
   align-items: flex-end;
   padding-top: 0;
-  padding-bottom: clamp(24px, 3.6dvh, 38px);
+  padding-bottom: clamp(12px, 1.8dvh, 22px);
 }
 #me .cards {
   align-items: flex-start;
-  padding-top: clamp(24px, 3.6dvh, 38px);
+  padding-top: clamp(12px, 1.8dvh, 22px);
   padding-bottom: 0;
 }
 
 .cards .c {
-  width: clamp(56px, 9.6dvh, 92px) !important;
-  height: calc(clamp(56px, 9.6dvh, 92px) * 1.45) !important;
+  width: clamp(64px, 10.6dvh, 100px) !important;
+  height: calc(clamp(64px, 10.6dvh, 100px) * 1.45) !important;
   border-radius: 9px !important;
   border: 2px solid #c9a968 !important;
   font: 800 38px/1 var(--mf) !important;
@@ -1588,8 +1584,8 @@ body.dragging-joker #fx::after {
 }
 #fx .deck {
   overflow: visible !important;
-  width: clamp(64px, 9.8dvh, 86px) !important;
-  height: calc(clamp(64px, 9.8dvh, 86px) * 1.42) !important;
+  width: clamp(64px, 10.6dvh, 100px) !important;
+  height: calc(clamp(64px, 10.6dvh, 100px) * 1.45) !important;
   margin: 0 !important;
   border-radius: 8px !important;
   border: 2px solid #9b88b2 !important;
@@ -2476,8 +2472,8 @@ body.dragging-joker #fx::after {
     width: 6px !important;
   }
   .cards .c {
-    width: clamp(52px, min(14.5vw, 9.8dvh), 72px) !important;
-    height: calc(clamp(52px, min(14.5vw, 9.8dvh), 72px) * 1.44) !important;
+    width: clamp(54px, min(15vw, 10.2dvh), 76px) !important;
+    height: calc(clamp(54px, min(15vw, 10.2dvh), 76px) * 1.45) !important;
     font-size: clamp(22px, min(5.8vw, 4dvh), 32px) !important;
   }
   .cards .c:not(.n):not(.bk) {
@@ -2491,8 +2487,8 @@ body.dragging-joker #fx::after {
     margin-left: 2px;
   }
   #fx .deck {
-    width: clamp(44px, 7.2dvh, 58px) !important;
-    height: calc(clamp(44px, 7.2dvh, 58px) * 1.42) !important;
+    width: clamp(54px, min(15vw, 10.2dvh), 76px) !important;
+    height: calc(clamp(54px, min(15vw, 10.2dvh), 76px) * 1.45) !important;
   }
   #fx #pass {
     width: clamp(48px, 7.6dvh, 60px) !important;
