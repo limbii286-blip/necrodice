@@ -1230,15 +1230,16 @@ body.dragging-joker #fx::after {
 .who .av {
   order: 2;
   justify-self: center;
-  width: clamp(56px, 8.2dvh, 78px) !important;
-  height: clamp(56px, 8.2dvh, 78px) !important;
-  border-radius: 50% 50% 12px 12px !important;
-  border: 3px solid #d4af5a !important;
+  width: clamp(66px, 9.6dvh, 92px) !important;
+  height: clamp(66px, 9.6dvh, 92px) !important;
+  border-radius: 50% 50% 14px 14px !important;
+  border: 3px solid #dfb764 !important;
   box-shadow:
-    0 0 0 2px #120c08,
-    0 6px 18px rgba(0, 0, 0, 0.95),
-    inset 0 0 14px rgba(0, 0, 0, 0.7) !important;
-  margin: -8px 0 -4px !important;
+    0 0 0 2.5px #120c08,
+    0 0 0 4.5px #6b5026,
+    0 8px 22px rgba(0, 0, 0, 0.96),
+    inset 0 0 16px rgba(0, 0, 0, 0.72) !important;
+  margin: -14px 0 -10px !important;
   background: #0c080a;
   object-fit: cover;
   object-position: 50% 50%;
@@ -1295,7 +1296,7 @@ body.dragging-joker #fx::after {
   box-shadow: 0 0 8px rgba(212, 168, 85, 0.85) !important;
 }
 
-/* Sağ Kanat: Skor / Toplam */
+/* Sağ Kanat: Hearthstone Tarzı Kabartmalı Skor Kalkanı / Madalyonu */
 .who .tot {
   order: 3;
   justify-self: center;
@@ -1304,10 +1305,18 @@ body.dragging-joker #fx::after {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 3px;
   text-align: center;
-  min-width: 0;
-  padding-left: 0;
+  min-width: clamp(68px, 8.5dvh, 92px);
+  padding: 5px 12px 7px;
+  background: radial-gradient(circle at 50% 25%, #5c1f1b 0%, #2b0f0d 72%, #180807 100%);
+  border: 2px solid #c99d4c;
+  border-radius: 10px 10px 24px 24px;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.88),
+    0 0 0 1.5px #120906,
+    inset 0 1px 0 rgba(255, 224, 150, 0.35),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.85);
   max-width: none !important;
 }
 .who .tot small {
@@ -1384,13 +1393,14 @@ body.dragging-joker #fx::after {
 .cards .c {
   width: clamp(56px, 9.6dvh, 92px) !important;
   height: calc(clamp(56px, 9.6dvh, 92px) * 1.45) !important;
-  border-radius: 8px !important;
+  border-radius: 9px !important;
   border: 2px solid #c9a968 !important;
   font: 800 38px/1 var(--mf) !important;
   box-shadow:
-    0 12px 24px rgba(0, 0, 0, 0.88),
+    0 4px 0 #5b4322,
+    0 12px 24px rgba(0, 0, 0, 0.9),
     0 0 0 1px #0d0806,
-    inset 0 0 0 1px rgba(255, 230, 175, 0.25) !important;
+    inset 0 0 0 1px rgba(255, 230, 175, 0.28) !important;
   transition: transform 0.2s cubic-bezier(0.2, 0.85, 0.3, 1.15), box-shadow 0.2s ease !important;
   cursor: default;
 }
@@ -1415,10 +1425,11 @@ body.dragging-joker #fx::after {
     0 0 18px rgba(230, 195, 106, 0.35) !important;
 }
 .cards .c:hover {
-  transform: scale(1.1) !important;
+  transform: translateY(-6px) scale(1.09) !important;
   z-index: 8;
   box-shadow:
-    0 18px 34px rgba(0, 0, 0, 0.95),
+    0 6px 0 #5b4322,
+    0 20px 36px rgba(0, 0, 0, 0.96),
     0 0 22px rgba(230, 195, 110, 0.5) !important;
 }
 
@@ -1459,7 +1470,17 @@ body.dragging-joker #fx::after {
 }
 
 #fx::before {
-  display: none !important;
+  content: "";
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, transparent 0%, rgba(168, 126, 62, 0.25) 18%, rgba(212, 168, 85, 0.48) 50%, rgba(168, 126, 62, 0.25) 82%, transparent 100%);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.85), 0 -1px 0 rgba(0, 0, 0, 0.65);
+  pointer-events: none;
+  z-index: 1;
 }
 #fx::after {
   display: none;
@@ -1721,11 +1742,14 @@ body.dragging-joker #fx::after {
   z-index: 6;
 }
 .side-clock {
+  position: relative;
   width: clamp(64px, 9.4dvh, 80px);
   height: clamp(64px, 9.4dvh, 80px);
   padding: 4px;
   border-radius: 50%;
-  background: radial-gradient(circle at 38% 30%, #2c231c 0%, #15100c 70%, #0b0807 100%);
+  background:
+    repeating-conic-gradient(from -2deg, rgba(212, 168, 85, 0.28) 0deg 3deg, transparent 3deg 30deg),
+    radial-gradient(circle at 38% 30%, #2c231c 0%, #15100c 68%, #0b0807 100%);
   border: 2.5px solid #8a6c40;
   box-shadow:
     0 0 0 3px #140f0c,
@@ -1739,6 +1763,19 @@ body.dragging-joker #fx::after {
   align-items: center;
   gap: 1px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+.side-clock::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 7px;
+  border-radius: 4px 4px 1px 1px;
+  background: linear-gradient(180deg, #d4a656, #6b4f23);
+  border: 1.5px solid #1a1209;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.85);
 }
 .side-clock .sc-val {
   font: 800 clamp(22px, 3.2dvh, 28px)/1 var(--mf);
@@ -2011,7 +2048,7 @@ body.dragging-joker #fx::after {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: clamp(10px, 1.35vw, 18px);
+  gap: clamp(2px, 0.45vw, 8px);
   padding: 4px 20px max(4px, env(safe-area-inset-bottom, 4px)) !important;
   min-height: 0 !important;
   pointer-events: none;
@@ -2020,9 +2057,13 @@ body.dragging-joker #fx::after {
 #hand .jslot {
   position: relative;
   flex: none;
-  width: clamp(58px, 9.2dvh, 84px);
-  height: calc(clamp(58px, 9.2dvh, 84px) * 1.5);
+  width: clamp(60px, 9.6dvh, 88px);
+  height: calc(clamp(60px, 9.6dvh, 88px) * 1.5);
   pointer-events: none;
+}
+#hand .jslot:nth-child(2),
+#hand .jslot:nth-child(3) {
+  transform: translateY(-5px);
 }
 #hand .j,
 #hand .spec-notice {
@@ -2035,11 +2076,12 @@ body.dragging-joker #fx::after {
   width: 100% !important;
   height: auto;
   margin-left: 0 !important;
-  border-radius: 8px !important;
+  border-radius: 9px !important;
   border: 2px solid #d4af64 !important;
   box-shadow:
+    0 4px 0 #5b4322,
     0 -4px 18px rgba(0, 0, 0, 0.88),
-    0 8px 24px rgba(0, 0, 0, 0.95),
+    0 10px 26px rgba(0, 0, 0, 0.96),
     0 0 14px rgba(212, 168, 85, 0.32) !important;
   transform: translateX(-50%) rotate(var(--r));
   transform-origin: 50% 94% !important;
