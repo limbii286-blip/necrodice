@@ -1103,7 +1103,7 @@ function R(){
   setH('#seal',`<b>${low?'En az':T}</b>`);
   if(prevSeal&&prevSeal!=seal){sl.classList.remove('stamp');void sl.offsetWidth;sl.classList.add('stamp')}
   $('#me').className='zone'+(my?' act':'')+(S.winSide!=null?(S.winSide<0?' round-lose':S.winSide===0?' round-tie':''):'');
-  setH('#me',`<div class="who">${av0}<div class="nm"><b>${p0Name}</b></div><div class="tot${bust?' bust':exact?' exact':''}"><small>Toplam</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`);
+  setH('#me',`<div class="who">${av0}<div class="nm"><b>${p0Name}</b><span class="meta my-crest">${IC.dif}</span></div><div class="tot${bust?' bust':exact?' exact':''}"><small>Toplam</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`);
   $('#prompt').className=P?'ask':'';
   setH('#prompt',P?`${J[P.id]}: ${KTXT[k]} ${k=='sign'?'<button class="btn sm" data-s="1">Ekle</button><button class="btn sm" data-s="-1">Çıkar</button>':''}<button class="btn sm alt" data-x="1">Vazgeç</button>`:'');
   const ends=(S.turns>0&&!S.acted)||oppTimeOut; // rakibin süresi bittiyse veya karşı taraf pas dediyse şimdi pas dersem tur biter
@@ -1786,8 +1786,45 @@ function createSmoothDragLoop(onFrame){
 
 /* ---------- ELDEKİ JOKERLERDE İMLEÇ ALTI KOLAY GEÇİŞ (SLOT BAZLI HOVER) ---------- */
 (function initHandSlotHover(){
+  let prevJId=null;
+  function clearOracle(){
+    prevJId=null;
+    document.querySelectorAll('.ora-tot,.ora-seal').forEach(el=>el.remove());
+  }
+  function updateOracle(targetJ){
+    const S=G;
+    if(!S||S.over||S.wait||S.turn!==0||lock||(S.noJ&&S.noJ[0])||!targetJ||targetJ.classList.contains('dim')){
+      clearOracle();return;
+    }
+    const id=+targetJ.dataset.j;
+    if(!id||id===prevJId)return;
+    clearOracle();
+    prevJId=id;
+    const sim={...S,eff:[...S.eff,{id,o:0,uid:-1}]};
+    const curT=total(S,0),newT=total(sim,0),curTg=tg(S),newTg=tg(sim),curLow=lowW(S),newLow=lowW(sim);
+    if(newT!==curT){
+      const totEl=document.querySelector('#me .tot');
+      if(totEl){
+        const sp=document.createElement('span');
+        const isExact=!newLow&&newT===newTg,isBust=!newLow&&newT>newTg;
+        sp.className='ora-tot'+(isExact?' ora-exact':isBust?' ora-bust':'');
+        sp.textContent='→ '+newT;
+        totEl.appendChild(sp);
+      }
+    }
+    if(newTg!==curTg||newLow!==curLow){
+      const sl=document.getElementById('seal');
+      if(sl){
+        const sm=document.createElement('small');
+        sm.className='ora-seal';
+        sm.textContent='→ '+(newLow?'En az':newTg);
+        sl.appendChild(sm);
+      }
+    }
+  }
   function clearHover(){
     document.querySelectorAll('#hand .j.hovered').forEach(el=>el.classList.remove('hovered'));
+    clearOracle();
   }
 
   document.addEventListener('pointermove',e=>{
@@ -1811,6 +1848,7 @@ function createSmoothDragLoop(onFrame){
     if(targetJ&&!targetJ.classList.contains('drag-source-hidden')){
       slots.forEach(s=>{const c=s.querySelector('.j');if(c&&c!==targetJ)c.classList.remove('hovered')});
       targetJ.classList.add('hovered');
+      updateOracle(targetJ);
     }else{
       clearHover();
     }
