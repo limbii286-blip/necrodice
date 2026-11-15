@@ -30,8 +30,8 @@ main{position:relative;z-index:1;max-width:800px;margin:auto;padding:max(10px,en
 .c:hover{transform:translateY(-3px)}
 .fresh{animation:fly .55s cubic-bezier(.2,.8,.25,1) both}
 @keyframes fly{from{opacity:0;transform:translate(var(--dx,0),var(--dy,-60px)) rotate(-14deg) scale(.45)}to{opacity:1;transform:none}}
-.cards{perspective:700px}.flip{animation:flip .75s ease-out both}
-@keyframes flip{0%{transform:rotateY(90deg) scale(1.12)}60%{transform:rotateY(-14deg)}100%{transform:none}}
+.cards{perspective:800px}.flip{animation:flip .68s cubic-bezier(.22,1,.36,1) both;backface-visibility:hidden;transform-style:preserve-3d;will-change:transform}
+@keyframes flip{0%{transform:rotateY(90deg) scale(1.08)}62%{transform:rotateY(-8deg) scale(1.02)}100%{transform:none}}
 .hl{outline:3px solid var(--gold);outline-offset:2px;cursor:pointer;animation:glow 1s infinite}
 @keyframes glow{50%{outline-color:#e6c36a33;box-shadow:0 0 18px var(--gold)}}
 /* Masa ortası: hedef mührü + aktif etkiler */
@@ -102,22 +102,22 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .sk{font-size:20px}.gear{background:none;border:0;color:var(--txt);font-size:22px;padding:2px 4px;cursor:pointer;margin-left:4px}
 .meta{display:flex;align-items:center;gap:2px;color:var(--bone);font-size:15px}
 .jpips{display:inline-flex;gap:6px;margin-left:8px;align-items:center}.jpips i{width:9px;height:9px;transform:rotate(45deg);border:1.5px solid var(--gold);display:inline-block}.jpips i.on{background:var(--gold)}
-.say{color:var(--lime);font-style:italic;animation:fade .4s}@keyframes fade{from{opacity:0}}
-.breathe{animation:breathe 4s ease-in-out infinite}@keyframes breathe{50%{transform:scale(1.07)}}
+.say{color:var(--lime);font-style:italic;animation:fade .35s cubic-bezier(.22,1,.36,1)}@keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+.breathe{animation:breathe 4.4s ease-in-out infinite}@keyframes breathe{50%{transform:scale(1.055)}}
 @media(max-width:430px){.lab{display:none}}
 /* --- sahne içi joker: ortada büyür, etkisi uygulanır, kendiliğinden kapanır --- */
 #cast{position:fixed;inset:0;z-index:8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;pointer-events:none}
-#cast img{height:min(46vh,380px);aspect-ratio:2/3;border-radius:12px;border:2px solid var(--bone);box-shadow:0 0 60px #e8c46bcc,0 0 0 100vmax #05040a99;animation:cast 1.5s cubic-bezier(.2,.9,.25,1) both}
-#cast.from1 img{--sy:-60vh}#cast.from0 img{--sy:60vh}
-@keyframes cast{0%{opacity:0;transform:translateY(var(--sy)) scale(.3) rotate(-12deg)}30%{opacity:1;transform:none}75%{opacity:1;transform:scale(1.04)}100%{opacity:0;transform:translateY(calc(var(--sy)*-.3)) scale(.5)}}
-#cast b{font:700 24px 'Alegreya SC',Alegreya,serif;color:var(--gold);text-shadow:0 2px 10px #000;animation:fade 1.5s both}
-.newc{animation:chipIn .6s cubic-bezier(.2,1.4,.4,1)}@keyframes chipIn{from{transform:scale(.2) rotate(-20deg);opacity:0}}
-.seal.stamp{animation:stampIn .5s cubic-bezier(.2,1.6,.4,1)}@keyframes stampIn{from{transform:rotate(-4deg) scale(2.2);opacity:0}}
+#cast img{height:min(46vh,380px);aspect-ratio:2/3;border-radius:12px;border:2px solid var(--bone);box-shadow:0 0 60px #e8c46bcc,0 0 0 100vmax #05040a99;will-change:transform,opacity;animation:cast 1.35s cubic-bezier(.22,1,.36,1) both}
+#cast.from1 img{--sy:-55vh}#cast.from0 img{--sy:55vh}
+@keyframes cast{0%{opacity:0;transform:translate3d(0,var(--sy),0) scale(.34) rotate(-9deg)}26%{opacity:1;transform:translate3d(0,0,0) scale(1) rotate(0deg)}76%{opacity:1;transform:translate3d(0,0,0) scale(1.035) rotate(0deg)}100%{opacity:0;transform:translate3d(0,calc(var(--sy)*-.26),0) scale(.56) rotate(4deg)}}
+#cast b{font:700 24px 'Alegreya SC',Alegreya,serif;color:var(--gold);text-shadow:0 2px 10px #000;animation:fade 1.35s both}
+.newc{animation:chipIn .58s cubic-bezier(.22,1,.36,1)}@keyframes chipIn{from{transform:scale(.28) rotate(-14deg);opacity:0}to{transform:none;opacity:1}}
+.seal.stamp{animation:stampIn .54s cubic-bezier(.22,1,.36,1)}@keyframes stampIn{from{transform:rotate(-4deg) scale(1.9);opacity:0}to{transform:rotate(-4deg) scale(1);opacity:1}}
 .flip{animation-delay:var(--fd,0s)}
 /* --- dramatik anlar --- */
-.shake main{animation:shake .45s}@keyframes shake{20%{transform:translate(-6px,3px)}40%{transform:translate(5px,-4px)}60%{transform:translate(-4px,2px)}80%{transform:translate(3px,-2px)}}
-#fl{position:fixed;inset:0;z-index:30;pointer-events:none;opacity:0;background:#fff}#fl.go{animation:flashA .5s}@keyframes flashA{from{opacity:.55}to{opacity:0}}
-.dead main{filter:grayscale(1) brightness(.45);transition:filter 1.2s}
+.shake main{animation:shake .46s cubic-bezier(.36,.07,.19,.97)}@keyframes shake{15%{transform:translate3d(-5px,2px,0)}35%{transform:translate3d(5px,-3px,0)}55%{transform:translate3d(-3px,2px,0)}78%{transform:translate3d(2px,-1px,0)}100%{transform:none}}
+#fl{position:fixed;inset:0;z-index:30;pointer-events:none;opacity:0;background:#fff}#fl.go{animation:flashA .48s cubic-bezier(.22,1,.36,1)}@keyframes flashA{from{opacity:.5}to{opacity:0}}
+.dead main{filter:grayscale(1) brightness(.45);transition:filter 1.2s cubic-bezier(.22,1,.36,1)}
 .rm *,.rm *::before,.rm *::after{animation-duration:.01s!important;transition-duration:.01s!important}
 /* --- ayarlar, kodeks, rehber --- */
 #mb h3{margin:0 0 10px;font:700 24px 'Alegreya SC',Alegreya,serif;color:var(--gold)}

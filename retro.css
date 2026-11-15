@@ -1407,7 +1407,8 @@ body.dragging-joker #fx::after {
     0 12px 24px rgba(0, 0, 0, 0.9),
     0 0 0 1px #0d0806,
     inset 0 0 0 1px rgba(255, 230, 175, 0.28) !important;
-  transition: transform 0.2s cubic-bezier(0.2, 0.85, 0.3, 1.15), box-shadow 0.2s ease !important;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.28s ease, filter 0.28s ease, border-color 0.24s ease !important;
+  will-change: transform;
   cursor: default;
 }
 .cards .c i {
@@ -1441,20 +1442,22 @@ body.dragging-joker #fx::after {
 
 /* Kart Çekme Animasyonu */
 .deck.pull {
-  animation: deckDrawPulse 0.45s ease-out;
+  animation: deckDrawPulse 0.52s cubic-bezier(0.22, 1, 0.36, 1);
 }
 @keyframes deckDrawPulse {
   0% { transform: scale(1); }
-  40% { transform: scale(1.18) translateY(-4px); box-shadow: 0 0 28px var(--gold); }
+  38% { transform: scale(1.16) translateY(-4px); box-shadow: 0 0 28px var(--gold); }
   100% { transform: scale(1); }
 }
 .cards .c.fresh {
-  animation: cardFlyIn 0.65s cubic-bezier(0.18, 0.9, 0.28, 1.15) both;
+  will-change: transform, opacity;
+  animation: cardFlyIn 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @keyframes cardFlyIn {
-  0% { opacity: 0; transform: translate(var(--dx, 0px), var(--dy, -80px)) scale(0.35) rotate(-16deg); }
-  65% { opacity: 1; transform: translate(calc(var(--dx, 0px) * 0.12), calc(var(--dy, -80px) * 0.12)) scale(1.1) rotate(3deg); }
-  100% { opacity: 1; transform: none; }
+  0% { opacity: 0; transform: translate3d(var(--dx, 0px), var(--dy, -80px), 0) scale(0.36) rotate(-14deg); }
+  58% { opacity: 1; transform: translate3d(calc(var(--dx, 0px) * 0.14), calc(var(--dy, -80px) * 0.14), 0) scale(1.08) rotate(2.5deg); }
+  84% { opacity: 1; transform: translate3d(0, -2px, 0) scale(1.01) rotate(-0.6deg); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
 }
 
 /* --- ORTADAN İKİYE YARILMIŞ TAŞLI RÜNİK MERKEZ HATTI (#fx) --- */
@@ -1526,7 +1529,7 @@ body.dragging-joker #fx::after {
     0 12px 26px rgba(0, 0, 0, 0.92) !important;
   cursor: grab;
   touch-action: none;
-  transition: transform 0.16s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.24s ease, border-color 0.24s ease, filter 0.24s ease;
 }
 #fx .deck:hover {
   transform: translateY(-3px) scale(1.06);
@@ -1652,7 +1655,7 @@ body.dragging-joker #fx::after {
   position: relative;
   margin-right: 8px;
   cursor: pointer;
-  transition: transform 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.2), box-shadow 0.18s ease, filter 0.18s ease !important;
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.28s ease, filter 0.24s ease, border-color 0.24s ease, background 0.28s ease !important;
 }
 
 /* Kart Çek Küresi (Gotik Oyma Taş & Parlayan Kehribar/Altın Çember) */
@@ -1796,7 +1799,7 @@ body.dragging-joker #fx::after {
   justify-content: center;
   align-items: center;
   gap: 1px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .side-clock::before {
   content: "";
@@ -1942,7 +1945,7 @@ body.dragging-joker #fx::after {
     0 0 0 2px #090608,
     0 6px 16px rgba(0, 0, 0, 0.92),
     inset 0 0 10px rgba(0, 0, 0, 0.85) !important;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.24s ease, border-color 0.24s ease, opacity 0.24s ease;
   cursor: default;
 }
 /* Sadece kartın üst-orta bölümündeki ana ikon tam ortalanarak yuvarlak kırpılır */
@@ -1997,10 +2000,10 @@ body.dragging-joker #fx::after {
   justify-content: center;
   pointer-events: none !important;
   background: radial-gradient(circle at 50% 50%, rgba(10, 7, 9, 0.68) 0%, rgba(5, 3, 5, 0.25) 65%, transparent 100%);
-  animation: jipIn 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+  animation: jipIn 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @keyframes jipIn {
-  from { opacity: 0; transform: scale(0.88) translateY(8px); }
+  from { opacity: 0; transform: scale(0.9) translateY(10px); }
   to { opacity: 1; transform: none; }
 }
 #joker-inspect-pop .jip-card {
@@ -2079,7 +2082,7 @@ body.dragging-joker #fx::after {
   transform-origin: 50% 50%;
   transform: rotate(0deg);
   will-change: transform;
-  transition: transform 0.68s cubic-bezier(0.22, 1, 0.36, 1), background 0.28s ease;
+  transition: transform 0.72s cubic-bezier(0.22, 1, 0.36, 1), background 0.32s ease;
 }
 #fx .seal::before {
   clip-path: polygon(50% 2%, 91.57% 74%, 8.43% 74%);
@@ -2192,7 +2195,8 @@ body.dragging-joker #fx::after {
     0 0 14px rgba(212, 168, 85, 0.32) !important;
   transform: translateX(-50%) rotate(var(--r));
   transform-origin: 50% 94% !important;
-  transition: width 0.18s cubic-bezier(0.2, 0.9, 0.25, 1), transform 0.18s cubic-bezier(0.2, 0.9, 0.25, 1), box-shadow 0.18s ease, filter 0.18s ease !important;
+  will-change: transform, filter;
+  transition: width 0.26s cubic-bezier(0.22, 1, 0.36, 1), transform 0.26s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.26s ease, filter 0.24s ease, border-color 0.24s ease !important;
   cursor: grab;
   touch-action: none;
 }
@@ -2551,13 +2555,14 @@ body.dragging-joker #fx::after {
   will-change: transform;
 }
 .who .av.av-hit {
-  animation: avHitRecoil 0.48s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+  will-change: transform, filter;
+  animation: avHitRecoil 0.54s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @keyframes avHitRecoil {
   0% { transform: scale(1); filter: none; }
-  20% { transform: scale(0.88) translateY(4px); filter: brightness(1.45) sepia(0.6) hue-rotate(-38deg) saturate(2.2); }
-  50% { transform: scale(1.06) translateX(-4px); filter: brightness(1.15) sepia(0.35) hue-rotate(-25deg); }
-  75% { transform: scale(0.98) translateX(3px); }
+  18% { transform: scale(0.89) translate3d(0, 4px, 0); filter: brightness(1.42) sepia(0.55) hue-rotate(-36deg) saturate(2.1); }
+  46% { transform: scale(1.055) translate3d(-3px, 0, 0); filter: brightness(1.14) sepia(0.32) hue-rotate(-24deg); }
+  74% { transform: scale(0.985) translate3d(2px, 0, 0); filter: brightness(1.04); }
   100% { transform: scale(1); filter: none; }
 }
 .av-impact {
@@ -2575,7 +2580,8 @@ body.dragging-joker #fx::after {
   border-radius: 50%;
   border: 3px solid rgba(239, 68, 68, 0.95);
   box-shadow: 0 0 24px rgba(239, 68, 68, 0.9), inset 0 0 18px rgba(251, 191, 36, 0.65);
-  animation: avShockwave 0.52s cubic-bezier(0.15, 0.85, 0.35, 1) forwards;
+  will-change: transform, opacity;
+  animation: avShockwave 0.58s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 .av-impact::after {
   content: "";
@@ -2588,7 +2594,8 @@ body.dragging-joker #fx::after {
   background: linear-gradient(90deg, transparent, #fff3c4 35%, #ef4444 65%, transparent);
   box-shadow: 0 0 16px #ef4444;
   transform: translate(-50%, -50%) rotate(-32deg) scaleX(0.2);
-  animation: avSlash 0.38s ease-out forwards;
+  will-change: transform, opacity;
+  animation: avSlash 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 .av-dmg {
   position: fixed;
@@ -2608,43 +2615,44 @@ body.dragging-joker #fx::after {
   text-shadow: 0 2px 4px #000;
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.92), 0 0 18px rgba(239, 68, 68, 0.85);
   pointer-events: none;
-  animation: avDmgPop 0.95s cubic-bezier(0.18, 0.9, 0.25, 1) forwards;
+  will-change: transform, opacity;
+  animation: avDmgPop 1.05s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 @keyframes avShockwave {
-  0% { transform: scale(0.35); opacity: 1; }
-  100% { transform: scale(1.65); opacity: 0; }
+  0% { transform: scale(0.32); opacity: 1; }
+  100% { transform: scale(1.7); opacity: 0; }
 }
 @keyframes avSlash {
   0% { transform: translate(-50%, -50%) rotate(-32deg) scaleX(0.2); opacity: 1; }
-  45% { transform: translate(-50%, -50%) rotate(-32deg) scaleX(1.2); opacity: 1; }
-  100% { transform: translate(-50%, -50%) rotate(-32deg) scaleX(1.35); opacity: 0; }
+  45% { transform: translate(-50%, -50%) rotate(-32deg) scaleX(1.22); opacity: 1; }
+  100% { transform: translate(-50%, -50%) rotate(-32deg) scaleX(1.38); opacity: 0; }
 }
 @keyframes avDmgPop {
-  0% { transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
-  22% { transform: translate(-50%, -62%) scale(1.22); opacity: 1; }
-  55% { transform: translate(-50%, -74%) scale(1); opacity: 1; }
-  100% { transform: translate(-50%, -95%) scale(0.9); opacity: 0; }
+  0% { transform: translate(-50%, -50%) scale(0.42); opacity: 0; }
+  22% { transform: translate(-50%, -64%) scale(1.2); opacity: 1; }
+  58% { transform: translate(-50%, -76%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -98%) scale(0.92); opacity: 0; }
 }
 
 .cards .c.dust-out {
-  animation: cardDustOut 0.78s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+  animation: cardDustOut 0.84s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
   will-change: transform, opacity, filter;
   pointer-events: none;
 }
 @keyframes cardDustOut {
   0% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translate3d(0, 0, 0) scale(1);
     filter: blur(0px) brightness(1);
   }
   45% {
-    opacity: 0.65;
-    transform: translateY(-10px) scale(0.95);
-    filter: blur(2px) brightness(1.1) contrast(1.2);
+    opacity: 0.68;
+    transform: translate3d(0, -10px, 0) scale(0.95);
+    filter: blur(2px) brightness(1.08) contrast(1.15);
   }
   100% {
     opacity: 0;
-    transform: translateY(-26px) scale(0.76);
+    transform: translate3d(0, -28px, 0) scale(0.76);
     filter: blur(8px) brightness(0.7);
   }
 }
@@ -2659,7 +2667,7 @@ body.dragging-joker #fx::after {
   pointer-events: none;
   z-index: 40;
   will-change: transform, opacity;
-  animation: dustMoteFloat 0.78s ease-out forwards;
+  animation: dustMoteFloat 0.84s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 @keyframes dustMoteFloat {
   0% {

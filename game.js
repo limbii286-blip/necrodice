@@ -762,11 +762,13 @@ function heroAttack(winIdx){
   srcAv.style.opacity='0';
 
   const anim=clone.animate([
-    {transform:'translate3d(0,0,0) scale(1)',offset:0},
-    {transform:`translate3d(${(-dx*0.08).toFixed(1)}px,${(-dy*0.08).toFixed(1)}px,0) scale(1.18)`,offset:0.24},
-    {transform:`translate3d(${(dx*0.92).toFixed(1)}px,${(dy*0.92).toFixed(1)}px,0) scale(1.24)`,offset:0.50},
-    {transform:'translate3d(0,0,0) scale(1)',offset:1}
-  ],{duration:680,easing:'cubic-bezier(0.22,0.85,0.32,1)',fill:'forwards'});
+    {transform:'translate3d(0,0,0) scale(1) rotate(0deg)',offset:0},
+    {transform:`translate3d(${(-dx*0.09).toFixed(1)}px,${(-dy*0.09).toFixed(1)}px,0) scale(1.16) rotate(-4deg)`,offset:0.18},
+    {transform:`translate3d(${(dx*0.48).toFixed(1)}px,${(dy*0.48).toFixed(1)}px,0) scale(1.26) rotate(3deg)`,offset:0.38},
+    {transform:`translate3d(${(dx*0.92).toFixed(1)}px,${(dy*0.92).toFixed(1)}px,0) scale(1.22) rotate(0deg)`,offset:0.48},
+    {transform:`translate3d(${(dx*0.84).toFixed(1)}px,${(dy*0.84).toFixed(1)}px,0) scale(1.14) rotate(0deg)`,offset:0.58},
+    {transform:'translate3d(0,0,0) scale(1) rotate(0deg)',offset:1}
+  ],{duration:760,easing:'cubic-bezier(0.22,1,0.36,1)',fill:'forwards'});
 
   setTimeout(()=>{
     if(!dstAv.isConnected)return;
@@ -783,8 +785,8 @@ function heroAttack(winIdx){
     dmg.style.top=(r2.top+r2.height/2)+'px';
     document.body.appendChild(imp);
     document.body.appendChild(dmg);
-    setTimeout(()=>{imp.remove();dmg.remove()},980);
-  },330);
+    setTimeout(()=>{imp.remove();dmg.remove()},1050);
+  },365);
 
   anim.onfinish=()=>{
     clone.remove();
@@ -1017,7 +1019,7 @@ function cast(p,id,cb){ // joker sahnede Runeterra büyüsü gibi belirir ve Kap
   el.onclick=finish;
   setTimeout(finish,1350);
 }
-function count(el,a,b){if(!el)return;if(a==b||RM||typeof requestAnimationFrame=='undefined'){el.textContent=b;return}const t0=performance.now(),f=n=>{const x=Math.min(1,(n-t0)/450);el.textContent=Math.round(a+(b-a)*x*(2-x));if(x<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
+function count(el,a,b){if(!el)return;if(a==b||RM||typeof requestAnimationFrame=='undefined'){el.textContent=b;return}const t0=performance.now(),f=n=>{const x=Math.min(1,(n-t0)/520),e=1-Math.pow(1-x,3);el.textContent=Math.round(a+(b-a)*e);if(x<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
 function fly(){ // yeni kartlar desteden uçarak gelir
   const d=$('#deck');if(!d||!d.getBoundingClientRect)return;const dr=d.getBoundingClientRect();let i=0;const F=FIT||1;
   const freshCards=document.querySelectorAll('.fresh');
@@ -1025,14 +1027,14 @@ function fly(){ // yeni kartlar desteden uçarak gelir
     d.classList.remove('pull');
     void d.offsetWidth;
     d.classList.add('pull');
-    setTimeout(()=>d.classList.remove('pull'),500);
+    setTimeout(()=>d.classList.remove('pull'),540);
   }
   const rects=[...freshCards].map(el=>el.getBoundingClientRect());
   freshCards.forEach((el,idx)=>{
     const r=rects[idx];
     el.style.setProperty('--dx',(dr.left-r.left+(dr.width-r.width)/2)/F+'px');
     el.style.setProperty('--dy',(dr.top-r.top+(dr.height-r.height)/2)/F+'px');
-    el.style.animationDelay=(i++*.13)+'s';
+    el.style.animationDelay=(i++*.10)+'s';
   });
 }
 /* Mobilde kaydırma olmasın: oyun alanı ekrana sığmıyorsa tek parça olarak küçültülür (PC'ye dokunmaz) */
