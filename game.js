@@ -1729,24 +1729,21 @@ function createSmoothDragLoop(onFrame){
     if(!hand)return;
     const slots=[...hand.querySelectorAll('.jslot')];
     if(!slots.length)return;
-    const handRect=hand.getBoundingClientRect();
-    const overHand=(e.clientX>=handRect.left-30 && e.clientX<=handRect.right+30 && e.clientY>=handRect.top-190 && e.clientY<=window.innerHeight);
-    if(!overHand){clearHover();return}
 
-    let matchedSlot=null;
-    for(const sl of slots){
-      const r=sl.getBoundingClientRect();
-      if(e.clientX>=r.left-4 && e.clientX<=r.right+4){
-        matchedSlot=sl;break;
+    let targetJ=e.target.closest&&e.target.closest('#hand .j');
+    if(!targetJ){
+      for(const sl of slots){
+        const r=sl.getBoundingClientRect();
+        if(e.clientX>=r.left && e.clientX<=r.right && e.clientY>=r.top && e.clientY<=r.bottom){
+          targetJ=sl.querySelector('.j');
+          break;
+        }
       }
     }
-    if(matchedSlot){
-      const j=matchedSlot.querySelector('.j');
-      if(j&&!j.classList.contains('is-dragging')){
-        slots.forEach(s=>{const c=s.querySelector('.j');if(c&&c!==j)c.classList.remove('hovered')});
-        j.classList.add('hovered');
-      }
-    }else if(!(e.target.closest&&e.target.closest('#hand .j'))){
+    if(targetJ&&!targetJ.classList.contains('drag-source-hidden')){
+      slots.forEach(s=>{const c=s.querySelector('.j');if(c&&c!==targetJ)c.classList.remove('hovered')});
+      targetJ.classList.add('hovered');
+    }else{
       clearHover();
     }
   });
