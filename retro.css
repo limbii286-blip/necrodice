@@ -2886,7 +2886,8 @@ body.dragging-joker #fx::after {
   color: #fecaca;
 }
 .hp-tip-tag {
-  font: 700 13px/1.2 var(--bf);
+  font: 700 12.5px/1.25 var(--mf);
+  letter-spacing: 0.25px;
   color: #cfb992;
   margin-top: 3px;
 }

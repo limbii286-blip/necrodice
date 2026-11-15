@@ -2084,7 +2084,7 @@ function createSmoothDragLoop(onFrame){
     const h=HERO_MAP[hid];
     if(!h)return;
     const isUsed=btn.classList.contains('used');
-    const tagTxt=h.passive?(isUsed?'Pasif · Tükendi':'Pasif'):(isUsed?'Kullanıldı':'Aktif');
+    const tagTxt=h.passive?(isUsed?'Pasif · Tükendi':'Pasif'):(isUsed?'Aktif, Kullanıldı':'Aktif, Her Düelloda 1 Kez');
     let tip=document.getElementById('hp-tip');
     if(!tip){
       tip=document.createElement('div');
