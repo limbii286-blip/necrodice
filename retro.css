@@ -927,9 +927,12 @@ main {
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
   background: transparent !important;
-  box-shadow: inset 0 0 70px rgba(0, 0, 0, 0.78) !important;
+  box-shadow: none !important;
   overflow: hidden;
   user-select: none;
+}
+html::after {
+  box-shadow: none !important;
 }
 main::before {
   display: none !important;
@@ -946,7 +949,7 @@ main::before {
   top: max(10px, env(safe-area-inset-top, 10px));
   left: 14px;
   right: 14px;
-  z-index: 15;
+  z-index: 32;
   display: flex !important;
   align-items: flex-start;
   justify-content: space-between;
@@ -1037,21 +1040,23 @@ main::before {
 #hdr .hg .gear {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   margin: 0;
-  padding: 7px 12px;
-  font: 700 14px/1 var(--mf);
-  letter-spacing: 0.8px;
-  color: #f3dfb9;
-  background: linear-gradient(180deg, rgba(32, 27, 45, 0.94), rgba(16, 13, 24, 0.97));
-  border: 1.5px solid #756394;
+  padding: 8px 14px;
+  font: 800 14px/1 var(--mf);
+  letter-spacing: 1px;
+  color: #fff6dc;
+  text-shadow: 0 1px 3px #000;
+  background: linear-gradient(180deg, rgba(36, 28, 52, 0.96), rgba(16, 12, 24, 0.98));
+  border: 2px solid #d4af64;
   border-radius: 8px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(235, 215, 255, 0.22);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.92), 0 0 14px rgba(212, 168, 85, 0.28), inset 0 1px 0 rgba(255, 240, 200, 0.28);
   cursor: pointer;
 }
 #hdr .hg .gear:hover {
-  border-color: #c084fc;
-  color: #fff6e0;
+  border-color: #fde68a;
+  color: #ffffff;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.95), 0 0 18px rgba(250, 204, 21, 0.55);
 }
 
 /* --- İKİYE BÖLÜNMÜŞ MERKEZİ SAVAŞ TAHTASI (#opp ÜST YARI, #me ALT YARI) --- */
@@ -1095,36 +1100,9 @@ main::before {
   background: radial-gradient(55% 75% at 50% 0%, rgba(56, 189, 248, 0.14), transparent 72%) !important;
 }
 
-/* Joker ortaya sürüklenirken savaş alanının parlaması */
+/* Joker veya deste sürüklenirken ekstra yazı/kutu gösterme */
 body.dragging-joker #fx::after {
-  content: "❖ JOKERİ BURAYA BIRAK ❖";
-  position: absolute;
-  left: 50%;
-  top: -42px;
-  transform: translateX(-50%);
-  padding: 5px 18px;
-  border-radius: 6px;
-  background: rgba(18, 12, 14, 0.96);
-  border: 2px solid #d4a855;
-  color: #f7e6c4;
-  font: 700 13px/1.1 var(--mf);
-  letter-spacing: 2px;
-  box-shadow: 0 0 24px rgba(212, 168, 85, 0.75);
-  pointer-events: none;
-  z-index: 30;
-  display: block !important;
-  white-space: nowrap;
-}
-body.drop-ready #opp.zone,
-body.drop-ready #me.zone {
-  box-shadow: inset 0 0 48px rgba(212, 168, 85, 0.25) !important;
-}
-body.drop-ready #fx {
-  border-color: #f2d28b !important;
-  box-shadow:
-    0 0 42px rgba(212, 168, 85, 0.65),
-    0 14px 36px rgba(0, 0, 0, 0.95),
-    inset 0 0 28px rgba(212, 168, 85, 0.35) !important;
+  display: none !important;
 }
 
 /* --- GOTİK OYMA TAŞ & RÜNİK KAHRAMAN PLAKALARI (.who) --- */
@@ -1375,23 +1353,7 @@ body.drop-ready #fx {
 }
 
 #fx::before {
-  content: "" !important;
-  display: block !important;
-  position: absolute;
-  left: 84px;
-  right: 84px;
-  top: 50%;
-  height: 4px;
-  transform: translateY(-50%);
-  background: linear-gradient(90deg,
-    rgba(195, 110, 255, 0.85) 0%,
-    rgba(95, 225, 255, 0.95) 50%,
-    rgba(195, 110, 255, 0.85) 100%) !important;
-  box-shadow:
-    0 0 14px rgba(168, 85, 247, 0.85),
-    0 0 28px rgba(56, 189, 248, 0.55);
-  z-index: 1;
-  pointer-events: none;
+  display: none !important;
 }
 #fx::after {
   display: none;
@@ -1418,20 +1380,34 @@ body.drop-ready #fx {
   gap: 10px;
 }
 #fx .deck {
-  width: clamp(44px, 6.6dvh, 56px) !important;
-  height: calc(clamp(44px, 6.6dvh, 56px) * 1.42) !important;
+  width: clamp(64px, 9.8dvh, 86px) !important;
+  height: calc(clamp(64px, 9.8dvh, 86px) * 1.42) !important;
   margin: 0 !important;
-  border-radius: 6px !important;
-  border: 2px solid #8c7b9e !important;
+  border-radius: 8px !important;
+  border: 2px solid #9b88b2 !important;
   box-shadow:
     3px 3px 0 #2e2838,
     6px 6px 0 #181420,
-    0 10px 22px rgba(0, 0, 0, 0.92) !important;
-  cursor: pointer;
-  transition: transform 0.16s ease;
+    0 12px 26px rgba(0, 0, 0, 0.92) !important;
+  cursor: grab;
+  touch-action: none;
+  transition: transform 0.16s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 #fx .deck:hover {
   transform: translateY(-3px) scale(1.06);
+}
+#fx .deck.can-draw {
+  border-color: #f3c86b !important;
+  box-shadow:
+    3px 3px 0 #2e2838,
+    6px 6px 0 #181420,
+    0 0 22px rgba(243, 200, 107, 0.55),
+    0 12px 26px rgba(0, 0, 0, 0.94) !important;
+  animation: deckDrawPulse 1.6s ease-in-out infinite;
+}
+@keyframes deckDrawPulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.16); }
 }
 #fx .deck b {
   bottom: -10px !important;
@@ -1443,8 +1419,22 @@ body.drop-ready #fx {
   padding: 1px 6px !important;
 }
 
-/* --- YAN TAŞ BORDÜR ÜZERİNDEKİ YUVARLAK OYMA TAŞ MÜHÜR BUTONLARI (#draw "Kart çek" ve #pass "Pas / Turu bitir") --- */
-#fx #draw,
+.deck-drag-ghost {
+  position: fixed;
+  width: clamp(64px, 9.8dvh, 86px);
+  height: calc(clamp(64px, 9.8dvh, 86px) * 1.42);
+  border-radius: 8px;
+  border: 2px solid #f3c86b;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(243, 200, 107, 0.22), transparent 62%),
+    linear-gradient(155deg, #2b2238 0%, #16111e 100%);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.92), 0 0 24px rgba(243, 200, 107, 0.55);
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%) scale(1.06);
+}
+
+/* --- YAN TAŞ BORDÜR ÜZERİNDEKİ YUVARLAK OYMA TAŞ MÜHÜR BUTONU (#pass "Pas / Turu bitir") --- */
 #fx #pass {
   width: clamp(68px, 10.6dvh, 86px) !important;
   height: clamp(68px, 10.6dvh, 86px) !important;
@@ -1461,6 +1451,7 @@ body.drop-ready #fx {
   letter-spacing: 0.8px !important;
   text-transform: uppercase;
   position: relative;
+  margin-right: 78px;
   cursor: pointer;
   transition: transform 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.2), box-shadow 0.18s ease, filter 0.18s ease !important;
 }
@@ -1524,6 +1515,11 @@ body.drop-ready #fx {
 
 /* Orta Yarıktaki Kullanılmış Jokerler: Yuvarlak Madalyon (Sadece Kartın Üst İkonu Görünür) */
 #fx .jk {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
   width: 100%;
   max-width: 820px;
   margin: 0 auto;
@@ -1547,6 +1543,95 @@ body.drop-ready #fx {
 #fx .jh.m {
   justify-content: flex-start;
   padding-left: 68px !important;
+}
+
+/* Sağ Kenardaki Rakip & Oyuncu Satranç Saatleri (Pas mührünün sağındaki dikey taş çerçeve) */
+.side-clocks {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 66px;
+  height: 156px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+  z-index: 6;
+}
+.side-clock {
+  width: 100%;
+  padding: 6px 4px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(24, 18, 32, 0.94) 0%, rgba(12, 9, 18, 0.96) 100%);
+  border: 1.5px solid #594b3e;
+  box-shadow: inset 0 1px 0 rgba(255, 232, 180, 0.12), 0 4px 12px rgba(0, 0, 0, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+.side-clock .sc-lbl {
+  font: 700 8px/1 var(--sf);
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: #a99b86;
+}
+.side-clock .sc-val {
+  font: 800 16px/1.1 var(--mf);
+  color: #e8dcc4;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+  font-variant-numeric: tabular-nums;
+}
+.side-clock.opp.ticking {
+  border-color: #d96b4e;
+  box-shadow: 0 0 16px rgba(217, 107, 78, 0.5), inset 0 1px 0 rgba(255, 200, 180, 0.2);
+}
+.side-clock.opp.ticking .sc-val {
+  color: #ffb8a3;
+}
+.side-clock.mine.ticking {
+  border-color: #eab354;
+  box-shadow: 0 0 16px rgba(234, 179, 84, 0.55), inset 0 1px 0 rgba(255, 236, 179, 0.22);
+}
+.side-clock.mine.ticking .sc-val {
+  color: #ffe89e;
+}
+.side-clock.low {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 18px rgba(239, 68, 68, 0.72) !important;
+  animation: scLowPulse 0.75s ease-in-out infinite;
+}
+.side-clock.low .sc-val {
+  color: #fecaca !important;
+}
+.side-clock.out {
+  opacity: 0.55;
+  filter: grayscale(0.7);
+}
+@keyframes scLowPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+.sc-grace {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(16, 12, 22, 0.92);
+  border: 1px solid #d4af64;
+  color: #f3d999;
+  font: 700 9px/1.2 var(--sf);
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+}
+.sc-grace:empty {
+  display: none;
 }
 #fx .e {
   position: relative;
@@ -1782,8 +1867,9 @@ body.drop-ready #fx {
   margin-left: 0 !important;
 }
 
-#hand .j:not(.dim):not(.is-dragging):hover {
-  transform: scale(2.45) rotate(0deg) !important;
+#hand .j:not(.dim):not(.is-dragging):hover,
+#hand .j.pinned:not(.is-dragging) {
+  transform: translateY(-34px) scale(2.85) rotate(0deg) !important;
   z-index: 60 !important;
   border-color: #ffe89e !important;
   box-shadow:
@@ -1795,10 +1881,11 @@ body.drop-ready #fx {
   filter: brightness(0.48) saturate(0.45) !important;
   border-color: #4a3f35 !important;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9) !important;
-  cursor: default;
+  cursor: pointer;
 }
-#hand .j.dim:not(.is-dragging):hover {
-  transform: scale(2.3) rotate(0deg) !important;
+#hand .j.dim:not(.is-dragging):hover,
+#hand .j.dim.pinned:not(.is-dragging) {
+  transform: translateY(-34px) scale(2.7) rotate(0deg) !important;
   filter: brightness(0.92) saturate(0.85) !important;
   border-color: #c2a668 !important;
   z-index: 60 !important;
@@ -1927,11 +2014,23 @@ body.drop-ready #fx {
   #fx .cl {
     gap: 6px;
   }
-  #fx #draw,
   #fx #pass {
-    width: clamp(58px, 9.2dvh, 72px) !important;
-    height: clamp(58px, 9.2dvh, 72px) !important;
+    width: clamp(56px, 8.8dvh, 70px) !important;
+    height: clamp(56px, 8.8dvh, 70px) !important;
+    margin-right: 60px;
     font-size: 11px !important;
+  }
+  #fx .deck {
+    width: clamp(50px, 8.2dvh, 66px) !important;
+    height: calc(clamp(50px, 8.2dvh, 66px) * 1.42) !important;
+  }
+  .side-clocks {
+    width: 54px;
+    height: 132px;
+    right: 2px;
+  }
+  .side-clock .sc-val {
+    font-size: 13px;
   }
   #fx .jh.o {
     padding-right: 44px !important;
@@ -1946,295 +2045,10 @@ body.drop-ready #fx {
     width: clamp(50px, 8.2dvh, 70px) !important;
   }
   #hand .j:not(.dim):not(.is-dragging):hover,
-  #hand .j.dim:not(.is-dragging):hover {
-    transform: scale(2.05) rotate(0deg) !important;
-  }
-}
-
-/* ==========================================================================
-   HEARTHSTONE HAMLE SÜRESİ & YANAN FİTİL (TURN TIMER & BURNING ROPE)
-   ========================================================================== */
-#turn-rope {
-  position: absolute;
-  left: 96px;
-  right: 96px;
-  top: 50%;
-  height: 8px;
-  transform: translateY(-50%);
-  pointer-events: none;
-  z-index: 26;
-  opacity: 0;
-  transition: opacity 0.25s ease;
-  display: flex;
-  align-items: center;
-}
-
-#fx.roping #turn-rope {
-  opacity: 1;
-}
-
-#turn-rope .rope-fill {
-  position: relative;
-  height: 6px;
-  width: 100%;
-  border-radius: 999px;
-  background:
-    repeating-linear-gradient(
-      -55deg,
-      #fef08a 0px,
-      #f59e0b 5px,
-      #9a3412 9px,
-      #f97316 14px
-    );
-  box-shadow:
-    0 0 12px rgba(249, 115, 22, 0.9),
-    0 0 24px rgba(220, 38, 38, 0.7),
-    inset 0 1px 1px rgba(255, 255, 255, 0.65);
-  transition: width 0.1s linear;
-}
-
-#turn-rope .rope-spark {
-  position: absolute;
-  right: -9px;
-  top: 50%;
-  width: 20px;
-  height: 20px;
-  transform: translateY(-50%);
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    #ffffff 0%,
-    #fef08a 28%,
-    #f97316 62%,
-    rgba(220, 38, 38, 0) 100%
-  );
-  box-shadow:
-    0 0 16px 5px rgba(251, 191, 36, 0.95),
-    0 0 30px 10px rgba(239, 68, 68, 0.85);
-  animation: ropeSparkPulse 0.18s infinite alternate ease-in-out;
-}
-
-@keyframes ropeSparkPulse {
-  0% {
-    transform: translateY(-50%) scale(0.88) rotate(-8deg);
-    filter: brightness(1);
-  }
-  100% {
-    transform: translateY(-50%) scale(1.24) rotate(8deg);
-    filter: brightness(1.35);
-  }
-}
-
-#turn-timer {
-  position: absolute;
-  left: 50%;
-  top: calc(50% + clamp(42px, 6.2dvh, 54px));
-  transform: translate(-50%, -50%);
-  z-index: 34;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 3px 12px;
-  border-radius: 999px;
-  background:
-    radial-gradient(circle at 50% 25%, rgba(36, 28, 54, 0.96) 0%, rgba(14, 10, 22, 0.98) 100%);
-  border: 1.5px solid rgba(168, 148, 198, 0.65);
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.88),
-    0 0 12px rgba(56, 189, 248, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16);
-  font-family: 'Cinzel', serif;
-  font-size: 12px;
-  font-weight: 800;
-  color: #e2e8f0;
-  letter-spacing: 0.04em;
-  pointer-events: none;
-  user-select: none;
-  white-space: nowrap;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, color 0.2s ease;
-}
-
-#turn-timer .tt-side {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 2px;
-  opacity: 0.48;
-  transition: opacity 0.2s ease, color 0.2s ease, text-shadow 0.2s ease;
-}
-
-#turn-timer .tt-side small {
-  font-size: 9px;
-  letter-spacing: 0.06em;
-  color: #94a3b8;
-  margin: 0 2px;
-}
-
-#turn-timer .tt-side b {
-  font-size: 13px;
-  font-weight: 900;
-  min-width: 18px;
-  text-align: center;
-}
-
-#turn-timer .tt-side.mine.active {
-  opacity: 1;
-  color: #7dd3fc;
-  text-shadow: 0 0 10px rgba(56, 189, 248, 0.75);
-}
-
-#turn-timer .tt-side.opp.active {
-  opacity: 1;
-  color: #d8b4fe;
-  text-shadow: 0 0 10px rgba(192, 132, 252, 0.75);
-}
-
-#turn-timer .tt-side.low {
-  opacity: 1;
-  color: #fde047 !important;
-  text-shadow: 0 0 12px rgba(245, 158, 11, 0.9) !important;
-}
-
-#turn-timer .tt-side.out {
-  opacity: 0.35;
-  color: #f87171 !important;
-  text-decoration: line-through;
-}
-
-#turn-timer .tt-mid {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0 3px;
-}
-
-#turn-timer .tt-mid em {
-  font-style: normal;
-  font-size: 10px;
-  font-weight: 800;
-  color: #fde047;
-  letter-spacing: 0.06em;
-  text-shadow: 0 0 10px rgba(250, 204, 21, 0.75);
-}
-
-#turn-timer.grace {
-  border-color: #facc15;
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.88),
-    0 0 16px rgba(250, 204, 21, 0.55);
-}
-
-#turn-timer.mine {
-  border-color: rgba(56, 189, 248, 0.78);
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.85),
-    0 0 14px rgba(56, 189, 248, 0.45),
-    inset 0 1px 0 rgba(186, 230, 253, 0.28);
-}
-
-#turn-timer.opp {
-  border-color: rgba(192, 132, 252, 0.68);
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.85),
-    0 0 14px rgba(192, 132, 252, 0.38),
-    inset 0 1px 0 rgba(233, 213, 255, 0.22);
-}
-
-#turn-timer.low {
-  border-color: #fbbf24 !important;
-  background:
-    radial-gradient(circle at 50% 30%, rgba(127, 29, 29, 0.96) 0%, rgba(40, 10, 14, 0.98) 100%) !important;
-  box-shadow:
-    0 4px 14px rgba(0, 0, 0, 0.9),
-    0 0 18px rgba(245, 158, 11, 0.85),
-    0 0 30px rgba(220, 38, 38, 0.65) !important;
-  animation: timerLowPulse 0.45s infinite alternate ease-in-out;
-}
-
-#turn-timer .tt-icon {
-  font-size: 12px;
-  line-height: 1;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8));
-}
-
-#turn-timer.low .tt-icon {
-  animation: hourglassShake 0.35s infinite alternate ease-in-out;
-}
-
-/* Oyuncu Plakalarındaki Satranç Saati (.who-clock) */
-.who-clock {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  margin-left: 6px;
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: rgba(12, 9, 18, 0.88);
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  font-family: 'Cinzel', serif;
-  font-size: 11px;
-  font-weight: 800;
-  color: #94a3b8;
-  opacity: 0.65;
-  transition: opacity 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.who-clock b {
-  font-size: 12px !important;
-  font-weight: 900 !important;
-  color: inherit !important;
-  margin-left: 2px;
-}
-
-.who-clock small {
-  font-size: 9px !important;
-  color: inherit !important;
-  opacity: 0.85;
-}
-
-.who-clock.mine.ticking {
-  opacity: 1;
-  color: #bae6fd;
-  border-color: #38bdf8;
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.55);
-}
-
-.who-clock.opp.ticking {
-  opacity: 1;
-  color: #e9d5ff;
-  border-color: #c084fc;
-  box-shadow: 0 0 10px rgba(192, 132, 252, 0.55);
-}
-
-.who-clock.low {
-  opacity: 1;
-  color: #fef08a !important;
-  border-color: #f59e0b !important;
-  background: rgba(127, 29, 29, 0.92) !important;
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.85) !important;
-}
-
-.who-clock.out {
-  opacity: 0.42;
-  color: #f87171 !important;
-  border-color: rgba(239, 68, 68, 0.5) !important;
-  text-decoration: line-through;
-}
-
-@keyframes timerLowPulse {
-  0% {
-    transform: translate(-50%, -50%) scale(1);
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1.12);
-  }
-}
-
-@keyframes hourglassShake {
-  0% {
-    transform: rotate(-12deg);
-  }
-  100% {
-    transform: rotate(12deg);
+  #hand .j.pinned:not(.is-dragging),
+  #hand .j.dim:not(.is-dragging):hover,
+  #hand .j.dim.pinned:not(.is-dragging) {
+    transform: translateY(-24px) scale(2.2) rotate(0deg) !important;
   }
 }
 

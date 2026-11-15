@@ -88,7 +88,7 @@ function playM(){
   const list=MU[curM],el=new Audio(),g=AC.createGain(),t=AC.currentTime;
   el._m=curM;el._g=g;el.preload='auto';el.loop=true;
   const fn=list[0];
-  const cs=[typeof GOTHIC_MUSIC_DATA!='undefined'?GOTHIC_MUSIC_DATA:'','audio/'+fn,fn,'/audio/'+fn].filter(Boolean);
+  const cs=['tavern_bg.mp3','./tavern_bg.mp3',typeof GOTHIC_MUSIC_DATA!='undefined'?GOTHIC_MUSIC_DATA:'','audio/'+fn,fn,'/audio/'+fn].filter(Boolean);
   el._i=0;
   el.onerror=()=>{
     if(++el._i<cs.length){
@@ -949,12 +949,16 @@ function R(){
   const meWinHtml=S.winSide!=null&&S.winSide>0?`<div class="zone-win-fx mine"><div class="zw-shockwave"></div><div class="zw-sparks"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="zw-banner"><span class="zw-ico">♛</span><div class="zw-txt"><b>${isSpec?p0Name+' Kazandı':'Turu Sen Kazandın'}</b><small>Toplam: ${mt} · Hedef: ${low?'En Az':T}</small></div><span class="zw-ico">♛</span></div></div>`:(S.winSide===0?`<div class="zone-win-fx tie"><div class="zw-shockwave"></div><div class="zw-banner"><span class="zw-ico">⚖</span><div class="zw-txt"><b>Tur Berabere</b><small>${mt} – ${ot} · Hedef: ${low?'En Az':T}</small></div><span class="zw-ico">⚖</span></div></div>`:'');
   const oppTimeOut=!!(S.timeOut&&S.timeOut[1]),meTimeOut=!!(S.timeOut&&S.timeOut[0]);
   const c0=Math.ceil(S.clocks?S.clocks[0]:66),c1=Math.ceil(S.clocks?S.clocks[1]:66);
-  const cc0=`<span class="who-clock mine${S.turn==0&&!S.wait&&!(S.graceLeft>0)&&!meTimeOut?' ticking':''}${meTimeOut?' out':c0<=10?' low':''}" id="wc-0" title="Senin Satranç Saatin">⏳<b id="wc-sec-0">${c0}</b><small>s</small></span>`;
-  const cc1=`<span class="who-clock opp${S.turn==1&&!S.wait&&!(S.graceLeft>0)&&!oppTimeOut?' ticking':''}${oppTimeOut?' out':c1<=10?' low':''}" id="wc-1" title="Rakibin Satranç Saati">⏳<b id="wc-sec-1">${c1}</b><small>s</small></span>`;
+  const sc0=$('#sc-0'),sc1=$('#sc-1'),scSec0=$('#sc-sec-0'),scSec1=$('#sc-sec-1');
+  if(scSec0)scSec0.textContent=String(c0);
+  if(scSec1)scSec1.textContent=String(c1);
+  if(sc0){sc0.classList.toggle('ticking',S.turn==0&&!S.wait&&!(S.graceLeft>0)&&!meTimeOut);sc0.classList.toggle('low',c0<=10&&c0>0);sc0.classList.toggle('out',meTimeOut||c0<=0)}
+  if(sc1){sc1.classList.toggle('ticking',S.turn==1&&!S.wait&&!(S.graceLeft>0)&&!oppTimeOut);sc1.classList.toggle('low',c1<=10&&c1>0);sc1.classList.toggle('out',oppTimeOut||c1<=0)}
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'')+(S.winSide!=null?(S.winSide<0?' round-win':S.winSide>0?' round-lose':' round-tie'):'');
-  setH('#opp',`<div class="who">${av1}<div class="nm"><b>${p1Name}</b><span class="meta">${MODE=='bot'?IC.dif.repeat(DN[DIFF]):'Online'}${jp(1-S.jUsed[1])}${cc1}</span></div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot${obust?' bust':oexact?' exact':''}"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${S.rev?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>${oppWinHtml}`);
+  setH('#opp',`<div class="who">${av1}<div class="nm"><b>${p1Name}</b><span class="meta">${MODE=='bot'?IC.dif.repeat(DN[DIFF]):'Online'}${jp(1-S.jUsed[1])}</span></div><span class="jbs">${S.hand[1].map(()=>`<img class="jb" src="${IMG.bj}" alt="">`).join('')}</span><div class="tot${obust?' bust':oexact?' exact':''}"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${S.rev?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>${oppWinHtml}`);
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<span class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}"><img src="${IMG.j[e.id]}" alt=""></span>`};
   $('#deck b').textContent=S.deck.length;
+  $('#deck').classList.toggle('can-draw',!isSpec&&my&&!P&&canDraw(S,0));
   setH('#jo',(S.pj||[]).filter(x=>x.o==1).map(chip).join(''));
   setH('#jm',(S.pj||[]).filter(x=>x.o==0).map(chip).join(''));
   const sl=$('#seal'),sc=(T!=21||low?' alt':'')+(low?' low':'');
@@ -964,15 +968,15 @@ function R(){
   if(prevSeal&&prevSeal!=seal){sl.classList.remove('stamp');void sl.offsetWidth;sl.classList.add('stamp')}
   $('#arr').className='arr '+(S.wait||S.over?'off':S.turn==0?'me':'op');
   $('#me').className='zone'+(my?' act':'')+(S.winSide!=null?(S.winSide>0?' round-win':S.winSide<0?' round-lose':' round-tie'):'');
-  setH('#me',`<div class="who">${av0}<div class="nm"><b>${p0Name}</b><span class="meta">${jp(1-S.jUsed[0])}${cc0}</span></div><div class="tot${bust?' bust':exact?' exact':''}"><small>Toplam</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>${meWinHtml}`);
+  setH('#me',`<div class="who">${av0}<div class="nm"><b>${p0Name}</b><span class="meta">${jp(1-S.jUsed[0])}</span></div><div class="tot${bust?' bust':exact?' exact':''}"><small>Toplam</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>${meWinHtml}`);
   $('#prompt').className=P?'ask':'';
   setH('#prompt',P?`${J[P.id]}: ${KTXT[k]} ${k=='sign'?'<button class="btn sm" data-s="1">Ekle</button><button class="btn sm" data-s="-1">Çıkar</button>':''}<button class="btn sm alt" data-x="1">Vazgeç</button>`:'');
   const ends=(S.turns>0&&!S.acted)||oppTimeOut; // rakibin süresi bittiyse veya karşı taraf pas dediyse şimdi pas dersem tur biter
-  $('#draw').disabled=isSpec||!(my&&!P&&canDraw(S,0));$('#pass').disabled=isSpec||!(my&&!P);
+  $('#pass').disabled=isSpec||!(my&&!P);
   if(isSpec){
-    $('#draw').style.display='none';$('#pass').style.display='none';
+    $('#pass').style.display='none';
   }else{
-    $('#draw').style.display='';$('#pass').style.display='';
+    $('#pass').style.display='';
     $('#pass').textContent=ends?'Turu bitir':'Pas';$('#pass').className='btn sm'+(ends?'':' alt');
   }
   const n=S.hand[0].length;
@@ -980,6 +984,7 @@ function R(){
     setH('#hand',`<div class="spec-notice">👁️ Canlı Maç Yayını · İzleyici Modundasın</div>`);
   }else{
     setH('#hand',S.hand[0].map((id,i)=>`<img class="j${my&&!P&&playable(S,0,id)?'':' dim'}" style="--r:${((i-(n-1)/2)*5).toFixed(1)}deg" data-j="${id}" src="${IMG.j[id]}" alt="">`).join(''));
+    document.querySelectorAll('#hand .j[data-j]').forEach(im=>hi(im,+im.dataset.j));
   }
   count(document.querySelector('#me .tot b'),lastTot[0],mt);count(document.querySelector('#opp .tot b'),lastTot[1],ot);lastTot=[mt,ot];
   (S.pj||[]).forEach(e=>seenE.add(e.uid));S.hand[0].forEach(id=>hiLoad(id));
@@ -1117,6 +1122,10 @@ function exitGame(){ // limbigames perdesi, sonra ilk ekrana dön
   },1700);
 }
 document.addEventListener('click',e=>{
+  const jClick=e.target.closest&&e.target.closest('#hand .j[data-j]');
+  if(!jClick){
+    document.querySelectorAll('#hand .j.pinned').forEach(el=>el.classList.remove('pinned'));
+  }
   const S=G,t=e.target.closest&&e.target.closest('[data-c],[data-e],[data-j],[data-s],[data-x],[data-g],[data-av]');
   if(lock||!t)return;
   if(t.dataset.g)return settings();
@@ -1137,15 +1146,13 @@ document.addEventListener('click',e=>{
   }
   if(t.dataset.j){
     if(window._suppressJokerClick)return;
-    const id=+t.dataset.j;
-    if(S.turn==0&&!S.wait&&playable(S,0,id)){
-      startJoker(id);
-    }
+    const wasPinned=t.classList.contains('pinned');
+    document.querySelectorAll('#hand .j.pinned').forEach(el=>el.classList.remove('pinned'));
+    if(!wasPinned){t.classList.add('pinned');snd('info')}
     return;
   }
 });
-$('#draw').onclick=()=>{const S=G;if(S.turn||lock||P||!canDraw(S,0))return;if(MODE=='guest')return conn.send({k:'draw'});S.graceLeft=0;lrnAct(S,'d');const c=S.deck.pop();S.pl[0].open.push(c);S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R()};
-$('#deck').onclick=()=>{const d=$('#draw');if(d&&!d.disabled)d.click()};
+function drawFromDeck(){const S=G;if(!S||S.turn||lock||P||!canDraw(S,0))return;if(MODE=='guest')return conn.send({k:'draw'});S.graceLeft=0;lrnAct(S,'d');const c=S.deck.pop();S.pl[0].open.push(c);S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R()}
 $('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE=='guest')conn.send({k:'pass'});else{lrnAct(G,'p');pass()}}};
 
 /* ---------- ONLINE (PeerJS) ---------- */
@@ -1445,7 +1452,62 @@ try{if(RM)document.body.classList.add('rm');if(!CRT)document.documentElement.cla
 try{$('#slogo').src=IMG.logo}catch(e){}setTimeout(()=>{const s=$('#splash');s&&s.remove()},2900);
 on('#b2',hostRoom);on('#b3',joinRoom);
 
-/* ---------- JOKER SÜRÜKLE-BIRAK (ORTAYA SÜRÜKLEYEREK VEYA TIKLAYARAK ATMA) ---------- */
+/* ---------- DESTEDEN BASILI TUTUP ÖNÜMÜZE KART ÇEKME ---------- */
+(function initDeckDragDraw(){
+  let dragging=false,pointerId=null,startX=0,startY=0,ghost=null;
+
+  function canDrawNow(){
+    const S=G;
+    return !!(S&&!S.over&&!lock&&!P&&S.turn==0&&!S.wait&&MODE!=='spectator'&&canDraw(S,0));
+  }
+
+  function cleanup(){
+    if(ghost){ghost.remove();ghost=null}
+    document.body.classList.remove('dragging-deck');
+    dragging=false;pointerId=null;
+  }
+
+  document.addEventListener('pointerdown',e=>{
+    if(e.button!=null&&e.button!==0)return;
+    const dk=e.target.closest&&e.target.closest('#deck');
+    if(!dk||!canDrawNow())return;
+    dragging=false;
+    pointerId=e.pointerId;
+    startX=e.clientX;
+    startY=e.clientY;
+    try{dk.setPointerCapture(e.pointerId)}catch(err){}
+  });
+
+  document.addEventListener('pointermove',e=>{
+    if(pointerId==null||e.pointerId!==pointerId)return;
+    const dx=e.clientX-startX,dy=e.clientY-startY;
+    if(!dragging&&Math.hypot(dx,dy)>8){
+      dragging=true;
+      document.body.classList.add('dragging-deck');
+      ghost=document.createElement('div');
+      ghost.className='deck-drag-ghost';
+      ghost.style.backgroundImage=`url("${IMG.bn}")`;
+      document.body.appendChild(ghost);
+    }
+    if(dragging&&ghost){
+      ghost.style.left=e.clientX+'px';
+      ghost.style.top=e.clientY+'px';
+      ghost.classList.toggle('ready',e.clientY > window.innerHeight*0.50);
+    }
+  });
+
+  function finish(e,cancelled){
+    if(pointerId==null||e.pointerId!==pointerId)return;
+    const ok=!cancelled&&dragging&&e.clientY > window.innerHeight*0.50&&canDrawNow();
+    cleanup();
+    if(ok)drawFromDeck();
+  }
+
+  document.addEventListener('pointerup',e=>finish(e,false));
+  document.addEventListener('pointercancel',e=>finish(e,true));
+})();
+
+/* ---------- JOKER SÜRÜKLE-BIRAK (SADECE SÜRÜKLEYEREK OYNAMA, TIKLAYINCA BÜYÜME) ---------- */
 (function initJokerDragAndDrop(){
   let dragEl=null,dragId=0,startX=0,startY=0,isDragging=false,pointerId=null;
 
@@ -1455,7 +1517,7 @@ on('#b2',hostRoom);on('#b3',joinRoom);
   }
 
   function isOverDropZone(clientY){
-    return clientY < window.innerHeight * 0.77;
+    return clientY < window.innerHeight * 0.72;
   }
 
   function cleanupDrag(){
@@ -1489,6 +1551,7 @@ on('#b2',hostRoom);on('#b3',joinRoom);
     const dy=e.clientY-startY;
     if(!isDragging&&Math.hypot(dx,dy)>8){
       isDragging=true;
+      dragEl.classList.remove('pinned');
       dragEl.classList.add('is-dragging');
       document.body.classList.add('dragging-joker');
     }
@@ -1580,7 +1643,7 @@ on('#b2',hostRoom);on('#b3',joinRoom);
   const bgImg=new Image();
   let bgLoaded=false;
   bgImg.onload=()=>{bgLoaded=true;};
-  bgImg.src='board_gothic.jpg?v=20261115_topdown1';
+  bgImg.src='board_gothic.jpg?v=20261115_sym1';
 
   const particles=[];
 
@@ -1642,9 +1705,8 @@ on('#b2',hostRoom);on('#b3',joinRoom);
       const dx=(W-dw)*0.5, dy=(H-dh)*0.5;
       ctx.drawImage(bgImg, dx, dy, dw, dh);
 
-      // Meşale & rünik çatlak parıltıları (sol üst ateş kasesi, sağ alt ateş kasesi, mavi & mor rün çatlakları)
+      // 4 köşedeki simetrik ateş kaseleri için titreyen sıcak meşale parıltıları
       const flicker = 0.78 + 0.22*Math.sin(t*7.1)*Math.cos(t*4.3);
-      const runePulse = 0.65 + 0.35*Math.sin(t*2.4);
       const drawLight = (u, v, rad, col) => {
         const lx = dx + dw*u, ly = dy + dh*v, lr = Math.min(W,H)*rad;
         const lg = ctx.createRadialGradient(lx, ly, 2, lx, ly, lr);
@@ -1653,10 +1715,10 @@ on('#b2',hostRoom);on('#b3',joinRoom);
         ctx.fillStyle = lg;
         ctx.fillRect(lx-lr, ly-lr, lr*2, lr*2);
       };
-      drawLight(0.135, 0.045, 0.22, `rgba(255, 155, 55, ${0.28*flicker})`);
-      drawLight(0.935, 0.760, 0.22, `rgba(255, 145, 45, ${0.28*flicker})`);
-      drawLight(0.620, 0.250, 0.18, `rgba(75, 220, 255, ${0.18*runePulse})`);
-      drawLight(0.320, 0.780, 0.18, `rgba(205, 105, 255, ${0.18*runePulse})`);
+      drawLight(0.155, 0.045, 0.19, `rgba(255, 155, 55, ${0.26*flicker})`);
+      drawLight(0.845, 0.045, 0.19, `rgba(255, 155, 55, ${0.26*flicker})`);
+      drawLight(0.155, 0.955, 0.19, `rgba(255, 145, 45, ${0.26*flicker})`);
+      drawLight(0.845, 0.955, 0.19, `rgba(255, 145, 45, ${0.26*flicker})`);
     } else {
       const g=ctx.createRadialGradient(W*0.5,H*0.5,40,W*0.5,H*0.5,Math.max(W,H)*0.75);
       g.addColorStop(0,'#1b222c');
@@ -1860,28 +1922,20 @@ on('#b2',hostRoom);on('#b3',joinRoom);
   requestAnimationFrame(render);
 })();
 
-/* ---------- SATRANÇ SAATİ (CHESS CLOCK 66s / 55s / 44s) & 5 SN HAZIRLIK & YANAN FİTİL ---------- */
+/* ---------- SATRANÇ SAATİ (CHESS CLOCK 66s / 55s / 44s) & 5 SN HAZIRLIK ---------- */
 (function initHearthstoneTurnTimer(){
   let lastTickSec=-1;
   setInterval(()=>{
-    const fx=$('#fx');
-    const rope=$('#turn-rope');
-    const fill=rope?rope.querySelector('.rope-fill'):null;
-    const badge=$('#turn-timer');
-    const sec0El=$('#tt-sec-0');
-    const sec1El=$('#tt-sec-1');
+    const sc0=$('#sc-0');
+    const sc1=$('#sc-1');
+    const scSec0=$('#sc-sec-0');
+    const scSec1=$('#sc-sec-1');
     const graceEl=$('#tt-grace');
-    const side0=$('#tt-mine');
-    const side1=$('#tt-opp');
-    const wc0=$('#wc-0');
-    const wc1=$('#wc-1');
-    const wcSec0=$('#wc-sec-0');
-    const wcSec1=$('#wc-sec-1');
     const menu=$('#menu');
     const active=!!(G && !G.over && !G.wait && !lock && (!menu || menu.hidden));
     if(!active){
-      if(fx) fx.classList.remove('roping');
-      if(badge) badge.classList.remove('low','grace');
+      if(sc0) sc0.classList.remove('ticking','low');
+      if(sc1) sc1.classList.remove('ticking','low');
       if(graceEl) graceEl.hidden=true;
       lastTickSec=-1;
       return;
@@ -1897,73 +1951,39 @@ on('#b2',hostRoom);on('#b3',joinRoom);
       G.graceLeft=Math.max(0, G.graceLeft - 0.1);
       const gSec=Math.ceil(G.graceLeft);
       const s0=Math.ceil(G.clocks[0]), s1=Math.ceil(G.clocks[1]);
-      if(sec0El) sec0El.textContent=String(s0);
-      if(sec1El) sec1El.textContent=String(s1);
-      if(wcSec0) wcSec0.textContent=String(s0);
-      if(wcSec1) wcSec1.textContent=String(s1);
+      if(scSec0) scSec0.textContent=String(s0);
+      if(scSec1) scSec1.textContent=String(s1);
       if(graceEl){
         graceEl.hidden=false;
         graceEl.textContent=`HAZIRLIK ${gSec}s`;
       }
-      if(badge){
-        badge.classList.add('grace');
-        badge.classList.remove('mine','opp','low');
-      }
-      if(side0) side0.classList.remove('active','low');
-      if(side1) side1.classList.remove('active','low');
-      if(wc0) wc0.classList.remove('ticking');
-      if(wc1) wc1.classList.remove('ticking');
-      if(fx) fx.classList.remove('roping');
+      if(sc0) sc0.classList.remove('ticking','low');
+      if(sc1) sc1.classList.remove('ticking','low');
       lastTickSec=-1;
       return;
     }
 
     if(graceEl) graceEl.hidden=true;
-    if(badge) badge.classList.remove('grace');
 
     const t=G.turn===1?1:0;
     G.clocks[t]=Math.max(0, G.clocks[t] - 0.1);
     const curLeft=G.clocks[t];
     const s0=Math.ceil(G.clocks[0]), s1=Math.ceil(G.clocks[1]);
     const sec=Math.ceil(curLeft);
-    const isLow=curLeft<=10 && curLeft>0;
     const myTurn=(t===0);
 
-    if(sec0El) sec0El.textContent=String(s0);
-    if(sec1El) sec1El.textContent=String(s1);
-    if(wcSec0) wcSec0.textContent=String(s0);
-    if(wcSec1) wcSec1.textContent=String(s1);
+    if(scSec0) scSec0.textContent=String(s0);
+    if(scSec1) scSec1.textContent=String(s1);
 
-    if(side0){
-      side0.classList.toggle('active', myTurn && !G.timeOut[0]);
-      side0.classList.toggle('low', G.clocks[0]<=10 && G.clocks[0]>0);
-      side0.classList.toggle('out', !!G.timeOut[0] || G.clocks[0]<=0);
+    if(sc0){
+      sc0.classList.toggle('ticking', myTurn && !G.timeOut[0]);
+      sc0.classList.toggle('low', G.clocks[0]<=10 && G.clocks[0]>0);
+      sc0.classList.toggle('out', !!G.timeOut[0] || G.clocks[0]<=0);
     }
-    if(side1){
-      side1.classList.toggle('active', !myTurn && !G.timeOut[1]);
-      side1.classList.toggle('low', G.clocks[1]<=10 && G.clocks[1]>0);
-      side1.classList.toggle('out', !!G.timeOut[1] || G.clocks[1]<=0);
-    }
-    if(wc0){
-      wc0.classList.toggle('ticking', myTurn && !G.timeOut[0]);
-      wc0.classList.toggle('low', G.clocks[0]<=10 && G.clocks[0]>0);
-      wc0.classList.toggle('out', !!G.timeOut[0] || G.clocks[0]<=0);
-    }
-    if(wc1){
-      wc1.classList.toggle('ticking', !myTurn && !G.timeOut[1]);
-      wc1.classList.toggle('low', G.clocks[1]<=10 && G.clocks[1]>0);
-      wc1.classList.toggle('out', !!G.timeOut[1] || G.clocks[1]<=0);
-    }
-
-    if(badge){
-      badge.classList.toggle('mine', myTurn);
-      badge.classList.toggle('opp', !myTurn);
-      badge.classList.toggle('low', isLow);
-    }
-    if(fx) fx.classList.toggle('roping', isLow);
-    if(fill){
-      const pct=isLow ? Math.max(0, Math.min(100, (curLeft/10)*100)) : 100;
-      fill.style.width=pct.toFixed(1)+'%';
+    if(sc1){
+      sc1.classList.toggle('ticking', !myTurn && !G.timeOut[1]);
+      sc1.classList.toggle('low', G.clocks[1]<=10 && G.clocks[1]>0);
+      sc1.classList.toggle('out', !!G.timeOut[1] || G.clocks[1]<=0);
     }
 
     if(curLeft<=5 && curLeft>0){
