@@ -1511,7 +1511,7 @@ body.dragging-joker #fx::after {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-left: clamp(14px, 1.8vw, 24px);
+  margin-left: clamp(-56px, -4.5vw, -18px);
 }
 #fx .deck {
   overflow: visible !important;
