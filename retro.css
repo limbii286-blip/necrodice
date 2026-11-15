@@ -1779,36 +1779,39 @@ body.dragging-joker #fx::after {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-}
-#joker-inspect-pop .jip-card img {
-  height: min(64dvh, 500px) !important;
-  width: auto !important;
-  max-width: 86vw;
-  aspect-ratio: 2 / 3;
-  border-radius: 10px;
-  border: 3px solid #e6c373;
+  gap: 8px;
+  padding: 10px 12px 9px;
+  border-radius: 14px;
+  background: rgba(14, 10, 14, 0.95);
+  border: 2px solid #c9a252;
   box-shadow:
     0 24px 65px rgba(0, 0, 0, 0.96),
-    0 0 42px rgba(212, 168, 85, 0.55);
+    0 0 38px rgba(212, 168, 85, 0.42);
+}
+#joker-inspect-pop .jip-card img {
+  height: min(60dvh, 470px) !important;
+  width: auto !important;
+  max-width: 84vw;
+  aspect-ratio: 2 / 3;
+  border-radius: 8px;
+  border: 1.5px solid rgba(230, 195, 115, 0.55);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.85);
 }
 #joker-inspect-pop .jip-tag {
-  padding: 5px 16px;
-  border-radius: 6px;
-  background: rgba(16, 11, 13, 0.96);
-  border: 1.5px solid #9c783e;
-  font: 700 14px/1.2 var(--mf);
-  letter-spacing: 1.5px;
+  padding: 2px 6px;
+  background: none;
+  border: none;
+  box-shadow: none;
+  font: 700 13px/1.2 var(--mf);
+  letter-spacing: 1.3px;
   text-transform: uppercase;
   color: #f5e6c8;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.92);
+  text-shadow: 0 2px 4px #000;
 }
 #joker-inspect-pop .jip-tag.opp {
-  border-color: var(--blood2);
   color: #ffccd0;
 }
 #joker-inspect-pop .jip-tag.mine {
-  border-color: var(--gold-bright);
   color: #fff2d6;
 }
 
