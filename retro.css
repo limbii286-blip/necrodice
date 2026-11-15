@@ -547,7 +547,7 @@ body:has(#menu:not([hidden])) #fl {
   align-items: center;
   justify-content: center;
   background: rgba(8, 6, 13, 0.84);
-  backdrop-filter: blur(5px);
+  background: rgba(6, 4, 10, 0.86);
   padding: 16px;
 }
 #m[hidden] {

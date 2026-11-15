@@ -2187,13 +2187,10 @@ function createSmoothDragLoop(onFrame){
         if(p.zone === 0) col = `rgba(255, 148, 52, ${alpha})`;
         else if(p.zone === 1) col = `rgba(245, 198, 92, ${alpha * 0.85})`;
         else if(p.zone === 2) col = `rgba(225, 92, 58, ${alpha * 0.72})`;
-        ctx.save();
         ctx.fillStyle = col;
-        if(!mob){ctx.shadowColor = col;ctx.shadowBlur = 8;}
         ctx.beginPath();
         ctx.arc(px, py, p.r, 0, Math.PI*2);
         ctx.fill();
-        ctx.restore();
       });
     }
 
@@ -2347,17 +2344,12 @@ function createSmoothDragLoop(onFrame){
         const ey=e.y*H;
         const al=0.32+0.55*Math.abs(Math.sin(t*2.2+e.phase));
         let col=`rgba(255, 200, 105, ${al})`;
-        let sh='#f59e0b';
-        if(e.kind===1){ col=`rgba(165, 225, 255, ${al})`; sh='#38bdf8'; }
-        else if(e.kind===2){ col=`rgba(216, 140, 255, ${al})`; sh='#c084fc'; }
-        ctx.save();
+        if(e.kind===1) col=`rgba(165, 225, 255, ${al})`;
+        else if(e.kind===2) col=`rgba(216, 140, 255, ${al})`;
         ctx.fillStyle=col;
-        ctx.shadowColor=sh;
-        ctx.shadowBlur=8;
         ctx.beginPath();
         ctx.arc(ex,ey,e.r,0,Math.PI*2);
         ctx.fill();
-        ctx.restore();
       });
     }
     if(!document.body.classList.contains('rm')||menuOpen){
