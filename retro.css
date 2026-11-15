@@ -678,9 +678,9 @@ body:has(#menu:not([hidden])) #fl {
 }
 #splash b, .veil b {
   font: 700 28px/1 var(--hf) !important;
-  letter-spacing: 5px !important;
+  letter-spacing: 3px !important;
   color: var(--bone) !important;
-  text-transform: uppercase;
+  text-transform: lowercase !important;
 }
 #splash b::after, .veil b::after {
   display: none !important;
