@@ -149,7 +149,7 @@ body:has(#menu:not([hidden])) #fl {
   display: block;
 }
 
-/* Merkezi Gotik Büyü Kitabı (Grimoire) & Oyma Taş Sunak Çerçevesi */
+/* Merkezi Hearthstone Tarzı Orta Çağ Ahşap & Antik Pirinç Han Sandığı */
 #mb2 {
   position: relative !important;
   z-index: 2 !important;
@@ -157,27 +157,25 @@ body:has(#menu:not([hidden])) #fl {
   max-width: 580px !important;
   height: auto !important;
   max-height: calc(100dvh - 20px) !important;
-  padding: clamp(14px, 2.3dvh, 24px) clamp(16px, 2.8vw, 30px) clamp(12px, 1.9dvh, 18px) !important;
+  padding: clamp(16px, 2.5dvh, 26px) clamp(18px, 3vw, 32px) clamp(14px, 2dvh, 20px) !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: clamp(8px, 1.4dvh, 13px) !important;
-  border-radius: 14px !important;
-  border: 2.5px solid #8a739e !important;
+  gap: clamp(9px, 1.5dvh, 14px) !important;
+  border-radius: 18px !important;
+  border: 3.5px solid #c99e4e !important;
   background:
-    radial-gradient(85% 55% at 50% 8%, rgba(185, 115, 255, 0.16) 0%, transparent 72%),
-    radial-gradient(75% 50% at 50% 95%, rgba(235, 175, 85, 0.12) 0%, transparent 70%),
-    linear-gradient(180deg, rgba(24, 20, 34, 0.80) 0%, rgba(16, 13, 24, 0.86) 55%, rgba(11, 9, 17, 0.90) 100%) !important;
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+    radial-gradient(85% 55% at 50% 6%, rgba(242, 195, 105, 0.16) 0%, transparent 72%),
+    radial-gradient(75% 50% at 50% 96%, rgba(180, 62, 42, 0.14) 0%, transparent 70%),
+    linear-gradient(180deg, rgba(46, 30, 19, 0.94) 0%, rgba(27, 18, 12, 0.96) 55%, rgba(17, 11, 7, 0.98) 100%) !important;
   box-shadow:
-    0 0 0 3px #0c0a12,
-    0 0 0 5px #4e4263,
-    0 24px 65px rgba(0, 0, 0, 0.95),
-    0 0 52px rgba(168, 85, 247, 0.25),
-    inset 0 1px 0 rgba(242, 220, 175, 0.35),
-    inset 0 0 36px rgba(8, 6, 14, 0.82) !important;
+    0 0 0 3px #120b06,
+    0 0 0 6px #6b4d23,
+    0 26px 65px rgba(0, 0, 0, 0.96),
+    0 0 44px rgba(212, 166, 74, 0.22),
+    inset 0 2px 0 rgba(255, 232, 179, 0.35),
+    inset 0 0 36px rgba(8, 5, 3, 0.85) !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
   animation: gothicRise 0.55s cubic-bezier(0.2, 0.9, 0.3, 1) both !important;
@@ -187,13 +185,13 @@ body:has(#menu:not([hidden])) #fl {
   to { opacity: 1; transform: none; }
 }
 
-/* Gotik İç Telkari & Ametist Rün Çerçevesi */
+/* Orta Çağ İç Pirinç Çerçeve */
 #mb2::after {
   content: "";
   position: absolute;
-  inset: 7px;
-  border: 1px solid rgba(216, 180, 254, 0.26);
-  border-radius: 9px;
+  inset: 8px;
+  border: 1.5px solid rgba(242, 204, 112, 0.32);
+  border-radius: 12px;
   pointer-events: none;
   z-index: 0;
 }
@@ -284,29 +282,29 @@ body:has(#menu:not([hidden])) #fl {
 
 #mb2 .grp.hs-plaque {
   margin: 0 !important;
-  padding: clamp(10px, 1.8dvh, 15px) clamp(12px, 2vw, 18px) !important;
+  padding: clamp(11px, 1.9dvh, 16px) clamp(12px, 2vw, 18px) !important;
   background:
-    radial-gradient(80% 90% at 50% 0%, rgba(192, 132, 252, 0.10), transparent 72%),
-    linear-gradient(180deg, rgba(31, 26, 44, 0.88) 0%, rgba(17, 14, 26, 0.94) 100%) !important;
-  border: 1.5px solid #756394 !important;
-  border-radius: 10px !important;
+    radial-gradient(80% 90% at 50% 0%, rgba(234, 179, 84, 0.11), transparent 72%),
+    linear-gradient(180deg, rgba(54, 36, 22, 0.92) 0%, rgba(28, 19, 12, 0.96) 100%) !important;
+  border: 2px solid #9c7438 !important;
+  border-radius: 12px !important;
   box-shadow:
-    0 6px 18px rgba(0, 0, 0, 0.75),
-    inset 0 2px 10px rgba(0, 0, 0, 0.88),
-    inset 0 1px 0 rgba(235, 215, 255, 0.22) !important;
+    0 6px 18px rgba(0, 0, 0, 0.82),
+    inset 0 2px 10px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(255, 232, 179, 0.28) !important;
 }
 
 #mb2 .grp.hs-plaque > span {
   display: block;
-  font: 700 clamp(15px, 2.15dvh, 19px)/1.15 var(--mf) !important;
+  font: 800 clamp(14px, 2.05dvh, 18px)/1.15 var(--mf) !important;
   letter-spacing: 1.8px !important;
-  color: #f3dfb9 !important;
+  color: #fde68a !important;
   text-shadow: 0 2px 5px #000 !important;
-  margin-bottom: clamp(7px, 1.2dvh, 11px) !important;
+  margin-bottom: clamp(8px, 1.3dvh, 12px) !important;
   text-transform: uppercase;
 }
 
-/* Zorluk Seçim Düğmeleri: Oyma Taş & Rün Ciltli Kitap Plakaları */
+/* Zorluk Seçim Düğmeleri: Hearthstone Kabartmalı Orta Çağ Plakaları */
 #mb2 .dr {
   display: grid !important;
   grid-template-columns: repeat(4, 1fr);
@@ -318,21 +316,21 @@ body:has(#menu:not([hidden])) #fl {
   padding: clamp(9px, 1.6dvh, 13px) 4px !important;
   font: 700 clamp(13px, 1.85dvh, 16px)/1.1 var(--mf) !important;
   letter-spacing: 0.8px !important;
-  border-radius: 7px !important;
-  border: 1.5px solid #7c6b96 !important;
-  background: linear-gradient(180deg, #2d263b 0%, #171321 100%) !important;
-  color: #f2e4c9 !important;
+  border-radius: 9px !important;
+  border: 2px solid #b58943 !important;
+  background: linear-gradient(180deg, #4b3421 0%, #271a10 100%) !important;
+  color: #f7e8ca !important;
   text-transform: none !important;
   box-shadow:
-    0 4px 0 #09070e,
-    0 6px 14px rgba(0, 0, 0, 0.88),
-    inset 0 1px 0 rgba(255, 238, 205, 0.25),
+    0 4px 0 #110a05,
+    0 7px 14px rgba(0, 0, 0, 0.88),
+    inset 0 1px 0 rgba(255, 238, 205, 0.32),
     inset 0 -3px 0 rgba(0, 0, 0, 0.55) !important;
   transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease !important;
 }
 #mb2 .dr .btn:hover {
   transform: translateY(-2px) !important;
-  border-color: #d8b4fe !important;
+  border-color: #fde68a !important;
   color: #fff9eb !important;
 }
 #mb2 .dr .btn:active {
@@ -434,16 +432,16 @@ body:has(#menu:not([hidden])) #fl {
   padding: clamp(8px, 1.4dvh, 11px) 10px !important;
   font: 700 clamp(15px, 2dvh, 19px)/1 var(--mf) !important;
   letter-spacing: 3px !important;
-  border-radius: 7px !important;
-  border: 1.5px solid #756394 !important;
-  background: rgba(12, 10, 19, 0.92) !important;
-  color: #f3dfb9 !important;
+  border-radius: 9px !important;
+  border: 2px solid #9c7438 !important;
+  background: rgba(16, 10, 6, 0.94) !important;
+  color: #fde68a !important;
   text-align: center;
   text-transform: uppercase;
   box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.95) !important;
 }
 #mb2 #code::placeholder {
-  color: #7c6f94 !important;
+  color: #9e845c !important;
   font-size: 12px;
   letter-spacing: 1.5px;
 }
@@ -457,28 +455,28 @@ body:has(#menu:not([hidden])) #fl {
   grid-template-columns: repeat(3, 1fr);
   gap: clamp(6px, 1vw, 10px) !important;
   margin: 0 !important;
-  padding-top: 6px;
-  border-top: 1px solid rgba(192, 132, 252, 0.25);
+  padding-top: 8px;
+  border-top: 1.5px solid rgba(212, 168, 85, 0.32);
 }
 
 #mb2 .hs-drawer .btn {
   padding: clamp(8px, 1.4dvh, 11px) 6px !important;
   font: 700 clamp(12px, 1.65dvh, 15px)/1.15 var(--mf) !important;
   letter-spacing: 0.6px !important;
-  border-radius: 7px !important;
-  border: 1.5px solid #6c5d87 !important;
-  background: linear-gradient(180deg, #262033 0%, #14111d 100%) !important;
-  color: #e6d7f5 !important;
+  border-radius: 9px !important;
+  border: 1.5px solid #8f6b35 !important;
+  background: linear-gradient(180deg, #3c291b 0%, #1f140d 100%) !important;
+  color: #f2e2c4 !important;
   text-transform: none !important;
   box-shadow:
-    0 3px 0 #08060c,
+    0 3px 0 #0e0804,
     0 5px 12px rgba(0, 0, 0, 0.8),
-    inset 0 1px 0 rgba(235, 220, 255, 0.2) !important;
+    inset 0 1px 0 rgba(255, 232, 185, 0.25) !important;
 }
 #mb2 .hs-drawer .btn:hover {
-  border-color: #c084fc !important;
+  border-color: #fde68a !important;
   color: #fff7e6 !important;
-  background: linear-gradient(180deg, #332a45 0%, #1c1629 100%) !important;
+  background: linear-gradient(180deg, #4f3624 0%, #2a1c12 100%) !important;
   transform: translateY(-1px);
 }
 
