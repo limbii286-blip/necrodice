@@ -1015,8 +1015,9 @@ function R(){
   const isSpec=MODE=='spectator';
   const specHdr=isSpec?`<div class="spec-badge"><i></i>İzleyici Modu (${specCount||1}/${MAX_SPECTATORS})</div>`:'';
   setH('#hdr',`<div class="hs sks">${sk}</div><div class="hc"><span class="lab">Düello ${S.bo+1}</span><span class="pips">${pips}</span>${specHdr}</div><div class="hg"><button class="gear" data-g="1" aria-label="Ayarlar">${IC.gear}<span>MENÜ</span></button></div>`);
-  const my=!isSpec&&S.turn==0&&!lock&&!S.wait,mt=total(S,0),ot=total(S,1,!!S.rev),bust=!low&&mt>T,obust=!!S.rev&&!low&&ot>T,seal=T+(low?'L':'');
-  const exact=!low&&mt===T,oexact=!!S.rev&&!low&&ot===T;
+  const oppClosedKnown=!!(S.rev||(S.pl[1].closed.length&&S.pl[1].closed.every(c=>c.o!=null)));
+  const my=!isSpec&&S.turn==0&&!lock&&!S.wait,mt=total(S,0),ot=total(S,1,oppClosedKnown),bust=!low&&mt>T,obust=oppClosedKnown&&!low&&ot>T,seal=T+(low?'L':'');
+  const exact=!low&&mt===T,oexact=oppClosedKnown&&!low&&ot===T;
   const jp=n=>`<span class="jpips" title="Bu tur kalan joker hakkı ${n}/2">${[0,1].map(i=>`<i${i<n?' class="on"':''}></i>`).join('')}</span>`;
   const avh=p=>{const k=avKey(S,p),now=performance.now();if(prevAv[p]!==undefined&&prevAv[p]!==k)morphT[p]=now;prevAv[p]=k;
     const el=(now-morphT[p])/1000,mo=morphT[p]&&el<1.1;return `<img class="av${mo?' morph':''}" data-av="${p}"${mo?` style="animation-delay:-${el.toFixed(2)}s"`:''} src="${avSrc(k)}" alt="">`};
@@ -1032,7 +1033,7 @@ function R(){
   if(sc1){sc1.classList.toggle('ticking',S.turn==1&&!S.wait&&!(S.graceLeft>0)&&!oppTimeOut);sc1.classList.toggle('low',c1<=10&&c1>0);sc1.classList.toggle('out',oppTimeOut||c1<=0)}
   const oppHandHtml=`<div class="opp-jhand" title="Rakibin elindeki kapalı jokerler (${S.hand[1].length})">${S.hand[1].map((_,i)=>`<img class="oj" style="--r:${((i-(S.hand[1].length-1)/2)*4.5).toFixed(1)}deg" src="${IMG.bj}" alt="">`).join('')}</div>`;
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'')+(S.winSide!=null?(S.winSide>0?' round-lose':S.winSide===0?' round-tie':''):'');
-  setH('#opp',`${oppHandHtml}<div class="who">${av1}<div class="nm"><b>${p1Name}</b><span class="meta">${MODE=='bot'?IC.dif.repeat(DN[DIFF]):'Online'}</span></div><div class="tot${obust?' bust':oexact?' exact':''}"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${S.rev?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!S.rev,S.rev)).join('')}</div>`);
+  setH('#opp',`${oppHandHtml}<div class="who">${av1}<div class="nm"><b>${p1Name}</b><span class="meta">${MODE=='bot'?IC.dif.repeat(DN[DIFF]):'Online'}</span></div><div class="tot${obust?' bust':oexact?' exact':''}"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${oppClosedKnown?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!(S.rev||c.o!=null),S.rev)).join('')}</div>`);
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<span class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}"><img src="${IMG.j[e.id]}" alt=""></span>`};
   $('#deck b').textContent=S.deck.length;
   const drawLocked=S.eff.some(e=>e.id==23&&!e.neg&&e.o!=0);
@@ -1246,7 +1247,7 @@ function view(S){ // rakibe gidecek, gizli bilgisi temizlenmiş ve aynalanmış 
   const f=a=>[a[1],a[0]];
   return {av:[S.av[1],S.av[0]],mast:[S.mast[1],S.mast[0]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:1-S.turn,clocks:S.clocks?f(S.clocks):[66,66],clockMax:S.clockMax||66,graceLeft:S.graceLeft||0,timeOut:S.timeOut?f(S.timeOut):[false,false],hadTimeout:!!S.hadTimeout,pts:f(S.pts),rev:S.rev,winSide:S.winSide==null?null:-S.winSide,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),jTurn:S.jTurn?f(S.jTurn):[0,0],noJ:f(S.noJ),
     hand:[S.hand[1],S.hand[0].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
-    pl:[S.pl[1],{open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:S.rev?c.o:undefined}))}],
+    pl:[S.pl[1],{open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:c.o}))}],
     eff:S.eff.map(e=>({...e,o:1-e.o})),pj:(S.pj||[]).map(e=>({...e,o:1-e.o})),log:S.log.slice(-6).map(l=>({...l,p:l.p<0?-1:1-l.p}))};
 }
 function specView(S){ // izleyicilere gidecek durum (0 = host/oda sahibi, 1 = misafir oyuncu, kapalı kartlar rev olmadan görünmez)
@@ -1254,8 +1255,8 @@ function specView(S){ // izleyicilere gidecek durum (0 = host/oda sahibi, 1 = mi
     av:[S.av[0],S.av[1]],mast:[S.mast[0],S.mast[1]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:S.turn,clocks:S.clocks?[...S.clocks]:[66,66],clockMax:S.clockMax||66,graceLeft:S.graceLeft||0,timeOut:S.timeOut?[...S.timeOut]:[false,false],hadTimeout:!!S.hadTimeout,pts:S.pts,rev:S.rev,winSide:S.winSide,res:S.res,jUsed:S.jUsed,jTurn:S.jTurn?[...S.jTurn]:[0,0],noJ:S.noJ,
     hand:[S.hand[0].map(()=>0),S.hand[1].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
     pl:[
-      {open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:S.rev?c.o:undefined}))},
-      {open:S.pl[1].open,closed:S.pl[1].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:S.rev?c.o:undefined}))}
+      {open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:c.o}))},
+      {open:S.pl[1].open,closed:S.pl[1].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:c.o}))}
     ],
     eff:S.eff.map(e=>({...e})),pj:(S.pj||[]).map(e=>({...e})),log:S.log.slice(-6).map(l=>({...l}))
   };

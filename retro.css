@@ -2082,10 +2082,13 @@ body.dragging-joker #fx::after {
 }
 #prompt.ask {
   display: flex !important;
+  align-items: center;
+  gap: 10px;
   position: fixed;
   left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  top: auto;
+  bottom: clamp(16px, 2.6dvh, 28px);
+  transform: translateX(-50%);
   z-index: 32;
   margin: 0 !important;
   padding: 10px 24px;
@@ -2096,6 +2099,15 @@ body.dragging-joker #fx::after {
   font: 700 clamp(15px, 2.2dvh, 20px)/1.2 var(--mf) !important;
   color: #ffeaad !important;
   white-space: nowrap;
+}
+#fx .e.hl {
+  cursor: pointer !important;
+  z-index: 12 !important;
+  border-color: #ffe89e !important;
+  transform: scale(1.18);
+  box-shadow:
+    0 0 0 2px rgba(255, 232, 158, 0.85),
+    0 0 18px rgba(242, 210, 139, 0.95) !important;
 }
 
 /* Mobil ve Dar Ekran Uyumluluğu */
