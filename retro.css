@@ -1764,14 +1764,14 @@ body.dragging-joker #fx::after {
   padding-left: clamp(92px, 8.5vw, 128px) !important;
 }
 
-/* Sağ Kenardaki Rakip & Oyuncu Yuvarlak Satranç Saatleri + Halat Bağları */
+/* Sağ Kenardaki Rakip & Oyuncu Yuvarlak Satranç Saatleri */
 .side-clocks {
   position: absolute;
-  right: clamp(-112px, -7.6vw, -60px);
+  right: clamp(-126px, -8.4vw, -66px);
   top: 50%;
   transform: translateY(-50%);
-  width: clamp(74px, 11dvh, 94px);
-  height: clamp(210px, 33dvh, 280px);
+  width: clamp(88px, 13dvh, 112px);
+  height: clamp(220px, 34dvh, 290px);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1781,8 +1781,8 @@ body.dragging-joker #fx::after {
 }
 .side-clock {
   position: relative;
-  width: clamp(72px, 10.6dvh, 92px);
-  height: clamp(72px, 10.6dvh, 92px);
+  width: clamp(86px, 12.6dvh, 108px);
+  height: clamp(86px, 12.6dvh, 108px);
   padding: 4px;
   border-radius: 50%;
   background:
@@ -1808,90 +1808,29 @@ body.dragging-joker #fx::after {
   top: -8px;
   left: 50%;
   transform: translateX(-50%);
-  width: 14px;
+  width: 16px;
   height: 7px;
   border-radius: 4px 4px 1px 1px;
   background: linear-gradient(180deg, #d4a656, #6b4f23);
   border: 1.5px solid #1a1209;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.85);
 }
-/* Örgülü Halat Bağı (Saatten Pas Küresine) */
-.side-clock::after {
-  content: "";
-  position: absolute;
-  width: 9px;
-  height: clamp(28px, 5.2dvh, 52px);
-  border-radius: 5px;
-  background: repeating-linear-gradient(
-    45deg,
-    #8c6b3f 0px,
-    #ba935a 3px,
-    #4a351c 5px,
-    #6b502a 8px
-  );
-  border: 1px solid #1d140b;
-  box-shadow:
-    0 3px 8px rgba(0, 0, 0, 0.9),
-    inset 1px 0 2px rgba(255, 230, 175, 0.25),
-    inset -1px 0 2px rgba(0, 0, 0, 0.78);
-  pointer-events: none;
-  z-index: -1;
-  transition: background 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
-}
-.side-clock.opp::after {
-  top: 86%;
-  left: 16%;
-  transform-origin: top center;
-  transform: rotate(34deg);
-}
-.side-clock.mine::after {
-  bottom: 86%;
-  left: 16%;
-  transform-origin: bottom center;
-  transform: rotate(-34deg);
-}
 .side-clock .sc-val {
-  font: 800 clamp(24px, 3.6dvh, 32px)/1 var(--mf);
+  font: 800 clamp(28px, 4.2dvh, 38px)/1 var(--mf);
   color: #f3e6cc;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95);
   font-variant-numeric: tabular-nums;
 }
 .side-clock.opp.ticking {
   border-color: #d96b4e;
-  box-shadow: 0 0 16px rgba(217, 107, 78, 0.5), inset 0 1px 0 rgba(255, 200, 180, 0.2);
-}
-.side-clock.opp.ticking::after {
-  background: repeating-linear-gradient(
-    45deg,
-    #ff9c6e 0px,
-    #e05336 3px,
-    #8c2113 5px,
-    #c73c22 8px
-  );
-  border-color: #ff8c66;
-  box-shadow:
-    0 0 14px rgba(235, 88, 56, 0.92),
-    0 0 26px rgba(217, 70, 40, 0.55);
+  box-shadow: 0 0 18px rgba(217, 107, 78, 0.55), inset 0 1px 0 rgba(255, 200, 180, 0.2);
 }
 .side-clock.opp.ticking .sc-val {
   color: #ffb8a3;
 }
 .side-clock.mine.ticking {
   border-color: #eab354;
-  box-shadow: 0 0 16px rgba(234, 179, 84, 0.55), inset 0 1px 0 rgba(255, 236, 179, 0.22);
-}
-.side-clock.mine.ticking::after {
-  background: repeating-linear-gradient(
-    45deg,
-    #fff2b2 0px,
-    #eab354 3px,
-    #8f5812 5px,
-    #d49532 8px
-  );
-  border-color: #fde68a;
-  box-shadow:
-    0 0 14px rgba(234, 179, 84, 0.95),
-    0 0 26px rgba(245, 198, 92, 0.6);
+  box-shadow: 0 0 18px rgba(234, 179, 84, 0.6), inset 0 1px 0 rgba(255, 236, 179, 0.22);
 }
 .side-clock.mine.ticking .sc-val {
   color: #ffe89e;
@@ -2443,22 +2382,22 @@ body.dragging-joker #fx::after {
   #fx #pass {
     width: clamp(48px, 7.6dvh, 60px) !important;
     height: clamp(48px, 7.6dvh, 60px) !important;
-    margin-right: 50px !important;
+    margin-right: 58px !important;
     font-size: 10px !important;
     padding: 3px !important;
   }
   .side-clocks {
-    width: 44px;
-    height: 100px;
+    width: 52px;
+    height: 116px;
     right: 4px;
   }
   .side-clock {
-    width: 42px;
-    height: 42px;
+    width: 50px;
+    height: 50px;
     padding: 2px;
   }
   .side-clock .sc-val {
-    font-size: 16px !important;
+    font-size: 19px !important;
   }
   #fx .seal {
     width: clamp(72px, 10.8dvh, 92px) !important;
