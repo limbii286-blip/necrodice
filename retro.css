@@ -1238,7 +1238,17 @@ body.dragging-joker #fx::after {
   object-fit: cover;
   object-position: 50% 50%;
   z-index: 2;
-  cursor: default;
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+.who .av:hover {
+  transform: scale(1.06);
+}
+#zm .zi.sq {
+  border-radius: 50% 50% 24px 24px !important;
+  border: 4px solid #dfb764 !important;
+  box-shadow: 0 0 0 3px #120c08, 0 20px 54px rgba(0, 0, 0, 0.96) !important;
+  object-fit: cover;
 }
 
 .who .nm {
@@ -2059,6 +2069,7 @@ body.dragging-joker #fx::after {
 }
 #hand .jslot {
   position: relative;
+  z-index: 1;
   flex: none;
   width: clamp(60px, 9.6dvh, 88px);
   height: calc(clamp(60px, 9.6dvh, 88px) * 1.5);
@@ -2067,6 +2078,15 @@ body.dragging-joker #fx::after {
 #hand .jslot:nth-child(2),
 #hand .jslot:nth-child(3) {
   transform: translateY(-5px);
+}
+#hand .jslot:has(.j.hovered),
+#hand .jslot:has(.j.pinned) {
+  z-index: 90 !important;
+}
+#hand:has(.j.hovered) .jslot:not(:has(.j.hovered)) .j,
+#hand:has(.j.pinned) .jslot:not(:has(.j.pinned)) .j {
+  filter: blur(2.5px) brightness(0.62) !important;
+  transform: translateX(-50%) rotate(var(--r)) scale(0.94) !important;
 }
 #hand .j,
 #hand .spec-notice {
