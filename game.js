@@ -371,6 +371,7 @@ const GRACE_INIT=5;       // İlk düello ve geçişlerde jokerlere bakmak için
 function newBO3(S){
   S.dj=[];S.jdeck=shuf(range(24));S.hand=[S.jdeck.splice(0,4),S.jdeck.splice(0,4)];
   S.pts=[0,0];S.rounds=0;S.res=[];
+  S.hpUsed=[false,false];S.d20Bonus=[0,0];
   S.clocks=[DUEL_CLOCK_INIT,DUEL_CLOCK_INIT];
   S.clockMax=DUEL_CLOCK_INIT;
   S.graceLeft=GRACE_INIT;
@@ -379,6 +380,7 @@ function deal(S){
   S.deck=shuf(range(11).map(n=>({id:++S.u,n})));
   S.pl=[0,1].map(()=>({open:[S.deck.pop()],closed:[S.deck.pop()]}));
   S.eff=[];S.pj=[];S.jUsed=[0,0];S.jTurn=[0,0];S.noJ=[false,false];S.acted=false;S.turns=0;
+  S.hpMod=[0,0];S.oppPeek=[];
   S.turn=S.pl[0].open[0].n<S.pl[1].open[0].n?0:1;
   S.wait=false;S.rev=false;S.winSide=null;S.timeOut=[false,false];S.hadTimeout=false;S.dead=[];S.pa=[0,0];S.st={pb:0,ob:0,px:0};
   if(!Array.isArray(S.clocks)||S.clocks.length!==2){
@@ -394,6 +396,7 @@ function total(S,p,wc=true){
     if(cl){if(act(S,20))return 0;if(act(S,21))v*=2}return v};
   let t=0;S.pl[p].open.forEach(c=>t+=f(c,0));if(wc)S.pl[p].closed.forEach(c=>t+=f(c,1));
   S.eff.forEach(e=>{if(e.neg||e.o!=p)return;if(e.id==3)t+=5;if(e.id==4)t-=5;if(e.id==22)t+=e.s*S.deck.length});
+  if(S.hpMod&&S.hpMod[p])t+=S.hpMod[p];
   return t;
 }
 const TGS=new Set([8,9,10,11,19]),tgE=S=>S.eff.filter(e=>!e.neg&&TGS.has(e.id)).pop(),lowW=S=>{const e=tgE(S);return !!e&&e.id==19}; // hedef değiştirenlerden SON oynanan geçerli
@@ -575,6 +578,17 @@ function bot(){
     if(lock||(S.graceLeft&&S.graceLeft>0)){held=1;return setTimeout(step,150)} // menü/pencere açık veya 5sn hazırlık süresi: oyun bekler
     if(held){held=0;return setTimeout(step,500)} // kapanınca kısa bir nefes payı
     thinkOn=false;
+    if(S.hpUsed&&!S.hpUsed[1]){
+      const bh=avKey(S,1),bt=total(S,1),bT=tg(S),low=lowW(S);
+      if(bh==='c'&&!low&&(bt===bT-2||bt===bT+2||bt>bT)){
+        const dlt=bt>bT?-2:2;S.hpMod[1]=(S.hpMod[1]||0)+dlt;S.hpUsed[1]=true;S.acted=true;S.log.push({p:1,t:`Hileli Dokunuş kullandı (${dlt>0?'+2':'−2'})`});snd('play');R();return think(AFTER[DIFF]);
+      }else if(bh==='m'&&S.rounds>=1){
+        S.d20Bonus[1]=(S.d20Bonus[1]||0)+3;S.hpUsed[1]=true;S.log.push({p:1,t:'Kader Mühürü mühürlendi (+3 D20)'});snd('stamp');R();
+      }else if(bh==='u'&&!low&&bt>bT&&S.pl[1].open.length&&S.deck.length){
+        const hiC=S.pl[1].open.reduce((a,b)=>b.n>a.n?b:a,S.pl[1].open[0]);
+        execSwapDeckHeroPower(1,hiC.id);return think(AFTER[DIFF]);
+      }
+    }
     const a=plan?plan.a:(n++<8?(prm.mc?decideH:decide)(S,1,prm.mc?{...prm,K:90,ms:400}:prm):null);plan=null;pid++;
     if(!a){R();return pass()}
     S.acted=true;
@@ -836,7 +850,7 @@ function endRound(){
       if(j[0]!=j[1]){L=j[0]<j[1]?0:1;how='joker'}
       else{let x,y;do{x=d6()+d6();y=d6()+d6()}while(x==y);L=x<y?0:1;hx=[x,y];how='zar'}
     }
-    const th=TH[Math.min(S.bo,3)],roll=d20(),surv=roll>=th;
+    const th=TH[Math.min(S.bo,3)],rawRoll=d20(),hpB=(S.d20Bonus&&S.d20Bonus[L])||0,roll=Math.min(20,rawRoll+hpB),surv=roll>=th;
     const mk=(v,roll,surv)=>{return `Düelloyu ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısına göre)':how=='zar'?` (beraberlik zarı: ${hx[v]}–${hx[1-v]})`:''}.<br>Ölüm zarını ${L==v?'sen atıyorsun':'rakip atıyor'}:<div class="d20-box" data-roll="${roll}" data-dc="${th}" data-m="${L==v?1:0}" data-s="${surv?'ok':L==v?'death':'win'}">
       <div class="bg3-roll-card">
         <div class="bg3-card-border"></div>
@@ -851,7 +865,7 @@ function endRound(){
         </div>
         ${L==v?'<button id="rl" class="btn d20-btn">ÖLÜM ZARINI AT</button>':''}
       </div>
-    </div><div class="after"><b>Zar Sonucu: ${roll}</b><br>`+(surv?(L==v?'Kurtuldun! Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
+    </div><div class="after"><b>Zar Sonucu: ${roll}${hpB?` (${rawRoll}+${hpB} Kader Mühürü)`:''}</b><br>`+(surv?(L==v?'Kurtuldun! Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
     const full=v=>mk(v,roll,surv),rig=MODE=='bot'&&DIFF=='imp'&&L==1&&!surv&&!S.rigDone; // sahne oyun başına bir kez; ikinci ölümde gerçekten ölür
     if(surv||rig){const n=S.bo+2,ek=['a','e','ye','e','e','e','ya','ye','e','a'][n%10];
       const lb=`Düello ${n}'${ek} geç`,go=()=>{try{document.body.classList.remove('dead')}catch(e){}S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()};
@@ -877,14 +891,30 @@ function impSave(html,cont){ // BİLİNMEYEN ölecekken: zar düşer, sahne gire
 let entering=false;
 function veil(ms=2000){const v=document.createElement('div');v.className='veil';v.style.animationDuration=ms+'ms';v.style.setProperty('--ms',ms*.9+'ms');v.innerHTML=`<img alt="" src="${IMG.logo}"><b>limbigames</b><span class="ldb"><i></i></span>`;document.body.appendChild(v);setTimeout(()=>v.remove(),ms+100)}
 function enter(fn){if(entering)return;entering=true;veil();setMusic('game');setTimeout(()=>{$('#menu').hidden=true;entering=false;fn()},1700)}
-function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}G={u:0,bo:0,log:[],over:false,used:[],av:['t','c'],mast:[0,0]};prevAv[0]=prevAv[1]=undefined;newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
+let MY_HERO='t';
+const HEROES=[
+  {id:'t',name:'Tüccar',hpName:'Pazarlık',desc:'Destedeki en üst 2 karta gizlice bak; istersen yerlerini değiştir.'},
+  {id:'c',name:'Yozlaşmış Tüccar',hpName:'Hileli Dokunuş',desc:'Bu turda toplamına +2 veya −2 uygula.'},
+  {id:'p',name:'Veba Doktoru',hpName:'Kuzgun Gözü',desc:'Rakibin kapalı sayı kartına gizlice bak.'},
+  {id:'m',name:'Ölümün Efendisi',hpName:'Kader Mühürü',desc:'Bu düelloda D20 ölüm zarına +3 bonus kazan.'},
+  {id:'u',name:'Bilinmeyen',hpName:'Hiçlik Değişimi',desc:'Açık bir kartını desteden rastgele bir kartla değiştir.'}
+];
+const HERO_MAP=Object.fromEntries(HEROES.map(h=>[h.id,h]));
+const HP_IC={
+  t:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M5 7h14M6 7l-2 6h4l-2-6zm12 0l-2 6h4l-2-6z"/></svg>',
+  c:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></svg>',
+  p:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="3"/></svg>',
+  m:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 21 8.5 18 19 6 19 3 8.5"/><path d="M12 2v17M3 8.5h18"/></svg>',
+  u:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 3l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 21l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>'
+};
+function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}const oppH=MODE=='bot'?({easy:'t',med:'c',hard:'m',imp:'u'}[DIFF]||'c'):'c';G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],mast:[0,0]};prevAv[0]=prevAv[1]=undefined;newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
 
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
 let prevT=false,lastLk='',flipId=null,lastTot=[0,0],lastBust=false,prevSeal='',sayT='';
-const NAMES={t:'Tüccar',c:'Yozlaşmış Tüccar',m:'Ölümün Efendisi',u:'BİLİNMEYEN'};
-const avKey=(S,p)=>MODE=='bot'?(p==1?{easy:'t',med:'c',hard:'m',imp:'u'}[DIFF]:(S.mast&&S.mast[0]>=2?'m':S.mast&&S.mast[0]>=1?'c':'t')):(S.mast&&S.mast[p]?'m':(S.av&&S.av[p])||'t');
-const avSrc=k=>k?AV[k]:IMG.bn,oppName=()=>NAMES[avKey(G,1)]||'Rakip';
+const NAMES={t:'Tüccar',c:'Yozlaşmış Tüccar',p:'Veba Doktoru',m:'Ölümün Efendisi',u:'BİLİNMEYEN'};
+const avKey=(S,p)=>{if(p===0)return (S.hero&&S.hero[0])||MY_HERO||'t';if(MODE=='bot')return (S.hero&&S.hero[1])||{easy:'t',med:'c',hard:'m',imp:'u'}[DIFF];return (S.hero&&S.hero[p])||(S.av&&S.av[p])||'t'};
+const avSrc=k=>k==='p'?'plague_doctor.jpg?v=20261115_p1':(k?AV[k]:IMG.bn),oppName=()=>NAMES[avKey(G,1)]||'Rakip';
 const prevAv=[undefined,undefined],morphT=[0,0];
 const peek=new Set(),seen=new Set(),seenE=new Set(),DN={easy:1,med:2,hard:3,imp:5},DES=new Set([13,14,17]);
 const IC={
@@ -1089,7 +1119,12 @@ function R(){
   if(sc1){sc1.classList.toggle('ticking',S.turn==1&&!S.wait&&!(S.graceLeft>0)&&!oppTimeOut);sc1.classList.toggle('low',c1<=10&&c1>0);sc1.classList.toggle('out',oppTimeOut||c1<=0)}
   const oppHandHtml=`<div class="opp-jhand" title="Rakibin elindeki kapalı jokerler (${S.hand[1].length})">${S.hand[1].map((_,i)=>`<img class="oj" style="--r:${((i-(S.hand[1].length-1)/2)*4.5).toFixed(1)}deg" src="${IMG.bj}" alt="">`).join('')}</div>`;
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'')+(S.winSide!=null?(S.winSide>0?' round-lose':S.winSide===0?' round-tie':''):'');
-  setH('#opp',`${oppHandHtml}<div class="who">${av1}<div class="nm"><b>${p1Name}</b>${MODE=='bot'?'':'<span class="meta">Online</span>'}</div><div class="tot${obust?' bust':oexact?' exact':''}"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${oppClosedKnown?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!(S.rev||c.o!=null),S.rev)).join('')}</div>`);
+  const myHId=avKey(S,0),oppHId=avKey(S,1),hpUsed0=!!(S.hpUsed&&S.hpUsed[0]),hpUsed1=!!(S.hpUsed&&S.hpUsed[1]);
+  const hpObj0=HERO_MAP[myHId]||HEROES[0],hpObj1=HERO_MAP[oppHId]||HEROES[0];
+  const canHp=!isSpec&&my&&!P&&!hpUsed0&&MODE!=='guest';
+  const hpBtn0=isSpec?'':`<button id="hp-btn" class="hp-btn${hpUsed0?' used':canHp?' ready':''}" data-hp="1" title="${hpObj0.hpName}: ${hpObj0.desc}"${canHp?'':' disabled'}>${HP_IC[myHId]||HP_IC.t}<span class="hp-b">${hpUsed0?'✓':'1'}</span></button>`;
+  const hpBtn1=`<span class="hp-btn opp-hp${hpUsed1?' used':''}" title="${hpObj1.hpName}: ${hpObj1.desc}">${HP_IC[oppHId]||HP_IC.t}</span>`;
+  setH('#opp',`${oppHandHtml}<div class="who">${av1}${hpBtn1}<div class="nm"><b>${p1Name}</b>${MODE=='bot'?'':'<span class="meta">Online</span>'}</div><div class="tot${obust?' bust':oexact?' exact':''}"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${oppClosedKnown?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!(S.rev||c.o!=null||(S.oppPeek&&S.oppPeek.includes(c.id))),S.rev)).join('')}</div>`);
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<span class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${k=='eff'&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}"><img src="${IMG.j[e.id]}" alt=""></span>`};
   $('#deck b').textContent=S.deck.length;
   const drawLocked=S.eff.some(e=>e.id==23&&!e.neg&&e.o!=0);
@@ -1103,9 +1138,9 @@ function R(){
   setH('#seal',`<b>${low?'En az':T}</b>`);
   if(prevSeal&&prevSeal!=seal){sl.classList.remove('stamp');void sl.offsetWidth;sl.classList.add('stamp')}
   $('#me').className='zone'+(my?' act':'')+(S.winSide!=null?(S.winSide<0?' round-lose':S.winSide===0?' round-tie':''):'');
-  setH('#me',`<div class="who">${av0}<div class="nm"><b>${p0Name}</b></div><div class="tot${bust?' bust':exact?' exact':''}"><small>Toplam</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`);
+  setH('#me',`<div class="who">${av0}${hpBtn0}<div class="nm"><b>${p0Name}</b></div><div class="tot${bust?' bust':exact?' exact':''}"><small>Toplam</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`);
   $('#prompt').className=P?'ask':'';
-  setH('#prompt',P?`${J[P.id]}: ${KTXT[k]} ${k=='sign'?'<button class="btn sm" data-s="1">Ekle</button><button class="btn sm" data-s="-1">Çıkar</button>':''}<button class="btn sm alt" data-x="1">Vazgeç</button>`:'');
+  setH('#prompt',P?(P.hp==='u'?`Hiçlik Değişimi: ${KTXT[k]} <button class="btn sm alt" data-x="1">Vazgeç</button>`:`${J[P.id]}: ${KTXT[k]} ${k=='sign'?'<button class="btn sm" data-s="1">Ekle</button><button class="btn sm" data-s="-1">Çıkar</button>':''}<button class="btn sm alt" data-x="1">Vazgeç</button>`):'');
   const ends=(S.turns>0&&!S.acted)||oppTimeOut; // rakibin süresi bittiyse veya karşı taraf pas dediyse şimdi pas dersem tur biter
   $('#pass').disabled=isSpec||!(my&&!P);
   if(isSpec){
@@ -1139,8 +1174,70 @@ function R(){
   }
 }
 function doPlay(id,pk){const S=G;P=null;if(MODE=='guest'){conn.send({k:'play',id,pk});return R()}S.graceLeft=0;lrnAct(S,'j',id);play(S,0,id,pk);S.acted=true;S.log.push({p:0,t:`joker oynadı: ${J[id]}`});note(0,id,()=>{if(MODE=='bot')talk('react',1,.5);R()})}
-function pick(v){P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
+function pick(v){if(P&&P.hp==='u'){const id=v;P=null;return execSwapDeckHeroPower(0,id)}P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
 function startJoker(id){const ks=NEED[id]||[];if(ks.length){P={id,ks,pk:[]};R()}else doPlay(id,[])}
+function chooseHero(onPick){
+  lock=true;
+  const cards=HEROES.map(h=>`<button class="hero-pick-card${MY_HERO===h.id?' sel':''}" data-pick-hero="${h.id}">
+    <img class="hpc-av" src="${avSrc(h.id)}" alt="${h.name}">
+    <div class="hpc-name">${h.name}</div>
+    <div class="hpc-pw"><span class="hpc-ic">${HP_IC[h.id]}</span><b>${h.hpName}</b></div>
+    <p class="hpc-desc">${h.desc}</p>
+  </button>`).join('');
+  $('#mb').innerHTML=`<h3>Kahramanını Seç</h3><p class="hpc-sub">Her düelloda <b>1 kez</b> kullanabileceğin özel bir Hero Power kazanırsın.</p><div class="hero-grid">${cards}</div><div class="row"><button id="hp-cancel" class="btn alt sm">Geri</button></div>`;
+  $('#m').hidden=false;
+  $('#mb').querySelectorAll('[data-pick-hero]').forEach(btn=>btn.onclick=()=>{
+    const hid=btn.dataset.pickHero;
+    $('#m').hidden=true;lock=false;snd('play');onPick(hid);
+  });
+  $('#hp-cancel').onclick=()=>{$('#m').hidden=true;lock=false};
+}
+function execSwapDeckHeroPower(p,cardId){
+  const S=G;if(!S||!S.deck.length)return;
+  const idx=S.pl[p].open.findIndex(c=>c.id===cardId);
+  if(idx<0)return;
+  const old=S.pl[p].open[idx];
+  const rep=S.deck.pop();
+  S.pl[p].open[idx]=rep;
+  S.deck.push(old);
+  shuf(S.deck);
+  S.hpUsed[p]=true;S.acted=true;S.graceLeft=0;
+  S.log.push({p,t:`Hiçlik Değişimi kullandı (${old.n} → ${rep.n})`});
+  snd('flip');R();
+}
+function useHeroPower(){
+  const S=G;if(!S||S.over||S.wait||S.turn!==0||lock||P||(S.hpUsed&&S.hpUsed[0]))return;
+  const hid=avKey(S,0);
+  if(hid==='t'){
+    if(!S.deck.length)return box('<h3>Pazarlık</h3><p>Destede bakılacak kart kalmadı.</p>');
+    S.hpUsed[0]=true;S.graceLeft=0;snd('info');
+    const n=S.deck.length,c1=S.deck[n-1],c2=n>1?S.deck[n-2]:null;
+    const cardHtml=c=>`<div class="scry-card"><img src="${IMG.n[c.n]}" alt="${c.n}"><span>${c.n}</span></div>`;
+    box(`<h3>Pazarlık — Deste Üstü</h3><p>${c2?'En üstteki 2 kartı görüyorsun (soldaki sıradaki çekilecek kart). İstersen yerlerini değiştir:':'Destede yalnızca 1 kart kaldı:'}</p><div class="scry-row">${cardHtml(c1)}${c2?cardHtml(c2):''}</div>${c2?'<div class="row"><button id="scry-keep" class="btn sm">Sırayı Koru</button><button id="scry-swap" class="btn sm alt">Yerlerini Değiştir</button></div>':''}`, !c2);
+    if(c2){
+      $('#scry-keep').onclick=()=>{$('#m').hidden=true;lock=false;S.log.push({p:0,t:'Pazarlık kullandı (sırayı korudu)'});R()};
+      $('#scry-swap').onclick=()=>{S.deck[n-1]=c2;S.deck[n-2]=c1;$('#m').hidden=true;lock=false;snd('flip');S.log.push({p:0,t:'Pazarlık kullandı (sırayı değiştirdi)'});R()};
+    }
+  }else if(hid==='c'){
+    box(`<h3>Hileli Dokunuş</h3><p>Bu turda kendi toplamına hangisini uygulamak istersin?</p><div class="row"><button id="hp-p2" class="btn sm">+2 Ekle</button><button id="hp-m2" class="btn sm alt">−2 Çıkar</button></div>`, true);
+    $('#hp-p2').onclick=()=>{S.hpMod[0]=(S.hpMod[0]||0)+2;S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;$('#m').hidden=true;lock=false;snd('play');S.log.push({p:0,t:'Hileli Dokunuş kullandı (+2)'});R()};
+    $('#hp-m2').onclick=()=>{S.hpMod[0]=(S.hpMod[0]||0)-2;S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;$('#m').hidden=true;lock=false;snd('play');S.log.push({p:0,t:'Hileli Dokunuş kullandı (−2)'});R()};
+  }else if(hid==='p'){
+    if(!S.pl[1].closed.length)return;
+    S.oppPeek=S.pl[1].closed.map(c=>c.id);
+    S.hpUsed[0]=true;S.graceLeft=0;
+    S.log.push({p:0,t:'Kuzgun Gözü ile rakibin kapalı kartına baktı'});
+    snd('flip');R();
+  }else if(hid==='m'){
+    S.d20Bonus[0]=(S.d20Bonus[0]||0)+3;
+    S.hpUsed[0]=true;S.graceLeft=0;
+    S.log.push({p:0,t:'Kader Mühürü mühürlendi (+3 D20)'});
+    snd('stamp');R();
+  }else if(hid==='u'){
+    if(!S.pl[0].open.length||!S.deck.length)return;
+    P={hp:'u',ks:['my'],pk:[]};R();
+  }
+}
 function box(html,close=true){lock=true;$('#mb').innerHTML=html+(close?'<div class="row"><button id="pc" class="btn">Kapat</button></div>':'');$('#m').hidden=false;if(close)$('#pc').onclick=()=>{$('#m').hidden=true;lock=false;if(G)R()}}
 /* ---------- BÜYÜK GÖRÜNÜM: karakter, sayı kartı, kapalı kart ---------- */
 const HQ={};
@@ -1262,10 +1359,11 @@ document.addEventListener('click',e=>{
   if(!jClick){
     document.querySelectorAll('#hand .j.pinned').forEach(el=>el.classList.remove('pinned'));
   }
-  const S=G,t=e.target.closest&&e.target.closest('[data-c],[data-e],[data-j],[data-s],[data-x],[data-g],[data-av]');
+  const S=G,t=e.target.closest&&e.target.closest('[data-c],[data-e],[data-j],[data-s],[data-x],[data-g],[data-av],[data-hp]');
   if(lock||!t)return;
   if(t.dataset.g)return settings();
   if(!S||S.over)return;
+  if(t.dataset.hp)return useHeroPower();
   const k=P&&P.ks[P.pk.length],c=+t.dataset.c,u=+t.dataset.e;
   if(t.dataset.x){P=null;return R()}
   if(t.dataset.s)return pick(+t.dataset.s);
@@ -1587,7 +1685,7 @@ function joinRoom(){
   peer.on('error',e=>st(NETERR(e)));
 }
 const on=(id,f)=>{const e=document.querySelector(id);if(e)e.onclick=f}; // bir öğe yoksa diğer düğmeler yine de çalışır
-document.querySelectorAll('.d').forEach(b=>b.onclick=()=>{DIFF=b.dataset.d;MODE='bot';enter(start)});
+document.querySelectorAll('.d').forEach(b=>b.onclick=()=>{DIFF=b.dataset.d;MODE='bot';chooseHero(h=>{MY_HERO=h;enter(start)})});
 on('#b4',codex);on('#b5',guide);on('#b6',settings);
 try{if(RM)document.body.classList.add('rm');if(!CRT)document.documentElement.classList.add('nocrt')}catch(e){}
 try{$('#slogo').src=IMG.logo}catch(e){}setTimeout(()=>{const s=$('#splash');s&&s.remove()},2900);
