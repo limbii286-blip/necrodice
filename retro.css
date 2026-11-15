@@ -1410,7 +1410,6 @@ body.dragging-joker #fx::after {
     0 0 0 1px #0d0806,
     inset 0 0 0 1px rgba(255, 230, 175, 0.28) !important;
   transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.28s ease, filter 0.28s ease, border-color 0.24s ease !important;
-  will-change: transform;
   cursor: default;
 }
 .cards .c i {
@@ -2293,6 +2292,15 @@ body.dragging-joker #fx::after {
 }
 
 /* Tablet & Orta Dar Ekranlarda Saatlerin Taşmasını Önle */
+@media (max-width: 1240px) and (min-width: 761px) {
+  #hdr .hc {
+    top: calc(max(10px, env(safe-area-inset-top, 10px)) + 48px);
+    right: max(14px, env(safe-area-inset-right, 14px));
+    padding: 8px 14px;
+    gap: 10px;
+  }
+}
+
 @media (max-width: 960px) {
   .side-clocks {
     right: 6px;
