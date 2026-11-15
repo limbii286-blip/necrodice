@@ -358,26 +358,30 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı animas
 }
 
 /* ---------- MOTOR ---------- */
-const DUEL_CLOCK_INIT=66; // Satranç saati: düello başında iki tarafın da 66 saniyesi vardır
+const DUEL_CLOCK_INIT=99; // Satranç saati: düello başında iki tarafın da 99 saniyesi vardır
+const ONLINE_CLOCK_INIT=99;
+const initClockSec=()=>((MODE==='host'||MODE==='guest'||MODE==='spectator')?ONLINE_CLOCK_INIT:DUEL_CLOCK_INIT);
 const GRACE_INIT=5;       // İlk düello ve geçişlerde jokerlere bakmak için 5 saniye hazırlık süresi
 function newBO3(S){
+  const cs=initClockSec();
   S.dj=[];S.jdeck=shuf(range(24));S.hand=[S.jdeck.splice(0,4),S.jdeck.splice(0,4)];
   S.pts=[0,0];S.rounds=0;S.res=[];
   S.hpUsed=[false,false];S.d20Bonus=[0,0];
-  S.clocks=[DUEL_CLOCK_INIT,DUEL_CLOCK_INIT];
-  S.clockMax=DUEL_CLOCK_INIT;
+  S.clocks=[cs,cs];
+  S.clockMax=cs;
   S.graceLeft=GRACE_INIT;
 }
 function deal(S){
   S.deck=shuf(range(11).map(n=>({id:++S.u,n})));
   S.pl=[0,1].map(()=>({open:[S.deck.pop()],closed:[S.deck.pop()]}));
   S.eff=[];S.pj=[];S.jUsed=[0,0];S.jTurn=[0,0];S.noJ=[false,false];S.acted=false;S.turns=0;
-  S.hpMod=[0,0];S.oppPeek=[];
+  S.hpMod=[0,0];S.oppPeek=[];S.oppPeek1=[];
   S.turn=S.pl[0].open[0].n<S.pl[1].open[0].n?0:1;
   S.wait=false;S.rev=false;S.winSide=null;S.timeOut=[false,false];S.hadTimeout=false;S.dead=[];S.pa=[0,0];S.st={pb:0,ob:0,px:0};
   if(!Array.isArray(S.clocks)||S.clocks.length!==2){
-    S.clocks=[DUEL_CLOCK_INIT,DUEL_CLOCK_INIT];
-    S.clockMax=DUEL_CLOCK_INIT;
+    const cs=initClockSec();
+    S.clocks=[cs,cs];
+    S.clockMax=cs;
   }
   S.graceLeft=GRACE_INIT;
   S.log.push({p:-1,t:`— Tur ${S.rounds+1} —`},{p:S.turn,t:'başlıyor (küçük açık kart)'});
@@ -898,11 +902,11 @@ function endRound(){
       </div>
     </div><div class="after"><b>Zar Sonucu: ${roll}${hpB?` (${rawRoll}+${hpB} Kader Mühürü)`:''}</b><br>`+(surv?(L==v?'Kurtuldun! Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
     const full=v=>mk(v,roll,surv),rig=MODE=='bot'&&DIFF=='imp'&&L==1&&!surv&&!S.rigDone; // sahne oyun başına bir kez; ikinci ölümde gerçekten ölür
-    const uRev=L===0&&avKey(S,0)==='u'&&!surv&&!(S.uRevived&&S.uRevived[0]);
+    const uRev=(MODE==='host'?(L===0||L===1):L===0)&&avKey(S,L)==='u'&&!surv&&!(S.uRevived&&S.uRevived[L]);
     if(surv||rig||uRev){const n=S.bo+2;
       const lb=`Düello ${n} ile devam et`,go=()=>{try{document.body.classList.remove('dead')}catch(e){}S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()};
       if(rig){S.rigDone=true;S.hpUsed[1]=true;impSave(mk(0,1,false),()=>M(mk(0,20,true),lb,go))}
-      else if(uRev){S.uRevived=S.uRevived||[false,false];S.uRevived[0]=true;S.hpUsed[0]=true;impSave(mk(0,roll,false),()=>M(mk(0,20,true),lb,go),'Hiçlik seni geri çevirdi… Bir kez daha ölümden döndün!')}
+      else if(uRev){S.uRevived=S.uRevived||[false,false];S.uRevived[L]=true;S.hpUsed[L]=true;impSave(mk(0,roll,false),()=>MM(v=>mk(v,20,true),lb,go),'Hiçlik seni geri çevirdi… Bir kez daha ölümden döndün!')}
       else MM(full,lb,go)}
     else{S.over=true;lrnGame(L==0);MM(full,'Yeniden oyna',start,null,true)}
   }
@@ -925,7 +929,7 @@ function impSave(html,cont,msg='Bu kadar kolay olacağını mı sandın? Bu oyun
 let entering=false;
 function veil(ms=2000){const v=document.createElement('div');v.className='veil';v.style.animationDuration=ms+'ms';v.style.setProperty('--ms',ms*.9+'ms');v.innerHTML=`<img alt="" src="${IMG.logo}"><b>limbigames</b><span class="ldb"><i></i></span>`;document.body.appendChild(v);setTimeout(()=>v.remove(),ms+100)}
 function enter(fn){if(entering)return;entering=true;veil();setMusic('game');setTimeout(()=>{$('#menu').hidden=true;entering=false;fn()},1700)}
-let MY_HERO='t';
+let MY_HERO='t',OPP_HERO='c';
 const HEROES=[
   {id:'t',name:'Tüccar',hpName:'Pazarlık',desc:'Destedeki en üst 2 karta gizlice bak; istersen yerlerini değiştir.'},
   {id:'c',name:'Yozlaşmış Tüccar',hpName:'Hileli Dokunuş',desc:'Bu turda toplamına +2 veya −2 uygula.'},
@@ -941,7 +945,7 @@ const HP_IC={
   m:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 21 8.5 18 19 6 19 3 8.5"/><path d="M12 2v17M3 8.5h18"/></svg>',
   u:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 3l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 21l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>'
 };
-function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}const oppH=MODE=='bot'?({easy:'t',med:'c',hard:'m',imp:'u'}[DIFF]||'c'):'c';G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],mast:[0,0]};prevAv[0]=prevAv[1]=undefined;newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
+function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}const oppH=MODE=='bot'?({easy:'t',med:'c',hard:'m',imp:'u'}[DIFF]||'c'):(OPP_HERO||'c');G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],mast:[0,0]};prevAv[0]=prevAv[1]=undefined;newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
 
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
@@ -1142,10 +1146,12 @@ function R(){
     const el=(now-morphT[p])/1000,mo=morphT[p]&&el<1.1;return `<img class="av${mo?' morph':''}" data-av="${p}"${mo?` style="animation-delay:-${el.toFixed(2)}s"`:''} src="${avSrc(k)}" alt="">`};
   const av0=avh(0),av1=avh(1);
   const p0Char=NAMES[avKey(S,0)]||'Tüccar';
+  const p1Char=NAMES[avKey(S,1)]||'Yozlaşmış Tüccar';
   const p0Name=isSpec?`${p0Char} (Oda Sahibi)`:p0Char;
-  const p1Name=isSpec?'Yozlaşmış Tüccar (Misafir)':(MODE=='guest'?'Yozlaşmış Tüccar (Sen)':(MODE=='host'?'Yozlaşmış Tüccar (Rakip)':(MODE=='bot'||S.av?oppName():'Rakip')));
+  const p1Name=isSpec?`${p1Char} (Misafir)`:(MODE=='guest'?`${p1Char} (Oda Sahibi)`:(MODE=='host'?`${p1Char} (Rakip)`:(MODE=='bot'||S.av?oppName():'Rakip')));
   const oppTimeOut=!!(S.timeOut&&S.timeOut[1]),meTimeOut=!!(S.timeOut&&S.timeOut[0]);
-  const c0=Math.ceil(S.clocks?S.clocks[0]:66),c1=Math.ceil(S.clocks?S.clocks[1]:66);
+  const defClock=initClockSec();
+  const c0=Math.ceil(S.clocks?S.clocks[0]:defClock),c1=Math.ceil(S.clocks?S.clocks[1]:defClock);
   const sc0=$('#sc-0'),sc1=$('#sc-1'),scSec0=$('#sc-sec-0'),scSec1=$('#sc-sec-1');
   if(scSec0)scSec0.textContent=String(c0);
   if(scSec1)scSec1.textContent=String(c1);
@@ -1155,9 +1161,9 @@ function R(){
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'')+(S.winSide!=null?(S.winSide>0?' round-lose':S.winSide===0?' round-tie':''):'');
   const myHId=avKey(S,0),oppHId=avKey(S,1);
   const hpUsed0=myHId==='u'?!!(S.uRevived&&S.uRevived[0]):myHId==='m'?false:!!(S.hpUsed&&S.hpUsed[0]);
-  const hpUsed1=oppHId==='u'?!!S.rigDone:oppHId==='m'?false:!!(S.hpUsed&&S.hpUsed[1]);
+  const hpUsed1=oppHId==='u'?!!(MODE==='bot'?S.rigDone:(S.uRevived&&S.uRevived[1])):oppHId==='m'?false:!!(S.hpUsed&&S.hpUsed[1]);
   const hpObj0=HERO_MAP[myHId]||HEROES[0],hpObj1=HERO_MAP[oppHId]||HEROES[0];
-  const canHp=!isSpec&&!hpObj0.passive&&my&&!P&&!hpUsed0&&MODE!=='guest';
+  const canHp=!isSpec&&!hpObj0.passive&&my&&!P&&!hpUsed0;
   const hpBtn0=isSpec?'':`<button id="hp-btn" class="hp-btn${hpObj0.passive?' passive':''}${hpUsed0?' used':canHp?' ready':''}" data-hp="1" data-hp-id="${myHId}" data-hp-side="0"${canHp?'':' disabled'}>${HP_IC[myHId]||HP_IC.t}</button>`;
   const hpBtn1=`<span class="hp-btn opp-hp${hpObj1.passive?' passive':''}${hpUsed1?' used':''}" data-hp-id="${oppHId}" data-hp-side="1">${HP_IC[oppHId]||HP_IC.t}</span>`;
   setH('#opp',`${oppHandHtml}<div class="who">${av1}${hpBtn1}<div class="nm"><b>${p1Name}</b>${MODE=='bot'?'':'<span class="meta">Online</span>'}</div><div class="tot${obust?' bust':oexact?' exact':''}"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${oppClosedKnown?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!(S.rev||c.o!=null||(S.oppPeek&&S.oppPeek.includes(c.id))),S.rev)).join('')}</div>`);
@@ -1222,7 +1228,7 @@ function R(){
 function doPlay(id,pk){const S=G;P=null;if(MODE=='guest'){conn.send({k:'play',id,pk});return R()}S.graceLeft=0;lrnAct(S,'j',id);play(S,0,id,pk);S.acted=true;S.log.push({p:0,t:`joker oynadı: ${J[id]}`});note(0,id,()=>{if(MODE=='bot')talk('react',1,.5);R()})}
 function pick(v){if(P&&P.hp==='u'){const id=v;P=null;return execSwapDeckHeroPower(0,id)}P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
 function startJoker(id){const ks=NEED[id]||[];if(ks.length){P={id,ks,pk:[]};R()}else doPlay(id,[])}
-function chooseHero(onPick){
+function chooseHero(onPick,onCancel){
   lock=true;
   const cards=HEROES.map(h=>`<button class="hero-pick-card${MY_HERO===h.id?' sel':''}" data-pick-hero="${h.id}">
     <div class="hpc-art"><img class="hpc-av" src="${avSrc(h.id)}" alt="${h.name}"></div>
@@ -1238,7 +1244,18 @@ function chooseHero(onPick){
     const hid=btn.dataset.pickHero;
     $('#m').hidden=true;lock=false;snd('play');onPick(hid);
   });
-  $('#hp-cancel').onclick=()=>{$('#m').hidden=true;lock=false};
+  $('#hp-cancel').onclick=()=>{$('#m').hidden=true;lock=false;onCancel&&onCancel()};
+}
+function showScryModal(c1,c2,onKeep,onSwap){
+  const cardHtml=c=>`<div class="scry-card"><img src="${IMG.n[c.n]}" alt="${c.n}"><span>${c.n}</span></div>`;
+  box(`<h3>Pazarlık — Deste Üstü</h3><p>${c2?'En üstteki 2 kartı görüyorsun (soldaki sıradaki çekilecek kart). İstersen yerlerini değiştir:':'Destede yalnızca 1 kart kaldı:'}</p><div class="scry-row">${cardHtml(c1)}${c2?cardHtml(c2):''}</div>${c2?'<div class="row"><button id="scry-keep" class="btn sm">Sırayı Koru</button><button id="scry-swap" class="btn sm alt">Yerlerini Değiştir</button></div>':''}`, !c2);
+  if(c2){
+    $('#scry-keep').onclick=()=>{$('#m').hidden=true;lock=false;onKeep()};
+    $('#scry-swap').onclick=()=>{$('#m').hidden=true;lock=false;snd('flip');onSwap()};
+  }else if($('#pc')){
+    const oldClose=$('#pc').onclick;
+    $('#pc').onclick=()=>{oldClose&&oldClose();onKeep()};
+  }
 }
 function execSwapDeckHeroPower(p,cardId){
   const S=G;if(!S||!S.deck.length)return;
@@ -1258,20 +1275,23 @@ function useHeroPower(){
   const hid=avKey(S,0);
   if(hid==='t'){
     if(!S.deck.length)return box('<h3>Pazarlık</h3><p>Destede bakılacak kart kalmadı.</p>');
+    if(MODE==='guest'){snd('info');return conn.send({k:'hp_scry'})}
     S.hpUsed[0]=true;S.graceLeft=0;snd('info');
     const n=S.deck.length,c1=S.deck[n-1],c2=n>1?S.deck[n-2]:null;
-    const cardHtml=c=>`<div class="scry-card"><img src="${IMG.n[c.n]}" alt="${c.n}"><span>${c.n}</span></div>`;
-    box(`<h3>Pazarlık — Deste Üstü</h3><p>${c2?'En üstteki 2 kartı görüyorsun (soldaki sıradaki çekilecek kart). İstersen yerlerini değiştir:':'Destede yalnızca 1 kart kaldı:'}</p><div class="scry-row">${cardHtml(c1)}${c2?cardHtml(c2):''}</div>${c2?'<div class="row"><button id="scry-keep" class="btn sm">Sırayı Koru</button><button id="scry-swap" class="btn sm alt">Yerlerini Değiştir</button></div>':''}`, !c2);
-    if(c2){
-      $('#scry-keep').onclick=()=>{$('#m').hidden=true;lock=false;S.log.push({p:0,t:'Pazarlık kullandı (sırayı korudu)'});R()};
-      $('#scry-swap').onclick=()=>{S.deck[n-1]=c2;S.deck[n-2]=c1;$('#m').hidden=true;lock=false;snd('flip');S.log.push({p:0,t:'Pazarlık kullandı (sırayı değiştirdi)'});R()};
-    }
+    showScryModal(c1,c2,()=>{S.log.push({p:0,t:'Pazarlık kullandı (sırayı korudu)'});R()},()=>{S.deck[n-1]=c2;S.deck[n-2]=c1;S.log.push({p:0,t:'Pazarlık kullandı (sırayı değiştirdi)'});R()});
   }else if(hid==='c'){
     box(`<h3>Hileli Dokunuş</h3><p>Bu turda kendi toplamına hangisini uygulamak istersin?</p><div class="row"><button id="hp-p2" class="btn sm">+2 Ekle</button><button id="hp-m2" class="btn sm alt">−2 Çıkar</button></div>`, true);
-    $('#hp-p2').onclick=()=>{S.hpMod[0]=(S.hpMod[0]||0)+2;S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;$('#m').hidden=true;lock=false;snd('play');S.log.push({p:0,t:'Hileli Dokunuş kullandı (+2)'});R()};
-    $('#hp-m2').onclick=()=>{S.hpMod[0]=(S.hpMod[0]||0)-2;S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;$('#m').hidden=true;lock=false;snd('play');S.log.push({p:0,t:'Hileli Dokunuş kullandı (−2)'});R()};
+    const applyMod=dlt=>{
+      $('#m').hidden=true;lock=false;snd('play');
+      if(MODE==='guest')return conn.send({k:'hp_mod',delta:dlt});
+      S.hpMod[0]=(S.hpMod[0]||0)+dlt;S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
+      S.log.push({p:0,t:`Hileli Dokunuş kullandı (${dlt>0?'+2':'−2'})`});R();
+    };
+    $('#hp-p2').onclick=()=>applyMod(2);
+    $('#hp-m2').onclick=()=>applyMod(-2);
   }else if(hid==='p'){
     if(!S.pl[1].closed.length)return;
+    if(MODE==='guest'){snd('flip');return conn.send({k:'hp_peek'})}
     S.oppPeek=S.pl[1].closed.map(c=>c.id);
     S.hpUsed[0]=true;
     snd('flip');R();
@@ -1439,15 +1459,15 @@ $('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE=='guest')conn.send({k:'
 let MODE='bot',peer,conn,spectators=[],specCount=0,waitM=false;
 const MAX_SPECTATORS = 5;
 function view(S){ // rakibe gidecek, gizli bilgisi temizlenmiş ve aynalanmış durum
-  const f=a=>[a[1],a[0]];
-  return {av:[S.av[1],S.av[0]],mast:[S.mast[1],S.mast[0]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:1-S.turn,clocks:S.clocks?f(S.clocks):[66,66],clockMax:S.clockMax||66,graceLeft:S.graceLeft||0,timeOut:S.timeOut?f(S.timeOut):[false,false],hadTimeout:!!S.hadTimeout,pts:f(S.pts),rev:S.rev,winSide:S.winSide==null?null:-S.winSide,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),jTurn:S.jTurn?f(S.jTurn):[0,0],noJ:f(S.noJ),
+  const f=a=>[a[1],a[0]],pk1=S.oppPeek1||[];
+  return {av:f(S.av),hero:S.hero?f(S.hero):f(S.av),hpUsed:S.hpUsed?f(S.hpUsed):[false,false],hpMod:S.hpMod?f(S.hpMod):[0,0],uRevived:S.uRevived?f(S.uRevived):[false,false],oppPeek:pk1,mast:f(S.mast),turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:1-S.turn,clocks:S.clocks?f(S.clocks):[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?f(S.timeOut):[false,false],hadTimeout:!!S.hadTimeout,pts:f(S.pts),rev:S.rev,winSide:S.winSide==null?null:-S.winSide,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),jTurn:S.jTurn?f(S.jTurn):[0,0],noJ:f(S.noJ),
     hand:[S.hand[1],S.hand[0].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
-    pl:[S.pl[1],{open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:c.o}))}],
+    pl:[S.pl[1],{open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:(S.rev||pk1.includes(c.id))?c.n:0,o:c.o}))}],
     eff:S.eff.map(e=>({...e,o:1-e.o})),pj:(S.pj||[]).map(e=>({...e,o:1-e.o})),log:S.log.slice(-6).map(l=>({...l,p:l.p<0?-1:1-l.p}))};
 }
 function specView(S){ // izleyicilere gidecek durum (0 = host/oda sahibi, 1 = misafir oyuncu, kapalı kartlar rev olmadan görünmez)
   return {
-    av:[S.av[0],S.av[1]],mast:[S.mast[0],S.mast[1]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:S.turn,clocks:S.clocks?[...S.clocks]:[66,66],clockMax:S.clockMax||66,graceLeft:S.graceLeft||0,timeOut:S.timeOut?[...S.timeOut]:[false,false],hadTimeout:!!S.hadTimeout,pts:S.pts,rev:S.rev,winSide:S.winSide,res:S.res,jUsed:S.jUsed,jTurn:S.jTurn?[...S.jTurn]:[0,0],noJ:S.noJ,
+    av:[S.av[0],S.av[1]],hero:S.hero?[...S.hero]:[S.av[0],S.av[1]],hpUsed:S.hpUsed?[...S.hpUsed]:[false,false],hpMod:S.hpMod?[...S.hpMod]:[0,0],uRevived:S.uRevived?[...S.uRevived]:[false,false],mast:[S.mast[0],S.mast[1]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:S.turn,clocks:S.clocks?[...S.clocks]:[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?[...S.timeOut]:[false,false],hadTimeout:!!S.hadTimeout,pts:S.pts,rev:S.rev,winSide:S.winSide,res:S.res,jUsed:S.jUsed,jTurn:S.jTurn?[...S.jTurn]:[0,0],noJ:S.noJ,
     hand:[S.hand[0].map(()=>0),S.hand[1].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
     pl:[
       {open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:c.o}))},
@@ -1470,8 +1490,8 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     fromConn.send({
       k: 'slots_info',
       slots: {
-        p0: { name: 'Tüccar', role: 'Oda Sahibi', busy: true },
-        p1: { name: 'Yozlaşmış Tüccar', role: 'Misafir Oyuncu', busy: guestBusy }
+        p0: { name: NAMES[MY_HERO]||'Tüccar', hero: MY_HERO||'t', role: 'Oda Sahibi', busy: true },
+        p1: { name: guestBusy?(NAMES[OPP_HERO]||'Misafir'):'Boş Slot', hero: guestBusy?(OPP_HERO||'c'):'c', role: 'Misafir Oyuncu', busy: guestBusy }
       },
       specCount: spectators.length
     });
@@ -1482,6 +1502,7 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
       if(!conn || !conn.open){
         conn = fromConn;
         fromConn._role = 'player';
+        OPP_HERO = (m.hero && HERO_MAP[m.hero]) ? m.hero : 'c';
         fromConn.send({k:'role', role:'player'});
         const ls=$('#lobbyStatus');if(ls)ls.textContent='Rakip bağlandı! Oyun başlıyor…';
         setTimeout(()=>{
@@ -1518,6 +1539,33 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     const id=m.id,ks=NEED[id]||[],pk=m.pk||[];
     if(!playable(S,1,id)||pk.length!=ks.length||!ks.every((k,i)=>opts(S,1,k).includes(pk[i])))return;
     S.graceLeft=0;play(S,1,id,pk);S.acted=true;S.log.push({p:1,t:`joker oynadı: ${J[id]}`});note(1,id,R);
+  }
+  else if(m.k=='hp_scry'){
+    if(avKey(S,1)!=='t'||(S.hpUsed&&S.hpUsed[1])||!S.deck.length)return;
+    S.hpUsed[1]=true;S.graceLeft=0;
+    const n=S.deck.length,c1=S.deck[n-1],c2=n>1?S.deck[n-2]:null;
+    fromConn.send({k:'hp_scry_res',c1,c2});
+    R();
+  }
+  else if(m.k=='hp_scry_done'){
+    if(avKey(S,1)!=='t')return;
+    const n=S.deck.length;
+    if(m.swap&&n>1){const tmp=S.deck[n-1];S.deck[n-1]=S.deck[n-2];S.deck[n-2]=tmp;S.log.push({p:1,t:'Pazarlık kullandı (sırayı değiştirdi)'})}
+    else S.log.push({p:1,t:'Pazarlık kullandı (sırayı korudu)'});
+    R();
+  }
+  else if(m.k=='hp_mod'){
+    if(avKey(S,1)!=='c'||(S.hpUsed&&S.hpUsed[1]))return;
+    const dlt=m.delta>0?2:-2;
+    S.hpMod[1]=(S.hpMod[1]||0)+dlt;S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
+    S.log.push({p:1,t:`Hileli Dokunuş kullandı (${dlt>0?'+2':'−2'})`});
+    R();
+  }
+  else if(m.k=='hp_peek'){
+    if(avKey(S,1)!=='p'||(S.hpUsed&&S.hpUsed[1])||!S.pl[0].closed.length)return;
+    S.oppPeek1=S.pl[0].closed.map(c=>c.id);
+    S.hpUsed[1]=true;
+    R();
   }
 }
 function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
@@ -1567,6 +1615,9 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
     snd(m.sd);
   }
   else if(m.k=='j')cast(m.p,m.id,R);
+  else if(m.k=='hp_scry_res'){
+    showScryModal(m.c1,m.c2,()=>{if(conn&&conn.open)conn.send({k:'hp_scry_done',swap:false})},()=>{if(conn&&conn.open)conn.send({k:'hp_scry_done',swap:true})});
+  }
 }
 const st=t=>$('#st').textContent=t;
 const NETERR=e=>({'network':1,'server-error':1,'socket-error':1,'socket-closed':1})[e.type]?'Sunucuya ulaşılamadı. İnternet bağlantını kontrol et.':e.type=='peer-unavailable'?'Oda bulunamadı':'Hata: '+e.type;
@@ -1648,7 +1699,7 @@ function showJoinModal(slots, specCount){
       <div class="slot-list">
         <div class="slot-card">
           <div class="slot-info">
-            <img class="slot-av" src="${avSrc('t')}" alt="Tüccar">
+            <img class="slot-av" src="${avSrc(p0.hero||'t')}" alt="${p0.name}">
             <div class="slot-names">
               <b>${p0.name}</b>
               <small>1. Oyuncu · ${p0.role}</small>
@@ -1659,7 +1710,7 @@ function showJoinModal(slots, specCount){
         
         <div class="slot-card">
           <div class="slot-info">
-            <img class="slot-av" src="${avSrc('c')}" alt="Yozlaşmış Tüccar">
+            <img class="slot-av" src="${avSrc(p1.hero||'c')}" alt="${p1.name}">
             <div class="slot-names">
               <b>${p1.name}</b>
               <small>2. Oyuncu · ${p1.role}</small>
@@ -1683,9 +1734,15 @@ function showJoinModal(slots, specCount){
   const bp = $('#btnJoinPlayer');
   if(bp && p1Free){
     bp.onclick = () => {
-      bp.disabled = true;
-      bp.textContent = 'Bağlanılıyor…';
-      if(conn && conn.open) conn.send({k:'join_as', role:'player'});
+      chooseHero(h => {
+        MY_HERO = h;
+        if(conn && conn.open){
+          st('Odaya katılınıyor…');
+          conn.send({k:'join_as', role:'player', hero:h});
+        }
+      }, () => {
+        if(conn && conn.open) showJoinModal(slots, specCount);
+      });
     };
   }
 
@@ -1744,7 +1801,7 @@ document.addEventListener('keydown',e=>{
 });
 try{if(RM)document.body.classList.add('rm');if(!CRT)document.documentElement.classList.add('nocrt')}catch(e){}
 try{$('#slogo').src=IMG.logo}catch(e){}setTimeout(()=>{const s=$('#splash');s&&s.remove()},2900);
-on('#b2',hostRoom);on('#b3',joinRoom);
+on('#b2',()=>{if(noNet())return;chooseHero(h=>{MY_HERO=h;hostRoom()})});on('#b3',joinRoom);
 
 /* ---------- SÜRÜKLENEBİLİR KARTLAR İÇİN ORTAK SMOOTH LERP DÖNGÜSÜ ---------- */
 function createSmoothDragLoop(onFrame){
@@ -2438,8 +2495,9 @@ function createSmoothDragLoop(onFrame){
       return;
     }
     if(!Array.isArray(G.clocks)||G.clocks.length!==2){
-      G.clocks=[DUEL_CLOCK_INIT,DUEL_CLOCK_INIT];
-      G.clockMax=DUEL_CLOCK_INIT;
+      const cs=initClockSec();
+      G.clocks=[cs,cs];
+      G.clockMax=cs;
     }
     if(!Array.isArray(G.timeOut)) G.timeOut=[false,false];
 
