@@ -1281,8 +1281,11 @@ body.dragging-joker #fx::after {
 .who .tot b,
 .who .pq {
   font: 800 clamp(26px, 4.2dvh, 38px)/1 var(--mf) !important;
+  font-style: normal !important;
   color: #f7e6c4 !important;
   text-shadow: 0 2px 6px #000, 0 0 12px rgba(230, 190, 110, 0.35) !important;
+  display: inline-flex;
+  align-items: center;
 }
 .who .tot.bust b {
   color: var(--blood2) !important;
@@ -1294,9 +1297,9 @@ body.dragging-joker #fx::after {
 }
 .who .tl {
   display: flex;
-  align-items: baseline;
-  justify-content: flex-start !important;
-  gap: 6px;
+  align-items: center;
+  justify-content: center !important;
+  gap: 5px;
 }
 
 .who .jbs {
