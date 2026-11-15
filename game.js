@@ -763,12 +763,12 @@ function heroAttack(winIdx){
 
   const anim=clone.animate([
     {transform:'translate3d(0,0,0) scale(1) rotate(0deg)',offset:0},
-    {transform:`translate3d(${(-dx*0.09).toFixed(1)}px,${(-dy*0.09).toFixed(1)}px,0) scale(1.16) rotate(-4deg)`,offset:0.18},
-    {transform:`translate3d(${(dx*0.48).toFixed(1)}px,${(dy*0.48).toFixed(1)}px,0) scale(1.26) rotate(3deg)`,offset:0.38},
-    {transform:`translate3d(${(dx*0.92).toFixed(1)}px,${(dy*0.92).toFixed(1)}px,0) scale(1.22) rotate(0deg)`,offset:0.48},
-    {transform:`translate3d(${(dx*0.84).toFixed(1)}px,${(dy*0.84).toFixed(1)}px,0) scale(1.14) rotate(0deg)`,offset:0.58},
+    {transform:`translate3d(${(-dx*0.10).toFixed(1)}px,${(-dy*0.10).toFixed(1)}px,0) scale(1.22) rotate(-5deg)`,offset:0.24},
+    {transform:`translate3d(${(dx*0.42).toFixed(1)}px,${(dy*0.42).toFixed(1)}px,0) scale(1.28) rotate(3deg)`,offset:0.40},
+    {transform:`translate3d(${(dx*0.92).toFixed(1)}px,${(dy*0.92).toFixed(1)}px,0) scale(1.24) rotate(0deg)`,offset:0.50},
+    {transform:`translate3d(${(dx*0.84).toFixed(1)}px,${(dy*0.84).toFixed(1)}px,0) scale(1.16) rotate(0deg)`,offset:0.58},
     {transform:'translate3d(0,0,0) scale(1) rotate(0deg)',offset:1}
-  ],{duration:760,easing:'cubic-bezier(0.22,1,0.36,1)',fill:'forwards'});
+  ],{duration:1850,easing:'cubic-bezier(0.22,1,0.36,1)',fill:'forwards'});
 
   setTimeout(()=>{
     if(!dstAv.isConnected)return;
@@ -785,8 +785,8 @@ function heroAttack(winIdx){
     dmg.style.top=(r2.top+r2.height/2)+'px';
     document.body.appendChild(imp);
     document.body.appendChild(dmg);
-    setTimeout(()=>{imp.remove();dmg.remove()},1050);
-  },365);
+    setTimeout(()=>{imp.remove();dmg.remove()},1250);
+  },925);
 
   anim.onfinish=()=>{
     clone.remove();
@@ -814,7 +814,7 @@ function endRound(){
       // 3) Yerdeki bütün sayı kartları tozlaşır gibi yok olur, sonra diğer tura geçilir
       dustTableCards();
       setTimeout(()=>{if(S!==G)return;lock=false;fin()},820);
-    },r!==0?2100:1800);
+    },r!==0?2400:1800);
   },750);
   function fin(){
     S.winSide=null;

@@ -1084,24 +1084,24 @@ html::after {
   transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 #hdr .pip.now {
-  border-color: #b5a792;
+  border-color: #cfc0a8;
   background: transparent;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.65);
 }
 #hdr .pip.w {
-  border-color: #3f6b49;
-  background: #264d32;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45);
+  border-color: #52a86c;
+  background: #2e7d47;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 #hdr .pip.l {
-  border-color: #7c3535;
-  background: #5c1f22;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45);
+  border-color: #cf4e54;
+  background: #9e242a;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 #hdr .pip.d {
-  background: #4b4744;
-  border-color: #6b655f;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45);
+  background: #635d56;
+  border-color: #8f877d;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 #hdr .hg .gear {
@@ -1460,6 +1460,26 @@ body.dragging-joker #fx::after {
 .cards .c.n {
   border: 2px solid #9e7f46 !important;
   filter: sepia(0.36) saturate(0.84) brightness(0.90) contrast(1.08) hue-rotate(-8deg);
+}
+.cards .c:not(.n):not(.bk) {
+  background:
+    radial-gradient(circle at 50% 32%, #312042 0%, #1c1226 68%, #0f0915 100%) !important;
+  border: 2px solid #c084fc !important;
+  color: #f6d58e !important;
+  font: 900 clamp(44px, 6.2dvh, 60px)/1 var(--mf) !important;
+  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.95), 0 0 14px rgba(192, 132, 252, 0.45) !important;
+  box-shadow:
+    0 4px 0 #3d2259,
+    0 12px 24px rgba(0, 0, 0, 0.94),
+    0 0 18px rgba(192, 132, 252, 0.35),
+    inset 0 0 0 1px rgba(233, 213, 255, 0.25) !important;
+}
+.cards .c:not(.n):not(.bk) i {
+  right: 6px;
+  bottom: 4px;
+  font: 800 15px/1 var(--mf) !important;
+  color: #d8b4fe;
+  text-shadow: 0 1px 3px #000;
 }
 .cards .c.bk {
   border-color: #b8323c !important;
@@ -2419,6 +2439,9 @@ body.dragging-joker #fx::after {
     width: clamp(52px, min(14.5vw, 9.8dvh), 72px) !important;
     height: calc(clamp(52px, min(14.5vw, 9.8dvh), 72px) * 1.44) !important;
     font-size: clamp(22px, min(5.8vw, 4dvh), 32px) !important;
+  }
+  .cards .c:not(.n):not(.bk) {
+    font-size: clamp(30px, min(7.8vw, 5.4dvh), 44px) !important;
   }
   #fx .ctl {
     padding: 0 2px;
