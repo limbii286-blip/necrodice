@@ -1945,12 +1945,12 @@ body.dragging-joker #fx::after {
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
   cursor: default;
 }
-/* Sadece kartın üst tarafındaki ikon/illüstrasyon yuvarlak içinde görünür */
+/* Sadece kartın üst-orta bölümündeki ana ikon tam ortalanarak yuvarlak kırpılır */
 #fx .e img {
-  width: 142% !important;
+  width: 140% !important;
   height: auto !important;
   aspect-ratio: 2 / 3;
-  margin-top: -12% !important;
+  margin-top: -22% !important;
   display: block;
   pointer-events: none;
   user-select: none;
