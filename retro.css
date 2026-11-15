@@ -2297,15 +2297,33 @@ body.dragging-joker #fx::after {
 
 /* Mobil ve Dar Ekran Uyumluluğu */
 @media (max-width: 760px) {
+  #lor-valley-bg {
+    background: #070508 url('board_gothic_mobile.jpg?v=20261116_m1') center / cover no-repeat;
+  }
   #mb2 {
-    width: 95vw !important;
-    padding: 14px 12px !important;
+    width: min(94vw, 430px) !important;
+    padding: 14px 12px 12px !important;
+    gap: 8px !important;
   }
   #mb2 .dr {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+  }
+  #mb2 .hs-join-row {
+    gap: 6px !important;
+  }
+  #mb2 #code {
+    width: 124px !important;
+    font-size: 14px !important;
   }
   #mb2 .hs-drawer {
-    grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+  #mb2 .hs-drawer .btn {
+    padding: 8px 4px !important;
+    font-size: 11px !important;
+    letter-spacing: 0.3px !important;
   }
   #mb {
     max-width: 94vw !important;
@@ -2314,105 +2332,115 @@ body.dragging-joker #fx::after {
     padding: 14px 12px !important;
   }
   .zone {
-    width: calc(100vw - 12px) !important;
-    padding: 4px 6px !important;
+    width: calc(100vw - 10px) !important;
+    padding: 2px 4px !important;
+    gap: clamp(8px, 1.5dvh, 14px) !important;
   }
   #fx {
     width: calc(100vw - 10px) !important;
-    height: clamp(64px, 10.5dvh, 84px) !important;
+    height: clamp(58px, 8.6dvh, 74px) !important;
     padding: 0 4px !important;
   }
   #hdr {
     top: max(6px, env(safe-area-inset-top, 6px));
     left: 6px;
     right: 6px;
-    gap: 6px;
+    gap: 4px;
     align-items: center;
+    justify-content: space-between;
   }
   #hdr .hs.sks {
-    padding: 4px 7px;
-    gap: 5px;
+    padding: 3px 6px;
+    gap: 4px;
+    border-radius: 9px;
   }
   #hdr .hs.sks::before {
-    left: 14px;
-    right: 14px;
+    left: 10px;
+    right: 10px;
   }
   .sk {
-    min-width: 20px;
+    min-width: 18px;
     padding: 2px;
-    font-size: 13px !important;
+    font-size: 12px !important;
   }
   .sk small {
-    font-size: 10px !important;
+    font-size: 9.5px !important;
   }
   #hdr .hc {
     position: static !important;
-    margin-left: auto;
-    padding: 4px 8px;
-    gap: 5px;
+    margin-left: 0;
+    padding: 4px 7px;
+    gap: 4px;
+    border-radius: 8px;
   }
   #hdr .lab {
-    font-size: 11px !important;
-    letter-spacing: 0.6px;
+    font-size: 10px !important;
+    letter-spacing: 0.4px;
   }
   #hdr .pip {
-    width: 12px !important;
-    height: 12px !important;
+    width: 11px !important;
+    height: 11px !important;
+  }
+  #hdr .hg {
+    gap: 4px !important;
   }
   #hdr .hg .gear {
-    padding: 5px 8px;
-    font-size: 11px;
+    padding: 5px 7px;
+    font-size: 10.5px;
+    letter-spacing: 0.4px;
   }
   #opp.zone {
-    padding-top: calc(max(6px, env(safe-area-inset-top, 6px)) + 34px) !important;
+    padding-top: calc(max(6px, env(safe-area-inset-top, 6px)) + 44px) !important;
   }
   .opp-jhand {
-    top: 2px !important;
+    position: relative;
+    top: 0 !important;
+    margin: 0 !important;
     gap: 4px !important;
-    min-height: 44px !important;
+    min-height: 38px !important;
   }
   .opp-jhand .oj {
     width: auto !important;
-    height: 42px !important;
+    height: 38px !important;
   }
   .who {
     min-width: 0 !important;
-    width: min(92vw, 340px);
+    width: min(94vw, 356px);
     padding: 4px 10px;
     gap: 8px;
   }
   .who .av {
-    width: clamp(44px, 6.8dvh, 58px) !important;
-    height: clamp(44px, 6.8dvh, 58px) !important;
+    width: clamp(40px, 6dvh, 52px) !important;
+    height: clamp(40px, 6dvh, 52px) !important;
     margin: -4px 0 -2px !important;
   }
   .who .nm {
     min-width: 0;
   }
   .who .nm b {
-    font-size: clamp(13px, 3.4vw, 16px) !important;
+    font-size: clamp(12px, 3.2vw, 15px) !important;
   }
   .who .tot {
-    min-width: 54px !important;
-    padding: 3px 8px !important;
+    min-width: 50px !important;
+    padding: 3px 7px !important;
   }
   .who .tot b,
   .who .tot .pq {
-    font-size: clamp(20px, 3.2dvh, 26px) !important;
+    font-size: clamp(18px, 3dvh, 24px) !important;
   }
   .cards {
-    gap: 6px !important;
+    gap: 5px !important;
   }
   .cards .gap {
-    width: 6px !important;
+    width: 5px !important;
   }
   .cards .c {
-    width: clamp(54px, min(15vw, 10.2dvh), 76px) !important;
-    height: calc(clamp(54px, min(15vw, 10.2dvh), 76px) * 1.45) !important;
-    font-size: clamp(22px, min(5.8vw, 4dvh), 32px) !important;
+    width: clamp(46px, min(13.2vw, 8.8dvh), 64px) !important;
+    height: calc(clamp(46px, min(13.2vw, 8.8dvh), 64px) * 1.45) !important;
+    font-size: clamp(20px, min(5.2vw, 3.6dvh), 28px) !important;
   }
   .cards .c:not(.n):not(.bk) {
-    font-size: clamp(30px, min(7.8vw, 5.4dvh), 44px) !important;
+    font-size: clamp(26px, min(6.8vw, 4.6dvh), 38px) !important;
   }
   #fx .ctl {
     padding: 0 2px;
@@ -2422,56 +2450,63 @@ body.dragging-joker #fx::after {
     margin-left: 2px;
   }
   #fx .deck {
-    width: clamp(54px, min(15vw, 10.2dvh), 76px) !important;
-    height: calc(clamp(54px, min(15vw, 10.2dvh), 76px) * 1.45) !important;
+    width: clamp(46px, min(13.2vw, 8.8dvh), 64px) !important;
+    height: calc(clamp(46px, min(13.2vw, 8.8dvh), 64px) * 1.45) !important;
+  }
+  #fx .deck b {
+    top: calc(100% + 5px) !important;
+    font-size: 12px !important;
+    padding: 2px 7px !important;
   }
   #fx #pass {
-    width: clamp(48px, 7.6dvh, 60px) !important;
-    height: clamp(48px, 7.6dvh, 60px) !important;
-    margin-right: 58px !important;
-    font-size: 10px !important;
+    width: clamp(44px, 6.8dvh, 54px) !important;
+    height: clamp(44px, 6.8dvh, 54px) !important;
+    margin-right: 54px !important;
+    font-size: 9.5px !important;
     padding: 3px !important;
   }
   .side-clocks {
-    width: 52px;
-    height: 116px;
-    right: 4px;
+    width: 48px;
+    height: 104px;
+    right: 2px;
   }
   .side-clock {
-    width: 50px;
-    height: 50px;
+    width: 46px;
+    height: 46px;
     padding: 2px;
   }
   .side-clock .sc-val {
-    font-size: 19px !important;
+    font-size: 17px !important;
   }
   #fx .seal {
-    width: clamp(50px, 7.6dvh, 62px) !important;
-    height: clamp(50px, 7.6dvh, 62px) !important;
+    width: clamp(46px, 7dvh, 58px) !important;
+    height: clamp(46px, 7dvh, 58px) !important;
   }
   #fx .seal b {
-    font-size: clamp(18px, 2.8dvh, 24px) !important;
+    font-size: clamp(16px, 2.6dvh, 22px) !important;
   }
   #fx .jh.o {
-    padding-right: 54px !important;
+    padding-right: 50px !important;
   }
   #fx .jh.m {
-    padding-left: 54px !important;
+    padding-left: 50px !important;
   }
   #fx .e {
-    width: 28px !important;
-    height: 28px !important;
+    width: 26px !important;
+    height: 26px !important;
   }
   #me.zone {
-    padding-bottom: clamp(78px, 12.5dvh, 108px) !important;
+    padding-bottom: clamp(78px, 12.2dvh, 102px) !important;
   }
   #hand {
-    gap: 6px !important;
-    padding: 4px 8px max(4px, env(safe-area-inset-bottom, 4px)) !important;
+    bottom: max(6px, env(safe-area-inset-bottom, 6px)) !important;
+    gap: 5px !important;
+    padding: 2px 6px 0 !important;
+    max-width: calc(100vw - 8px) !important;
   }
   #hand .jslot {
-    width: clamp(46px, 12vw, 64px);
-    height: calc(clamp(46px, 12vw, 64px) * 1.5);
+    width: clamp(44px, 11.5vw, 58px);
+    height: calc(clamp(44px, 11.5vw, 58px) * 1.5);
   }
   #hand .j:not(.dim):not(.drag-source-hidden):hover,
   #hand .j.pinned:not(.drag-source-hidden),
@@ -3022,6 +3057,11 @@ body.dragging-joker #fx::after {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 8px;
     overflow-x: visible;
+  }
+  .hero-pick-card:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    max-width: 56%;
+    justify-self: center;
   }
   .hpc-art {
     aspect-ratio: 4 / 3;

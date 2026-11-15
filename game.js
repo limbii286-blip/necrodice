@@ -2332,8 +2332,16 @@ function createSmoothDragLoop(onFrame){
 
   const menuImg=new Image();
   let menuImgLoaded=false;
+  let isMobileMenuBg=false;
+  function pickMenuImg(){
+    const wantMobile=window.innerWidth<=760||window.innerHeight>window.innerWidth*1.15;
+    if(wantMobile===isMobileMenuBg&&menuImg.src)return;
+    isMobileMenuBg=wantMobile;
+    menuImgLoaded=false;
+    menuImg.src=wantMobile?'menu_gothic_mobile.jpg?v=20261116_m1':'menu_gothic.jpg?v=20261114_sanctum1';
+  }
   menuImg.onload=()=>{menuImgLoaded=true;};
-  menuImg.src='menu_gothic.jpg?v=20261114_sanctum1';
+  pickMenuImg();
 
   const motes=[];
   for(let i=0;i<52;i++){
@@ -2356,6 +2364,7 @@ function createSmoothDragLoop(onFrame){
     cvs.width=Math.round(W*DPR);
     cvs.height=Math.round(H*DPR);
     ctx.setTransform(DPR,0,0,DPR,0,0);
+    pickMenuImg();
   }
   window.addEventListener('resize',resize);
   resize();
@@ -2373,7 +2382,8 @@ function createSmoothDragLoop(onFrame){
         const dx=(W-dw)*0.5, dy=(H-dh)*0.5;
         ctx.drawImage(menuImg, dx, dy, dw, dh);
 
-        // Görseldeki büyü kitabının üzerindeki sabit yazıyı ("Oyna / Koleksiyon / Macera") temiz deri dokusu ve parlayan rün mührüyle ört
+        // Görseldeki büyü kitabının üzerindeki sabit yazıyı ("Oyna / Koleksiyon / Macera") yalnızca masaüstü görselinde ört
+        if(!isMobileMenuBg){
         ctx.save();
         ctx.beginPath();
         ctx.moveTo(dx + dw*0.365, dy + dh*0.640);
@@ -2407,6 +2417,7 @@ function createSmoothDragLoop(onFrame){
         ctx.textBaseline = 'middle';
         ctx.fillText('ᛟ', 0, 0);
         ctx.restore();
+        }
 
         // Ortadaki büyük Gotik vitray pencereden süzülen hareketli ay ışığı huzmeleri
         ctx.save();
