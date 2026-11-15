@@ -1052,7 +1052,7 @@ function R(){
   if(isSpec){
     setH('#hand',`<div class="spec-notice">👁️ Canlı Maç Yayını · İzleyici Modundasın</div>`);
   }else{
-    setH('#hand',S.hand[0].map((id,i)=>`<span class="jslot"><img class="j${my&&!P&&playable(S,0,id)?'':' dim'}" style="--r:${((i-(n-1)/2)*5).toFixed(1)}deg" data-j="${id}" src="${IMG.j[id]}" alt=""></span>`).join(''));
+    setH('#hand',S.hand[0].map((id,i)=>`<span class="jslot"><img class="j${my&&!P&&playable(S,0,id)?'':' dim'}" draggable="false" style="--r:${((i-(n-1)/2)*5).toFixed(1)}deg" data-j="${id}" src="${IMG.j[id]}" alt=""></span>`).join(''));
     document.querySelectorAll('#hand .j[data-j]').forEach(im=>hi(im,+im.dataset.j));
   }
   count(document.querySelector('#me .tot b'),lastTot[0],mt);count(document.querySelector('#opp .tot b'),lastTot[1],ot);lastTot=[mt,ot];
@@ -1526,29 +1526,50 @@ try{if(RM)document.body.classList.add('rm');if(!CRT)document.documentElement.cla
 try{$('#slogo').src=IMG.logo}catch(e){}setTimeout(()=>{const s=$('#splash');s&&s.remove()},2900);
 on('#b2',hostRoom);on('#b3',joinRoom);
 
+/* ---------- SÜRÜKLENEBİLİR KARTLAR İÇİN ORTAK SMOOTH LERP DÖNGÜSÜ ---------- */
+function createSmoothDragLoop(onFrame){
+  let rafId=0,lastTs=0,curX=0,curY=0,targetX=0,targetY=0,tilt=0,curScale=1,targetScale=1.08;
+  function tick(ts){
+    const dt=lastTs?Math.min(0.05,Math.max(0.001,(ts-lastTs)/1000)):0.016;
+    lastTs=ts;
+    const posAlpha=1-Math.exp(-28*dt);
+    const tiltAlpha=1-Math.exp(-18*dt);
+    const scaleAlpha=1-Math.exp(-20*dt);
+    const dx=targetX-curX,dy=targetY-curY;
+    curX+=dx*posAlpha;
+    curY+=dy*posAlpha;
+    const targetTilt=Math.max(-14,Math.min(14,dx*0.42));
+    tilt+=(targetTilt-tilt)*tiltAlpha;
+    curScale+=(targetScale-curScale)*scaleAlpha;
+    if(onFrame(curX,curY,tilt,curScale)===false){rafId=0;return}
+    rafId=requestAnimationFrame(tick);
+  }
+  return {
+    start(x,y,startScale=1,endScale=1.08){
+      curX=targetX=x;curY=targetY=y;tilt=0;curScale=startScale;targetScale=endScale;lastTs=0;
+      if(!rafId)rafId=requestAnimationFrame(tick);
+    },
+    move(x,y){targetX=x;targetY=y},
+    setScale(s){targetScale=s},
+    stop(){if(rafId){cancelAnimationFrame(rafId);rafId=0}lastTs=0}
+  };
+}
+
 /* ---------- DESTEDEN TIKLAYARAK VEYA SÜRÜKLEYEREK KART ÇEKME (SMOOTH LERP) ---------- */
 (function initDeckDragDraw(){
-  let dragging=false,pointerId=null,startX=0,startY=0,ghost=null,rafId=0;
-  let targetX=0,targetY=0,curX=0,curY=0,velX=0;
+  let dragging=false,pointerId=null,startX=0,startY=0,ghost=null;
+  const loop=createSmoothDragLoop((x,y,tilt,sc)=>{
+    if(!dragging||!ghost)return false;
+    ghost.style.transform=`translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) translate(-50%, -50%) rotate(${tilt.toFixed(2)}deg) scale(${sc.toFixed(3)})`;
+  });
 
   function canDrawNow(){
     const S=G;
     return !!(S&&!S.over&&!lock&&!P&&S.turn==0&&!S.wait&&MODE!=='spectator'&&canDraw(S,0));
   }
 
-  function step(){
-    if(!dragging||!ghost){rafId=0;return}
-    const dx=targetX-curX, dy=targetY-curY;
-    curX+=dx*0.38;
-    curY+=dy*0.38;
-    velX=velX*0.65+dx*0.35;
-    const tilt=Math.max(-14,Math.min(14,velX*0.35));
-    ghost.style.transform=`translate3d(${curX.toFixed(1)}px, ${curY.toFixed(1)}px, 0) translate(-50%, -50%) rotate(${tilt.toFixed(2)}deg) scale(1.08)`;
-    rafId=requestAnimationFrame(step);
-  }
-
   function cleanup(){
-    if(rafId){cancelAnimationFrame(rafId);rafId=0}
+    loop.stop();
     if(ghost){ghost.remove();ghost=null}
     document.body.classList.remove('dragging-deck');
     dragging=false;pointerId=null;
@@ -1566,29 +1587,29 @@ on('#b2',hostRoom);on('#b3',joinRoom);
     try{window.getSelection&&window.getSelection().removeAllRanges&&window.getSelection().removeAllRanges()}catch(err){}
     dragging=false;
     pointerId=e.pointerId;
-    startX=curX=targetX=e.clientX;
-    startY=curY=targetY=e.clientY;
-    velX=0;
+    startX=e.clientX;
+    startY=e.clientY;
     try{dk.setPointerCapture(e.pointerId)}catch(err){}
   });
 
   document.addEventListener('pointermove',e=>{
     if(pointerId==null||e.pointerId!==pointerId)return;
-    targetX=e.clientX;
-    targetY=e.clientY;
-    const dx=targetX-startX,dy=targetY-startY;
+    const dx=e.clientX-startX,dy=e.clientY-startY;
     if(!dragging&&Math.hypot(dx,dy)>8){
       dragging=true;
       document.body.classList.add('dragging-deck');
       ghost=document.createElement('div');
       ghost.className='deck-drag-ghost';
       ghost.style.backgroundImage=`url("${IMG.bn}")`;
-      ghost.style.transform=`translate3d(${curX.toFixed(1)}px, ${curY.toFixed(1)}px, 0) translate(-50%, -50%) scale(1.08)`;
+      ghost.style.transform=`translate3d(${e.clientX.toFixed(2)}px, ${e.clientY.toFixed(2)}px, 0) translate(-50%, -50%) scale(1)`;
       document.body.appendChild(ghost);
-      if(!rafId)rafId=requestAnimationFrame(step);
+      loop.start(e.clientX,e.clientY,1,1.08);
     }
     if(dragging&&ghost){
-      ghost.classList.toggle('ready',e.clientY > window.innerHeight*0.50);
+      loop.move(e.clientX,e.clientY);
+      const ready=e.clientY > window.innerHeight*0.50;
+      ghost.classList.toggle('ready',ready);
+      loop.setScale(ready?1.12:1.08);
     }
   });
 
@@ -1601,12 +1622,16 @@ on('#b2',hostRoom);on('#b3',joinRoom);
 
   document.addEventListener('pointerup',e=>finish(e,false));
   document.addEventListener('pointercancel',e=>finish(e,true));
+  window.addEventListener('blur',cleanup);
 })();
 
-/* ---------- JOKER SÜRÜKLE-BIRAK & TIKLAYINCA OYNAMA (SMOOTH LERP) ---------- */
+/* ---------- JOKER SÜRÜKLE-BIRAK & TIKLAYINCA OYNAMA (SMOOTH GHOST LERP) ---------- */
 (function initJokerDragAndDrop(){
-  let dragEl=null,dragId=0,startX=0,startY=0,isDragging=false,pointerId=null,rafId=0;
-  let targetDx=0,targetDy=0,curDx=0,curDy=0,velX=0;
+  let dragEl=null,ghost=null,dragId=0,startX=0,startY=0,isDragging=false,pointerId=null;
+  const loop=createSmoothDragLoop((x,y,tilt,sc)=>{
+    if(!isDragging||!ghost)return false;
+    ghost.style.transform=`translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) translate(-50%, -50%) rotate(${tilt.toFixed(2)}deg) scale(${sc.toFixed(3)})`;
+  });
 
   function canPlayJoker(id){
     const S=G;
@@ -1617,27 +1642,10 @@ on('#b2',hostRoom);on('#b3',joinRoom);
     return clientY < window.innerHeight * 0.72;
   }
 
-  function step(){
-    if(!dragEl||!isDragging){rafId=0;return}
-    const ddx=targetDx-curDx, ddy=targetDy-curDy;
-    curDx+=ddx*0.42;
-    curDy+=ddy*0.42;
-    velX=velX*0.65+ddx*0.35;
-    const rot=Math.max(-14,Math.min(14,velX*0.35));
-    dragEl.style.setProperty('--drag-x',curDx.toFixed(1)+'px');
-    dragEl.style.setProperty('--drag-y',curDy.toFixed(1)+'px');
-    dragEl.style.setProperty('--drag-rot',rot.toFixed(2)+'deg');
-    rafId=requestAnimationFrame(step);
-  }
-
   function cleanupDrag(){
-    if(rafId){cancelAnimationFrame(rafId);rafId=0}
-    if(dragEl){
-      dragEl.classList.remove('is-dragging','drop-hot');
-      dragEl.style.removeProperty('--drag-x');
-      dragEl.style.removeProperty('--drag-y');
-      dragEl.style.removeProperty('--drag-rot');
-    }
+    loop.stop();
+    if(ghost){ghost.remove();ghost=null}
+    if(dragEl){dragEl.classList.remove('drag-source-hidden','is-dragging','drop-hot')}
     document.body.classList.remove('dragging-joker','drop-ready');
     dragEl=null;dragId=0;isDragging=false;pointerId=null;
   }
@@ -1648,13 +1656,12 @@ on('#b2',hostRoom);on('#b3',joinRoom);
     if(!jEl)return;
     const id=+jEl.dataset.j;
     if(!canPlayJoker(id))return;
+    e.preventDefault();
+    try{window.getSelection&&window.getSelection().removeAllRanges&&window.getSelection().removeAllRanges()}catch(err){}
     dragEl=jEl;
     dragId=id;
     startX=e.clientX;
     startY=e.clientY;
-    targetDx=curDx=0;
-    targetDy=curDy=0;
-    velX=0;
     isDragging=false;
     pointerId=e.pointerId;
     try{jEl.setPointerCapture(e.pointerId)}catch(err){}
@@ -1662,18 +1669,27 @@ on('#b2',hostRoom);on('#b3',joinRoom);
 
   document.addEventListener('pointermove',e=>{
     if(!dragEl||e.pointerId!==pointerId)return;
-    targetDx=e.clientX-startX;
-    targetDy=e.clientY-startY;
-    if(!isDragging&&Math.hypot(targetDx,targetDy)>8){
+    const dx=e.clientX-startX,dy=e.clientY-startY;
+    if(!isDragging&&Math.hypot(dx,dy)>8){
       isDragging=true;
       dragEl.classList.remove('pinned','hovered');
-      dragEl.classList.add('is-dragging');
+      dragEl.classList.add('drag-source-hidden');
       document.body.classList.add('dragging-joker');
-      if(!rafId)rafId=requestAnimationFrame(step);
+      ghost=document.createElement('img');
+      ghost.className='joker-drag-ghost';
+      ghost.draggable=false;
+      ghost.alt='';
+      ghost.src=dragEl.currentSrc||dragEl.src||IMG.j[dragId]||'';
+      hi(ghost,dragId);
+      ghost.style.transform=`translate3d(${e.clientX.toFixed(2)}px, ${e.clientY.toFixed(2)}px, 0) translate(-50%, -50%) scale(1)`;
+      document.body.appendChild(ghost);
+      loop.start(e.clientX,e.clientY,1,1.08);
     }
-    if(isDragging){
+    if(isDragging&&ghost){
+      loop.move(e.clientX,e.clientY);
       const hot=isOverDropZone(e.clientY);
-      dragEl.classList.toggle('drop-hot',hot);
+      ghost.classList.toggle('ready',hot);
+      loop.setScale(hot?1.14:1.08);
       document.body.classList.toggle('drop-ready',hot);
     }
   });
@@ -1695,6 +1711,7 @@ on('#b2',hostRoom);on('#b3',joinRoom);
 
   document.addEventListener('pointerup',e=>finishPointer(e,false));
   document.addEventListener('pointercancel',e=>finishPointer(e,true));
+  window.addEventListener('blur',cleanupDrag);
 })();
 
 /* ---------- ELDEKİ JOKERLERDE İMLEÇ ALTI KOLAY GEÇİŞ (SLOT BAZLI HOVER) ---------- */
