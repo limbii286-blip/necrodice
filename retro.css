@@ -2226,10 +2226,16 @@ body.dragging-joker #fx::after {
   .who .tot .pq {
     font-size: clamp(20px, 3.2dvh, 26px) !important;
   }
+  .cards {
+    gap: 6px !important;
+  }
+  .cards .gap {
+    width: 6px !important;
+  }
   .cards .c {
-    width: clamp(40px, 11vw, 56px) !important;
-    height: calc(clamp(40px, 11vw, 56px) * 1.44) !important;
-    font-size: clamp(18px, 4.6vw, 26px) !important;
+    width: clamp(52px, min(14.5vw, 9.8dvh), 72px) !important;
+    height: calc(clamp(52px, min(14.5vw, 9.8dvh), 72px) * 1.44) !important;
+    font-size: clamp(22px, min(5.8vw, 4dvh), 32px) !important;
   }
   #fx .ctl {
     padding: 0 2px;
