@@ -320,24 +320,17 @@ body:has(#menu:not([hidden])) #fl {
   font: 700 clamp(13px, 1.85dvh, 16px)/1.1 var(--mf) !important;
   letter-spacing: 0.8px !important;
   border-radius: 7px !important;
-  border: 2px solid #9e733b !important;
+  border: 1.5px solid #8a6432 !important;
   background:
-    repeating-linear-gradient(
-      178deg,
-      rgba(255, 220, 170, 0.04) 0px,
-      rgba(255, 220, 170, 0.04) 2px,
-      rgba(0, 0, 0, 0.09) 2px,
-      rgba(0, 0, 0, 0.09) 5px
-    ),
-    linear-gradient(180deg, #6d4726 0%, #4b2f17 52%, #36200f 100%) !important;
+    linear-gradient(rgba(16, 10, 5, 0.24), rgba(10, 6, 3, 0.38)),
+    url('wood_plank.jpg?v=20261115_w1') center / 100% 100% no-repeat !important;
   color: #fae8c8 !important;
-  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.95), 0 1px 0 rgba(0, 0, 0, 0.8) !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.96), 0 1px 1px rgba(0, 0, 0, 0.9) !important;
   text-transform: none !important;
   box-shadow:
-    0 4px 0 #170c05,
+    0 4px 0 #140b04,
     0 7px 14px rgba(0, 0, 0, 0.88),
-    inset 0 1px 0 rgba(255, 224, 175, 0.34),
-    inset 0 -3px 0 rgba(0, 0, 0, 0.45) !important;
+    inset 0 1px 0 rgba(255, 224, 175, 0.25) !important;
   transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease !important;
 }
 #mb2 .dr .btn:hover,
@@ -432,36 +425,39 @@ body:has(#menu:not([hidden])) #fl {
   font: 700 17px/1.1 var(--mf) !important;
   letter-spacing: 1px !important;
   text-transform: none;
-  color: #f5e6c8 !important;
+  color: #fae8c8 !important;
   padding: 10px 22px 9px;
-  border: 1.5px solid #a88752 !important;
+  border: 1.5px solid #8a6432 !important;
   border-radius: 7px !important;
-  background: linear-gradient(180deg, #4a2338 0%, #26101e 100%) !important;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9) !important;
+  background:
+    linear-gradient(rgba(16, 10, 5, 0.24), rgba(10, 6, 3, 0.38)),
+    url('wood_plank.jpg?v=20261115_w1') center / 100% 100% no-repeat !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.96) !important;
   box-shadow:
-    0 4px 0 #09060d,
+    0 4px 0 #140b04,
     0 6px 16px rgba(0, 0, 0, 0.85),
-    inset 0 1px 0 rgba(255, 225, 195, 0.28),
-    inset 0 -3px 0 rgba(0, 0, 0, 0.5) !important;
+    inset 0 1px 0 rgba(255, 225, 195, 0.25) !important;
   cursor: pointer;
   transition: transform 0.15s ease, filter 0.15s ease, border-color 0.15s ease;
 }
 .btn:hover:not(:disabled) {
   filter: brightness(1.12);
-  border-color: #e2be78 !important;
+  border-color: #fde68a !important;
   transform: translateY(-1px);
 }
 .btn:active:not(:disabled) {
   transform: translateY(2px);
 }
 .btn.alt {
-  background: linear-gradient(180deg, #282236 0%, #14111d 100%) !important;
-  border-color: #756394 !important;
-  color: #ebe0f5 !important;
+  background:
+    linear-gradient(rgba(16, 10, 5, 0.32), rgba(10, 6, 3, 0.46)),
+    url('wood_plank.jpg?v=20261115_w1') center / 100% 100% no-repeat !important;
+  border-color: #8a6432 !important;
+  color: #fae8c8 !important;
 }
 .btn.alt:hover:not(:disabled) {
-  background: linear-gradient(180deg, #352d47 0%, #1d1829 100%) !important;
-  border-color: #c084fc !important;
+  filter: brightness(1.12);
+  border-color: #fde68a !important;
 }
 .btn.sm {
   padding: 7px 14px 6px;
