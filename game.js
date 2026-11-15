@@ -85,30 +85,71 @@ function playM(){
     return;
   }
   if(NOF){startSyn();return}
-  const list=MU[curM],el=new Audio(),g=AC.createGain(),t=AC.currentTime;
-  el._m=curM;el._g=g;el.preload='auto';el.loop=true;
-  const fn=list[0];
+  const list=MU[curM],fn=list[0];
   const cs=['tavern_bg.mp3','./tavern_bg.mp3',typeof GOTHIC_MUSIC_DATA!='undefined'?GOTHIC_MUSIC_DATA:'','audio/'+fn,fn,'/audio/'+fn].filter(Boolean);
-  el._i=0;
-  el.onerror=()=>{
-    if(++el._i<cs.length){
-      el.src=cs[el._i];
-      el.play().catch(()=>{});
+
+  function spawnTrack(src,fadeIn){
+    const el=new Audio(),g=AC.createGain(),t=AC.currentTime;
+    el._m=curM;el._g=g;el.preload='auto';el.loop=false;el._xf=false;
+    el._i=0;
+    el.onerror=()=>{
+      if(++el._i<cs.length){
+        el.src=cs[el._i];
+        el.play().catch(()=>{});
+      }else{
+        AUD.mus='bad';NOF=true;el.onerror=null;
+        if(mel===el){mel=null}
+        startSyn();
+      }
+    };
+    el.onplaying=()=>{AUD.mus='ok'};
+    el.ontimeupdate=()=>{
+      if(el._xf||mel!==el||!el.duration||!isFinite(el.duration)||el.duration<6)return;
+      if(el.duration-el.currentTime<=2.2){
+        el._xf=true;
+        const next=spawnTrack(el.src,true);
+        mel=next;
+        const now=AC.currentTime;
+        if(!FILE&&el._g){
+          el._g.gain.cancelScheduledValues(now);
+          el._g.gain.setValueAtTime(el._g.gain.value,now);
+          el._g.gain.linearRampToValueAtTime(0,now+2.0);
+        }else if(FILE){
+          const sv=el.volume;let k=0;
+          const iv=setInterval(()=>{k++;el.volume=Math.max(0,sv*(1-k/20));if(k>=20)clearInterval(iv)},100);
+        }
+        setTimeout(()=>{try{el.pause();el.src=''}catch(e){}},2300);
+      }
+    };
+    el.onended=()=>{
+      if(!el._xf&&mel===el){
+        const next=spawnTrack(el.src,false);
+        mel=next;
+      }
+    };
+    el.src=src;
+    if(FILE){
+      const tv=Math.min(1,VM*.8);
+      if(fadeIn){
+        el.volume=0;let k=0;
+        const iv=setInterval(()=>{k++;el.volume=Math.min(tv,tv*(k/20));if(k>=20)clearInterval(iv)},100);
+      }else el.volume=tv;
     }else{
-      AUD.mus='bad';NOF=true;el.onerror=null;
-      if(mel===el){mel=null}
-      startSyn();
+      try{AC.createMediaElementSource(el).connect(g)}catch(e){console.warn('müzik bağlanamadı',e);return el}
+      g.connect(MG);
+      if(fadeIn){
+        g.gain.setValueAtTime(0,t);
+        g.gain.linearRampToValueAtTime(1,t+2.0);
+      }else{
+        g.gain.setValueAtTime(0,t);
+        g.gain.linearRampToValueAtTime(1,t+1.2);
+      }
     }
-  };
-  el.onplaying=()=>{AUD.mus='ok'};
-  el.src=cs[0];
-  if(FILE)el.volume=Math.min(1,VM*.8);
-  else{
-    try{AC.createMediaElementSource(el).connect(g)}catch(e){console.warn('müzik bağlanamadı',e);return}
-    g.connect(MG);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(1,t+1.2);
+    el.play().catch(e=>console.warn('müzik çalınamadı',e));
+    return el;
   }
-  mel=el;
-  el.play().catch(e=>console.warn('müzik çalınamadı',e));
+
+  mel=spawnTrack(cs[0],false);
 }
 function setMusic(m){curM=m;playM()}
 document.addEventListener('visibilitychange',()=>{if(syn&&AC){document.hidden?AC.suspend():AC.resume();return}if(!mel)return;if(document.hidden)mel.pause();else mel.play().catch(()=>{})});

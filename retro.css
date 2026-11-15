@@ -1101,9 +1101,12 @@ main::before {
 }
 
 #opp.zone {
-  padding-top: max(4px, env(safe-area-inset-top, 4px)) !important;
-  padding-bottom: 12px !important;
+  padding-top: max(6px, env(safe-area-inset-top, 6px)) !important;
+  padding-bottom: 10px !important;
   background: transparent !important;
+}
+#opp.zone .who {
+  margin-top: clamp(14px, 2.5dvh, 28px) !important;
 }
 #opp.zone.act {
   background: radial-gradient(55% 75% at 50% 100%, rgba(192, 84, 255, 0.14), transparent 72%) !important;
@@ -1321,6 +1324,14 @@ body.dragging-joker #fx::after {
   min-height: 0 !important;
   padding: 4px 12px;
   perspective: 900px;
+}
+#opp .cards {
+  align-items: flex-end;
+  padding-bottom: 10px;
+}
+#me .cards {
+  align-items: flex-start;
+  padding-top: 10px;
 }
 
 .cards .c {
