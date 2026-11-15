@@ -1055,9 +1055,9 @@ main::before {
   background: #120f1c;
 }
 #hdr .pip.now {
-  border-color: #c084fc;
-  background: #9333ea;
-  box-shadow: 0 0 10px rgba(168, 85, 247, 0.85);
+  border-color: #ffffff;
+  background: #f8fafc;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.85);
 }
 #hdr .pip.w {
   border-color: #4ade80;
