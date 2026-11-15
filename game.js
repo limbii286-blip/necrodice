@@ -14,9 +14,9 @@ let G,P=null,lock=false;
 
 /* ---------- SES: Web Audio (müzik ve efekt ayrı ses ayarlı) ---------- */
 const LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem('nd_'+k);localStorage.setItem('nd_'+k,v)}catch(e){}return null};
-let AC,SG,MG,VM=+(LS('vm')??.5),VS=+(LS('vs')??.8),RM=LS('rm')=='1',VB=LS('vb')!='0',CRT=LS('crt')!='0';
+let AC,SG,MG,VM=+(LS('vm')??.45),VS=+(LS('vs')??.8),RM=LS('rm')=='1',VB=LS('vb')!='0',CRT=LS('crt')!='0';
 const ac=()=>{
-  if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();SG=AC.createGain();MG=AC.createGain();SG.gain.value=VS;MG.gain.value=VM*.8;SG.connect(AC.destination);MG.connect(AC.destination);loadSfx();playM()}
+  if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();SG=AC.createGain();MG=AC.createGain();SG.gain.value=VS;MG.gain.value=VM*.45;SG.connect(AC.destination);MG.connect(AC.destination);loadSfx();playM()}
   if(AC.state=='suspended')AC.resume();return AC;
 };
 /* Müzik: menüde menu.m4a, oyunda game1/game2 sırayla. Web Audio'ya bağlı olduğu için ses ayarı iOS'ta da çalışır. */
@@ -129,7 +129,7 @@ function playM(){
     };
     el.src=src;
     if(FILE){
-      const tv=Math.min(1,VM*.8);
+      const tv=Math.min(1,VM*.45);
       if(fadeIn){
         el.volume=0;let k=0;
         const iv=setInterval(()=>{k++;el.volume=Math.min(tv,tv*(k/20));if(k>=20)clearInterval(iv)},100);
@@ -1212,7 +1212,7 @@ function guide(){box(`<h3>Nasıl oynanır</h3>
 function settings(){
   const inGame=$('#menu').hidden&&!!G;
   box(`<h3>Ayarlar</h3><label>Müzik<input type="range" id="sm" min="0" max="1" step=".05" value="${VM}"></label><label>Efektler<input type="range" id="ss" min="0" max="1" step=".05" value="${VS}"></label><label class="chk"><input type="checkbox" id="sr" ${RM?'checked':''}> Hareketi azalt</label><label class="chk"><input type="checkbox" id="sv" ${VB?'checked':''}> Titreşim</label>${inGame?`<div class="row"><button class="btn alt sm" id="sk">Joker Kodeksi</button><button class="btn alt sm" id="sg">Nasıl oynanır</button></div>`:''}${inGame?`<div class="row">${MODE=='bot'?'<button class="btn alt sm" id="sa">Tekrar oyna</button>':''}</div><div class="row"><button class="btn alt sm" id="sx">Ana menüye dön</button></div>`:''}`);
-  $('#sm').oninput=e=>{VM=+e.target.value;LS('vm',VM);ac();MG.gain.value=VM*.8;if(FILE&&mel)mel.volume=Math.min(1,VM*.8)};
+  $('#sm').oninput=e=>{VM=+e.target.value;LS('vm',VM);ac();MG.gain.value=VM*.45;if(FILE&&mel)mel.volume=Math.min(1,VM*.45)};
   $('#ss').oninput=e=>{VS=+e.target.value;LS('vs',VS);ac();SG.gain.value=VS};$('#ss').onchange=()=>snd('draw');
   $('#sr').onchange=e=>{RM=e.target.checked;LS('rm',RM?1:0);document.body.classList.toggle('rm',RM)};
   $('#sv').onchange=e=>{VB=e.target.checked;LS('vb',VB?1:0)};
