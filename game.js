@@ -1139,8 +1139,18 @@ function R(){
   if(prevSeal&&prevSeal!=seal){sl.classList.remove('stamp');void sl.offsetWidth;sl.classList.add('stamp')}
   $('#me').className='zone'+(my?' act':'')+(S.winSide!=null?(S.winSide<0?' round-lose':S.winSide===0?' round-tie':''):'');
   setH('#me',`<div class="who">${av0}${hpBtn0}<div class="nm"><b>${p0Name}</b></div><div class="tot${bust?' bust':exact?' exact':''}"><small>Toplam</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`);
-  $('#prompt').className=P?'ask':'';
-  setH('#prompt',P?(P.hp==='u'?`Hiçlik Değişimi: ${KTXT[k]} <button class="btn sm alt" data-x="1">Vazgeç</button>`:`${J[P.id]}: ${KTXT[k]} ${k=='sign'?'<button class="btn sm" data-s="1">Ekle</button><button class="btn sm" data-s="-1">Çıkar</button>':''}<button class="btn sm alt" data-x="1">Vazgeç</button>`):'');
+  const pr=$('#prompt');
+  pr.className=P?(P.hp?'ask':'ask has-joker'+(k==='sign'?' sign-mode':'')):'';
+  if(!P){
+    setH('#prompt','');
+  }else if(P.hp==='u'){
+    setH('#prompt',`<div class="pr-box"><div class="pr-txt">Hiçlik Değişimi: ${KTXT[k]}</div><div class="pr-btns"><button class="btn sm alt" data-x="1">Vazgeç</button></div></div>`);
+  }else{
+    const btns=k==='sign'?'<button class="btn sm" data-s="1">Ekle (+)</button><button class="btn sm" data-s="-1">Çıkar (−)</button>':'';
+    setH('#prompt',`<div class="pr-card-wrap"><img class="pr-jcard" src="${IMG.j[P.id]}" alt="${J[P.id]||''}"></div><div class="pr-box"><div class="pr-title">${J[P.id]}</div><div class="pr-txt">${KTXT[k]}</div><div class="pr-btns">${btns}<button class="btn sm alt" data-x="1">Vazgeç</button></div></div>`);
+    const jim=pr.querySelector('.pr-jcard');
+    if(jim)hi(jim,P.id);
+  }
   const ends=(S.turns>0&&!S.acted)||oppTimeOut; // rakibin süresi bittiyse veya karşı taraf pas dediyse şimdi pas dersem tur biter
   $('#pass').disabled=isSpec||!(my&&!P);
   if(isSpec){
