@@ -205,7 +205,7 @@ const SND={
   info(){sfx('info',.85)},
   play(){sfx('play',1)},
   click(){sfx('click',.8)},
-  stone(){tone(145,.045,'triangle',.16,0,-55);noise(.028,.12,1800)},
+  stone(){const p=0.92+Math.random()*0.16;tone(360*p,.028,'triangle',.18,0,-190);tone(780*p,.016,'sine',.09,0,-260);noise(.022,.22,1250)},
   tick(){tone(920,.045,'triangle',.09);noise(.03,.08,3200)},
   pass(){sfx('click',.9);tone(110,.18,'sine',.25)},
   turn(){sfx('tap',.7);tone(587,.12,'sine',.08);tone(880,.16,'sine',.06,.05)},
