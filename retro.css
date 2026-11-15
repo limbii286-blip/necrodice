@@ -1120,7 +1120,7 @@ main::before {
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  gap: clamp(12px, 2dvh, 22px);
+  gap: clamp(22px, 3.6dvh, 38px);
   min-height: 0;
   overflow: visible;
   transition: box-shadow 0.25s ease, background 0.25s ease;
@@ -1143,15 +1143,15 @@ main::before {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  gap: clamp(3px, 0.5vw, 7px);
-  min-height: clamp(54px, 8.2dvh, 76px);
+  gap: clamp(4px, 0.6vw, 8px);
+  min-height: clamp(60px, 9.2dvh, 84px);
   margin-top: 0;
-  margin-bottom: 0;
+  margin-bottom: -6px;
   pointer-events: none;
   z-index: 5;
 }
 .opp-jhand .oj {
-  height: clamp(56px, 8.4dvh, 76px);
+  height: clamp(62px, 9.6dvh, 86px);
   width: auto;
   border-radius: 6px;
   border: 1.5px solid #c99e52;
@@ -1167,7 +1167,7 @@ main::before {
 #me.zone {
   flex-direction: column-reverse;
   padding-top: 0 !important;
-  padding-bottom: clamp(104px, 16dvh, 144px) !important;
+  padding-bottom: clamp(78px, 11.8dvh, 110px) !important;
   background: transparent !important;
 }
 #me.zone.act {
@@ -2071,7 +2071,7 @@ body.dragging-joker #fx::after {
 /* --- OYUNCUNUN JOKER ELİ (#hand: Hearthstone Gibi Alt Kenarda, Karakter Portresini Kapatmaz) --- */
 #hand {
   position: fixed;
-  bottom: 0;
+  bottom: -8px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 25;
@@ -2079,7 +2079,7 @@ body.dragging-joker #fx::after {
   align-items: flex-end;
   justify-content: center;
   gap: clamp(2px, 0.45vw, 8px);
-  padding: 4px 20px max(4px, env(safe-area-inset-bottom, 4px)) !important;
+  padding: 4px 20px 0 !important;
   min-height: 0 !important;
   pointer-events: none;
   overflow: visible !important;
@@ -2088,8 +2088,8 @@ body.dragging-joker #fx::after {
   position: relative;
   z-index: 1;
   flex: none;
-  width: clamp(60px, 9.6dvh, 88px);
-  height: calc(clamp(60px, 9.6dvh, 88px) * 1.5);
+  width: clamp(54px, 8.6dvh, 78px);
+  height: calc(clamp(54px, 8.6dvh, 78px) * 1.5);
   pointer-events: none;
 }
 #hand .jslot:nth-child(2),
