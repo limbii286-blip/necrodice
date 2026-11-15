@@ -713,26 +713,31 @@ function hmove(T,a,pol){ // simülasyonda oyuncunun hamlesi: öğrendiği alış
   return null}
 function dustTableCards(){
   const cards=[...document.querySelectorAll('#opp .cards .c, #me .cards .c')];
+  const rects=cards.map(c=>c.getBoundingClientRect());
+  const frag=document.createDocumentFragment();
+  const motes=[];
   cards.forEach((c,idx)=>{
-    const r=c.getBoundingClientRect();
+    const r=rects[idx];
     c.style.animationDelay=(idx*28)+'ms';
     c.classList.add('dust-out');
     if(r.width>0&&r.height>0){
       for(let i=0;i<10;i++){
         const m=document.createElement('span');
         m.className='dust-mote';
-        const px=r.left+Math.random()*r.width;
-        const py=r.top+Math.random()*r.height;
-        m.style.left=px+'px';
-        m.style.top=py+'px';
+        m.style.left=(r.left+Math.random()*r.width)+'px';
+        m.style.top=(r.top+Math.random()*r.height)+'px';
         m.style.setProperty('--dx',((Math.random()-0.5)*70).toFixed(1)+'px');
         m.style.setProperty('--dy',(-20-Math.random()*65).toFixed(1)+'px');
         m.style.animationDelay=(idx*25+Math.random()*160)+'ms';
-        document.body.appendChild(m);
-        setTimeout(()=>m.remove(),950);
+        frag.appendChild(m);
+        motes.push(m);
       }
     }
   });
+  if(motes.length){
+    document.body.appendChild(frag);
+    setTimeout(()=>motes.forEach(m=>m.remove()),950);
+  }
 }
 function endRound(){
   const S=G,a=[total(S,0),total(S,1)],T=tg(S),r=outc(S,0);
@@ -969,8 +974,9 @@ function fly(){ // yeni kartlar desteden uçarak gelir
     d.classList.add('pull');
     setTimeout(()=>d.classList.remove('pull'),500);
   }
-  freshCards.forEach(el=>{
-    const r=el.getBoundingClientRect();
+  const rects=[...freshCards].map(el=>el.getBoundingClientRect());
+  freshCards.forEach((el,idx)=>{
+    const r=rects[idx];
     el.style.setProperty('--dx',(dr.left-r.left+(dr.width-r.width)/2)/F+'px');
     el.style.setProperty('--dy',(dr.top-r.top+(dr.height-r.height)/2)/F+'px');
     el.style.animationDelay=(i++*.13)+'s';

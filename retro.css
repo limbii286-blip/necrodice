@@ -1401,7 +1401,7 @@ body.dragging-joker #fx::after {
 }
 @keyframes cardFlyIn {
   0% { opacity: 0; transform: translate(var(--dx, 0px), var(--dy, -80px)) scale(0.35) rotate(-16deg); }
-  65% { opacity: 1; transform: translate(calc(var(--dx) * 0.12), calc(var(--dy) * 0.12)) scale(1.1) rotate(3deg); }
+  65% { opacity: 1; transform: translate(calc(var(--dx, 0px) * 0.12), calc(var(--dy, -80px) * 0.12)) scale(1.1) rotate(3deg); }
   100% { opacity: 1; transform: none; }
 }
 
@@ -2234,6 +2234,7 @@ body.dragging-joker #fx::after {
 
 .cards .c.dust-out {
   animation: cardDustOut 0.78s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+  will-change: transform, opacity, filter;
   pointer-events: none;
 }
 @keyframes cardDustOut {
@@ -2263,6 +2264,7 @@ body.dragging-joker #fx::after {
   box-shadow: 0 0 6px rgba(231, 215, 184, 0.55);
   pointer-events: none;
   z-index: 40;
+  will-change: transform, opacity;
   animation: dustMoteFloat 0.78s ease-out forwards;
 }
 @keyframes dustMoteFloat {
