@@ -870,11 +870,11 @@ function endRound(){
     const duelEnds=S.pts.some(x=>x>=2)||S.rounds>=3;
     if(!duelEnds){
       // Bu turda bir oyuncunun süresi bittiyse ve düello devam ediyorsa:
-      // İlk turda olduysa (S.rounds===1) iki taraf da 55 sn, ikinci turdan sonra olduysa 44 sn ile başlar
+      // İlk turda olduysa 66 sn, 2. tur ve sonrasında 44 sn taban süre uygulanır (fazlası olanın süresi korunur, azı olan tabana tamamlanır)
       if(S.hadTimeout||(S.timeOut&&(S.timeOut[0]||S.timeOut[1]))){
-        const nextSec=S.rounds===1?55:44;
-        S.clocks=[nextSec,nextSec];
-        S.clockMax=nextSec;
+        const floorSec=S.rounds===1?66:44;
+        S.clocks=[Math.max(S.clocks[0]||0,floorSec),Math.max(S.clocks[1]||0,floorSec)];
+        S.clockMax=Math.max(S.clocks[0],S.clocks[1],floorSec);
       }
       deal(S);R();next();
       return;
