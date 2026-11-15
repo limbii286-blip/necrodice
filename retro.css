@@ -17,11 +17,11 @@
   --lime: #5ec27e;
   --bone: #e6d7b8;
   --txt: #e8dcc4;
-  --gf: 'Grenze Gotisch', 'MedievalSharp', Georgia, serif;
-  --hf: 'Grenze Gotisch', 'MedievalSharp', Georgia, serif;
-  --mf: 'MedievalSharp', 'Almendra', Georgia, serif;
-  --bf: 'Almendra', Georgia, serif;
-  --sf: 'MedievalSharp', 'Almendra', Georgia, serif;
+  --gf: 'Grenze Gotisch', 'Cinzel', Georgia, serif;
+  --hf: 'Grenze Gotisch', 'Cinzel', Georgia, serif;
+  --mf: 'Cinzel', Georgia, serif;
+  --bf: 'Cormorant Garamond', Georgia, serif;
+  --sf: 'Cinzel', Georgia, serif;
 }
 
 * {
@@ -294,18 +294,12 @@ body:has(#menu:not([hidden])) #fl {
 
 #mb2 .grp.hs-plaque > span {
   display: block;
-  font: 700 clamp(15px, 2.15dvh, 19px)/1.15 var(--bf) !important;
-  letter-spacing: 2px !important;
+  font: 700 clamp(15px, 2.15dvh, 19px)/1.15 var(--mf) !important;
+  letter-spacing: 1.8px !important;
   color: #f3dfb9 !important;
   text-shadow: 0 2px 5px #000 !important;
   margin-bottom: clamp(7px, 1.2dvh, 11px) !important;
   text-transform: uppercase;
-}
-#mb2 .grp.hs-plaque > span::before,
-#mb2 .grp.hs-plaque > span::after {
-  content: " ᛟ ";
-  color: #c084fc;
-  text-shadow: 0 0 8px rgba(192, 132, 252, 0.75);
 }
 
 /* Zorluk Seçim Düğmeleri: Oyma Taş & Rün Ciltli Kitap Plakaları */

@@ -1389,7 +1389,7 @@ function hostRoom(){
   const showLobby=()=>{
     box(`
       <div class="lobby-box">
-        <h3 style="margin-bottom:8px">Çevrimiçi Lobi</h3>
+        <h3 style="margin-bottom:8px">Çevrim İçi Lobi</h3>
         <p style="color:var(--bone);font-size:20px;margin-bottom:14px">Bu kodu arkadaşına ilet:</p>
         <div class="lobby-code-badge" id="lobbyCodeBox" title="Kodu Kopyala">
           <span class="lobby-lbl">ODA KODU</span>
