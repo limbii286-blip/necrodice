@@ -334,7 +334,7 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı animas
         doPop();
 
         if(isCrit){snd('win');flash();vib([80,80,200])}
-        else if(isFail){snd('death');try{document.body.classList.add('dead')}catch(e){}vib([300,100,500])}
+        else if(isFail){snd('death');if(res=='death'){try{document.body.classList.add('dead')}catch(e){}}vib([300,100,500])}
         else{snd(res);flash()}
 
         setTimeout(()=>{const x=document.querySelector('#mx');if(x)x.style.visibility=''},600);
@@ -803,7 +803,7 @@ function endRound(){
     </div><div class="after"><b>Zar Sonucu: ${roll}</b><br>`+(surv?(L==v?'Kurtuldun! Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
     const full=v=>mk(v,roll,surv),rig=MODE=='bot'&&DIFF=='imp'&&L==1&&!surv&&!S.rigDone; // sahne oyun başına bir kez; ikinci ölümde gerçekten ölür
     if(surv||rig){const n=S.bo+2,ek=['a','e','ye','e','e','e','ya','ye','e','a'][n%10];
-      const lb=`Düello ${n}'${ek} geç`,go=()=>{S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()};
+      const lb=`Düello ${n}'${ek} geç`,go=()=>{try{document.body.classList.remove('dead')}catch(e){}S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()};
       if(rig){S.rigDone=true;impSave(mk(0,1,false),()=>M(mk(0,20,true),lb,go))}else MM(full,lb,go)}
     else{S.over=true;lrnGame(L==0);MM(full,'Yeniden oyna',start,null,true)}
   }
