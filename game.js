@@ -1924,7 +1924,7 @@ function createSmoothDragLoop(onFrame){
   let W=0,H=0,DPR=1;
   const bgImg=new Image();
   let bgLoaded=false;
-  bgImg.onload=()=>{bgLoaded=true;};
+  bgImg.onload=()=>{bgLoaded=true;requestAnimationFrame(render);};
   bgImg.src='board_gothic.jpg?v=20261115_sym1';
 
   const particles=[];
@@ -2040,7 +2040,7 @@ function createSmoothDragLoop(onFrame){
       });
     }
 
-    if(!document.body.classList.contains('rm')){
+    if(!document.body.classList.contains('rm')||menuOpen){
       requestAnimationFrame(render);
     }
   }
@@ -2203,7 +2203,7 @@ function createSmoothDragLoop(onFrame){
         ctx.restore();
       });
     }
-    if(!document.body.classList.contains('rm')){
+    if(!document.body.classList.contains('rm')||menuOpen){
       requestAnimationFrame(render);
     }
   }

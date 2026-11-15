@@ -943,6 +943,7 @@ body:has(#menu:not([hidden])) #fl {
   z-index: 0;
   pointer-events: none;
   display: block;
+  background: #070508 url('board_gothic.jpg?v=20261115_sym1') center / cover no-repeat;
 }
 
 main {
@@ -963,9 +964,6 @@ main {
 }
 html::after {
   box-shadow: none !important;
-}
-main::before {
-  display: none !important;
 }
 
 /* Rakibin konuşma kutusu kapalı */
