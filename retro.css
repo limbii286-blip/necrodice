@@ -1119,7 +1119,8 @@ main::before {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
+  gap: clamp(12px, 2dvh, 22px);
   min-height: 0;
   overflow: visible;
   transition: box-shadow 0.25s ease, background 0.25s ease;
@@ -1131,32 +1132,33 @@ main::before {
   background: transparent !important;
 }
 #opp.zone .who {
-  margin-top: clamp(8px, 1.4dvh, 18px) !important;
+  margin-top: 0 !important;
 }
 #opp.zone.act {
   background: radial-gradient(55% 75% at 50% 100%, rgba(200, 72, 52, 0.14), transparent 72%) !important;
 }
 
-/* Rakibin Üstte Kapalı & Stackli Joker Kartları */
+/* Rakibin Üstte Kapalı & Sayılabilir Joker Kartları */
 .opp-jhand {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  min-height: clamp(36px, 5.4dvh, 52px);
-  margin-top: -6px;
-  margin-bottom: 4px;
+  gap: clamp(3px, 0.5vw, 7px);
+  min-height: clamp(54px, 8.2dvh, 76px);
+  margin-top: 0;
+  margin-bottom: 0;
   pointer-events: none;
   z-index: 5;
 }
 .opp-jhand .oj {
-  height: clamp(46px, 7.2dvh, 66px);
+  height: clamp(56px, 8.4dvh, 76px);
   width: auto;
   border-radius: 6px;
-  border: 1.5px solid #a67c38;
+  border: 1.5px solid #c99e52;
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.6);
   transform: rotate(var(--r, 0deg));
   transform-origin: 50% 0%;
-  margin-left: -18px;
+  margin-left: 0;
 }
 .opp-jhand .oj:first-child {
   margin-left: 0;
@@ -1368,7 +1370,7 @@ body.dragging-joker #fx::after {
 
 /* --- SAVAŞ ALANI KART DİZİLİMİ (.cards) --- */
 .zone .cards {
-  flex: 1;
+  flex: 0 0 auto;
   width: 100%;
   max-width: 1040px;
   display: flex;
@@ -1376,18 +1378,18 @@ body.dragging-joker #fx::after {
   justify-content: center;
   gap: clamp(8px, 1.4vw, 16px);
   min-height: 0 !important;
-  padding: 4px 12px;
+  padding: 0 12px;
   perspective: 900px;
 }
 #opp .cards {
   align-items: flex-end;
-  padding-top: 4px;
-  padding-bottom: clamp(22px, 3.2dvh, 34px);
+  padding-top: 0;
+  padding-bottom: clamp(16px, 2.4dvh, 26px);
 }
 #me .cards {
   align-items: flex-start;
-  padding-top: clamp(22px, 3.2dvh, 34px);
-  padding-bottom: 4px;
+  padding-top: clamp(16px, 2.4dvh, 26px);
+  padding-bottom: 0;
 }
 
 .cards .c {
@@ -2288,10 +2290,12 @@ body.dragging-joker #fx::after {
   }
   .opp-jhand {
     top: 2px !important;
+    gap: 4px !important;
+    min-height: 44px !important;
   }
   .opp-jhand .oj {
-    width: 24px !important;
-    height: 36px !important;
+    width: auto !important;
+    height: 42px !important;
   }
   .who {
     min-width: 0 !important;
