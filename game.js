@@ -1227,8 +1227,7 @@ function useHeroPower(){
   }else if(hid==='p'){
     if(!S.pl[1].closed.length)return;
     S.oppPeek=S.pl[1].closed.map(c=>c.id);
-    S.hpUsed[0]=true;S.graceLeft=0;
-    S.log.push({p:0,t:'Kuzgun Gözü ile rakibin kapalı kartına baktı'});
+    S.hpUsed[0]=true;
     snd('flip');R();
   }else{
     return;
