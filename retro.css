@@ -1388,11 +1388,11 @@ body.dragging-joker #fx::after {
 #opp .cards {
   align-items: flex-end;
   padding-top: 0;
-  padding-bottom: clamp(16px, 2.4dvh, 26px);
+  padding-bottom: clamp(24px, 3.6dvh, 38px);
 }
 #me .cards {
   align-items: flex-start;
-  padding-top: clamp(16px, 2.4dvh, 26px);
+  padding-top: clamp(24px, 3.6dvh, 38px);
   padding-bottom: 0;
 }
 
@@ -2050,8 +2050,8 @@ body.dragging-joker #fx::after {
   top: 50%;
   transform: translate(-50%, -50%);
   margin: 0;
-  width: clamp(98px, 14.5dvh, 126px) !important;
-  height: clamp(98px, 14.5dvh, 126px) !important;
+  width: clamp(86px, 12.6dvh, 110px) !important;
+  height: clamp(86px, 12.6dvh, 110px) !important;
   border-radius: 0 !important;
   background: transparent !important;
   border: 0 !important;
@@ -2111,7 +2111,7 @@ body.dragging-joker #fx::after {
 #fx .seal b {
   position: relative;
   z-index: 2;
-  font: 900 clamp(28px, 4.4dvh, 40px)/1 var(--mf) !important;
+  font: 900 clamp(23px, 3.6dvh, 33px)/1 var(--mf) !important;
   color: #fff2d6;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95);
 }
@@ -2123,7 +2123,9 @@ body.dragging-joker #fx::after {
   text-shadow: none;
 }
 #fx .seal.low b {
-  font: 800 clamp(15px, 2.3dvh, 21px)/1 var(--mf) !important;
+  font: 800 clamp(12px, 1.85dvh, 16px)/1 var(--mf) !important;
+  white-space: nowrap;
+  letter-spacing: -0.2px;
 }
 #fx .seal.stamp {
   animation: stampTri 0.5s cubic-bezier(0.2, 1.6, 0.4, 1);
