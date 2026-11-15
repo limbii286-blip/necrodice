@@ -817,13 +817,13 @@ function endRound(){
     }
     snd(r>0?'win':r<0?'lose':'ok');
     R();
-    if(r!==0)heroAttack(r>0?0:1);
+    if(r!==0)setTimeout(()=>{if(S===G)heroAttack(r>0?0:1);},1000);
     setTimeout(()=>{
       if(S!==G)return;
       // 3) Yerdeki bütün sayı kartları tozlaşır gibi yok olur, sonra diğer tura geçilir
       dustTableCards();
       setTimeout(()=>{if(S!==G)return;lock=false;fin()},820);
-    },r!==0?2400:1800);
+    },r!==0?3400:1800);
   },750);
   function fin(){
     S.winSide=null;
