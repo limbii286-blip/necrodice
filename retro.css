@@ -1038,22 +1038,22 @@ main::before {
 }
 #hdr .pip.now {
   border-color: #c084fc;
-  background: radial-gradient(circle, #e9d5ff 20%, #6b21a8 100%);
-  box-shadow: 0 0 10px #c084fc;
+  background: #9333ea;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.85);
 }
 #hdr .pip.w {
-  border-color: #38bdf8;
-  background: radial-gradient(circle, #bae6fd 20%, #0369a1 100%);
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.75);
+  border-color: #4ade80;
+  background: #22c55e;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.8);
 }
 #hdr .pip.l {
-  border-color: #f43f5e;
-  background: radial-gradient(circle, #fda4af 20%, #881337 100%);
-  box-shadow: 0 0 8px rgba(244, 63, 94, 0.75);
+  border-color: #f87171;
+  background: #dc2626;
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.8);
 }
 #hdr .pip.d {
-  background: #6c667d;
-  border-color: #a39bb5;
+  background: #6b7280;
+  border-color: #9ca3af;
 }
 
 #hdr .hg .gear {
