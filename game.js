@@ -1032,7 +1032,7 @@ function R(){
   $('#deck').classList.toggle('can-draw',!isSpec&&my&&!P&&canDraw(S,0));
   setH('#jo',(S.pj||[]).filter(x=>x.o==1).map(chip).join(''));
   setH('#jm',(S.pj||[]).filter(x=>x.o==0).map(chip).join(''));
-  const sl=$('#seal'),sc=(T!=21||low?' alt':'')+(low?' low':'');
+  const sl=$('#seal'),sc=(T!=21||low?' alt':'')+(low?' low':'')+(S.turn==0?' turn-me':' turn-op');
   if(!sl._o){sl._o=1;sl.addEventListener('animationend',()=>sl.classList.remove('stamp'))}
   if(sl._c!==sc){sl._c=sc;sl.className='seal'+sc+(sl.classList.contains('stamp')?' stamp':'')}
   setH('#seal',`<b>${low?'En az':T}</b>`);
