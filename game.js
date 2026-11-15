@@ -1801,8 +1801,16 @@ function createSmoothDragLoop(onFrame){
     clearOracle();
     prevJId=id;
     const sim={...S,eff:[...S.eff,{id,o:0,uid:-1}]};
-    const curT=total(S,0),newT=total(sim,0),curTg=tg(S),newTg=tg(sim),curLow=lowW(S),newLow=lowW(sim);
-    if(newT!==curT){
+    const curT=total(S,0),newT=id===22?curT:total(sim,0),curTg=tg(S),newTg=tg(sim),curLow=lowW(S),newLow=lowW(sim);
+    if(id===22&&S.deck.length>0){
+      const totEl=document.querySelector('#me .tot');
+      if(totEl){
+        const sp=document.createElement('span');
+        sp.className='ora-tot';
+        sp.textContent=`±${S.deck.length}`;
+        totEl.appendChild(sp);
+      }
+    }else if(Number.isFinite(newT)&&newT!==curT){
       const totEl=document.querySelector('#me .tot');
       if(totEl){
         const sp=document.createElement('span');
