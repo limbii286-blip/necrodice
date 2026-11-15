@@ -2278,6 +2278,15 @@ body.dragging-joker #fx::after {
 }
 
 @media (max-width: 960px) {
+  #fx {
+    width: calc(100vw - 24px) !important;
+  }
+  #fx .cl {
+    margin-left: 4px;
+  }
+  .who {
+    min-width: 340px;
+  }
   .side-clocks {
     right: 6px;
     width: 56px;
@@ -2334,11 +2343,12 @@ body.dragging-joker #fx::after {
   .zone {
     width: calc(100vw - 10px) !important;
     padding: 2px 4px !important;
-    gap: clamp(8px, 1.5dvh, 14px) !important;
+    gap: clamp(6px, 1.2dvh, 12px) !important;
   }
   #fx {
     width: calc(100vw - 10px) !important;
-    height: clamp(58px, 8.6dvh, 74px) !important;
+    height: clamp(60px, 8.8dvh, 74px) !important;
+    margin: 6px auto !important;
     padding: 0 4px !important;
   }
   #hdr {
@@ -2390,29 +2400,30 @@ body.dragging-joker #fx::after {
     letter-spacing: 0.4px;
   }
   #opp.zone {
-    padding-top: calc(max(6px, env(safe-area-inset-top, 6px)) + 44px) !important;
+    padding-top: calc(max(6px, env(safe-area-inset-top, 6px)) + 48px) !important;
+    padding-bottom: 12px !important;
   }
   .opp-jhand {
     position: relative;
     top: 0 !important;
     margin: 0 !important;
     gap: 4px !important;
-    min-height: 38px !important;
+    min-height: 36px !important;
   }
   .opp-jhand .oj {
     width: auto !important;
-    height: 38px !important;
+    height: 36px !important;
   }
   .who {
     min-width: 0 !important;
     width: min(94vw, 356px);
-    padding: 4px 10px;
-    gap: 8px;
+    padding: 4px 12px;
+    gap: 6px;
   }
   .who .av {
-    width: clamp(40px, 6dvh, 52px) !important;
-    height: clamp(40px, 6dvh, 52px) !important;
-    margin: -4px 0 -2px !important;
+    width: 42px !important;
+    height: 42px !important;
+    margin: -2px 0 !important;
   }
   .who .nm {
     min-width: 0;
@@ -2429,54 +2440,58 @@ body.dragging-joker #fx::after {
     font-size: clamp(18px, 3dvh, 24px) !important;
   }
   .cards {
-    gap: 5px !important;
+    gap: 4px !important;
   }
   .cards .gap {
-    width: 5px !important;
+    width: 4px !important;
   }
   .cards .c {
-    width: clamp(46px, min(13.2vw, 8.8dvh), 64px) !important;
-    height: calc(clamp(46px, min(13.2vw, 8.8dvh), 64px) * 1.45) !important;
-    font-size: clamp(20px, min(5.2vw, 3.6dvh), 28px) !important;
+    width: clamp(44px, min(12.6vw, 8.4dvh), 60px) !important;
+    height: calc(clamp(44px, min(12.6vw, 8.4dvh), 60px) * 1.45) !important;
+    font-size: clamp(19px, min(5vw, 3.4dvh), 26px) !important;
   }
   .cards .c:not(.n):not(.bk) {
-    font-size: clamp(26px, min(6.8vw, 4.6dvh), 38px) !important;
+    font-size: clamp(24px, min(6.4vw, 4.4dvh), 36px) !important;
   }
   #fx .ctl {
     padding: 0 2px;
   }
   #fx .cl {
     gap: 4px;
-    margin-left: 2px;
+    margin-left: 4px;
   }
   #fx .deck {
-    width: clamp(46px, min(13.2vw, 8.8dvh), 64px) !important;
-    height: calc(clamp(46px, min(13.2vw, 8.8dvh), 64px) * 1.45) !important;
+    width: 44px !important;
+    height: 64px !important;
   }
   #fx .deck b {
-    top: calc(100% + 5px) !important;
-    font-size: 12px !important;
-    padding: 2px 7px !important;
+    top: auto !important;
+    bottom: -5px !important;
+    left: auto !important;
+    right: -5px !important;
+    transform: none !important;
+    font-size: 11px !important;
+    padding: 2px 6px !important;
   }
   #fx #pass {
-    width: clamp(44px, 6.8dvh, 54px) !important;
-    height: clamp(44px, 6.8dvh, 54px) !important;
-    margin-right: 54px !important;
+    width: 46px !important;
+    height: 46px !important;
+    margin-right: 48px !important;
     font-size: 9.5px !important;
     padding: 3px !important;
   }
   .side-clocks {
-    width: 48px;
-    height: 104px;
+    width: 44px;
+    height: 92px;
     right: 2px;
   }
   .side-clock {
-    width: 46px;
-    height: 46px;
+    width: 42px;
+    height: 42px;
     padding: 2px;
   }
   .side-clock .sc-val {
-    font-size: 17px !important;
+    font-size: 15px !important;
   }
   #fx .seal {
     width: clamp(46px, 7dvh, 58px) !important;
@@ -2496,10 +2511,11 @@ body.dragging-joker #fx::after {
     height: 26px !important;
   }
   #me.zone {
-    padding-bottom: clamp(78px, 12.2dvh, 102px) !important;
+    padding-top: 12px !important;
+    padding-bottom: clamp(82px, 12.6dvh, 104px) !important;
   }
   #hand {
-    bottom: max(6px, env(safe-area-inset-bottom, 6px)) !important;
+    bottom: max(8px, env(safe-area-inset-bottom, 8px)) !important;
     gap: 5px !important;
     padding: 2px 6px 0 !important;
     max-width: calc(100vw - 8px) !important;
