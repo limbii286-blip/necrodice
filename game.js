@@ -759,8 +759,8 @@ function endRound(){
       // 3) Yerdeki bütün sayı kartları tozlaşır gibi yok olur, sonra diğer tura geçilir
       dustTableCards();
       setTimeout(()=>{if(S!==G)return;lock=false;fin()},820);
-    },r!==0?2450:1450);
-  },1150);
+    },r!==0?2100:1800);
+  },750);
   function fin(){
     S.winSide=null;
     const duelEnds=S.pts.some(x=>x>=2)||S.rounds>=3;
