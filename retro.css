@@ -1427,7 +1427,6 @@ body.dragging-joker #fx::after {
 }
 .cards .c.mc {
   border-color: #e6c36a !important;
-  cursor: pointer !important;
   box-shadow:
     0 12px 24px rgba(0, 0, 0, 0.9),
     0 0 0 2px rgba(230, 195, 106, 0.55),
@@ -2259,7 +2258,6 @@ body.dragging-joker #fx::after {
   margin-top: 2px;
 }
 #fx .e.hl {
-  cursor: pointer !important;
   z-index: 12 !important;
   border-color: #ffe89e !important;
   transform: scale(1.18);
@@ -3117,8 +3115,8 @@ label,
 .hl,
 .hl *,
 .j:not(.dim),
-.c.mc,
-.c.mc *,
+.cards .c.mc,
+.cards .c.mc *,
 .cards .c,
 .cards .c *,
 #fx .e,
