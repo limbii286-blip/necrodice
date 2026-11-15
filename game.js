@@ -338,14 +338,6 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı animas
         else{snd(res);flash()}
 
         setTimeout(()=>{const x=document.querySelector('#mx');if(x)x.style.visibility=''},600);
-        if(res=='ok' && !document.querySelector('#mb.rig')){
-          setTimeout(()=>{
-            if(d.isConnected && !$('#m').hidden){
-              const mo=document.querySelector('#mo');
-              if(mo) mo.click();
-            }
-          }, 2000);
-        }
       }
     };
     animId = requestAnimationFrame(frame);
