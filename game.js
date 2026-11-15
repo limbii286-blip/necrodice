@@ -1928,10 +1928,10 @@ function createSmoothDragLoop(onFrame){
         const px = p.x * W;
         const py = p.y * H;
         const alpha = 0.35 + 0.55 * Math.abs(Math.sin(t * 2.3 + p.phase));
-        let col = `rgba(140, 235, 255, ${alpha})`;
-        if(p.zone === 0) col = `rgba(255, 155, 55, ${alpha})`;
-        else if(p.zone === 1) col = `rgba(95, 255, 135, ${alpha})`;
-        else if(p.zone === 2) col = `rgba(215, 130, 255, ${alpha})`;
+        let col = `rgba(255, 218, 145, ${alpha * 0.78})`;
+        if(p.zone === 0) col = `rgba(255, 148, 52, ${alpha})`;
+        else if(p.zone === 1) col = `rgba(245, 198, 92, ${alpha * 0.85})`;
+        else if(p.zone === 2) col = `rgba(225, 92, 58, ${alpha * 0.72})`;
         ctx.save();
         ctx.fillStyle = col;
         if(!mob){ctx.shadowColor = col;ctx.shadowBlur = 8;}

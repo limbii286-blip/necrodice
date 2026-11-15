@@ -582,7 +582,7 @@ body:has(#menu:not([hidden])) #fl {
 }
 
 #mb::before {
-  content: "ᛟ NECRODICE ᛟ";
+  content: "NECRODICE";
   display: block;
   margin: -24px -22px 16px;
   padding: 7px 14px;
@@ -1006,13 +1006,17 @@ main::before {
   align-items: center;
   gap: 12px;
   padding: 9px 16px;
-  background: linear-gradient(180deg, rgba(28, 24, 39, 0.92), rgba(14, 12, 22, 0.96));
-  border: 2px solid #8671ab;
+  background: linear-gradient(180deg, rgba(36, 28, 22, 0.94), rgba(16, 12, 10, 0.97));
+  border: 2px solid #8f6e3b;
   border-radius: 10px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(235, 215, 255, 0.25);
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.92),
+    0 0 0 1px #0b0806,
+    inset 0 1px 0 rgba(255, 224, 160, 0.24),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.75);
 }
 .sk {
-  color: #5a5172;
+  color: #6b5842;
   font: 700 22px/1 var(--mf);
 }
 .sk small {
@@ -1020,11 +1024,11 @@ main::before {
   margin-top: 2px;
 }
 .sk.past {
-  color: #968bb0;
+  color: #a68c68;
 }
 .sk.cur {
-  color: #e879f9;
-  text-shadow: 0 0 12px rgba(232, 121, 249, 0.9);
+  color: #f59e0b;
+  text-shadow: 0 0 12px rgba(245, 158, 11, 0.85), 0 2px 4px #000;
 }
 
 #hdr .hc {
@@ -1035,10 +1039,14 @@ main::before {
   align-items: center;
   gap: 12px;
   padding: 10px 18px;
-  background: linear-gradient(180deg, rgba(28, 24, 39, 0.92), rgba(14, 12, 22, 0.96));
-  border: 2px solid #8671ab;
+  background: linear-gradient(180deg, rgba(36, 28, 22, 0.94), rgba(16, 12, 10, 0.97));
+  border: 2px solid #8f6e3b;
   border-radius: 10px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(235, 215, 255, 0.25);
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.92),
+    0 0 0 1px #0b0806,
+    inset 0 1px 0 rgba(255, 224, 160, 0.24),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.75);
 }
 #hdr .lab {
   display: inline !important;
@@ -1051,8 +1059,9 @@ main::before {
   width: 17px;
   height: 17px;
   border-radius: 50% !important;
-  border: 2px solid #6e5f8a;
-  background: #120f1c;
+  border: 2px solid #755b36;
+  background: radial-gradient(circle at 35% 35%, #241b15, #0e0a08);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.85);
 }
 #hdr .pip.now {
   border-color: #ffffff;
@@ -1084,10 +1093,14 @@ main::before {
   letter-spacing: 1px;
   color: #fff6dc;
   text-shadow: 0 1px 3px #000;
-  background: linear-gradient(180deg, rgba(36, 28, 52, 0.96), rgba(16, 12, 24, 0.98));
-  border: 2px solid #d4af64;
+  background: linear-gradient(180deg, rgba(42, 32, 24, 0.96), rgba(18, 13, 10, 0.98));
+  border: 2px solid #c99e52;
   border-radius: 8px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.92), 0 0 14px rgba(212, 168, 85, 0.28), inset 0 1px 0 rgba(255, 240, 200, 0.28);
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.92),
+    0 0 0 1px #0b0806,
+    0 0 14px rgba(212, 168, 85, 0.24),
+    inset 0 1px 0 rgba(255, 232, 180, 0.28);
   cursor: pointer;
 }
 #hdr .hg .gear:hover {
@@ -1127,7 +1140,7 @@ main::before {
   margin-top: clamp(8px, 1.4dvh, 18px) !important;
 }
 #opp.zone.act {
-  background: radial-gradient(55% 75% at 50% 100%, rgba(192, 84, 255, 0.14), transparent 72%) !important;
+  background: radial-gradient(55% 75% at 50% 100%, rgba(200, 72, 52, 0.14), transparent 72%) !important;
 }
 
 /* Rakibin Üstte Kapalı & Stackli Joker Kartları */
@@ -1162,7 +1175,7 @@ main::before {
   background: transparent !important;
 }
 #me.zone.act {
-  background: radial-gradient(55% 75% at 50% 0%, rgba(56, 189, 248, 0.14), transparent 72%) !important;
+  background: radial-gradient(55% 75% at 50% 0%, rgba(234, 179, 84, 0.12), transparent 72%) !important;
 }
 
 /* Joker veya deste sürüklenirken ekstra yazı/kutu gösterme */
@@ -1170,7 +1183,7 @@ body.dragging-joker #fx::after {
   display: none !important;
 }
 
-/* --- GOTİK OYMA TAŞ & RÜNİK KAHRAMAN PLAKALARI (.who) --- */
+/* --- GOTİK OYMA TAŞ & ANTİK BRONZ KAHRAMAN PLAKALARI (.who) --- */
 .who {
   position: relative;
   z-index: 6;
@@ -1181,29 +1194,37 @@ body.dragging-joker #fx::after {
   gap: 18px;
   min-width: clamp(310px, 34vw, 440px);
   padding: 6px 24px;
-  background: linear-gradient(180deg, rgba(28, 25, 40, 0.92) 0%, rgba(15, 13, 24, 0.96) 100%);
-  border: 2px solid #6e5f8c;
-  border-radius: 48px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(110, 82, 48, 0.22) 0%, transparent 65%),
+    linear-gradient(180deg, rgba(36, 28, 23, 0.95) 0%, rgba(17, 13, 11, 0.98) 100%);
+  border: 2px solid #7d6238;
+  border-radius: 18px;
   box-shadow:
     0 12px 28px rgba(0, 0, 0, 0.94),
-    0 0 0 2px #09070e,
-    inset 0 1px 0 rgba(235, 215, 255, 0.28),
-    inset 0 -3px 8px rgba(0, 0, 0, 0.88);
+    0 0 0 2px #0b0806,
+    0 0 0 3.5px #3d2e1b,
+    inset 0 1px 0 rgba(255, 224, 160, 0.26),
+    inset 0 -4px 10px rgba(0, 0, 0, 0.88);
   min-height: 0 !important;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 #opp.act .who {
-  border-color: #c084fc;
+  border-color: #c8523b;
   box-shadow:
     0 12px 30px rgba(0, 0, 0, 0.94),
-    0 0 26px rgba(192, 132, 252, 0.6),
-    inset 0 1px 0 rgba(243, 232, 255, 0.4);
+    0 0 0 2px #0b0806,
+    0 0 24px rgba(200, 82, 59, 0.45),
+    inset 0 1px 0 rgba(255, 196, 176, 0.34),
+    inset 0 -4px 10px rgba(0, 0, 0, 0.88);
 }
 #me.act .who {
-  border-color: #38bdf8;
+  border-color: #eab354;
   box-shadow:
     0 12px 30px rgba(0, 0, 0, 0.94),
-    0 0 26px rgba(56, 189, 248, 0.55),
-    inset 0 1px 0 rgba(224, 242, 254, 0.45);
+    0 0 0 2px #0b0806,
+    0 0 26px rgba(234, 179, 84, 0.5),
+    inset 0 1px 0 rgba(255, 236, 179, 0.42),
+    inset 0 -4px 10px rgba(0, 0, 0, 0.88);
 }
 
 .who .av {
@@ -1592,60 +1613,63 @@ body.dragging-joker #fx::after {
   transition: transform 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.2), box-shadow 0.18s ease, filter 0.18s ease !important;
 }
 
-/* Kart Çek Küresi (Gotik Oyma Taş & Parlayan Mavi/Mor Rün Çemberi) */
+/* Kart Çek Küresi (Gotik Oyma Taş & Parlayan Kehribar/Altın Çember) */
 #fx #draw {
   background:
-    radial-gradient(circle at 38% 32%, #3a344c 0%, #221e2e 58%, #110e18 100%) !important;
-  border: 3px solid #7dd3fc !important;
-  color: #f1f5f9 !important;
-  text-shadow: 0 2px 6px #000, 0 0 10px rgba(56, 189, 248, 0.65) !important;
+    radial-gradient(circle at 38% 32%, #3a2e22 0%, #221a13 58%, #110c09 100%) !important;
+  border: 3px solid #d4a44d !important;
+  color: #fef3c7 !important;
+  text-shadow: 0 2px 6px #000, 0 0 10px rgba(212, 164, 77, 0.55) !important;
   box-shadow:
-    0 0 0 4px #181522,
-    0 0 0 7px #524c66,
+    0 0 0 4px #140f0b,
+    0 0 0 7px #5c472b,
     0 12px 26px rgba(0, 0, 0, 0.96),
-    0 0 22px rgba(56, 189, 248, 0.55),
-    inset 0 3px 8px rgba(186, 230, 253, 0.32),
+    0 0 22px rgba(212, 164, 77, 0.45),
+    inset 0 3px 8px rgba(255, 228, 168, 0.28),
     inset 0 -6px 12px rgba(0, 0, 0, 0.85) !important;
 }
 #fx #draw:hover:not(:disabled) {
   transform: scale(1.08) !important;
-  filter: brightness(1.15);
-  border-color: #bae6fd !important;
+  filter: brightness(1.12);
+  border-color: #fde68a !important;
 }
 
-/* Pas Küresi (Gotik Oyma Taş & Ametist Rün Mührü - Referans Görseldeki "Tur Bitir" Taş Küresi) */
+/* Pas Küresi (Oyma Bazalt Taş & Antik Bronz Madalyon - Bekleme / Pas Durumu) */
 #fx #pass {
   background:
-    radial-gradient(circle at 38% 32%, #3d334c 0%, #231c2e 58%, #120e18 100%) !important;
-  border: 3px solid #c084fc !important;
-  color: #f5f3ff !important;
-  text-shadow: 0 2px 6px #000, 0 0 10px rgba(192, 132, 252, 0.65) !important;
+    radial-gradient(circle at 36% 28%, #3b3129 0%, #221c17 58%, #110e0c 100%) !important;
+  border: 3px solid #8c6d42 !important;
+  color: #e8dcc4 !important;
+  text-shadow: 0 2px 5px #000 !important;
   box-shadow:
-    0 0 0 4px #181422,
-    0 0 0 7px #564d69,
+    0 0 0 4px #120e0b,
+    0 0 0 7px #4a3a26,
     0 12px 26px rgba(0, 0, 0, 0.96),
-    0 0 22px rgba(192, 132, 252, 0.55),
-    inset 0 3px 8px rgba(233, 213, 255, 0.32),
-    inset 0 -6px 12px rgba(0, 0, 0, 0.85) !important;
+    inset 0 3px 8px rgba(255, 224, 170, 0.2),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.88) !important;
 }
 #fx #pass:hover:not(:disabled) {
-  transform: scale(1.08) !important;
-  filter: brightness(1.15);
-  border-color: #e9d5ff !important;
+  transform: scale(1.07) !important;
+  filter: brightness(1.12);
+  border-color: #d4a656 !important;
+}
+#fx #pass:active:not(:disabled) {
+  transform: translateY(2px) scale(0.97) !important;
 }
 
-/* Turu Bitir Küresi (Parlayan Ametist & Altın Rün Mührü) */
+/* Turu Bitir Küresi (Hearthstone Tarzı Parlayan Eskitilmiş Altın & Kehribar Mührü) */
 #fx #pass:not(.alt) {
   background:
-    radial-gradient(circle at 38% 32%, #582c7a 0%, #311547 58%, #160824 100%) !important;
-  border-color: #e879f9 !important;
-  color: #fae8ff !important;
+    radial-gradient(circle at 36% 28%, #9b6a21 0%, #5c3a0e 58%, #291705 100%) !important;
+  border-color: #f3c669 !important;
+  color: #fff8e1 !important;
+  text-shadow: 0 2px 5px #000, 0 0 10px rgba(255, 210, 110, 0.55) !important;
   box-shadow:
-    0 0 0 4px #1a1024,
-    0 0 0 7px #705887,
+    0 0 0 4px #181109,
+    0 0 0 7px #75582d,
     0 12px 26px rgba(0, 0, 0, 0.96),
-    0 0 28px rgba(217, 70, 239, 0.75),
-    inset 0 3px 8px rgba(245, 208, 254, 0.45),
+    0 0 26px rgba(234, 179, 84, 0.62),
+    inset 0 3px 9px rgba(255, 240, 190, 0.48),
     inset 0 -6px 12px rgba(0, 0, 0, 0.82) !important;
 }
 
@@ -1701,12 +1725,14 @@ body.dragging-joker #fx::after {
   height: clamp(64px, 9.4dvh, 80px);
   padding: 4px;
   border-radius: 50%;
-  background: radial-gradient(circle at 38% 30%, rgba(36, 28, 48, 0.96) 0%, rgba(14, 10, 20, 0.98) 100%);
-  border: 2.5px solid #6b5a48;
+  background: radial-gradient(circle at 38% 30%, #2c231c 0%, #15100c 70%, #0b0807 100%);
+  border: 2.5px solid #8a6c40;
   box-shadow:
-    0 0 0 3px #14101a,
-    0 8px 18px rgba(0, 0, 0, 0.9),
-    inset 0 2px 6px rgba(255, 232, 180, 0.14);
+    0 0 0 3px #140f0c,
+    0 0 0 4.5px #4a3a26,
+    0 8px 18px rgba(0, 0, 0, 0.92),
+    inset 0 2px 6px rgba(255, 224, 160, 0.18),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.82);
   display: flex;
   flex-direction: column;
   justify-content: center;
