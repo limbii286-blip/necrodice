@@ -894,8 +894,8 @@ const HEROES=[
   {id:'t',name:'Tüccar',hpName:'Pazarlık',desc:'Destedeki en üst 2 karta gizlice bak; istersen yerlerini değiştir.'},
   {id:'c',name:'Yozlaşmış Tüccar',hpName:'Hileli Dokunuş',desc:'Bu turda toplamına +2 veya −2 uygula.'},
   {id:'p',name:'Veba Doktoru',hpName:'Kuzgun Gözü',desc:'Rakibin kapalı sayı kartına gizlice bak.'},
-  {id:'m',name:'Ölümün Efendisi',passive:true,hpName:'Kader Mühürü',desc:'Pasif: Her D20 ölüm zarına +2 bonus kazanırsın.'},
-  {id:'u',name:'Bilinmeyen',passive:true,hpName:'Hiçlikten Dönüş',desc:'Pasif: Ölüm zarında ölürsen oyun başına 1 kez ölümden dönersin.'}
+  {id:'m',name:'Ölümün Efendisi',passive:true,hpName:'Kader Mühürü',desc:'Her D20 ölüm zarına +2 bonus kazanırsın.'},
+  {id:'u',name:'Bilinmeyen',passive:true,hpName:'Hiçlikten Dönüş',desc:'Ölüm zarında ölürsen oyun başına 1 kez ölümden dönersin.'}
 ];
 const HERO_MAP=Object.fromEntries(HEROES.map(h=>[h.id,h]));
 const HP_IC={
@@ -2025,7 +2025,7 @@ function createSmoothDragLoop(onFrame){
     const h=HERO_MAP[hid];
     if(!h)return;
     const isUsed=btn.classList.contains('used');
-    const tagTxt=h.passive?(isUsed?'Pasif · Tükendi':'Pasif Güç'):(isUsed?'Düelloda Kullanıldı':'Düelloda 1 Kez');
+    const tagTxt=h.passive?(isUsed?'Pasif · Tükendi':'Pasif'):(isUsed?'Düelloda Kullanıldı':'Aktif · Düelloda 1 Kez');
     let tip=document.getElementById('hp-tip');
     if(!tip){
       tip=document.createElement('div');
@@ -2034,9 +2034,9 @@ function createSmoothDragLoop(onFrame){
       document.body.appendChild(tip);
     }
     tip.className=`hp-tip ${side===1?'opp':'mine'}${h.passive?' passive':''}${isUsed?' used':''}`;
-    tip.innerHTML=`<div class="hp-tip-head"><span class="hp-tip-ic">${HP_IC[hid]||HP_IC.t}</span><div class="hp-tip-meta"><div class="hp-tip-title">${h.hpName}</div><div class="hp-tip-tag">${tagTxt}</div></div></div><div class="hp-tip-desc">${h.desc}</div>`;
+    tip.innerHTML=`<div class="hp-tip-head"><div class="hp-tip-title">${h.hpName}</div><div class="hp-tip-tag">${tagTxt}</div></div><div class="hp-tip-desc">${h.desc}</div>`;
     const r=btn.getBoundingClientRect();
-    const tw=tip.offsetWidth||220,th=tip.offsetHeight||96;
+    const tw=tip.offsetWidth||290,th=tip.offsetHeight||120;
     const left=Math.max(10,Math.min(window.innerWidth-tw-10,r.left+r.width/2-tw/2));
     let top=side===1?(r.bottom+10):(r.top-th-10);
     if(top<10)top=r.bottom+10;
