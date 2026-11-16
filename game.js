@@ -782,7 +782,7 @@ function dustTableCards(){
     setTimeout(()=>motes.forEach(m=>m.remove()),950);
   }
 }
-function heroAttack(winIdx){
+function heroAttack(winIdx,tanked=false){
   const srcAv=document.querySelector((winIdx===0?'#me':'#opp')+' .who .av');
   const dstAv=document.querySelector((winIdx===0?'#opp':'#me')+' .who .av');
   if(!srcAv||!dstAv)return;
@@ -820,12 +820,25 @@ function heroAttack(winIdx){
     imp.style.top=(r2.top+r2.height/2)+'px';
     const dmg=document.createElement('div');
     dmg.className='av-dmg';
-    dmg.textContent='-1';
+    dmg.textContent=tanked?'0':'-1';
     dmg.style.left=(r2.left+r2.width/2)+'px';
     dmg.style.top=(r2.top+r2.height/2)+'px';
     document.body.appendChild(imp);
     document.body.appendChild(dmg);
     setTimeout(()=>{imp.remove();dmg.remove()},1250);
+    if(tanked){
+      const hpEl=document.querySelector(winIdx===0?'#opp .hp-btn':'#me .hp-btn');
+      if(hpEl){
+        const hr=hpEl.getBoundingClientRect();
+        const fx=document.createElement('div');
+        fx.className='hp-cast-fx'+(winIdx===0?' opp':'');
+        fx.style.left=(hr.left+hr.width/2)+'px';
+        fx.style.top=(hr.top+hr.height/2)+'px';
+        fx.innerHTML='<i class="hp-cast-ring"></i><span class="hp-cast-pop">Demir İrade!</span>';
+        document.body.appendChild(fx);
+        setTimeout(()=>fx.remove(),1350);
+      }
+    }
   },1580);
 
   anim.onfinish=()=>{
@@ -880,11 +893,11 @@ function heroClash(){
 }
 function endRound(){
   const S=G,a=[total(S,0),total(S,1)],T=tg(S);
-  let r=outc(S,0);
+  let r=outc(S,0),tankedSide=-1;
   if(r!==0){
     const loser=r<0?0:1;
     if(avKey(S,loser)==='n'&&Math.random()<0.30){
-      r=0;
+      r=0;tankedSide=loser;
       S.log.push({p:loser,t:'Demir İrade! Hasarı tanklayıp turu berabereye çevirdi!'});
     }
   }
@@ -901,7 +914,7 @@ function endRound(){
     }
     snd(r>0?'win':r<0?'lose':'ok');
     R();
-    setTimeout(()=>{if(S===G){if(r!==0)heroAttack(r>0?0:1);else heroClash();}},1000);
+    setTimeout(()=>{if(S===G){if(tankedSide>=0)heroAttack(1-tankedSide,true);else if(r!==0)heroAttack(r>0?0:1);else heroClash();}},1000);
     setTimeout(()=>{
       if(S!==G)return;
       // 3) Yerdeki bütün sayı kartları tozlaşır gibi yok olur, sonra diğer tura geçilir
