@@ -398,8 +398,8 @@ const initClockSec=()=>((MODE==='host'||MODE==='guest'||MODE==='spectator')?ONLI
 const GRACE_INIT=5;       // İlk düello ve geçişlerde jokerlere bakmak için 5 saniye hazırlık süresi
 function newBO3(S){
   const cs=initClockSec();
-  S.dj=[];S.jdeck=shuf(range(24));S.hand=[S.jdeck.splice(0,4),S.jdeck.splice(0,4)];
-  [0,1].forEach(p=>{if(avKey(S,p)==='s')S.hand[p].push(25)});
+  S.dj=[];S.jdeck=shuf(range(24));
+  S.hand=[0,1].map(p=>avKey(S,p)==='s'?[...S.jdeck.splice(0,3),25]:S.jdeck.splice(0,4));
   S.pts=[0,0];S.rounds=0;S.res=[];
   S.hpUsed=[false,false];S.d20Bonus=[0,0];
   S.clocks=[cs,cs];
