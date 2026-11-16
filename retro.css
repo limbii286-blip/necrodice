@@ -1905,9 +1905,10 @@ body.dragging-joker #fx::after {
 }
 .side-clock.out .sc-val {
   color: #ef4444 !important;
-  font-size: clamp(22px, 3.6dvh, 30px) !important;
+  font-size: clamp(42px, 6.2dvh, 56px) !important;
+  line-height: 1 !important;
   font-weight: 900 !important;
-  text-shadow: 0 0 12px rgba(239, 68, 68, 0.9), 0 2px 4px #000 !important;
+  text-shadow: 0 0 14px rgba(239, 68, 68, 0.95), 0 2px 5px #000 !important;
 }
 .side-clock.turn-on {
   transform: scale(1.14);
