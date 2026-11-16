@@ -1034,7 +1034,7 @@ const HD_PORTRAITS={
   m:'cursed_king.jpg?v=20261116_t21',
   w:'necromancer.jpg?v=20261116_t21',
   l:'werewolf.jpg?v=20261116_t21',
-  v:'vampire.jpg?v=20261116_t21',
+  v:'vampire.jpg?v=20261116_t37',
   u:'unknown.jpg?v=20261116_t21'
 };
 const avSrc=k=>HD_PORTRAITS[k]||(k?AV[k]:IMG.bn),oppName=()=>NAMES[avKey(G,1)]||'Rakip';
