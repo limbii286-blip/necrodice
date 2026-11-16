@@ -958,7 +958,7 @@ function endRound(){
 }
 function cutscene(txt,done){ // BİLİNMEYEN: ikonu ve konuşma balonu
   lock=true;const el=document.createElement('div');el.id='cs';
-  el.innerHTML=`<div class="bub"><span></span></div><img src="${AV.u}" alt="">`;document.body.appendChild(el);
+  el.innerHTML=`<div class="bub"><span></span></div><img src="${avSrc('u')}" alt="">`;document.body.appendChild(el);
   try{snd('stamp');vib([200,80,400])}catch(e){}
   const sp=el.querySelector('span');let i=0,end=false,tm=null;
   const out=()=>{if(end)return;end=true;clearInterval(tm);el.remove();done()};
