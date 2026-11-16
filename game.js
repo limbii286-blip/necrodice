@@ -993,7 +993,7 @@ const HEROES=[
   {id:'c',name:'Lanetli Tüccar',hpName:'Hileli Terazi',desc:'Bu turda toplamına +2 veya −2 uygula.'},
   {id:'p',name:'Veba Doktoru',hpName:'Veba Laneti',desc:'Rakibin bu eldeki tüm mevcut ve gelecek sayı kartlarına +1 veya −1 laneti uygula.'},
   {id:'n',name:'Kara Şövalye',passive:true,hpName:'Demir İrade',desc:'Kaybettiğin her turda %30 ihtimalle gelen hasarı tanklayıp turu berabereye çevirirsin.'},
-  {id:'a',name:'Simyacı',hpName:'Dönüşüm İksiri',desc:'Seçtiğin bir kendi sayı kartını destenin en üstündeki kartla değiştir; seçtiğin kart destenin en üstüne gider.'},
+  {id:'a',name:'Simyacı',hpName:'Dönüşüm İksiri',desc:'Son çektiğin açık sayı kartını destenin en üstündeki kartla değiştir; o kart destenin en üstüne gider.'},
   {id:'s',name:'Büyücü',hpName:'Kuzgun Gözü',desc:'Rakibin kapalı sayı kartına gizlice bak. (Rakip kullandığını anlamaz)'},
   {id:'e',name:'Cellat',passive:true,hpName:'İnfaz Hükmü',desc:'Rakibin attığı her ölüm zarından 2 eksiltir.'},
   {id:'m',name:'Ölümün Efendisi',passive:true,hpName:'Kader Mühürü',desc:'Attığın her ölüm zarına +2 bonus kazanırsın.'},
@@ -1414,8 +1414,12 @@ function useHeroPower(){
     $('#hp-plp1').onclick=()=>applyPlague(1);
     $('#hp-plm1').onclick=()=>applyPlague(-1);
   }else if(hid==='a'){
-    if(!(S.pl[0].open.length||S.pl[0].closed.length)||!S.deck.length)return box('<h3>Dönüşüm İksiri</h3><p>Değiştirilecek kart veya destede kart yok.</p>');
-    P={hp:'a',ks:['my_all'],pk:[]};snd('info');R();
+    if(!S.pl[0].open.length||!S.deck.length)return box('<h3>Dönüşüm İksiri</h3><p>Değiştirilecek açık kart veya destede kart yok.</p>');
+    if(MODE==='guest'){snd('flip');return conn.send({k:'hp_alch'})}
+    const idx=S.pl[0].open.length-1,old=S.pl[0].open[idx],rep=S.deck.pop();
+    S.pl[0].open[idx]=rep;S.deck.push(old);
+    S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
+    S.log.push({p:0,t:'Dönüşüm İksiri kullandı'});snd('flip');R();
   }else if(hid==='s'){
     if(!S.pl[1].closed.length)return;
     if(MODE==='guest'){snd('flip');return conn.send({k:'hp_peek'})}
@@ -1761,19 +1765,12 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     R();
   }
   else if(m.k=='hp_alch'){
-    if(avKey(S,1)!=='a'||(S.hpUsed&&S.hpUsed[1])||!S.deck.length)return;
-    let done=false;
-    for(const arr of [S.pl[1].open,S.pl[1].closed]){
-      const idx=m.cid!=null?arr.findIndex(c=>c.id===m.cid):(arr.length-1);
-      if(idx>=0){
-        const old=arr[idx],rep=S.deck.pop();
-        arr[idx]=rep;S.deck.push(old);
-        S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
-        S.log.push({p:1,t:'Dönüşüm İksiri kullandı'});
-        done=true;R();break;
-      }
-    }
-    if(!done)return;
+    if(avKey(S,1)!=='a'||(S.hpUsed&&S.hpUsed[1])||!S.pl[1].open.length||!S.deck.length)return;
+    const idx=S.pl[1].open.length-1,old=S.pl[1].open[idx],rep=S.deck.pop();
+    S.pl[1].open[idx]=rep;S.deck.push(old);
+    S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
+    S.log.push({p:1,t:'Dönüşüm İksiri kullandı'});
+    R();
   }
   else if(m.k=='hp_necro'){
     if(avKey(S,1)!=='w'||(S.hpUsed&&S.hpUsed[1])||!canDraw(S,1))return;
