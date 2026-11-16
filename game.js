@@ -1009,17 +1009,17 @@ let prevT=false,lastLk='',flipId=null,lastTot=[0,0],lastBust=false,prevSeal='',s
 const NAMES={c:'Lanetli Tüccar',p:'Veba Doktoru',n:'Kara Şövalye',a:'Simyacı',s:'Büyücü',e:'Cellat',m:'Ölümün Efendisi',w:'Cadı',l:'Kurt Adam',v:'Vampir',u:'BİLİNMEYEN'};
 const avKey=(S,p)=>{if(p===0)return (S.hero&&S.hero[0])||MY_HERO||'c';if(MODE=='bot')return (S.hero&&S.hero[1])||{easy:'c',med:'p',hard:'m',imp:'u'}[DIFF];return (S.hero&&S.hero[p])||(S.av&&S.av[p])||'c'};
 const HD_PORTRAITS={
-  c:'corrupted_merchant.jpg?v=20261116_t6',
-  p:'plague_doctor.jpg?v=20261116_t6',
-  n:'dark_knight.jpg?v=20261116_t6',
-  a:'shadow_alchemist.jpg?v=20261116_t6',
-  s:'crimson_oracle.jpg?v=20261116_t6',
-  e:'iron_executioner.jpg?v=20261116_t6',
-  m:'cursed_king.jpg?v=20261116_t6',
-  w:'necromancer.jpg?v=20261116_t6',
-  l:'werewolf.jpg?v=20261116_t6',
-  v:'vampire.jpg?v=20261116_t16',
-  u:'unknown.jpg?v=20261116_t6'
+  c:'corrupted_merchant.jpg?v=20261116_t18',
+  p:'plague_doctor.jpg?v=20261116_t18',
+  n:'dark_knight.jpg?v=20261116_t18',
+  a:'shadow_alchemist.jpg?v=20261116_t18',
+  s:'crimson_oracle.jpg?v=20261116_t18',
+  e:'iron_executioner.jpg?v=20261116_t18',
+  m:'cursed_king.jpg?v=20261116_t18',
+  w:'necromancer.jpg?v=20261116_t18',
+  l:'werewolf.jpg?v=20261116_t18',
+  v:'vampire.jpg?v=20261116_t18',
+  u:'unknown.jpg?v=20261116_t18'
 };
 const avSrc=k=>HD_PORTRAITS[k]||(k?AV[k]:IMG.bn),oppName=()=>NAMES[avKey(G,1)]||'Rakip';
 const prevAv=[undefined,undefined],morphT=[0,0];
