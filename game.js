@@ -1212,7 +1212,7 @@ function R(){
   const exact=!low&&mt===T,oexact=oppClosedKnown&&!low&&ot===T;
   const jp=n=>`<span class="jpips" title="Bu tur kalan joker hakkı ${n}/2">${[0,1].map(i=>`<i${i<n?' class="on"':''}></i>`).join('')}</span>`;
   const avh=p=>{const k=avKey(S,p),now=performance.now();if(prevAv[p]!==undefined&&prevAv[p]!==k)morphT[p]=now;prevAv[p]=k;
-    const el=(now-morphT[p])/1000,mo=morphT[p]&&el<1.1;return `<img class="av${mo?' morph':''}" data-av="${p}"${mo?` style="animation-delay:-${el.toFixed(2)}s"`:''} src="${avSrc(k)}" alt="">`};
+    const el=(now-morphT[p])/1000,mo=morphT[p]&&el<1.1,fp=HERO_FOCUS[k]||'50% 25%';return `<img class="av${mo?' morph':''}" data-av="${p}" style="object-position:${fp};${mo?`animation-delay:-${el.toFixed(2)}s`:''}" src="${avSrc(k)}" alt="">`};
   const av0=avh(0),av1=avh(1);
   const p0Char=NAMES[avKey(S,0)]||'Lanetli Tüccar';
   const p1Char=NAMES[avKey(S,1)]||'Kara Şövalye';
