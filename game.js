@@ -422,7 +422,7 @@ function deal(S){
 const act=(S,id)=>S.eff.some(e=>e.id==id&&!e.neg);
 function total(S,p,wc=true){
   const pm=(S.plagueMod&&S.plagueMod[p])||0;
-  const f=(c,cl)=>{const b=Math.max(0,(c.o??c.n)+pm);let v=b;if(act(S,1)&&b%2)v=b*2;else if(act(S,2)&&b%2==0)v=b/2; // x2: tekler iki katı, ÷2: çiftler yarısı (ikisi birlikte olunca da her kart yalnızca bir kez etkilenir)
+  const f=(c,cl)=>{const b=Math.max(0,(c.o??c.n)+pm);if(c.hpImmune)return b;let v=b;if(act(S,1)&&b%2)v=b*2;else if(act(S,2)&&b%2==0)v=b/2; // x2: tekler iki katı, ÷2: çiftler yarısı (ikisi birlikte olunca da her kart yalnızca bir kez etkilenir)
     if(cl){if(act(S,20))return 0;if(act(S,21))v*=2}return v};
   let t=0;S.pl[p].open.forEach(c=>t+=f(c,0));if(wc)S.pl[p].closed.forEach(c=>t+=f(c,1));
   S.eff.forEach(e=>{if(e.neg||e.o!=p)return;if(e.id==3)t+=5;if(e.id==4)t-=5;if(e.id==22)t+=e.s*S.deck.length});
@@ -440,7 +440,7 @@ const canDraw=(S,p)=>S.deck.length>0&&!S.eff.some(e=>e.id==23&&!e.neg&&e.o!=p);
 function opts(S,p,k){
   if(k=='my')return S.pl[p].open.map(c=>c.id);
   if(k=='opp')return S.pl[1-p].open.map(c=>c.id);
-  if(k=='any')return S.pl.flatMap(x=>[...x.open,...x.closed]).map(c=>c.id);
+  if(k=='any')return S.pl.flatMap(x=>[...x.open,...x.closed.filter(c=>!c.hpImmune)]).map(c=>c.id);
   if(k=='eff')return S.eff.filter(e=>!e.neg&&BLOCK.has(e.id)).map(e=>e.uid);
   if(k=='sign')return [1,-1];
 }
@@ -457,7 +457,7 @@ function play(S,p,id,pk){
   if(id==12)S.eff.find(e=>e.uid==pk[0]).neg=true;
   if(id==13||id==14)(S.dead=S.dead||[]).push(take(pk[0]));
   if(id==15){const[a,i]=find(pk[0]),[b,k]=find(pk[1]);[a[i],b[k]]=[b[k],a[i]]}
-  if(id==16)[S.pl[0].closed,S.pl[1].closed]=[S.pl[1].closed,S.pl[0].closed];
+  if(id==16){const i0=S.pl[0].closed.findIndex(c=>!c.hpImmune),i1=S.pl[1].closed.findIndex(c=>!c.hpImmune);if(i0>=0&&i1>=0){const tmp=S.pl[0].closed[i0];S.pl[0].closed[i0]=S.pl[1].closed[i1];S.pl[1].closed[i1]=tmp;}}
   if(id==17)S.pl[p].open.push(take(pk[0]));
   if(id==18)S.pl[q].open.push(take(pk[0]));
   if(id==24)S.noJ[q]=true;
@@ -981,7 +981,7 @@ const HEROES=[
   {id:'s',name:'Büyücü',hpName:'Kuzgun Gözü',desc:'Rakibin kapalı sayı kartına gizlice bak.'},
   {id:'e',name:'Cellat',passive:true,hpName:'İnfaz Hükmü',desc:'Rakibin attığı her ölüm zarından 2 eksiltir.'},
   {id:'m',name:'Ölümün Efendisi',passive:true,hpName:'Kader Mühürü',desc:'Attığın her ölüm zarına +2 bonus kazanırsın.'},
-  {id:'w',name:'Cadı',hpName:'Kara Ayin',desc:'Desteden fazladan 1 kapalı sayı kartı çek.'},
+  {id:'w',name:'Cadı',hpName:'Kara Ayin',desc:'Desteden fazladan 1 kapalı sayı kartı çek. (Bu kart hiçbir jokerden etkilenmez)'},
   {id:'l',name:'Kurt Adam',hpName:'Vahşi Pençe',desc:'İki tarafın da masadaki rastgele bir sayı kartını imha eder.'},
   {id:'v',name:'Vampir',hpName:'Kan Emici',desc:'Bu turda rakibin toplamından 2 puan çalıp kendi toplamına eklersin.'},
   {id:'u',name:'Bilinmeyen',passive:true,bossOnly:true,hpName:'Hiçlikten Dönüş',desc:'Ölüm zarında hedeflenen sayıdan düşük atarsa, bir kereliğine hayata geri döner.'}
@@ -1380,7 +1380,7 @@ function useHeroPower(){
   }else if(hid==='w'){
     if(!canDraw(S,0))return box('<h3>Kara Ayin</h3><p>Desteden kart çekilemiyor.</p>');
     if(MODE==='guest'){snd('draw');return conn.send({k:'hp_necro'})}
-    const c=S.deck.pop();S.pl[0].closed.push(c);
+    const c=S.deck.pop();c.hpImmune=true;S.pl[0].closed.push(c);
     S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
     S.log.push({p:0,t:'Kara Ayin kullandı (1 kapalı kart çekti)'});snd('draw');R();
   }else if(hid==='l'){
@@ -1578,7 +1578,7 @@ function view(S){ // rakibe gidecek, gizli bilgisi temizlenmiş ve aynalanmış 
   const f=a=>[a[1],a[0]],pk1=S.oppPeek1||[];
   return {av:f(S.av),hero:S.hero?f(S.hero):f(S.av),hpUsed:S.hpUsed?f(S.hpUsed):[false,false],hpMod:S.hpMod?f(S.hpMod):[0,0],plagueMod:S.plagueMod?f(S.plagueMod):[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?f(S.uRevived):[false,false],oppPeek:pk1,mast:f(S.mast),turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:1-S.turn,clocks:S.clocks?f(S.clocks):[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?f(S.timeOut):[false,false],hadTimeout:!!S.hadTimeout,pts:f(S.pts),rev:S.rev,winSide:S.winSide==null?null:-S.winSide,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),jTurn:S.jTurn?f(S.jTurn):[0,0],noJ:f(S.noJ),
     hand:[S.hand[1],S.hand[0].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
-    pl:[S.pl[1],{open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:(S.rev||pk1.includes(c.id))?c.n:0,o:c.o}))}],
+    pl:[S.pl[1],{open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:(S.rev||pk1.includes(c.id))?c.n:0,o:c.o,hpImmune:!!c.hpImmune}))}],
     eff:S.eff.map(e=>({...e,o:1-e.o})),pj:(S.pj||[]).map(e=>({...e,o:1-e.o})),log:S.log.slice(-6).map(l=>({...l,p:l.p<0?-1:1-l.p}))};
 }
 function specView(S){ // izleyicilere gidecek durum (0 = host/oda sahibi, 1 = misafir oyuncu, kapalı kartlar rev olmadan görünmez)
@@ -1586,8 +1586,8 @@ function specView(S){ // izleyicilere gidecek durum (0 = host/oda sahibi, 1 = mi
     av:[S.av[0],S.av[1]],hero:S.hero?[...S.hero]:[S.av[0],S.av[1]],hpUsed:S.hpUsed?[...S.hpUsed]:[false,false],hpMod:S.hpMod?[...S.hpMod]:[0,0],plagueMod:S.plagueMod?[...S.plagueMod]:[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?[...S.uRevived]:[false,false],mast:[S.mast[0],S.mast[1]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:S.turn,clocks:S.clocks?[...S.clocks]:[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?[...S.timeOut]:[false,false],hadTimeout:!!S.hadTimeout,pts:S.pts,rev:S.rev,winSide:S.winSide,res:S.res,jUsed:S.jUsed,jTurn:S.jTurn?[...S.jTurn]:[0,0],noJ:S.noJ,
     hand:[S.hand[0].map(()=>0),S.hand[1].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
     pl:[
-      {open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:c.o}))},
-      {open:S.pl[1].open,closed:S.pl[1].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:c.o}))}
+      {open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:c.o,hpImmune:!!c.hpImmune}))},
+      {open:S.pl[1].open,closed:S.pl[1].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:c.o,hpImmune:!!c.hpImmune}))}
     ],
     eff:S.eff.map(e=>({...e})),pj:(S.pj||[]).map(e=>({...e})),log:S.log.slice(-6).map(l=>({...l}))
   };
@@ -1701,7 +1701,7 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
   }
   else if(m.k=='hp_necro'){
     if(avKey(S,1)!=='w'||(S.hpUsed&&S.hpUsed[1])||!canDraw(S,1))return;
-    const c=S.deck.pop();S.pl[1].closed.push(c);
+    const c=S.deck.pop();c.hpImmune=true;S.pl[1].closed.push(c);
     S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
     S.log.push({p:1,t:'Kara Ayin kullandı (1 kapalı kart çekti)'});
     R();
