@@ -1130,7 +1130,7 @@ html::after {
 
 #opp.zone {
   justify-content: flex-end;
-  padding-top: max(6px, env(safe-area-inset-top, 6px)) !important;
+  padding-top: max(2px, env(safe-area-inset-top, 2px)) !important;
   padding-bottom: 0 !important;
   background: transparent !important;
 }
@@ -1153,10 +1153,16 @@ html::after {
   justify-content: center;
   gap: clamp(4px, 0.6vw, 8px);
   min-height: clamp(60px, 9.2dvh, 84px);
-  margin-top: 0;
-  margin-bottom: -6px;
+  margin-top: -6px;
+  margin-bottom: -4px;
   pointer-events: none;
   z-index: 5;
+}
+@media (min-width: 761px) {
+  #opp.zone .who,
+  #me.zone .who {
+    transform: translateY(-10px);
+  }
 }
 .opp-jhand .oj {
   height: clamp(62px, 9.6dvh, 86px);
