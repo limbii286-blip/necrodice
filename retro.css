@@ -1153,15 +1153,17 @@ html::after {
   justify-content: center;
   gap: clamp(4px, 0.6vw, 8px);
   min-height: clamp(60px, 9.2dvh, 84px);
-  margin-top: -6px;
-  margin-bottom: -4px;
+  margin-top: -16px;
+  margin-bottom: -2px;
   pointer-events: none;
   z-index: 5;
 }
 @media (min-width: 761px) {
-  #opp.zone .who,
-  #me.zone .who {
+  #opp.zone .who {
     transform: translateY(-10px);
+  }
+  #me.zone .who {
+    transform: translateY(10px);
   }
 }
 .opp-jhand .oj {
