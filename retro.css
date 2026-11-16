@@ -3241,9 +3241,12 @@ body.dragging-joker #fx::after {
 }
 @media (max-width: 760px) {
   #mb:has(.hero-grid) {
-    width: 94vw !important;
-    max-width: 94vw !important;
-    padding: 14px 12px !important;
+    width: 95vw !important;
+    max-width: 95vw !important;
+    max-height: 90dvh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 14px 10px !important;
   }
   .hero-grid {
     display: grid;
@@ -3263,28 +3266,37 @@ body.dragging-joker #fx::after {
   .hero-pick-card:not(:first-child) {
     margin-left: 0;
   }
-  .hero-pick-card:last-child:nth-child(odd) {
-    grid-column: 1 / -1;
-    max-width: 56%;
-    justify-self: center;
-  }
   .hpc-art {
     aspect-ratio: 1 / 1;
+    height: auto;
+    flex: 0 0 auto;
   }
   .hpc-body {
+    position: static;
     opacity: 1;
     transform: none;
-    padding: 20px 6px 8px;
+    padding: 8px 6px 10px;
+    background: linear-gradient(180deg, #1b130d 0%, #0d0907 100%);
+    flex: 1;
   }
   .hpc-name {
-    font-size: 14px;
+    font-size: 13.5px;
+  }
+  .hpc-pw {
+    font-size: 10.5px;
+    padding: 3px 6px;
   }
   .hpc-desc {
-    font-size: 12.5px;
+    font-size: 11.5px;
+    line-height: 1.25;
   }
   .hp-tip {
     width: min(260px, calc(100vw - 24px));
     padding: 11px 13px;
+  }
+  .hp-cast-pop {
+    font-size: 11.5px;
+    padding: 4px 10px;
   }
   #hand {
     max-width: calc(100vw - 12px);
