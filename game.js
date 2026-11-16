@@ -1715,6 +1715,13 @@ document.addEventListener('click',e=>{
     flipId=c;
     return R();
   }
+  if(t.dataset.e){
+    const x=(S.eff&&S.eff.find(y=>y.uid==u))||(S.pj&&S.pj.find(y=>y.uid==u));
+    if(x){
+      const statusTxt=x.neg?'Etkisiz kılındı':(BLOCK.has(x.id)?'Aktif Etki':'Kullanıldı');
+      return preview(x.id,false,`${x.o==0?'Senin Jokerin':'Rakibin Jokeri'} · ${statusTxt}`);
+    }
+  }
   if(t.dataset.j){
     if(window._suppressJokerClick)return;
     const id=+t.dataset.j;
