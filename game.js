@@ -967,7 +967,7 @@ function endRound(){
       if(rig){S.rigDone=true;S.hpUsed[1]=true;impSave(mk(0,1,false),()=>M(mk(0,20,true),lb,go))}
       else if(uRev){S.uRevived=S.uRevived||[false,false];S.uRevived[L]=true;S.hpUsed[L]=true;impSave(mk(0,roll,false),()=>MM(v=>mk(v,20,true),lb,go),'Hiçlik seni geri çevirdi… Bir kez daha ölümden döndün!')}
       else MM(full,lb,go)}
-    else{S.over=true;lrnGame(L==0);MM(full,'Yeniden oyna',()=>chooseHero(hid=>{MY_HERO=hid;start()},()=>{$('#menu').hidden=false;setMusic('menu')}),null,true)}
+    else{S.over=true;lrnGame(L==0);rematchReady=[false,false];rematchHeroes=[null,null];MM(full,'Yeniden oyna',()=>chooseHero(hid=>{if(MODE==='host'){MY_HERO=hid;rematchReady[0]=true;rematchHeroes[0]=hid;checkStartOnlineRematch()}else{MY_HERO=hid;start()}},()=>{$('#menu').hidden=false;setMusic('menu')}),null,true)}
   }
 }
 function cutscene(txt,done){ // BİLİNMEYEN: ikonu ve konuşma balonu
@@ -1017,7 +1017,7 @@ const HP_IC={
   v:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2.5C12 2.5 6 9.5 6 14a6 6 0 0012 0c0-4.5-6-11.5-6-11.5z"/><path d="M9.5 15a2.5 2.5 0 002.5 2.5"/></svg>',
   u:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 3l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 21l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>'
 };
-function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}const oppH=MODE=='bot'?({easy:'c',med:'p',hard:'m',imp:'u'}[DIFF]||'c'):(OPP_HERO||'n');G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],mast:[0,0]};prevAv[0]=prevAv[1]=undefined;prevHpAnim=[false,false];newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
+function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}rematchReady=[false,false];rematchHeroes=[null,null];const oppH=MODE=='bot'?({easy:'c',med:'p',hard:'m',imp:'u'}[DIFF]||'c'):(OPP_HERO||'n');G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],mast:[0,0]};prevAv[0]=prevAv[1]=undefined;prevHpAnim=[false,false];newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
 
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
@@ -1617,7 +1617,21 @@ function drawFromDeck(){const S=G;if(!S||S.turn||lock||P||!canDraw(S,0))return;i
 $('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE=='guest')conn.send({k:'pass'});else{lrnAct(G,'p');pass()}}};
 
 /* ---------- ONLINE (PeerJS) ---------- */
-let MODE='bot',peer,conn,spectators=[],specCount=0,waitM=false;
+let MODE='bot',peer,conn,spectators=[],specCount=0,waitM=false,rematchReady=[false,false],rematchHeroes=[null,null];
+function showRematchWait(msg){
+  box(`<h3>Hazırsın</h3><p>${msg}</p><div class="row"><button id="rm-exit" class="btn alt">Ana menüye dön</button></div>`,false);
+  const ex=$('#rm-exit');if(ex)ex.onclick=exitGame;
+}
+function checkStartOnlineRematch(){
+  if(rematchReady[0]&&rematchReady[1]){
+    MY_HERO=rematchHeroes[0]||MY_HERO;
+    OPP_HERO=rematchHeroes[1]||OPP_HERO;
+    rematchReady=[false,false];rematchHeroes=[null,null];
+    $('#m').hidden=true;lock=false;start();
+  }else if(rematchReady[0]){
+    showRematchWait('Rakibin "Yeniden oyna" demesi ve kahraman seçmesi bekleniyor…');
+  }
+}
 const MAX_SPECTATORS = 5;
 function view(S){ // rakibe gidecek, gizli bilgisi temizlenmiş ve aynalanmış durum
   const f=a=>[a[1],a[0]],pk1=S.oppPeek1||[];
@@ -1691,6 +1705,14 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
         if(G)R();
       });
     }
+    return;
+  }
+
+  if(m.k=='rematch_ready'){
+    if(fromConn!==conn)return;
+    rematchReady[1]=true;
+    rematchHeroes[1]=(m.hero&&HERO_MAP[m.hero]&&!HERO_MAP[m.hero].bossOnly)?m.hero:'c';
+    checkStartOnlineRematch();
     return;
   }
 
@@ -1824,7 +1846,15 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
   }
   else if(m.k=='m'){
     waitM=true;
-    M(m.html,null,null,m.end);
+    if(m.end&&MODE==='guest'){
+      M(m.html,'Yeniden oyna',()=>chooseHero(hid=>{
+        MY_HERO=hid;waitM=true;
+        if(conn&&conn.open)conn.send({k:'rematch_ready',hero:hid});
+        showRematchWait('Rakibin "Yeniden oyna" demesi ve kahraman seçmesi bekleniyor…');
+      },exitGame),true);
+    }else{
+      M(m.html,null,null,m.end);
+    }
     snd(m.sd);
   }
   else if(m.k=='j')cast(m.p,m.id,R);
