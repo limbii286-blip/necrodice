@@ -1129,8 +1129,8 @@ html::after {
 }
 
 #opp.zone {
-  justify-content: flex-end;
-  padding-top: max(2px, env(safe-area-inset-top, 2px)) !important;
+  justify-content: flex-start;
+  padding-top: max(6px, env(safe-area-inset-top, 6px)) !important;
   padding-bottom: 0 !important;
   background: transparent !important;
 }
@@ -1153,13 +1153,19 @@ html::after {
   justify-content: center;
   gap: clamp(4px, 0.6vw, 8px);
   min-height: clamp(60px, 9.2dvh, 84px);
-  margin-top: -16px;
-  margin-bottom: -2px;
+  margin-top: 0;
+  margin-bottom: -6px;
   pointer-events: none;
   z-index: 5;
 }
 @media (min-width: 761px) {
+  #opp.zone {
+    justify-content: flex-end;
+    padding-top: max(2px, env(safe-area-inset-top, 2px)) !important;
+  }
   #opp.zone .opp-jhand {
+    margin-top: -16px;
+    margin-bottom: -2px;
     transform: translateY(-22px);
   }
   #opp.zone .who {
@@ -2488,8 +2494,12 @@ body.dragging-joker #fx::after {
     letter-spacing: 0.4px;
   }
   #opp.zone {
+    justify-content: flex-start !important;
     padding-top: calc(max(6px, env(safe-area-inset-top, 6px)) + 42px) !important;
     padding-bottom: 0 !important;
+  }
+  #opp.zone .who {
+    margin-bottom: auto !important;
   }
   .opp-jhand {
     position: relative;
@@ -2656,6 +2666,9 @@ body.dragging-joker #fx::after {
     gap: 4px !important;
     padding-top: 0 !important;
     padding-bottom: clamp(78px, 11.5dvh, 98px) !important;
+  }
+  #me.zone .who {
+    margin-top: auto !important;
   }
   #hand {
     bottom: max(4px, env(safe-area-inset-bottom, 4px)) !important;
