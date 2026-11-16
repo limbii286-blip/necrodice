@@ -392,8 +392,8 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı animas
 }
 
 /* ---------- MOTOR ---------- */
-const DUEL_CLOCK_INIT=99; // Satranç saati: düello başında iki tarafın da 99 saniyesi vardır
-const ONLINE_CLOCK_INIT=99;
+const DUEL_CLOCK_INIT=44; // Her tur için iki tarafın da 44 saniyesi vardır
+const ONLINE_CLOCK_INIT=44;
 const initClockSec=()=>((MODE==='host'||MODE==='guest'||MODE==='spectator')?ONLINE_CLOCK_INIT:DUEL_CLOCK_INIT);
 const GRACE_INIT=5;       // İlk düello ve geçişlerde jokerlere bakmak için 5 saniye hazırlık süresi
 function newBO3(S){
@@ -413,11 +413,9 @@ function deal(S){
   S.hpMod=[0,0];S.plagueMod=[0,0];S.hpTgMod=0;S.oppPeek=[];S.oppPeek1=[];S.vampWinSide=-1;
   S.turn=S.pl[0].open[0].n<S.pl[1].open[0].n?0:1;
   S.wait=false;S.rev=false;S.winSide=null;S.timeOut=[false,false];S.hadTimeout=false;S.dead=[];S.pa=[0,0];S.st={pb:0,ob:0,px:0};
-  if(!Array.isArray(S.clocks)||S.clocks.length!==2){
-    const cs=initClockSec();
-    S.clocks=[cs,cs];
-    S.clockMax=cs;
-  }
+  const cs=initClockSec();
+  S.clocks=[cs,cs];
+  S.clockMax=cs;
   S.graceLeft=GRACE_INIT;
   S.log.push({p:-1,t:`— Tur ${S.rounds+1} —`},{p:S.turn,t:'başlıyor (küçük açık kart)'});
 }
@@ -643,6 +641,11 @@ function pass(fromTimeout=false){
   S.log.push({p:S.turn,t:fromTimeout?'süresi bitti — sıra rakibe geçti':'pas dedi'});
   if(S.turn==1&&!fromTimeout)talk('pass',0,.35);
   const opp=1-S.turn;
+  if(fromTimeout&&S.timeOut&&S.timeOut[opp]){
+    S.wait=true;lock=true;R();
+    setTimeout(()=>{if(S===G)endRound()},1000);
+    return;
+  }
   // Karşı tarafın süresi zaten bittiyse (sıra tekrar süresi bitene geçmez!) veya normal iki pas olduysa tur biter:
   if((S.timeOut&&S.timeOut[opp])||(!fromTimeout&&S.turns>0&&!S.acted))return endRound();
   (S.pa=S.pa||[0,0])[S.turn]++;S.turns++;S.acted=false;S.turn=opp;(S.jTurn=S.jTurn||[0,0])[S.turn]=0;R();next();
@@ -1027,13 +1030,6 @@ function endRound(){
     S.winSide=null;S.vampWinSide=-1;
     const duelEnds=S.pts.some(x=>x>=2)||S.rounds>=3;
     if(!duelEnds){
-      // Bu turda bir oyuncunun süresi bittiyse ve düello devam ediyorsa:
-      // İlk turda olduysa 66 sn, 2. tur ve sonrasında 44 sn taban süre uygulanır (fazlası olanın süresi korunur, azı olan tabana tamamlanır)
-      if(S.hadTimeout||(S.timeOut&&(S.timeOut[0]||S.timeOut[1]))){
-        const floorSec=S.rounds===1?66:44;
-        S.clocks=[Math.max(S.clocks[0]||0,floorSec),Math.max(S.clocks[1]||0,floorSec)];
-        S.clockMax=Math.max(S.clocks[0],S.clocks[1],floorSec);
-      }
       deal(S);R();next();
       return;
     }
@@ -1338,8 +1334,8 @@ function R(){
   const defClock=initClockSec();
   const c0=Math.ceil(S.clocks?S.clocks[0]:defClock),c1=Math.ceil(S.clocks?S.clocks[1]:defClock);
   const sc0=$('#sc-0'),sc1=$('#sc-1'),scSec0=$('#sc-sec-0'),scSec1=$('#sc-sec-1');
-  if(scSec0)scSec0.textContent=String(c0);
-  if(scSec1)scSec1.textContent=String(c1);
+  if(scSec0)scSec0.textContent=(meTimeOut||c0<=0)?'✕':String(c0);
+  if(scSec1)scSec1.textContent=(oppTimeOut||c1<=0)?'✕':String(c1);
   if(sc0){sc0.classList.toggle('ticking',S.turn==0&&!S.wait&&!(S.graceLeft>0)&&!meTimeOut);sc0.classList.toggle('low',c0<=10&&c0>0);sc0.classList.toggle('out',meTimeOut||c0<=0)}
   if(sc1){sc1.classList.toggle('ticking',S.turn==1&&!S.wait&&!(S.graceLeft>0)&&!oppTimeOut);sc1.classList.toggle('low',c1<=10&&c1>0);sc1.classList.toggle('out',oppTimeOut||c1<=0)}
   const oppHandHtml=`<div class="opp-jhand" title="Rakibin elindeki kapalı jokerler (${S.hand[1].length})">${S.hand[1].map((_,i)=>`<img class="oj" style="--r:${((i-(S.hand[1].length-1)/2)*4.5).toFixed(1)}deg" src="${IMG.bj}" alt="">`).join('')}</div>`;
@@ -2932,8 +2928,8 @@ function createSmoothDragLoop(onFrame){
     if(G.graceLeft && G.graceLeft > 0){
       G.graceLeft=Math.max(0, G.graceLeft - 0.1);
       const s0=Math.ceil(G.clocks[0]), s1=Math.ceil(G.clocks[1]);
-      if(scSec0) scSec0.textContent=String(s0);
-      if(scSec1) scSec1.textContent=String(s1);
+      if(scSec0) scSec0.textContent=(G.timeOut[0]||s0<=0)?'✕':String(s0);
+      if(scSec1) scSec1.textContent=(G.timeOut[1]||s1<=0)?'✕':String(s1);
       if(sc0) sc0.classList.remove('ticking','low');
       if(sc1) sc1.classList.remove('ticking','low');
       lastTickSec=-1;
@@ -2947,8 +2943,8 @@ function createSmoothDragLoop(onFrame){
     const sec=Math.ceil(curLeft);
     const myTurn=(t===0);
 
-    if(scSec0) scSec0.textContent=String(s0);
-    if(scSec1) scSec1.textContent=String(s1);
+    if(scSec0) scSec0.textContent=(G.timeOut[0]||s0<=0)?'✕':String(s0);
+    if(scSec1) scSec1.textContent=(G.timeOut[1]||s1<=0)?'✕':String(s1);
 
     if(sc0){
       sc0.classList.toggle('ticking', myTurn && !G.timeOut[0]);
