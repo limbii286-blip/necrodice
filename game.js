@@ -1251,7 +1251,7 @@ function R(){
   setH('#seal',`<b>${low?'En az':T}</b>`);
   if(prevSeal&&prevSeal!=seal){sl.classList.remove('stamp');void sl.offsetWidth;sl.classList.add('stamp')}
   $('#me').className='zone'+(my?' act':'')+(S.winSide!=null?(S.winSide<0?' round-lose':S.winSide===0?' round-tie':''):'');
-  setH('#me',`<div class="who">${av0}${hpBtn0}<div class="nm"><b>${p0Name}</b></div><div class="tot${bust?' bust':exact?' exact':''}"><small>Toplam</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`);
+  setH('#me',`<div class="who">${av0}${hpBtn0}<div class="nm"><b>${p0Name}</b></div><div class="tot${bust?' bust':exact?' exact':''}"><small>Toplam</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||c.o!=null||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`);
   const pr=$('#prompt');
   pr.className=P?(P.hp?'ask':'ask has-joker'+(k==='sign'?' sign-mode':'')):'';
   if(!P){
