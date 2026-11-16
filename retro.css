@@ -1248,12 +1248,8 @@ body.dragging-joker #fx::after {
   width: clamp(76px, 11.4dvh, 108px) !important;
   height: clamp(76px, 11.4dvh, 108px) !important;
   border-radius: 10px !important;
-  border: 3px solid #dfb764 !important;
-  box-shadow:
-    0 0 0 2.5px #120c08,
-    0 0 0 4.5px #6b5026,
-    0 8px 22px rgba(0, 0, 0, 0.96),
-    inset 0 0 16px rgba(0, 0, 0, 0.72) !important;
+  border: none !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.94) !important;
   margin: -14px 0 -10px !important;
   background: #0c080a;
   object-fit: cover;
@@ -2655,7 +2651,7 @@ body.dragging-joker #fx::after {
   z-index: 95;
   margin: 0 !important;
   border-radius: 10px !important;
-  border: 3px solid #f5cc70;
+  border: none;
   object-fit: cover;
   pointer-events: none;
   box-shadow:
