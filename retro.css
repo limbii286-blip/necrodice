@@ -2455,7 +2455,7 @@ body.dragging-joker #fx::after {
     letter-spacing: 0.4px;
   }
   #opp.zone {
-    padding-top: calc(max(6px, env(safe-area-inset-top, 6px)) + 48px) !important;
+    padding-top: calc(max(6px, env(safe-area-inset-top, 6px)) + 42px) !important;
     padding-bottom: 2px !important;
   }
   .opp-jhand {
@@ -2463,22 +2463,22 @@ body.dragging-joker #fx::after {
     top: 0 !important;
     margin: 0 !important;
     gap: 4px !important;
-    min-height: 36px !important;
+    min-height: 28px !important;
   }
   .opp-jhand .oj {
     width: auto !important;
-    height: 36px !important;
+    height: 28px !important;
   }
   .who {
     min-width: 0 !important;
     width: min(96vw, 390px);
-    padding: 5px 12px;
+    padding: 4px 12px;
     gap: 8px;
   }
   .who .av {
-    width: 62px !important;
-    height: 62px !important;
-    margin: -4px 0 !important;
+    width: 74px !important;
+    height: 74px !important;
+    margin: -6px 0 !important;
   }
   .who .nm {
     min-width: 0;
@@ -2603,17 +2603,17 @@ body.dragging-joker #fx::after {
   }
   #me.zone {
     padding-top: 2px !important;
-    padding-bottom: clamp(92px, 14dvh, 120px) !important;
+    padding-bottom: clamp(78px, 11.5dvh, 98px) !important;
   }
   #hand {
-    bottom: max(8px, env(safe-area-inset-bottom, 8px)) !important;
+    bottom: max(4px, env(safe-area-inset-bottom, 4px)) !important;
     gap: 6px !important;
     padding: 2px 6px 0 !important;
     max-width: calc(100vw - 8px) !important;
   }
   #hand .jslot {
-    width: clamp(50px, 13.5vw, 66px);
-    height: calc(clamp(50px, 13.5vw, 66px) * 1.5);
+    width: clamp(46px, 12.2vw, 60px);
+    height: calc(clamp(46px, 12.2vw, 60px) * 1.5);
   }
   #hand .j:not(.dim):not(.drag-source-hidden):hover,
   #hand .j.pinned:not(.drag-source-hidden),
@@ -3580,19 +3580,24 @@ body.dragging-joker #fx::after {
 }
 
 @media (max-width: 760px) {
-  .who .hp-btn {
-    left: calc(50% + 36px);
-    width: 32px;
-    height: 32px;
+  .who .hp-btn,
+  .who .hp-btn.opp-hp,
+  .who .hp-btn.passive,
+  .who .hp-btn.used {
+    left: calc(50% + 42px) !important;
+    width: 32px !important;
+    height: 32px !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+  }
+  .who .hp-btn:not(.ready):not(.passive):not(.used) {
+    opacity: 0.65;
+    filter: saturate(0.55) brightness(0.75);
   }
   .who .hp-btn .hp-b {
     width: 15px;
     height: 15px;
     font-size: 9px;
-  }
-  .who .hp-btn.opp-hp {
-    width: 32px;
-    height: 32px;
   }
 }
 
