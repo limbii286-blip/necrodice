@@ -983,6 +983,7 @@ const HEROES=[
   {id:'m',name:'Ölümün Efendisi',passive:true,hpName:'Kader Mühürü',desc:'Attığın her ölüm zarına +2 bonus kazanırsın.'},
   {id:'w',name:'Cadı',hpName:'Kara Ayin',desc:'Desteden fazladan 1 kapalı sayı kartı çek.'},
   {id:'l',name:'Kurt Adam',hpName:'Vahşi Pençe',desc:'İki tarafın da masadaki rastgele bir sayı kartını imha eder.'},
+  {id:'v',name:'Vampir',hpName:'Kan Emici',desc:'Bu turda rakibin toplamından 2 puan çalıp kendi toplamına eklersin.'},
   {id:'u',name:'Bilinmeyen',passive:true,bossOnly:true,hpName:'Hiçlikten Dönüş',desc:'Ölüm zarında hedeflenen sayıdan düşük atarsa, bir kereliğine hayata geri döner.'}
 ];
 const HERO_MAP=Object.fromEntries(HEROES.map(h=>[h.id,h]));
@@ -997,6 +998,7 @@ const HP_IC={
   m:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 21 8.5 18 19 6 19 3 8.5"/><path d="M12 2v17M3 8.5h18"/></svg>',
   w:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3a6 6 0 00-6 6c0 2.5 1.5 4.2 2 5v2h8v-2c.5-.8 2-2.5 2-5a6 6 0 00-6-6z"/><path d="M9.5 19h5M10 10h.01M14 10h.01"/></svg>',
   l:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4l3 16M12 3l1 18M19 4l-3 16"/></svg>',
+  v:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2.5C12 2.5 6 9.5 6 14a6 6 0 0012 0c0-4.5-6-11.5-6-11.5z"/><path d="M9.5 15a2.5 2.5 0 002.5 2.5"/></svg>',
   u:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 3l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 21l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>'
 };
 function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}const oppH=MODE=='bot'?({easy:'c',med:'p',hard:'m',imp:'u'}[DIFF]||'c'):(OPP_HERO||'n');G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],mast:[0,0]};prevAv[0]=prevAv[1]=undefined;newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
@@ -1004,7 +1006,7 @@ function start(){hiPreload();setMusic('game');try{document.body.classList.remove
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
 let prevT=false,lastLk='',flipId=null,lastTot=[0,0],lastBust=false,prevSeal='',sayT='';
-const NAMES={c:'Lanetli Tüccar',p:'Veba Doktoru',n:'Kara Şövalye',a:'Simyacı',s:'Büyücü',e:'Cellat',m:'Ölümün Efendisi',w:'Cadı',l:'Kurt Adam',u:'BİLİNMEYEN'};
+const NAMES={c:'Lanetli Tüccar',p:'Veba Doktoru',n:'Kara Şövalye',a:'Simyacı',s:'Büyücü',e:'Cellat',m:'Ölümün Efendisi',w:'Cadı',l:'Kurt Adam',v:'Vampir',u:'BİLİNMEYEN'};
 const avKey=(S,p)=>{if(p===0)return (S.hero&&S.hero[0])||MY_HERO||'c';if(MODE=='bot')return (S.hero&&S.hero[1])||{easy:'c',med:'p',hard:'m',imp:'u'}[DIFF];return (S.hero&&S.hero[p])||(S.av&&S.av[p])||'c'};
 const HD_PORTRAITS={
   c:'corrupted_merchant.jpg?v=20261116_t6',
@@ -1016,6 +1018,7 @@ const HD_PORTRAITS={
   m:'cursed_king.jpg?v=20261116_t6',
   w:'necromancer.jpg?v=20261116_t6',
   l:'werewolf.jpg?v=20261116_t6',
+  v:'vampire.jpg?v=20261116_t16',
   u:'unknown.jpg?v=20261116_t6'
 };
 const avSrc=k=>HD_PORTRAITS[k]||(k?AV[k]:IMG.bn),oppName=()=>NAMES[avKey(G,1)]||'Rakip';
@@ -1294,7 +1297,7 @@ function R(){
 function doPlay(id,pk){const S=G;P=null;if(MODE=='guest'){conn.send({k:'play',id,pk});return R()}S.graceLeft=0;lrnAct(S,'j',id);play(S,0,id,pk);S.acted=true;S.log.push({p:0,t:`joker oynadı: ${J[id]}`});note(0,id,()=>{if(MODE=='bot')talk('react',1,.5);R()})}
 function pick(v){if(P&&P.hp==='u'){const id=v;P=null;return execSwapDeckHeroPower(0,id)}P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
 function startJoker(id){const ks=NEED[id]||[];if(ks.length){P={id,ks,pk:[]};R()}else doPlay(id,[])}
-const HERO_FOCUS={c:'44% 28%',p:'56% 24%',n:'50% 22%',a:'46% 25%',s:'48% 25%',e:'52% 22%',m:'48% 24%',w:'45% 23%',l:'68% 28%'};
+const HERO_FOCUS={c:'44% 28%',p:'56% 24%',n:'50% 22%',a:'46% 25%',s:'48% 25%',e:'52% 22%',m:'48% 24%',w:'45% 23%',l:'68% 28%',v:'50% 25%'};
 function chooseHero(onPick,onCancel){
   lock=true;
   const cards=HEROES.filter(h=>!h.bossOnly).map(h=>`<button class="hero-pick-card${MY_HERO===h.id?' sel':''}" data-pick-hero="${h.id}">
@@ -1387,6 +1390,11 @@ function useHeroPower(){
     destroyRand(0);destroyRand(1);
     S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
     S.log.push({p:0,t:'Vahşi Pençe kullandı (İki taraftan 1\'er kart imha edildi)'});snd('play');R();
+  }else if(hid==='v'){
+    if(MODE==='guest'){snd('play');return conn.send({k:'hp_vamp'})}
+    S.hpMod[1]=(S.hpMod[1]||0)-2;S.hpMod[0]=(S.hpMod[0]||0)+2;
+    S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
+    S.log.push({p:0,t:'Kan Emici kullandı (Rakipten 2 çaldı)'});snd('play');R();
   }else{
     return;
   }
@@ -1426,6 +1434,7 @@ const HERO_LORE={
   m:'Ölümün kendisiyle pazarlık etmiş, her kader zarında karanlık lütufla kutsanan efendi.',
   w:'Kuzgun yoldaşı ve kemik tılsımlarıyla mezardan gizli kartlar çağıran kara büyücü.',
   l:'Dolunayın öfkesiyle avının üstüne atılıp rakibi sınırın ötesine sürükleyen vahşi canavar.',
+  v:'Karanlık kadehini rakiplerinin yaşam gücüyle dolduran ölümsüz kan lordu.',
   u:'Zamanın ve kaderin ötesinden bakan, ölümden bile geri dönebilen çok kollu kozmik varlık.'
 };
 function zoomAv(p){const S=G,k=avKey(S,p),nm=NAMES[k]||(p?'Rakip':'Sen');
@@ -1703,6 +1712,13 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     destroyRand(0);destroyRand(1);
     S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
     S.log.push({p:1,t:'Vahşi Pençe kullandı (İki taraftan 1\'er kart imha edildi)'});
+    R();
+  }
+  else if(m.k=='hp_vamp'){
+    if(avKey(S,1)!=='v'||(S.hpUsed&&S.hpUsed[1]))return;
+    S.hpMod[0]=(S.hpMod[0]||0)-2;S.hpMod[1]=(S.hpMod[1]||0)+2;
+    S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
+    S.log.push({p:1,t:'Kan Emici kullandı (Rakipten 2 çaldı)'});
     R();
   }
 }
