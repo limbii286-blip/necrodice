@@ -3084,6 +3084,84 @@ body.dragging-joker #fx::after {
   pointer-events: none;
   transform: translate(-50%, -50%);
 }
+.hp-board-fx {
+  position: fixed;
+  z-index: 95;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+.hp-fx-rewind {
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  border: 3.5px dashed #fde68a;
+  background: radial-gradient(circle, rgba(234, 179, 84, 0.34) 0%, rgba(180, 120, 30, 0.14) 55%, transparent 74%);
+  box-shadow: 0 0 38px rgba(234, 179, 84, 0.85), inset 0 0 28px rgba(253, 230, 138, 0.5);
+  animation: hpRewindSpin 1.15s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes hpRewindSpin {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.35) rotate(0deg); }
+  28% { opacity: 1; transform: translate(-50%, -50%) scale(1.12) rotate(-180deg); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.55) rotate(-420deg); }
+}
+.hp-fx-plague {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  border: 3px solid #4ade80;
+  background: radial-gradient(circle, rgba(74, 222, 128, 0.42) 0%, rgba(22, 101, 52, 0.25) 55%, transparent 75%);
+  box-shadow: 0 0 34px rgba(74, 222, 128, 0.85), inset 0 0 24px rgba(167, 243, 208, 0.4);
+  animation: hpAuraBurst 0.95s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.hp-fx-alch {
+  width: 110px;
+  height: 136px;
+  border-radius: 14px;
+  border: 3px solid #67e8f9;
+  background: radial-gradient(circle, rgba(103, 232, 249, 0.38) 0%, rgba(253, 224, 71, 0.2) 60%, transparent 80%);
+  box-shadow: 0 0 32px rgba(103, 232, 249, 0.88);
+  animation: hpAuraBurst 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.hp-fx-witch {
+  width: 105px;
+  height: 132px;
+  border-radius: 14px;
+  border: 2.5px solid #c084fc;
+  background: radial-gradient(circle, rgba(192, 132, 252, 0.36) 0%, rgba(88, 28, 135, 0.22) 62%, transparent 80%);
+  box-shadow: 0 0 30px rgba(192, 132, 252, 0.85);
+  animation: hpAuraBurst 0.95s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.hp-fx-wolf {
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(220, 38, 38, 0.42) 0%, rgba(127, 29, 29, 0.24) 52%, transparent 72%);
+  box-shadow: 0 0 42px rgba(220, 38, 38, 0.9);
+  animation: hpAuraBurst 0.95s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.hp-fx-wolf::before,
+.hp-fx-wolf::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 168px;
+  height: 7px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #fecaca 35%, #ef4444 65%, transparent);
+  box-shadow: 0 0 18px #ef4444;
+}
+.hp-fx-wolf::before {
+  transform: translate(-50%, -68%) rotate(-32deg);
+}
+.hp-fx-wolf::after {
+  transform: translate(-50%, -32%) rotate(-32deg);
+}
+@keyframes hpAuraBurst {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.45); }
+  25% { opacity: 1; transform: translate(-50%, -50%) scale(1.06); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.42); }
+}
 .hp-cast-ring {
   position: absolute;
   left: 50%;

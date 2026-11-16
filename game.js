@@ -1403,17 +1403,7 @@ function R(){
   [0,1].forEach(side=>{
     const uNow=side===0?hpUsed0:hpUsed1,hObj=side===0?hpObj0:hpObj1,hId=side===0?myHId:oppHId;
     if(uNow&&!prevHpAnim[side]&&!hObj.passive&&!(side===1&&hId==='w')){
-      const btn=document.querySelector(side===0?'#me .hp-btn':'#opp .hp-btn');
-      if(btn){
-        const r=btn.getBoundingClientRect();
-        const fx=document.createElement('div');
-        fx.className='hp-cast-fx'+(side===1?' opp':'');
-        fx.style.left=(r.left+r.width/2)+'px';
-        fx.style.top=(r.top+r.height/2)+'px';
-        fx.innerHTML=`<i class="hp-cast-ring"></i><span class="hp-cast-pop">${hObj.hpName}!</span>`;
-        document.body.appendChild(fx);
-        setTimeout(()=>fx.remove(),1350);
-      }
+      playHeroPowerAnim(hId,side,hObj);
     }
     prevHpAnim[side]=uNow;
   });
@@ -1427,6 +1417,37 @@ function R(){
       spectators.forEach(s=>{try{if(s.open)s.send({k:'s',v:sv,specCount:spectators.length})}catch(e){}});
     }
   }
+}
+function playHeroPowerAnim(hId,side,hObj){
+  const btn=document.querySelector(side===0?'#me .hp-btn':'#opp .hp-btn');
+  if(btn){
+    const r=btn.getBoundingClientRect();
+    const fx=document.createElement('div');
+    fx.className='hp-cast-fx'+(side===1?' opp':'');
+    fx.style.left=(r.left+r.width/2)+'px';
+    fx.style.top=(r.top+r.height/2)+'px';
+    fx.innerHTML=`<i class="hp-cast-ring"></i><span class="hp-cast-pop">${hObj.hpName}!</span>`;
+    document.body.appendChild(fx);
+    setTimeout(()=>fx.remove(),1350);
+  }
+  const spawnBoard=(cls,el)=>{
+    const b=document.createElement('div');
+    b.className='hp-board-fx '+cls;
+    if(el){
+      const er=el.getBoundingClientRect();
+      b.style.left=(er.left+er.width/2)+'px';
+      b.style.top=(er.top+er.height/2)+'px';
+    }else{
+      b.style.left='50%';b.style.top='50%';
+    }
+    document.body.appendChild(b);
+    setTimeout(()=>b.remove(),1200);
+  };
+  if(hId==='c')spawnBoard('hp-fx-rewind',document.querySelector('#fx'));
+  else if(hId==='p')spawnBoard('hp-fx-plague',document.querySelector(side===0?'#me .who':'#opp .who'));
+  else if(hId==='a')spawnBoard('hp-fx-alch',document.querySelector('#deck'));
+  else if(hId==='w'&&side===0)spawnBoard('hp-fx-witch',document.querySelector('#opp .cards .c.bk'));
+  else if(hId==='l')spawnBoard('hp-fx-wolf',document.querySelector('#fx'));
 }
 function doPlay(id,pk){const S=G;P=null;if(MODE=='guest'){conn.send({k:'play',id,pk});return R()}S.graceLeft=0;lrnAct(S,'j',id);play(S,0,id,pk);S.acted=true;S.log.push({p:0,t:`joker oynadı: ${J[id]}`});note(0,id,()=>{if(MODE=='bot')talk('react',1,.5);R()})}
 function execAlchSwap(cid){
