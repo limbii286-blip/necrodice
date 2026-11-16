@@ -1159,6 +1159,9 @@ html::after {
   z-index: 5;
 }
 @media (min-width: 761px) {
+  #opp.zone .opp-jhand {
+    transform: translateY(-22px);
+  }
   #opp.zone .who {
     transform: translateY(-10px);
   }
