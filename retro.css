@@ -2970,9 +2970,10 @@ body.dragging-joker #fx::after {
 
 /* Kahraman Seçim Modalı */
 #mb:has(.hero-grid) {
-  width: min(97vw, 1440px) !important;
-  max-width: min(97vw, 1440px) !important;
-  padding: 16px 16px 14px !important;
+  width: 98vw !important;
+  max-width: 98vw !important;
+  padding: 14px 12px 12px !important;
+  overflow: visible !important;
 }
 .hpc-sub {
   margin: 0 0 10px;
@@ -2980,37 +2981,43 @@ body.dragging-joker #fx::after {
   color: #d6c5a7;
 }
 .hero-grid {
-  display: grid;
-  grid-template-columns: repeat(9, minmax(0, 1fr));
-  gap: 8px;
-  margin-bottom: 12px;
+  display: flex;
+  justify-content: center;
   align-items: stretch;
+  padding: 12px 10px 14px;
+  margin-bottom: 8px;
 }
 .hero-pick-card {
   position: relative;
-  min-width: 0;
+  flex: 1 1 0;
+  min-width: clamp(142px, 12.2vw, 200px);
+  max-width: 215px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   text-align: center;
-  padding: 6px 6px 10px;
-  border-radius: 11px;
+  padding: 7px 7px 11px;
+  border-radius: 12px;
   background: linear-gradient(180deg, #2b1f16 0%, #17100c 58%, #0d0907 100%);
   border: 2.5px solid #8a6a3b;
   box-shadow:
     inset 0 0 0 1px rgba(242, 204, 112, 0.24),
-    0 10px 22px rgba(0, 0, 0, 0.92);
+    -4px 10px 22px rgba(0, 0, 0, 0.94);
   color: #f5e6c8;
   overflow: hidden;
   transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.22s ease, box-shadow 0.22s ease;
 }
+.hero-pick-card:not(:first-child) {
+  margin-left: clamp(-24px, -1.5vw, -10px);
+}
 .hero-pick-card:hover {
-  transform: translateY(-6px) scale(1.02);
+  transform: translateY(-16px) scale(1.14);
+  z-index: 30;
   border-color: #f5cc70;
   box-shadow:
     inset 0 0 0 1px rgba(255, 240, 195, 0.55),
-    0 16px 32px rgba(0, 0, 0, 0.96),
-    0 0 24px rgba(234, 179, 84, 0.52);
+    0 22px 42px rgba(0, 0, 0, 0.98),
+    0 0 28px rgba(234, 179, 84, 0.6);
 }
 .hpc-art {
   position: relative;
@@ -3038,7 +3045,7 @@ body.dragging-joker #fx::after {
   flex: 1;
 }
 .hpc-name {
-  font: 800 13.5px/1.15 var(--mf);
+  font: 800 14.5px/1.15 var(--mf);
   color: #fde68a;
   letter-spacing: 0.2px;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95);
@@ -3050,11 +3057,11 @@ body.dragging-joker #fx::after {
   justify-content: center;
   gap: 3px 4px;
   max-width: 100%;
-  padding: 3px 6px;
+  padding: 3px 7px;
   border-radius: 999px;
   background: rgba(18, 12, 8, 0.92);
   border: 1px solid rgba(212, 166, 74, 0.45);
-  font: 700 10.5px/1.15 var(--mf);
+  font: 700 11px/1.15 var(--mf);
   color: #fbbf24;
   text-align: center;
 }
@@ -3070,12 +3077,26 @@ body.dragging-joker #fx::after {
 }
 .hpc-desc {
   margin: 0;
-  font: 600 11.5px/1.24 var(--bf);
+  font: 600 12.5px/1.26 var(--bf);
   color: #ddd0ba;
 }
 @media (max-width: 1120px) and (min-width: 761px) {
+  #mb:has(.hero-grid) {
+    max-height: 90dvh !important;
+    overflow-y: auto !important;
+  }
   .hero-grid {
+    display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+    padding: 4px 0;
+  }
+  .hero-pick-card {
+    min-width: 0;
+    max-width: none;
+  }
+  .hero-pick-card:not(:first-child) {
+    margin-left: 0;
   }
 }
 @media (max-width: 760px) {
@@ -3085,9 +3106,18 @@ body.dragging-joker #fx::after {
     padding: 14px 12px !important;
   }
   .hero-grid {
+    display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 8px;
+    padding: 0;
     overflow-x: visible;
+  }
+  .hero-pick-card {
+    min-width: 0;
+    max-width: none;
+  }
+  .hero-pick-card:not(:first-child) {
+    margin-left: 0;
   }
   .hero-pick-card:last-child:nth-child(odd) {
     grid-column: 1 / -1;
