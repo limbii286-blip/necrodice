@@ -2546,48 +2546,52 @@ body.dragging-joker #fx::after {
     padding: 0 !important;
   }
   #fx #pass {
-    width: 64px !important;
-    height: 64px !important;
-    margin-right: 54px !important;
-    font-size: 11px !important;
+    width: 58px !important;
+    height: 58px !important;
+    margin-right: 48px !important;
+    font-size: 10.5px !important;
     padding: 4px !important;
   }
   .side-clocks {
-    width: 52px;
-    height: 104px;
+    width: 48px;
+    height: 100px;
     right: 2px;
   }
   .side-clock {
-    width: 48px;
-    height: 48px;
+    width: 46px;
+    height: 46px;
     padding: 3px;
   }
   .side-clock .sc-val {
-    font-size: 17px !important;
+    font-size: 16px !important;
   }
   #fx .seal {
-    width: clamp(54px, 7.8dvh, 66px) !important;
-    height: clamp(54px, 7.8dvh, 66px) !important;
+    width: 52px !important;
+    height: 52px !important;
   }
   #fx .seal b {
-    font-size: clamp(19px, 2.9dvh, 25px) !important;
+    font-size: 19px !important;
   }
   #fx .jh {
-    gap: 4px;
-    flex-wrap: wrap;
-    align-content: center;
+    gap: 3px;
+    flex-wrap: nowrap !important;
+    align-items: center;
   }
   #fx .jh.o {
-    padding-left: 64px !important;
-    padding-right: 38px !important;
+    padding-left: 60px !important;
+    padding-right: 29px !important;
   }
   #fx .jh.m {
-    padding-left: 38px !important;
-    padding-right: 122px !important;
+    padding-left: 29px !important;
+    padding-right: 108px !important;
   }
   #fx .e {
-    width: 30px !important;
-    height: 30px !important;
+    flex: 0 1 35px !important;
+    min-width: 0 !important;
+    width: 35px !important;
+    max-width: 35px !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1 !important;
   }
   #me.zone {
     padding-top: 6px !important;
