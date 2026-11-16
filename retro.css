@@ -1122,7 +1122,7 @@ html::after {
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  gap: clamp(16px, 2.6dvh, 28px);
+  gap: clamp(10px, 1.8dvh, 20px);
   min-height: 0;
   overflow: visible;
   transition: box-shadow 0.25s ease, background 0.25s ease;
@@ -1176,7 +1176,7 @@ html::after {
   flex-direction: column-reverse;
   justify-content: flex-end;
   padding-top: 0 !important;
-  padding-bottom: clamp(78px, 11.8dvh, 110px) !important;
+  padding-bottom: clamp(92px, 13.5dvh, 126px) !important;
   background: transparent !important;
 }
 #me.zone .cards {
@@ -2589,10 +2589,10 @@ body.dragging-joker #fx::after {
     padding: 0 !important;
   }
   #fx #pass {
-    width: 52px !important;
-    height: 52px !important;
-    margin-right: 46px !important;
-    font-size: 10px !important;
+    width: 50px !important;
+    height: 50px !important;
+    margin-right: 45px !important;
+    font-size: 9.5px !important;
     padding: 4px !important;
   }
   .side-clocks {
@@ -2616,11 +2616,11 @@ body.dragging-joker #fx::after {
     font-size: 22px !important;
   }
   #fx .seal {
-    width: 48px !important;
-    height: 48px !important;
+    width: 44px !important;
+    height: 44px !important;
   }
   #fx .seal b {
-    font-size: 18px !important;
+    font-size: 17px !important;
   }
   #fx .jh {
     min-width: 0;
@@ -2629,12 +2629,12 @@ body.dragging-joker #fx::after {
     align-items: center;
   }
   #fx .jh.o {
-    padding-left: 60px !important;
-    padding-right: 26px !important;
+    padding-left: 58px !important;
+    padding-right: 23px !important;
   }
   #fx .jh.m {
-    padding-left: 26px !important;
-    padding-right: 98px !important;
+    padding-left: 23px !important;
+    padding-right: 96px !important;
   }
   #fx .e {
     flex: 0 0 30px !important;
