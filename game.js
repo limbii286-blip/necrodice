@@ -885,7 +885,7 @@ function endRound(){
       if(j[0]!=j[1]){L=j[0]<j[1]?0:1;how='joker'}
       else{let x,y;do{x=d6()+d6();y=d6()+d6()}while(x==y);L=x<y?0:1;hx=[x,y];how='zar'}
     }
-    const th=TH[Math.min(S.bo,3)],rawRoll=d20(),hpB=avKey(S,L)==='m'?2:0,roll=Math.min(20,rawRoll+hpB),surv=roll>=th;
+    const th=TH[Math.min(S.bo,3)],rawRoll=d20(),hpB=avKey(S,L)==='m'?2:0,execPen=avKey(S,1-L)==='e'?-2:0,roll=Math.max(1,Math.min(20,rawRoll+hpB+execPen)),surv=roll>=th;
     const mk=(v,roll,surv)=>{return `Düelloyu ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısına göre)':how=='zar'?` (beraberlik zarı: ${hx[v]}–${hx[1-v]})`:''}.<br>Ölüm zarını ${L==v?'sen atıyorsun':'rakip atıyor'}<div class="d20-box" data-roll="${roll}" data-dc="${th}" data-m="${L==v?1:0}" data-s="${surv?'ok':L==v?'death':'win'}">
       <div class="bg3-roll-card">
         <div class="bg3-card-border"></div>
@@ -900,7 +900,7 @@ function endRound(){
         </div>
         ${L==v?'<button id="rl" class="btn d20-btn">ÖLÜM ZARINI AT</button>':''}
       </div>
-    </div><div class="after"><b>Zar Sonucu: ${roll}${hpB?` (${rawRoll}+${hpB} Kader Mühürü)`:''}</b><br>`+(surv?(L==v?'Kurtuldun! Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
+    </div><div class="after"><b>Zar Sonucu: ${roll}${(hpB||execPen)?` (${rawRoll}${hpB?`+${hpB} Kader Mühürü`:''}${execPen?`−2 İnfaz Hükmü`:''})`:''}</b><br>`+(surv?(L==v?'Kurtuldun! Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
     const full=v=>mk(v,roll,surv),rig=MODE=='bot'&&DIFF=='imp'&&L==1&&!surv&&!S.rigDone; // sahne oyun başına bir kez; ikinci ölümde gerçekten ölür
     const uRev=(MODE==='host'?(L===0||L===1):L===0)&&avKey(S,L)==='u'&&!surv&&!(S.uRevived&&S.uRevived[L]);
     if(surv||rig||uRev){const n=S.bo+2;
@@ -937,7 +937,7 @@ const HEROES=[
   {id:'n',name:'Karanlık Şövalye',hpName:'Kalkan Darbesi',desc:'Rakibin masadaki son açık sayı kartını −2 azalt.'},
   {id:'a',name:'Gölge Simyacı',hpName:'Dönüşüm İksiri',desc:'Masadaki son açık sayı kartını destenin en üstündeki kartla değiştir.'},
   {id:'s',name:'Kızıl Kâhin',hpName:'Kader Kehaneti',desc:'Destedeki en üst 2 karta gizlice bak; istersen yerlerini değiştir.'},
-  {id:'e',name:'Demir Cellat',hpName:'İnfaz Baltası',desc:'Rakibin masadaki en yüksek açık sayı kartını yarıya böl.'},
+  {id:'e',name:'Demir Cellat',passive:true,hpName:'İnfaz Hükmü',desc:'Rakibin attığı her D20 ölüm zarından 2 eksiltir.'},
   {id:'m',name:'Ölümün Efendisi',passive:true,hpName:'Kader Mühürü',desc:'Her D20 ölüm zarına +2 bonus kazanırsın.'},
   {id:'w',name:'Ölüm Büyücüsü',hpName:'Kara Ayin',desc:'Desteden fazladan 1 kapalı sayı kartı çek.'},
   {id:'l',name:'Kurt Adam',hpName:'Vahşi Pençe',desc:'Bu turda rakibin toplamına +2 ekle.'},
@@ -1184,8 +1184,8 @@ function R(){
   const oppHandHtml=`<div class="opp-jhand" title="Rakibin elindeki kapalı jokerler (${S.hand[1].length})">${S.hand[1].map((_,i)=>`<img class="oj" style="--r:${((i-(S.hand[1].length-1)/2)*4.5).toFixed(1)}deg" src="${IMG.bj}" alt="">`).join('')}</div>`;
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'')+(S.winSide!=null?(S.winSide>0?' round-lose':S.winSide===0?' round-tie':''):'');
   const myHId=avKey(S,0),oppHId=avKey(S,1);
-  const hpUsed0=myHId==='u'?!!(S.uRevived&&S.uRevived[0]):myHId==='m'?false:!!(S.hpUsed&&S.hpUsed[0]);
-  const hpUsed1=oppHId==='u'?!!(MODE==='bot'?S.rigDone:(S.uRevived&&S.uRevived[1])):oppHId==='m'?false:!!(S.hpUsed&&S.hpUsed[1]);
+  const hpUsed0=myHId==='u'?!!(S.uRevived&&S.uRevived[0]):(myHId==='m'||myHId==='e')?false:!!(S.hpUsed&&S.hpUsed[0]);
+  const hpUsed1=oppHId==='u'?!!(MODE==='bot'?S.rigDone:(S.uRevived&&S.uRevived[1])):(oppHId==='m'||oppHId==='e')?false:!!(S.hpUsed&&S.hpUsed[1]);
   const hpObj0=HERO_MAP[myHId]||HEROES[0],hpObj1=HERO_MAP[oppHId]||HEROES[0];
   const canHp=!isSpec&&!hpObj0.passive&&my&&!P&&!hpUsed0;
   const hpBtn0=isSpec?'':`<button id="hp-btn" class="hp-btn${hpObj0.passive?' passive':''}${hpUsed0?' used':canHp?' ready':''}" data-hp="1" data-hp-id="${myHId}" data-hp-side="0"${canHp?'':' disabled'}>${HP_IC[myHId]||HP_IC.c}</button>`;
@@ -1342,15 +1342,6 @@ function useHeroPower(){
     S.hpUsed[0]=true;S.graceLeft=0;snd('info');
     const n=S.deck.length,c1=S.deck[n-1],c2=n>1?S.deck[n-2]:null;
     showScryModal(c1,c2,()=>{S.log.push({p:0,t:'Kader Kehaneti kullandı (sırayı korudu)'});R()},()=>{if(c2){S.deck[n-1]=c2;S.deck[n-2]=c1}S.log.push({p:0,t:'Kader Kehaneti kullandı (sırayı değiştirdi)'});R()});
-  }else if(hid==='e'){
-    if(!S.pl[1].open.length)return box('<h3>İnfaz Baltası</h3><p>Rakibin masada açık sayı kartı yok.</p>');
-    if(MODE==='guest'){snd('play');return conn.send({k:'hp_exec'})}
-    let best=S.pl[1].open[0];
-    S.pl[1].open.forEach(c=>{if((c.o??c.n)>(best.o??best.n))best=c});
-    const cur=best.o??best.n;
-    best.o=Math.max(1,Math.floor(cur/2));
-    S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
-    S.log.push({p:0,t:`İnfaz Baltası kullandı (${cur} → ${best.o})`});snd('play');R();
   }else if(hid==='w'){
     if(!canDraw(S,0))return box('<h3>Mezar Çağrısı</h3><p>Desteden kart çekilemiyor.</p>');
     if(MODE==='guest'){snd('draw');return conn.send({k:'hp_necro'})}
@@ -1654,16 +1645,6 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     S.pl[1].open[S.pl[1].open.length-1]=rep;S.deck.unshift(old);
     S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
     S.log.push({p:1,t:`Dönüşüm İksiri kullandı (${old.n} → ${rep.n})`});
-    R();
-  }
-  else if(m.k=='hp_exec'){
-    if(avKey(S,1)!=='e'||(S.hpUsed&&S.hpUsed[1])||!S.pl[0].open.length)return;
-    let best=S.pl[0].open[0];
-    S.pl[0].open.forEach(c=>{if((c.o??c.n)>(best.o??best.n))best=c});
-    const cur=best.o??best.n;
-    best.o=Math.max(1,Math.floor(cur/2));
-    S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
-    S.log.push({p:1,t:`İnfaz Baltası kullandı (${cur} → ${best.o})`});
     R();
   }
   else if(m.k=='hp_necro'){
