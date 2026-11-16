@@ -933,11 +933,11 @@ let MY_HERO='c',OPP_HERO='n';
 const HEROES=[
   {id:'c',name:'Lanetli Tüccar',hpName:'Hileli Terazi',desc:'Bu turda toplamına +2 veya −2 uygula.'},
   {id:'p',name:'Veba Doktoru',hpName:'Kuzgun Gözü',desc:'Rakibin kapalı sayı kartına gizlice bak.'},
-  {id:'k',name:'Lanetli Kral',hpName:'Kraliyet Fermanı',desc:'Bu düelloda hedef sayıyı +2 artır veya −2 azalt.'},
-  {id:'n',name:'Karanlık Şövalye',hpName:'Kalkan Darbesi',desc:'Rakibin masadaki son açık sayı kartını −2 azalt.'},
-  {id:'a',name:'Gölge Simyacı',hpName:'Dönüşüm İksiri',desc:'Masadaki son açık sayı kartını destenin en üstündeki kartla değiştir.'},
-  {id:'s',name:'Kızıl Kâhin',hpName:'Kader Kehaneti',desc:'Destedeki en üst 2 karta gizlice bak; istersen yerlerini değiştir.'},
-  {id:'e',name:'Demir Cellat',passive:true,hpName:'İnfaz Hükmü',desc:'Rakibin attığı her D20 ölüm zarından 2 eksiltir.'},
+  {id:'k',name:'Kral',hpName:'Kraliyet Fermanı',desc:'Bu düelloda hedef sayıyı +2 artır veya −2 azalt.'},
+  {id:'n',name:'Şövalye',hpName:'Kalkan Darbesi',desc:'Rakibin masadaki son açık sayı kartını −2 azalt.'},
+  {id:'a',name:'Simyacı',hpName:'Dönüşüm İksiri',desc:'Masadaki son açık sayı kartını destenin en üstündeki kartla değiştir.'},
+  {id:'s',name:'Kâhin',hpName:'Kader Kehaneti',desc:'Destedeki en üst 2 karta gizlice bak; istersen yerlerini değiştir.'},
+  {id:'e',name:'Cellat',passive:true,hpName:'İnfaz Hükmü',desc:'Rakibin attığı her D20 ölüm zarından 2 eksiltir.'},
   {id:'m',name:'Ölümün Efendisi',passive:true,hpName:'Kader Mühürü',desc:'Her D20 ölüm zarına +2 bonus kazanırsın.'},
   {id:'w',name:'Ölüm Büyücüsü',hpName:'Kara Ayin',desc:'Desteden fazladan 1 kapalı sayı kartı çek.'},
   {id:'l',name:'Kurt Adam',hpName:'Vahşi Pençe',desc:'Bu turda rakibin toplamına +2 ekle.'},
@@ -962,7 +962,7 @@ function start(){hiPreload();setMusic('game');try{document.body.classList.remove
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
 let prevT=false,lastLk='',flipId=null,lastTot=[0,0],lastBust=false,prevSeal='',sayT='';
-const NAMES={c:'Lanetli Tüccar',p:'Veba Doktoru',k:'Lanetli Kral',n:'Karanlık Şövalye',a:'Gölge Simyacı',s:'Kızıl Kâhin',e:'Demir Cellat',m:'Ölümün Efendisi',w:'Ölüm Büyücüsü',l:'Kurt Adam',u:'BİLİNMEYEN'};
+const NAMES={c:'Lanetli Tüccar',p:'Veba Doktoru',k:'Kral',n:'Şövalye',a:'Simyacı',s:'Kâhin',e:'Cellat',m:'Ölümün Efendisi',w:'Ölüm Büyücüsü',l:'Kurt Adam',u:'BİLİNMEYEN'};
 const avKey=(S,p)=>{if(p===0)return (S.hero&&S.hero[0])||MY_HERO||'c';if(MODE=='bot')return (S.hero&&S.hero[1])||{easy:'c',med:'p',hard:'m',imp:'u'}[DIFF];return (S.hero&&S.hero[p])||(S.av&&S.av[p])||'c'};
 const HD_PORTRAITS={
   c:'corrupted_merchant.jpg?v=20261116_t1',
@@ -1170,7 +1170,7 @@ function R(){
     const el=(now-morphT[p])/1000,mo=morphT[p]&&el<1.1;return `<img class="av${mo?' morph':''}" data-av="${p}"${mo?` style="animation-delay:-${el.toFixed(2)}s"`:''} src="${avSrc(k)}" alt="">`};
   const av0=avh(0),av1=avh(1);
   const p0Char=NAMES[avKey(S,0)]||'Lanetli Tüccar';
-  const p1Char=NAMES[avKey(S,1)]||'Karanlık Şövalye';
+  const p1Char=NAMES[avKey(S,1)]||'Şövalye';
   const p0Name=isSpec?`${p0Char} (Oda Sahibi)`:p0Char;
   const p1Name=isSpec?`${p1Char} (Misafir)`:(MODE=='guest'?`${p1Char} (Oda Sahibi)`:(MODE=='host'?`${p1Char} (Rakip)`:(MODE=='bot'||S.av?oppName():'Rakip')));
   const oppTimeOut=!!(S.timeOut&&S.timeOut[1]),meTimeOut=!!(S.timeOut&&S.timeOut[0]);
