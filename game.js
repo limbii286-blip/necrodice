@@ -997,7 +997,7 @@ function enter(fn){if(entering)return;entering=true;veil();setMusic('game');setT
 let MY_HERO='c',OPP_HERO='n';
 const HEROES=[
   {id:'c',name:'Lanetli Tüccar',hpName:'Hileli Terazi',desc:'Bu turda toplamına +2 veya −2 uygula.'},
-  {id:'p',name:'Veba Doktoru',hpName:'Veba Laneti',desc:'Rakibin bu eldeki tüm mevcut ve gelecek sayı kartlarına +1 veya −1 laneti uygula.'},
+  {id:'p',name:'Veba Doktoru',hpName:'Veba İksiri',desc:'Elindeki bir joker kartını yakıp, rastgele 2 joker kartı çekersin.'},
   {id:'n',name:'Kara Şövalye',passive:true,hpName:'Demir İrade',desc:'Kaybettiğin her turda %20 ihtimalle gelen hasarı tanklayıp turu berabereye çevirirsin.'},
   {id:'a',name:'Simyacı',hpName:'Dönüşüm İksiri',desc:'Son çektiğin açık sayı kartını destenin en üstündeki kartla değiştir; o kart destenin en üstüne gider.'},
   {id:'s',name:'Büyücü',hpName:'Kuzgun Gözü',desc:'Rakibin kapalı sayı kartına gizlice bak. (Rakip kullandığını anlamaz)'},
@@ -1410,16 +1410,27 @@ function useHeroPower(){
     $('#hp-p2').onclick=()=>applyMod(2);
     $('#hp-m2').onclick=()=>applyMod(-2);
   }else if(hid==='p'){
-    box(`<h3>Veba Laneti</h3><p>Rakibin bu eldeki tüm mevcut ve gelecek sayı kartlarına hangi laneti uygulamak istersin?</p><div class="row"><button id="hp-plp1" class="btn sm">Tüm Kartlara +1</button><button id="hp-plm1" class="btn sm alt">Tüm Kartlara −1</button></div>`, true);
-    const applyPlague=dlt=>{
-      $('#m').hidden=true;lock=false;snd('play');
-      if(MODE==='guest'){S.hpUsed[0]=true;R();return conn.send({k:'hp_plague',delta:dlt});}
-      S.plagueMod=S.plagueMod||[0,0];
-      S.plagueMod[1]=dlt;S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
-      S.log.push({p:0,t:`Veba Laneti kullandı (Rakip tüm kartlar ${dlt>0?'+1':'−1'})`});R();
-    };
-    $('#hp-plp1').onclick=()=>applyPlague(1);
-    $('#hp-plm1').onclick=()=>applyPlague(-1);
+    if(!S.hand[0].length)return box('<h3>Veba İksiri</h3><p>Elinde yakılacak joker kartı yok.</p>');
+    if(!S.jdeck.length)return box('<h3>Veba İksiri</h3><p>Joker destesinde çekilecek kart kalmadı.</p>');
+    const jBtns=S.hand[0].map((jid,i)=>`<button class="btn sm" data-pburn="${i}">${J[jid]}</button>`).join('');
+    box(`<h3>Veba İksiri</h3><p>Yakmak istediğin joker kartını seç (yerine desteden rastgele 2 joker çekeceksin):</p><div class="row" style="flex-wrap:wrap;gap:8px">${jBtns}</div>`, true);
+    document.querySelectorAll('[data-pburn]').forEach(btn=>{
+      btn.onclick=()=>{
+        const idx=+btn.dataset.pburn;
+        if(idx<0||idx>=S.hand[0].length)return;
+        $('#m').hidden=true;lock=false;snd('play');
+        if(MODE==='guest'){S.hpUsed[0]=true;R();return conn.send({k:'hp_plague',idx});}
+        const burned=S.hand[0].splice(idx,1)[0];
+        const drawn=[];
+        for(let k=0;k<2&&S.jdeck.length;k++){
+          const rIdx=Math.floor(Math.random()*S.jdeck.length);
+          drawn.push(S.jdeck.splice(rIdx,1)[0]);
+        }
+        S.hand[0].push(...drawn);
+        S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
+        S.log.push({p:0,t:`Veba İksiri kullandı (${J[burned]} yaktı, ${drawn.length} joker çekti)`});R();
+      };
+    });
   }else if(hid==='a'){
     if(!S.pl[0].open.length||!S.deck.length)return box('<h3>Dönüşüm İksiri</h3><p>Değiştirilecek açık kart veya destede kart yok.</p>');
     if(MODE==='guest'){S.hpUsed[0]=true;snd('flip');R();return conn.send({k:'hp_alch'})}
@@ -1787,11 +1798,19 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     R();
   }
   else if(m.k=='hp_plague'){
-    if(avKey(S,1)!=='p'||(S.hpUsed&&S.hpUsed[1]))return;
-    const dlt=m.delta>0?1:-1;
-    S.plagueMod=S.plagueMod||[0,0];
-    S.plagueMod[0]=dlt;S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
-    S.log.push({p:1,t:`Veba Laneti kullandı (Rakip tüm kartlar ${dlt>0?'+1':'−1'})`});
+    S.hpUsed=S.hpUsed||[false,false];
+    if(avKey(S,1)!=='p'||S.hpUsed[1])return;
+    const idx=m.idx|0;
+    if(idx<0||idx>=S.hand[1].length||!S.jdeck.length)return;
+    S.hand[1].splice(idx,1);
+    const drawn=[];
+    for(let k=0;k<2&&S.jdeck.length;k++){
+      const rIdx=Math.floor(Math.random()*S.jdeck.length);
+      drawn.push(S.jdeck.splice(rIdx,1)[0]);
+    }
+    S.hand[1].push(...drawn);
+    S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
+    S.log.push({p:1,t:`Veba İksiri kullandı (1 joker yaktı, ${drawn.length} joker çekti)`});
     R();
   }
   else if(m.k=='hp_alch'){
