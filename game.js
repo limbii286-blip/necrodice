@@ -1342,7 +1342,7 @@ function R(){
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'')+(S.winSide!=null?(S.winSide>0?' round-lose':S.winSide===0?' round-tie':''):'');
   const myHId=avKey(S,0),oppHId=avKey(S,1);
   const hpUsed0=myHId==='u'?!!(S.uRevived&&S.uRevived[0]):myHId==='v'?!!(S.vampUsed&&S.vampUsed[0]):(myHId==='m'||myHId==='e'||myHId==='n'||myHId==='s')?false:!!(S.hpUsed&&S.hpUsed[0]);
-  const hpUsed1=oppHId==='u'?!!(MODE==='bot'?S.rigDone:(S.uRevived&&S.uRevived[1])):oppHId==='v'?!!(S.vampUsed&&S.vampUsed[1]):(oppHId==='m'||oppHId==='e'||oppHId==='n'||oppHId==='s'||oppHId==='w')?false:!!(S.hpUsed&&S.hpUsed[1]);
+  const hpUsed1=oppHId==='u'?!!(MODE==='bot'?S.rigDone:(S.uRevived&&S.uRevived[1])):oppHId==='v'?!!(S.vampUsed&&S.vampUsed[1]):(oppHId==='m'||oppHId==='e'||oppHId==='n'||oppHId==='s'||oppHId==='w'||oppHId==='a')?false:!!(S.hpUsed&&S.hpUsed[1]);
   const hpObj0=HERO_MAP[myHId]||HEROES[0],hpObj1=HERO_MAP[oppHId]||HEROES[0];
   const cWins0=(S.cWins&&S.cWins[0])||0,cReady=myHId!=='c'||cWins0>=4;
   const canHp=!isSpec&&!hpObj0.passive&&my&&!P&&!hpUsed0&&cReady;
@@ -1402,7 +1402,7 @@ function R(){
   if(fresh)snd('draw');
   [0,1].forEach(side=>{
     const uNow=side===0?hpUsed0:hpUsed1,hObj=side===0?hpObj0:hpObj1,hId=side===0?myHId:oppHId;
-    if(uNow&&!prevHpAnim[side]&&!hObj.passive&&!(side===1&&hId==='w')){
+    if(uNow&&!prevHpAnim[side]&&!hObj.passive&&hId!=='w'&&hId!=='a'){
       playHeroPowerAnim(hId,side,hObj);
     }
     prevHpAnim[side]=uNow;
@@ -1556,9 +1556,9 @@ function useHeroPower(){
     if(MODE==='guest'){S.hpUsed[0]=true;R();return conn.send({k:'hp_scry'})}
     S.hpUsed[0]=true;S.graceLeft=0;
     const n=S.deck.length,c1=S.deck[n-1],c2=n>1?S.deck[n-2]:null;
-    showScryModal(c1,c2,()=>{S.log.push({p:0,t:'Kaderin Damıtılması kullandı (sırayı korudu)'});R()},()=>{
+    showScryModal(c1,c2,()=>R(),()=>{
       if(n>1){const tmp=S.deck[n-1];S.deck[n-1]=S.deck[n-2];S.deck[n-2]=tmp}
-      S.log.push({p:0,t:'Kaderin Damıtılması kullandı (sırayı değiştirdi)'});R();
+      R();
     });
   }else if(hid==='w'){
     if(!S.pl[1].closed.length)return;
@@ -1809,7 +1809,7 @@ const MAX_SPECTATORS = 5;
 function view(S){ // rakibe gidecek, gizli bilgisi temizlenmiş ve aynalanmış durum
   const f=a=>[a[1],a[0]],pk1=S.oppPeek1||[];
   const hu0=S.hpUsed?!!S.hpUsed[0]:false,hu1=S.hpUsed?!!S.hpUsed[1]:false;
-  const visHu0=avKey(S,0)==='w'?false:hu0;
+  const visHu0=(avKey(S,0)==='w'||avKey(S,0)==='a')?false:hu0;
   return {av:f(S.av),hero:S.hero?f(S.hero):f(S.av),hpUsed:[hu1,visHu0],hpMod:S.hpMod?f(S.hpMod):[0,0],plagueMod:S.plagueMod?f(S.plagueMod):[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?f(S.uRevived):[false,false],vampUsed:S.vampUsed?f(S.vampUsed):[false,false],cWins:S.cWins?f(S.cWins):[0,0],vampWinSide:S.vampWinSide>=0?1-S.vampWinSide:-1,oppPeek:pk1,mast:f(S.mast),turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:1-S.turn,clocks:S.clocks?f(S.clocks):[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?f(S.timeOut):[false,false],hadTimeout:!!S.hadTimeout,pts:f(S.pts),rev:S.rev,winSide:S.winSide==null?null:-S.winSide,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),jTurn:S.jTurn?f(S.jTurn):[0,0],noJ:f(S.noJ),
     hand:[S.hand[1],S.hand[0].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
     pl:[S.pl[1],{open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:(S.rev||pk1.includes(c.id))?c.n:0,o:c.o,hpImmune:!!c.hpImmune}))}],
@@ -1915,8 +1915,7 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
   else if(m.k=='hp_scry_done'){
     if(avKey(S,1)!=='a')return;
     const n=S.deck.length;
-    if(m.swap&&n>1){const tmp=S.deck[n-1];S.deck[n-1]=S.deck[n-2];S.deck[n-2]=tmp;S.log.push({p:1,t:'Kaderin Damıtılması kullandı (sırayı değiştirdi)'})}
-    else S.log.push({p:1,t:'Kaderin Damıtılması kullandı (sırayı korudu)'});
+    if(m.swap&&n>1){const tmp=S.deck[n-1];S.deck[n-1]=S.deck[n-2];S.deck[n-2]=tmp}
     R();
   }
   else if(m.k=='hp_rewind'){
