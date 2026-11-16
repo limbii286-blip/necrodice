@@ -439,6 +439,7 @@ function outc(S,p){ // p açısından: 1 kazan, 0 berabere, -1 kaybet
 const canDraw=(S,p)=>S.deck.length>0&&!S.eff.some(e=>e.id==23&&!e.neg&&e.o!=p);
 function opts(S,p,k){
   if(k=='my')return S.pl[p].open.map(c=>c.id);
+  if(k=='my_all')return [...S.pl[p].open,...S.pl[p].closed].map(c=>c.id);
   if(k=='opp')return S.pl[1-p].open.map(c=>c.id);
   if(k=='any')return S.pl.flatMap(x=>[...x.open,...x.closed.filter(c=>!c.hpImmune)]).map(c=>c.id);
   if(k=='eff')return S.eff.filter(e=>!e.neg&&BLOCK.has(e.id)).map(e=>e.uid);
@@ -992,7 +993,7 @@ const HEROES=[
   {id:'c',name:'Lanetli Tüccar',hpName:'Hileli Terazi',desc:'Bu turda toplamına +2 veya −2 uygula.'},
   {id:'p',name:'Veba Doktoru',hpName:'Veba Laneti',desc:'Rakibin bu eldeki tüm mevcut ve gelecek sayı kartlarına +1 veya −1 laneti uygula.'},
   {id:'n',name:'Kara Şövalye',passive:true,hpName:'Demir İrade',desc:'Kaybettiğin her turda %30 ihtimalle gelen hasarı tanklayıp turu berabereye çevirirsin.'},
-  {id:'a',name:'Simyacı',hpName:'Dönüşüm İksiri',desc:'Masadaki son açık sayı kartını destenin en üstündeki kartla değiştir.'},
+  {id:'a',name:'Simyacı',hpName:'Dönüşüm İksiri',desc:'Seçtiğin bir kendi sayı kartını destenin en üstündeki kartla değiştir; seçtiğin kart destenin en üstüne gider.'},
   {id:'s',name:'Büyücü',hpName:'Kuzgun Gözü',desc:'Rakibin kapalı sayı kartına gizlice bak. (Rakip kullandığını anlamaz)'},
   {id:'e',name:'Cellat',passive:true,hpName:'İnfaz Hükmü',desc:'Rakibin attığı her ölüm zarından 2 eksiltir.'},
   {id:'m',name:'Ölümün Efendisi',passive:true,hpName:'Kader Mühürü',desc:'Attığın her ölüm zarına +2 bonus kazanırsın.'},
@@ -1271,6 +1272,8 @@ function R(){
     setH('#prompt','');
   }else if(P.hp==='u'){
     setH('#prompt',`<div class="pr-box"><div class="pr-txt">Hiçlik Değişimi: ${KTXT[k]}</div><div class="pr-btns"><button class="btn sm alt" data-x="1">Vazgeç</button></div></div>`);
+  }else if(P.hp==='a'){
+    setH('#prompt',`<div class="pr-box"><div class="pr-txt">Dönüşüm İksiri: Destenin en üstüyle değiştireceğin kendi sayı kartını seç</div><div class="pr-btns"><button class="btn sm alt" data-x="1">Vazgeç</button></div></div>`);
   }else{
     const btns=k==='sign'?'<button class="btn sm" data-s="1">Ekle (+)</button><button class="btn sm" data-s="-1">Çıkar (−)</button>':'';
     setH('#prompt',`<div class="pr-card-wrap"><img class="pr-jcard" src="${IMG.j[P.id]}" alt="${J[P.id]||''}"></div><div class="pr-box"><div class="pr-title">${J[P.id]}</div><div class="pr-txt">${KTXT[k]}</div><div class="pr-btns">${btns}<button class="btn sm alt" data-x="1">Vazgeç</button></div></div>`);
@@ -1327,7 +1330,21 @@ function R(){
   }
 }
 function doPlay(id,pk){const S=G;P=null;if(MODE=='guest'){conn.send({k:'play',id,pk});return R()}S.graceLeft=0;lrnAct(S,'j',id);play(S,0,id,pk);S.acted=true;S.log.push({p:0,t:`joker oynadı: ${J[id]}`});note(0,id,()=>{if(MODE=='bot')talk('react',1,.5);R()})}
-function pick(v){if(P&&P.hp==='u'){const id=v;P=null;return execSwapDeckHeroPower(0,id)}P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
+function execAlchSwap(cid){
+  const S=G;if(!S||!S.deck.length)return;
+  if(MODE==='guest'){snd('flip');return conn.send({k:'hp_alch',cid})}
+  for(const arr of [S.pl[0].open,S.pl[0].closed]){
+    const idx=arr.findIndex(c=>c.id===cid);
+    if(idx>=0){
+      const old=arr[idx],rep=S.deck.pop();
+      arr[idx]=rep;S.deck.push(old);
+      S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
+      S.log.push({p:0,t:'Dönüşüm İksiri kullandı'});snd('flip');R();
+      return;
+    }
+  }
+}
+function pick(v){if(P&&P.hp==='u'){const id=v;P=null;return execSwapDeckHeroPower(0,id)}if(P&&P.hp==='a'){const id=v;P=null;return execAlchSwap(id)}P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
 function startJoker(id){const ks=NEED[id]||[];if(ks.length){P={id,ks,pk:[]};R()}else doPlay(id,[])}
 const HERO_FOCUS={c:'44% 28%',p:'56% 24%',n:'50% 22%',a:'46% 25%',s:'48% 25%',e:'52% 22%',m:'48% 24%',w:'45% 23%',l:'68% 28%',v:'50% 25%'};
 function chooseHero(onPick,onCancel){
@@ -1397,12 +1414,8 @@ function useHeroPower(){
     $('#hp-plp1').onclick=()=>applyPlague(1);
     $('#hp-plm1').onclick=()=>applyPlague(-1);
   }else if(hid==='a'){
-    if(!S.pl[0].open.length||!S.deck.length)return box('<h3>Dönüşüm İksiri</h3><p>Değiştirilecek açık kart veya destede kart yok.</p>');
-    if(MODE==='guest'){snd('flip');return conn.send({k:'hp_alch'})}
-    const old=S.pl[0].open[S.pl[0].open.length-1],rep=S.deck.pop();
-    S.pl[0].open[S.pl[0].open.length-1]=rep;S.deck.unshift(old);
-    S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
-    S.log.push({p:0,t:`Dönüşüm İksiri kullandı (${old.n} → ${rep.n})`});snd('flip');R();
+    if(!(S.pl[0].open.length||S.pl[0].closed.length)||!S.deck.length)return box('<h3>Dönüşüm İksiri</h3><p>Değiştirilecek kart veya destede kart yok.</p>');
+    P={hp:'a',ks:['my_all'],pk:[]};snd('info');R();
   }else if(hid==='s'){
     if(!S.pl[1].closed.length)return;
     if(MODE==='guest'){snd('flip');return conn.send({k:'hp_peek'})}
@@ -1726,12 +1739,19 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     R();
   }
   else if(m.k=='hp_alch'){
-    if(avKey(S,1)!=='a'||(S.hpUsed&&S.hpUsed[1])||!S.pl[1].open.length||!S.deck.length)return;
-    const old=S.pl[1].open[S.pl[1].open.length-1],rep=S.deck.pop();
-    S.pl[1].open[S.pl[1].open.length-1]=rep;S.deck.unshift(old);
-    S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
-    S.log.push({p:1,t:`Dönüşüm İksiri kullandı (${old.n} → ${rep.n})`});
-    R();
+    if(avKey(S,1)!=='a'||(S.hpUsed&&S.hpUsed[1])||!S.deck.length)return;
+    let done=false;
+    for(const arr of [S.pl[1].open,S.pl[1].closed]){
+      const idx=m.cid!=null?arr.findIndex(c=>c.id===m.cid):(arr.length-1);
+      if(idx>=0){
+        const old=arr[idx],rep=S.deck.pop();
+        arr[idx]=rep;S.deck.push(old);
+        S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
+        S.log.push({p:1,t:'Dönüşüm İksiri kullandı'});
+        done=true;R();break;
+      }
+    }
+    if(!done)return;
   }
   else if(m.k=='hp_necro'){
     if(avKey(S,1)!=='w'||(S.hpUsed&&S.hpUsed[1])||!canDraw(S,1))return;
