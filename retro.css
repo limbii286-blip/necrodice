@@ -3440,6 +3440,54 @@ body.dragging-joker #fx::after {
     width: min(260px, calc(100vw - 24px));
     padding: 11px 13px;
   }
+  .hp-mobile-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    padding: 4px 2px;
+  }
+  .hp-mc-ic {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 35% 30%, #3a2a16 0%, #171009 80%);
+    border: 2.5px solid #e6c36a;
+    color: #ffe89e;
+    box-shadow: 0 0 22px rgba(212, 168, 85, 0.45);
+  }
+  .hp-mobile-card.opp .hp-mc-ic {
+    border-color: #ef4444;
+    color: #fecaca;
+    background: radial-gradient(circle at 35% 30%, #3b1318 0%, #16090b 80%);
+    box-shadow: 0 0 22px rgba(220, 38, 38, 0.45);
+  }
+  .hp-mc-ic svg {
+    width: 34px;
+    height: 34px;
+  }
+  .hp-mobile-card .hp-tip-title {
+    font: 800 20px/1.15 var(--mf);
+    color: #fde68a;
+  }
+  .hp-mobile-card.opp .hp-tip-title {
+    color: #fecaca;
+  }
+  .hp-mobile-card .hp-tip-tag {
+    font: 700 11.5px/1.2 var(--sf);
+    color: #d6c5a7;
+    opacity: 0.9;
+  }
+  .hp-mobile-card .hp-tip-desc {
+    font-size: 15px;
+    line-height: 1.4;
+    color: #f5e6c8;
+    margin: 2px 0 4px;
+  }
   .hp-cast-pop {
     font-size: 11.5px;
     padding: 4px 10px;
