@@ -1380,9 +1380,23 @@ const backHD=cb=>{
   if(typeof HDBK!='undefined'&&HDBK){cb(HDBK);return;}
   hq('bk_v2',['img/back.png','img/back.jpg','img/n/back.png','img/n/back.jpg','img/back.webp'],cb);
 };
+const HERO_LORE={
+  c:'Karanlık pazarlarda kemik ve altın tartıp terazisine hile karıştıran lanetli bezirgân.',
+  p:'Gagalı maskesinin ardında ölümün izini süren, rakibin sırlarını okuyan gizemli hekim.',
+  k:'Kafatası tahtından verdiği fermanla düellonun kader sınırını bile eğip büken ölümsüz hükümdar.',
+  n:'Rünlü kalkanı ve ağır kılıcıyla düşmanın en güçlü hamlesini ezen yılmaz zırhlı savaşçı.',
+  a:'Yasak iksirlerle sayıları dönüştürüp kaderin sırasını laboratuvarında yeniden yazan bilgin.',
+  s:'Kadim yazmalar ve mum ışığı eşliğinde destenin gelecekteki kartlarını önceden okuyan bilge.',
+  e:'Paslı baltası ve soğuk hükmüyle rakibin ölüm zarındaki son şansını bile gölgeleyen infazcı.',
+  m:'Ölümün kendisiyle pazarlık etmiş, her kader zarında karanlık lütufla kutsanan efendi.',
+  w:'Kuzgun yoldaşı ve kemik tılsımlarıyla mezardan gizli kartlar çağıran kara büyücü.',
+  l:'Dolunayın öfkesiyle avının üstüne atılıp rakibi sınırın ötesine sürükleyen vahşi canavar.',
+  u:'Zamanın ve kaderin ötesinden bakan, ölümden bile geri dönebilen çok kollu kozmik varlık.'
+};
 function zoomAv(p){const S=G,k=avKey(S,p),nm=NAMES[k]||(p?'Rakip':'Sen');
   const initialSrc=HD_PORTRAITS[k]||((typeof HDAV!='undefined'&&HDAV[k])?HDAV[k]:avSrc(k));
-  zoom({src:initialSrc,cls:'sq',cap:nm,sub:p==0?'Sen':'Rakip',hd:cb=>{
+  const lore=HERO_LORE[k]||'';
+  zoom({src:initialSrc,cls:'sq',cap:`${nm} (${p==0?'Sen':'Rakip'})`,sub:lore,hd:cb=>{
     if(HD_PORTRAITS[k]){cb(HD_PORTRAITS[k]);return;}
     if(typeof HDAV!='undefined'&&HDAV[k]){cb(HDAV[k]);return;}
     const cs=[`img/av/${k}.jpg`,`img/av/${k}.png`,`img/av/${k}.webp`,`img/${k}.png`];
