@@ -1451,14 +1451,14 @@ function startJoker(id){const ks=NEED[id]||[];if(ks.length){P={id,ks,pk:[]};R()}
 const HERO_FOCUS={c:'44% 28%',p:'56% 24%',n:'50% 22%',a:'46% 25%',s:'48% 25%',e:'52% 22%',m:'48% 24%',w:'45% 23%',l:'68% 28%',v:'50% 25%'};
 function chooseHero(onPick,onCancel){
   lock=true;
-  const cards=HEROES.filter(h=>!h.bossOnly).map(h=>`<button class="hero-pick-card${MY_HERO===h.id?' sel':''}" data-pick-hero="${h.id}">
+  const cards=HEROES.filter(h=>!h.bossOnly).map(h=>{const dl=h.desc.length,dc=dl<=55?'hpc-desc-lg':dl<=105?'hpc-desc-md':'hpc-desc-sm';return `<button class="hero-pick-card${MY_HERO===h.id?' sel':''}" data-pick-hero="${h.id}">
     <div class="hpc-art"><img class="hpc-av" src="${avSrc(h.id)}" alt="${h.name}" style="object-position:${HERO_FOCUS[h.id]||'50% 25%'};transform-origin:${HERO_FOCUS[h.id]||'50% 25%'}"></div>
     <div class="hpc-body">
       <div class="hpc-name">${h.name}</div>
       <div class="hpc-pw"><span class="hpc-ic">${HP_IC[h.id]}</span><b>${h.hpName}</b></div>
-      <p class="hpc-desc">${h.desc}</p>
+      <p class="hpc-desc ${dc}">${h.desc}</p>
     </div>
-  </button>`).join('');
+  </button>`}).join('');
   $('#mb').innerHTML=`<h3>Kahramanını Seç</h3><div class="hero-grid">${cards}</div><div class="row"><button id="hp-cancel" class="btn alt sm">Geri</button></div>`;
   $('#m').hidden=false;
   $('#mb').querySelectorAll('[data-pick-hero]').forEach(btn=>btn.onclick=()=>{
