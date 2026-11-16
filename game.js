@@ -940,6 +940,7 @@ const HEROES=[
   {id:'e',name:'Demir Cellat',passive:true,hpName:'İnfaz Hükmü',desc:'Rakip ölüm zarı attığında ölüm eşiği +2 artar.'},
   {id:'m',name:'Ölümün Efendisi',passive:true,hpName:'Kader Mühürü',desc:'Her D20 ölüm zarına +2 bonus kazanırsın.'},
   {id:'w',name:'Ölüm Büyücüsü',hpName:'Mezar Çağrısı',desc:'Desteden fazladan 1 kapalı sayı kartı çek.'},
+  {id:'l',name:'Kurt Adam',hpName:'Vahşi Pençe',desc:'Bu turda rakibin toplamına +2 ekle.'},
   {id:'u',name:'Bilinmeyen',passive:true,bossOnly:true,hpName:'Hiçlikten Dönüş',desc:'Ölüm zarında hedeflenenden düşük atarsan, bir kereliğine hayata geri dönersin.'}
 ];
 const HERO_MAP=Object.fromEntries(HEROES.map(h=>[h.id,h]));
@@ -953,6 +954,7 @@ const HP_IC={
   e:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M12 5c4 0 7 2 7 5s-3 5-7 5"/></svg>',
   m:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 21 8.5 18 19 6 19 3 8.5"/><path d="M12 2v17M3 8.5h18"/></svg>',
   w:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3a6 6 0 00-6 6c0 2.5 1.5 4.2 2 5v2h8v-2c.5-.8 2-2.5 2-5a6 6 0 00-6-6z"/><path d="M9.5 19h5M10 10h.01M14 10h.01"/></svg>',
+  l:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4l3 16M12 3l1 18M19 4l-3 16"/></svg>',
   u:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 3l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 21l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>'
 };
 function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}const oppH=MODE=='bot'?({easy:'c',med:'p',hard:'m',imp:'u'}[DIFF]||'c'):(OPP_HERO||'n');G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],mast:[0,0]};prevAv[0]=prevAv[1]=undefined;newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
@@ -960,17 +962,19 @@ function start(){hiPreload();setMusic('game');try{document.body.classList.remove
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
 let prevT=false,lastLk='',flipId=null,lastTot=[0,0],lastBust=false,prevSeal='',sayT='';
-const NAMES={c:'Lanetli Tüccar',p:'Veba Doktoru',k:'Lanetli Kral',n:'Karanlık Şövalye',a:'Gölge Simyacı',s:'Kızıl Kâhin',e:'Demir Cellat',m:'Ölümün Efendisi',w:'Ölüm Büyücüsü',u:'BİLİNMEYEN'};
+const NAMES={c:'Lanetli Tüccar',p:'Veba Doktoru',k:'Lanetli Kral',n:'Karanlık Şövalye',a:'Gölge Simyacı',s:'Kızıl Kâhin',e:'Demir Cellat',m:'Ölümün Efendisi',w:'Ölüm Büyücüsü',l:'Kurt Adam',u:'BİLİNMEYEN'};
 const avKey=(S,p)=>{if(p===0)return (S.hero&&S.hero[0])||MY_HERO||'c';if(MODE=='bot')return (S.hero&&S.hero[1])||{easy:'c',med:'p',hard:'m',imp:'u'}[DIFF];return (S.hero&&S.hero[p])||(S.av&&S.av[p])||'c'};
 const HD_PORTRAITS={
-  c:'corrupted_merchant.jpg?v=20261116_hd3',
-  p:'plague_doctor.jpg?v=20261116_hd2',
-  k:'cursed_king.jpg?v=20261116_hd3',
-  n:'dark_knight.jpg?v=20261116_hd3',
-  a:'shadow_alchemist.jpg?v=20261116_hd3',
-  s:'crimson_oracle.jpg?v=20261116_hd2',
-  e:'iron_executioner.jpg?v=20261116_hd2',
-  w:'necromancer.jpg?v=20261116_hd2'
+  c:'corrupted_merchant.jpg?v=20261116_t1',
+  p:'plague_doctor.jpg?v=20261116_t1',
+  k:'cursed_king.jpg?v=20261116_t1',
+  n:'dark_knight.jpg?v=20261116_t1',
+  a:'shadow_alchemist.jpg?v=20261116_t1',
+  s:'crimson_oracle.jpg?v=20261116_t1',
+  e:'iron_executioner.jpg?v=20261116_t1',
+  w:'necromancer.jpg?v=20261116_t1',
+  l:'werewolf.jpg?v=20261116_t1',
+  u:'unknown.jpg?v=20261116_t1'
 };
 const avSrc=k=>HD_PORTRAITS[k]||(k?AV[k]:IMG.bn),oppName=()=>NAMES[avKey(G,1)]||'Rakip';
 const prevAv=[undefined,undefined],morphT=[0,0];
@@ -1347,6 +1351,10 @@ function useHeroPower(){
     const c=S.deck.pop();S.pl[0].closed.push(c);
     S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
     S.log.push({p:0,t:'Mezar Çağrısı kullandı (1 kapalı kart çekti)'});snd('draw');R();
+  }else if(hid==='l'){
+    if(MODE==='guest'){snd('play');return conn.send({k:'hp_wolf'})}
+    S.hpMod[1]=(S.hpMod[1]||0)+2;S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
+    S.log.push({p:0,t:'Vahşi Pençe kullandı (Rakip +2)'});snd('play');R();
   }else{
     return;
   }
@@ -1657,6 +1665,12 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     const c=S.deck.pop();S.pl[1].closed.push(c);
     S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
     S.log.push({p:1,t:'Mezar Çağrısı kullandı (1 kapalı kart çekti)'});
+    R();
+  }
+  else if(m.k=='hp_wolf'){
+    if(avKey(S,1)!=='l'||(S.hpUsed&&S.hpUsed[1]))return;
+    S.hpMod[0]=(S.hpMod[0]||0)+2;S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
+    S.log.push({p:1,t:'Vahşi Pençe kullandı (Rakip +2)'});
     R();
   }
 }
