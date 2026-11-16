@@ -719,6 +719,42 @@ body:has(#menu:not([hidden])) #fl {
 .d20-box ~ .after { opacity: 0; transition: opacity 0.6s; }
 .d20-box.finished ~ .after { opacity: 1; }
 #mb.rig .after, #mb.rig #mo { display: none !important; }
+.d20-hp-mod {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 4px 0 8px;
+  transition: transform 0.46s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.46s ease;
+}
+.d20-hp-mod.fly {
+  transform: translateY(-115px) scale(1.22);
+  opacity: 0;
+}
+.d20-mod-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font: 800 13px/1.1 var(--mf);
+  border: 1.5px solid #d4a64a;
+  background: rgba(20, 14, 10, 0.94);
+  color: #fde68a;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.85), 0 0 14px rgba(234, 179, 84, 0.45);
+}
+.d20-mod-pill.neg {
+  border-color: #dc2626;
+  color: #fecaca;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.85), 0 0 14px rgba(220, 38, 38, 0.45);
+}
+.d20-mod-pill i {
+  font-style: normal;
+  font-size: 15px;
+  font-weight: 900;
+}
 
 /* Lobi & Odaya Katıl Modalları */
 .lobby-box, .join-modal {
@@ -2618,7 +2654,7 @@ body.dragging-joker #fx::after {
   position: fixed;
   z-index: 95;
   margin: 0 !important;
-  border-radius: 50% 50% 14px 14px;
+  border-radius: 10px !important;
   border: 3px solid #f5cc70;
   object-fit: cover;
   pointer-events: none;

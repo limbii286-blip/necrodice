@@ -231,13 +231,15 @@ const die=n=>`<i class="die">${[...Array(9)].map((_,i)=>`<b${PIP[n].includes(i)?
 const d20=()=>1+Math.random()*20|0;
 function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı animasyonu
   const d=document.querySelector('#mb .d20-box');if(!d)return;
-  const target=+d.dataset.roll,dc=+d.dataset.dc,isMe=d.dataset.m=='1',res=d.dataset.s;
+  const finalTarget=+d.dataset.roll,rawTarget=+(d.dataset.raw||finalTarget),modVal=+(d.dataset.mod||0),dc=+d.dataset.dc,isMe=d.dataset.m=='1',res=d.dataset.s;
+  const target=rawTarget;
   const cv=d.querySelector('#d20cv');
   if(!cv)return;
 
   // Hedef zar değerine göre gerçek D20 yüzünün iniş açısını al
   const initAng = (typeof getD20FaceAngles === 'function') ? getD20FaceAngles(20) : { rx: Math.atan(1 / Math.sqrt(2)), ry: Math.PI / 4, rz: 0 };
   const targetAng = (typeof getD20FaceAngles === 'function') ? getD20FaceAngles(target) : initAng;
+  const finalAng = (typeof getD20FaceAngles === 'function') ? getD20FaceAngles(finalTarget) : targetAng;
   const targetRx = targetAng.rx;
   const targetRy = targetAng.ry;
   const targetRz = targetAng.rz;
@@ -298,46 +300,77 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı animas
       } else {
         // Landing & Slam
         rolling = false;
-        finished = true;
         d.classList.remove('rolling');
-        d.classList.add('finished');
 
         // Tam hedef açısına pürüzsüz kilitlenmiş hali
         rx = targetRx;
         ry = targetRy;
         rz = targetRz;
 
-        const isCrit = target >= 20;
-        const isFail = target == 1 || res == 'death';
-
-        // BG3 Tarzı Tatmin Edici Karar Vuruşu (Zar oturur, bize bakan sayı kameraya doğru hafifçe zıplayıp netleşir)
-        let popStep = 0;
-        // scaleMult (tüm zar) ve popMult (bize bakan sayı) dizisi
-        const popSeq = [
-          { s: 1.15, p: 1.35 },
-          { s: 1.12, p: 1.42 },
-          { s: 1.05, p: 1.30 },
-          { s: 0.96, p: 1.15 },
-          { s: 1.02, p: 1.08 },
-          { s: 1.0,  p: 1.0 }
-        ];
-        const doPop = () => {
-          if(!d.isConnected) return;
-          if(popStep < popSeq.length) {
-            const frame = popSeq[popStep++];
-            render(target, isCrit, isFail, frame.s, frame.p);
-            setTimeout(doPop, 45);
-          } else {
-            render(target, isCrit, isFail, 1.0, 1.0);
+        const finishFinal = (num, triggerEffects) => {
+          finished = true;
+          d.classList.add('finished');
+          const isCrit = num >= 20;
+          const isFail = num == 1 || res == 'death';
+          let popStep = 0;
+          const popSeq = [
+            { s: 1.15, p: 1.35 },
+            { s: 1.12, p: 1.42 },
+            { s: 1.05, p: 1.30 },
+            { s: 0.96, p: 1.15 },
+            { s: 1.02, p: 1.08 },
+            { s: 1.0,  p: 1.0 }
+          ];
+          const doPop = () => {
+            if(!d.isConnected) return;
+            if(popStep < popSeq.length) {
+              const fr = popSeq[popStep++];
+              render(num, isCrit, isFail, fr.s, fr.p);
+              setTimeout(doPop, 45);
+            } else {
+              render(num, isCrit, isFail, 1.0, 1.0);
+            }
+          };
+          doPop();
+          if(triggerEffects){
+            if(isCrit){snd('win');flash();vib([80,80,200])}
+            else if(isFail){snd('death');if(res=='death'){try{document.body.classList.add('dead')}catch(e){}}vib([300,100,500])}
+            else{snd(res);flash()}
+            setTimeout(()=>{const x=document.querySelector('#mx');if(x)x.style.visibility=''},600);
           }
         };
-        doPop();
 
-        if(isCrit){snd('win');flash();vib([80,80,200])}
-        else if(isFail){snd('death');if(res=='death'){try{document.body.classList.add('dead')}catch(e){}}vib([300,100,500])}
-        else{snd(res);flash()}
-
-        setTimeout(()=>{const x=document.querySelector('#mx');if(x)x.style.visibility=''},600);
+        if(modVal !== 0 && rawTarget !== finalTarget){
+          render(rawTarget, false, false, 1.06, 1.15);
+          setTimeout(()=>{ if(d.isConnected) render(rawTarget, false, false, 1.0, 1.0); }, 180);
+          const hpModEl = d.querySelector('.d20-hp-mod');
+          setTimeout(()=>{
+            if(!d.isConnected) return;
+            if(hpModEl) hpModEl.classList.add('fly');
+            snd('play');
+            const mStart = performance.now(), mDur = 480;
+            const sRx = rx, sRy = ry, sRz = rz;
+            const fRx = finalAng.rx, fRy = finalAng.ry, fRz = finalAng.rz;
+            const modFrame = tNow => {
+              if(!d.isConnected) return;
+              const p = Math.min(1, (tNow - mStart) / mDur);
+              const e = 1 - Math.pow(1 - p, 3);
+              rx = sRx + (fRx - sRx) * e;
+              ry = sRy + (fRy - sRy) * e;
+              rz = sRz + (fRz - sRz) * e;
+              const sc = 1 + Math.sin(p * Math.PI) * 0.14;
+              render(p < 0.55 ? rawTarget : finalTarget, false, false, sc, 1 + Math.sin(p * Math.PI) * 0.25);
+              if(p < 1) requestAnimationFrame(modFrame);
+              else {
+                rx = fRx; ry = fRy; rz = fRz;
+                finishFinal(finalTarget, true);
+              }
+            };
+            requestAnimationFrame(modFrame);
+          }, 480);
+        } else {
+          finishFinal(finalTarget, true);
+        }
       }
     };
     animId = requestAnimationFrame(frame);
@@ -895,7 +928,7 @@ function endRound(){
       else{let x,y;do{x=d6()+d6();y=d6()+d6()}while(x==y);L=x<y?0:1;hx=[x,y];how='zar'}
     }
     const th=TH[Math.min(S.bo,3)],rawRoll=d20(),hpB=avKey(S,L)==='m'?2:0,execPen=avKey(S,1-L)==='e'?-2:0,roll=Math.max(1,Math.min(20,rawRoll+hpB+execPen)),surv=roll>=th;
-    const mk=(v,roll,surv)=>{return `Düelloyu ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısına göre)':how=='zar'?` (beraberlik zarı: ${hx[v]}–${hx[1-v]})`:''}.<br>Ölüm zarını ${L==v?'sen atıyorsun':'rakip atıyor'}<div class="d20-box" data-roll="${roll}" data-dc="${th}" data-m="${L==v?1:0}" data-s="${surv?'ok':L==v?'death':'win'}">
+    const mk=(v,roll,surv)=>{return `Düelloyu ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısına göre)':how=='zar'?` (beraberlik zarı: ${hx[v]}–${hx[1-v]})`:''}.<br>Ölüm zarını ${L==v?'sen atıyorsun':'rakip atıyor'}<div class="d20-box" data-roll="${roll}" data-raw="${rawRoll}" data-mod="${hpB+execPen}" data-dc="${th}" data-m="${L==v?1:0}" data-s="${surv?'ok':L==v?'death':'win'}">
       <div class="bg3-roll-card">
         <div class="bg3-card-border"></div>
         <i class="bg3-corner tl"></i><i class="bg3-corner tr"></i><i class="bg3-corner bl"></i><i class="bg3-corner br"></i>
@@ -907,6 +940,7 @@ function endRound(){
           <div class="d20-glow"></div>
           <canvas id="d20cv" class="d20-canvas" width="280" height="280"></canvas>
         </div>
+        ${(hpB||execPen)?`<div class="d20-hp-mod">${hpB?`<span class="d20-mod-pill pos"><b>Kader Mühürü</b><i>+${hpB}</i></span>`:''}${execPen?`<span class="d20-mod-pill neg"><b>İnfaz Hükmü</b><i>−2</i></span>`:''}</div>`:''}
         ${L==v?'<button id="rl" class="btn d20-btn">ÖLÜM ZARINI AT</button>':''}
       </div>
     </div><div class="after"><b>Zar Sonucu: ${roll}${(hpB||execPen)?` (${rawRoll}${hpB?`+${hpB} Kader Mühürü`:''}${execPen?`−2 İnfaz Hükmü`:''})`:''}</b><br>`+(surv?(L==v?'Kurtuldun! Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
@@ -936,7 +970,7 @@ function impSave(html,cont,msg='Bu kadar kolay olacağını mı sandın? Bu oyun
     if(d.classList.contains('finished')){clearInterval(w);setTimeout(()=>cutscene(msg,()=>{$('#mb').classList.remove('rig');cont()}),1000)}},120);
 }
 let entering=false;
-function veil(ms=2000){const v=document.createElement('div');v.className='veil';v.style.animationDuration=ms+'ms';v.style.setProperty('--ms',ms*.9+'ms');v.innerHTML=`<img alt="" src="${IMG.logo}"><b>limbigames</b><span class="ldb"><i></i></span>`;document.body.appendChild(v);setTimeout(()=>v.remove(),ms+100)}
+function veil(ms=2000){const v=document.createElement('div');v.className='veil';v.style.animationDuration=ms+'ms';v.style.setProperty('--ms',ms*.9+'ms');v.innerHTML=`<img alt="" src="limbi_favicon.png?v=limbi3"><b>limbigames</b><span class="ldb"><i></i></span>`;document.body.appendChild(v);setTimeout(()=>v.remove(),ms+100)}
 function enter(fn){if(entering)return;entering=true;veil();setMusic('game');setTimeout(()=>{$('#menu').hidden=true;entering=false;fn()},1700)}
 let MY_HERO='c',OPP_HERO='n';
 const HEROES=[
