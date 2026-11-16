@@ -2946,6 +2946,59 @@ body.dragging-joker #fx::after {
 .who .hp-btn.opp-hp::before {
   border-color: rgba(248, 113, 113, 0.22);
 }
+.hp-cast-fx {
+  position: fixed;
+  z-index: 96;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+.hp-cast-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 3px solid #fde68a;
+  box-shadow: 0 0 20px rgba(234, 179, 84, 0.9);
+  transform: translate(-50%, -50%) scale(0.7);
+  animation: hpCastRing 0.95s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.hp-cast-fx.opp .hp-cast-ring {
+  border-color: #f87171;
+  box-shadow: 0 0 20px rgba(220, 38, 38, 0.9);
+}
+@keyframes hpCastRing {
+  0% { opacity: 0.95; transform: translate(-50%, -50%) scale(0.75); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(2.15); }
+}
+.hp-cast-pop {
+  position: absolute;
+  left: 50%;
+  top: -36px;
+  transform: translateX(-50%);
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: rgba(16, 11, 8, 0.96);
+  border: 2px solid #f5cc70;
+  color: #fde68a;
+  font: 800 14px/1.1 var(--mf);
+  white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.92), 0 0 18px rgba(234, 179, 84, 0.55);
+  animation: hpCastPop 1.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.hp-cast-fx.opp .hp-cast-pop {
+  top: 38px;
+  border-color: #ef4444;
+  color: #fecaca;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.92), 0 0 18px rgba(220, 38, 38, 0.55);
+}
+@keyframes hpCastPop {
+  0% { opacity: 0; transform: translate(-50%, 8px) scale(0.82); }
+  20% { opacity: 1; transform: translate(-50%, 0) scale(1.06); }
+  75% { opacity: 1; transform: translate(-50%, -8px) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -18px) scale(0.96); }
+}
 
 /* Hero Power Hover Açıklama Kutusu */
 .hp-tip {
