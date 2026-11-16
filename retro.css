@@ -1245,8 +1245,8 @@ body.dragging-joker #fx::after {
 .who .av {
   order: 2;
   justify-self: center;
-  width: clamp(66px, 9.6dvh, 92px) !important;
-  height: clamp(66px, 9.6dvh, 92px) !important;
+  width: clamp(76px, 11.4dvh, 108px) !important;
+  height: clamp(76px, 11.4dvh, 108px) !important;
   border-radius: 10px !important;
   border: 3px solid #dfb764 !important;
   box-shadow:
@@ -2467,9 +2467,9 @@ body.dragging-joker #fx::after {
     gap: 6px;
   }
   .who .av {
-    width: 42px !important;
-    height: 42px !important;
-    margin: -2px 0 !important;
+    width: 50px !important;
+    height: 50px !important;
+    margin: -3px 0 !important;
   }
   .who .nm {
     min-width: 0;
@@ -2839,7 +2839,7 @@ body.dragging-joker #fx::after {
    ========================================================================== */
 .who .hp-btn {
   position: absolute;
-  left: calc(50% + clamp(40px, 5.5dvh, 52px));
+  left: calc(50% + clamp(46px, 6.4dvh, 62px));
   top: 50%;
   transform: translateY(-50%);
   z-index: 4;
@@ -3234,9 +3234,9 @@ body.dragging-joker #fx::after {
   }
   .who .hp-btn,
   .who .hp-btn.opp-hp {
-    left: calc(50% + 33px);
-    width: 32px;
-    height: 32px;
+    left: calc(50% + 31px);
+    width: 30px;
+    height: 30px;
   }
 }
 
