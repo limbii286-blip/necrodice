@@ -2722,6 +2722,50 @@ body.dragging-joker #fx::after {
   will-change: transform, opacity;
   animation: avSlash 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+.av-vamp-blood {
+  position: fixed;
+  z-index: 98;
+  width: 140px;
+  height: 140px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.av-vamp-blood::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(220, 38, 38, 0.88) 0%, rgba(153, 27, 27, 0.65) 42%, transparent 72%);
+  box-shadow: 0 0 32px rgba(220, 38, 38, 0.95);
+  animation: avShockwave 0.72s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.av-vamp-blood::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 112px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #fecaca 35%, #dc2626 65%, transparent);
+  box-shadow: 0 0 22px #dc2626;
+  transform: translate(-50%, -50%) rotate(-28deg) scaleX(0.2);
+  animation: avSlash 0.52s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.hp-prog {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  padding: 1px 4px;
+  border-radius: 8px;
+  background: #1a120d;
+  border: 1px solid rgba(212, 175, 55, 0.7);
+  color: #f4d483;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.1;
+  pointer-events: none;
+}
 .av-dmg {
   position: fixed;
   z-index: 97;
