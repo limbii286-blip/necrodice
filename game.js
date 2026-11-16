@@ -966,7 +966,7 @@ function endRound(){
       if(rig){S.rigDone=true;S.hpUsed[1]=true;impSave(mk(0,1,false),()=>M(mk(0,20,true),lb,go))}
       else if(uRev){S.uRevived=S.uRevived||[false,false];S.uRevived[L]=true;S.hpUsed[L]=true;impSave(mk(0,roll,false),()=>MM(v=>mk(v,20,true),lb,go),'Hiçlik seni geri çevirdi… Bir kez daha ölümden döndün!')}
       else MM(full,lb,go)}
-    else{S.over=true;lrnGame(L==0);MM(full,'Yeniden oyna',start,null,true)}
+    else{S.over=true;lrnGame(L==0);MM(full,'Yeniden oyna',()=>chooseHero(hid=>{MY_HERO=hid;start()},()=>{$('#menu').hidden=false;setMusic('menu')}),null,true)}
   }
 }
 function cutscene(txt,done){ // BİLİNMEYEN: ikonu ve konuşma balonu
