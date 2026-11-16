@@ -963,14 +963,14 @@ let prevT=false,lastLk='',flipId=null,lastTot=[0,0],lastBust=false,prevSeal='',s
 const NAMES={c:'Lanetli Tüccar',p:'Veba Doktoru',k:'Lanetli Kral',n:'Karanlık Şövalye',a:'Gölge Simyacı',s:'Kızıl Kâhin',e:'Demir Cellat',m:'Ölümün Efendisi',w:'Ölüm Büyücüsü',u:'BİLİNMEYEN'};
 const avKey=(S,p)=>{if(p===0)return (S.hero&&S.hero[0])||MY_HERO||'c';if(MODE=='bot')return (S.hero&&S.hero[1])||{easy:'c',med:'p',hard:'m',imp:'u'}[DIFF];return (S.hero&&S.hero[p])||(S.av&&S.av[p])||'c'};
 const HD_PORTRAITS={
-  c:'corrupted_merchant.jpg?v=20261116_hd1',
-  p:'plague_doctor.jpg?v=20261115_p1',
-  k:'cursed_king.jpg?v=20261116_hd1',
-  n:'dark_knight.jpg?v=20261116_hd1',
-  a:'shadow_alchemist.jpg?v=20261116_hd1',
-  s:'crimson_oracle.jpg?v=20261116_hd1',
-  e:'iron_executioner.jpg?v=20261116_hd1',
-  w:'necromancer.jpg?v=20261116_hd1'
+  c:'corrupted_merchant.jpg?v=20261116_hd2',
+  p:'plague_doctor.jpg?v=20261116_hd2',
+  k:'cursed_king.jpg?v=20261116_hd2',
+  n:'dark_knight.jpg?v=20261116_hd2',
+  a:'shadow_alchemist.jpg?v=20261116_hd2',
+  s:'crimson_oracle.jpg?v=20261116_hd2',
+  e:'iron_executioner.jpg?v=20261116_hd2',
+  w:'necromancer.jpg?v=20261116_hd2'
 };
 const avSrc=k=>HD_PORTRAITS[k]||(k?AV[k]:IMG.bn),oppName=()=>NAMES[avKey(G,1)]||'Rakip';
 const prevAv=[undefined,undefined],morphT=[0,0];
