@@ -1136,6 +1136,7 @@ html::after {
 }
 #opp.zone .cards {
   margin-top: auto;
+  margin-bottom: -10px;
 }
 #opp.zone .who {
   margin-top: 0 !important;
@@ -1175,6 +1176,10 @@ html::after {
   padding-top: 0 !important;
   padding-bottom: clamp(78px, 11.8dvh, 110px) !important;
   background: transparent !important;
+}
+#me.zone .cards {
+  margin-bottom: auto;
+  margin-top: -10px;
 }
 #me.zone.act {
   background: radial-gradient(68% 92% at 50% 35%, rgba(234, 179, 84, 0.19), rgba(168, 112, 34, 0.07) 52%, transparent 78%) !important;
@@ -2486,6 +2491,8 @@ body.dragging-joker #fx::after {
   }
   .cards {
     gap: 4px !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
   }
   .cards .gap {
     width: 4px !important;
