@@ -375,7 +375,7 @@ function deal(S){
   S.deck=shuf(range(11).map(n=>({id:++S.u,n})));
   S.pl=[0,1].map(()=>({open:[S.deck.pop()],closed:[S.deck.pop()]}));
   S.eff=[];S.pj=[];S.jUsed=[0,0];S.jTurn=[0,0];S.noJ=[false,false];S.acted=false;S.turns=0;
-  S.hpMod=[0,0];S.hpTgMod=0;S.oppPeek=[];S.oppPeek1=[];
+  S.hpMod=[0,0];S.plagueMod=[0,0];S.hpTgMod=0;S.oppPeek=[];S.oppPeek1=[];
   S.turn=S.pl[0].open[0].n<S.pl[1].open[0].n?0:1;
   S.wait=false;S.rev=false;S.winSide=null;S.timeOut=[false,false];S.hadTimeout=false;S.dead=[];S.pa=[0,0];S.st={pb:0,ob:0,px:0};
   if(!Array.isArray(S.clocks)||S.clocks.length!==2){
@@ -388,7 +388,8 @@ function deal(S){
 }
 const act=(S,id)=>S.eff.some(e=>e.id==id&&!e.neg);
 function total(S,p,wc=true){
-  const f=(c,cl)=>{const b=c.o??c.n;let v=b;if(act(S,1)&&b%2)v=b*2;else if(act(S,2)&&b%2==0)v=b/2; // x2: tekler iki katı, ÷2: çiftler yarısı (ikisi birlikte olunca da her kart yalnızca bir kez etkilenir)
+  const pm=(S.plagueMod&&S.plagueMod[p])||0;
+  const f=(c,cl)=>{const b=Math.max(0,(c.o??c.n)+pm);let v=b;if(act(S,1)&&b%2)v=b*2;else if(act(S,2)&&b%2==0)v=b/2; // x2: tekler iki katı, ÷2: çiftler yarısı (ikisi birlikte olunca da her kart yalnızca bir kez etkilenir)
     if(cl){if(act(S,20))return 0;if(act(S,21))v*=2}return v};
   let t=0;S.pl[p].open.forEach(c=>t+=f(c,0));if(wc)S.pl[p].closed.forEach(c=>t+=f(c,1));
   S.eff.forEach(e=>{if(e.neg||e.o!=p)return;if(e.id==3)t+=5;if(e.id==4)t-=5;if(e.id==22)t+=e.s*S.deck.length});
@@ -843,7 +844,15 @@ function heroClash(){
   a1.onfinish=()=>{c1.remove();if(av1.isConnected)av1.style.opacity='';};
 }
 function endRound(){
-  const S=G,a=[total(S,0),total(S,1)],T=tg(S),r=outc(S,0);
+  const S=G,a=[total(S,0),total(S,1)],T=tg(S);
+  let r=outc(S,0);
+  if(r!==0){
+    const loser=r<0?0:1;
+    if(avKey(S,loser)==='n'&&Math.random()<0.30){
+      r=0;
+      S.log.push({p:loser,t:'Demir İrade! Hasarı tanklayıp turu berabereye çevirdi!'});
+    }
+  }
   if(MODE=='bot'){profRec(S,a[0],T);lrnRound(r)}
   S.pts[0]+=r>0?1:r==0?.5:0;S.pts[1]+=r<0?1:r==0?.5:0;S.rounds++;S.res.push(r);S.wait=true;S.rev=true;S.winSide=null;
   R();snd('flip');lock=true; // 1) Kapalı kartlar açılır ve masada açık kalır
@@ -932,15 +941,15 @@ function enter(fn){if(entering)return;entering=true;veil();setMusic('game');setT
 let MY_HERO='c',OPP_HERO='n';
 const HEROES=[
   {id:'c',name:'Lanetli Tüccar',hpName:'Hileli Terazi',desc:'Bu turda toplamına +2 veya −2 uygula.'},
-  {id:'p',name:'Veba Doktoru',hpName:'Kuzgun Gözü',desc:'Rakibin kapalı sayı kartına gizlice bak.'},
-  {id:'n',name:'Kara Şövalye',hpName:'Kalkan Darbesi',desc:'Rakibin masadaki son açık sayı kartını −2 azalt.'},
+  {id:'p',name:'Veba Doktoru',hpName:'Veba Laneti',desc:'Rakibin bu eldeki tüm mevcut ve gelecek sayı kartlarına +1 veya −1 laneti uygula.'},
+  {id:'n',name:'Kara Şövalye',passive:true,hpName:'Demir İrade',desc:'Kaybettiğin her turda %30 ihtimalle gelen hasarı tanklayıp turu berabereye çevirirsin.'},
   {id:'a',name:'Simyacı',hpName:'Dönüşüm İksiri',desc:'Masadaki son açık sayı kartını destenin en üstündeki kartla değiştir.'},
-  {id:'s',name:'Büyücü',hpName:'Kader Kehaneti',desc:'Destedeki en üst 2 karta gizlice bak; istersen yerlerini değiştir.'},
-  {id:'e',name:'Cellat',passive:true,hpName:'İnfaz Hükmü',desc:'Rakibin attığı her D20 ölüm zarından 2 eksiltir.'},
-  {id:'m',name:'Ölümün Efendisi',passive:true,hpName:'Kader Mühürü',desc:'Her D20 ölüm zarına +2 bonus kazanırsın.'},
+  {id:'s',name:'Büyücü',hpName:'Kuzgun Gözü',desc:'Rakibin kapalı sayı kartına gizlice bak.'},
+  {id:'e',name:'Cellat',passive:true,hpName:'İnfaz Hükmü',desc:'Rakibin attığı her ölüm zarından 2 eksiltir.'},
+  {id:'m',name:'Ölümün Efendisi',passive:true,hpName:'Kader Mühürü',desc:'Attığın her ölüm zarına +2 bonus kazanırsın.'},
   {id:'w',name:'Cadı',hpName:'Kara Ayin',desc:'Desteden fazladan 1 kapalı sayı kartı çek.'},
-  {id:'l',name:'Kurt Adam',hpName:'Vahşi Pençe',desc:'Bu turda rakibin toplamına +2 ekle.'},
-  {id:'u',name:'Bilinmeyen',passive:true,bossOnly:true,hpName:'Hiçlikten Dönüş',desc:'Ölüm zarında hedeflenenden düşük atarsan, bir kereliğine hayata geri dönersin.'}
+  {id:'l',name:'Kurt Adam',hpName:'Vahşi Pençe',desc:'İki tarafın da masadaki rastgele bir sayı kartını imha eder.'},
+  {id:'u',name:'Bilinmeyen',passive:true,bossOnly:true,hpName:'Hiçlikten Dönüş',desc:'Ölüm zarında hedeflenen sayıdan düşük atarsa, bir kereliğine hayata geri döner.'}
 ];
 const HERO_MAP=Object.fromEntries(HEROES.map(h=>[h.id,h]));
 const HP_IC={
@@ -1183,8 +1192,8 @@ function R(){
   const oppHandHtml=`<div class="opp-jhand" title="Rakibin elindeki kapalı jokerler (${S.hand[1].length})">${S.hand[1].map((_,i)=>`<img class="oj" style="--r:${((i-(S.hand[1].length-1)/2)*4.5).toFixed(1)}deg" src="${IMG.bj}" alt="">`).join('')}</div>`;
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'')+(S.winSide!=null?(S.winSide>0?' round-lose':S.winSide===0?' round-tie':''):'');
   const myHId=avKey(S,0),oppHId=avKey(S,1);
-  const hpUsed0=myHId==='u'?!!(S.uRevived&&S.uRevived[0]):(myHId==='m'||myHId==='e')?false:!!(S.hpUsed&&S.hpUsed[0]);
-  const hpUsed1=oppHId==='u'?!!(MODE==='bot'?S.rigDone:(S.uRevived&&S.uRevived[1])):(oppHId==='m'||oppHId==='e')?false:!!(S.hpUsed&&S.hpUsed[1]);
+  const hpUsed0=myHId==='u'?!!(S.uRevived&&S.uRevived[0]):(myHId==='m'||myHId==='e'||myHId==='n')?false:!!(S.hpUsed&&S.hpUsed[0]);
+  const hpUsed1=oppHId==='u'?!!(MODE==='bot'?S.rigDone:(S.uRevived&&S.uRevived[1])):(oppHId==='m'||oppHId==='e'||oppHId==='n')?false:!!(S.hpUsed&&S.hpUsed[1]);
   const hpObj0=HERO_MAP[myHId]||HEROES[0],hpObj1=HERO_MAP[oppHId]||HEROES[0];
   const canHp=!isSpec&&!hpObj0.passive&&my&&!P&&!hpUsed0;
   const hpBtn0=isSpec?'':`<button id="hp-btn" class="hp-btn${hpObj0.passive?' passive':''}${hpUsed0?' used':canHp?' ready':''}" data-hp="1" data-hp-id="${myHId}" data-hp-side="0"${canHp?'':' disabled'}>${HP_IC[myHId]||HP_IC.c}</button>`;
@@ -1307,27 +1316,16 @@ function useHeroPower(){
     $('#hp-p2').onclick=()=>applyMod(2);
     $('#hp-m2').onclick=()=>applyMod(-2);
   }else if(hid==='p'){
-    if(!S.pl[1].closed.length)return;
-    if(MODE==='guest'){snd('flip');return conn.send({k:'hp_peek'})}
-    S.oppPeek=S.pl[1].closed.map(c=>c.id);
-    S.hpUsed[0]=true;
-    snd('flip');R();
-  }else if(hid==='k'){
-    box(`<h3>Kraliyet Fermanı</h3><p>Bu düelloda hedef sayıyı nasıl değiştirmek istersin?</p><div class="row"><button id="hp-tp2" class="btn sm">Hedef +2</button><button id="hp-tm2" class="btn sm alt">Hedef −2</button></div>`, true);
-    const applyTg=dlt=>{
+    box(`<h3>Veba Laneti</h3><p>Rakibin bu eldeki tüm mevcut ve gelecek sayı kartlarına hangi laneti uygulamak istersin?</p><div class="row"><button id="hp-plp1" class="btn sm">Tüm Kartlara +1</button><button id="hp-plm1" class="btn sm alt">Tüm Kartlara −1</button></div>`, true);
+    const applyPlague=dlt=>{
       $('#m').hidden=true;lock=false;snd('play');
-      if(MODE==='guest')return conn.send({k:'hp_tg',delta:dlt});
-      S.hpTgMod=(S.hpTgMod||0)+dlt;S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
-      S.log.push({p:0,t:`Kraliyet Fermanı kullandı (Hedef ${dlt>0?'+2':'−2'})`});R();
+      if(MODE==='guest')return conn.send({k:'hp_plague',delta:dlt});
+      S.plagueMod=S.plagueMod||[0,0];
+      S.plagueMod[1]=dlt;S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
+      S.log.push({p:0,t:`Veba Laneti kullandı (Rakip tüm kartlar ${dlt>0?'+1':'−1'})`});R();
     };
-    $('#hp-tp2').onclick=()=>applyTg(2);
-    $('#hp-tm2').onclick=()=>applyTg(-2);
-  }else if(hid==='n'){
-    if(!S.pl[1].open.length)return box('<h3>Kara Darbe</h3><p>Rakibin masada açık sayı kartı yok.</p>');
-    if(MODE==='guest'){snd('play');return conn.send({k:'hp_knight'})}
-    const c=S.pl[1].open[S.pl[1].open.length-1],cur=c.o??c.n;
-    c.o=Math.max(1,cur-2);S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
-    S.log.push({p:0,t:`Kara Darbe kullandı (${cur} → ${c.o})`});snd('play');R();
+    $('#hp-plp1').onclick=()=>applyPlague(1);
+    $('#hp-plm1').onclick=()=>applyPlague(-1);
   }else if(hid==='a'){
     if(!S.pl[0].open.length||!S.deck.length)return box('<h3>Dönüşüm İksiri</h3><p>Değiştirilecek açık kart veya destede kart yok.</p>');
     if(MODE==='guest'){snd('flip');return conn.send({k:'hp_alch'})}
@@ -1336,21 +1334,24 @@ function useHeroPower(){
     S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
     S.log.push({p:0,t:`Dönüşüm İksiri kullandı (${old.n} → ${rep.n})`});snd('flip');R();
   }else if(hid==='s'){
-    if(!S.deck.length)return box('<h3>Kader Kehaneti</h3><p>Destede bakılacak kart kalmadı.</p>');
-    if(MODE==='guest'){snd('info');return conn.send({k:'hp_scry'})}
-    S.hpUsed[0]=true;S.graceLeft=0;snd('info');
-    const n=S.deck.length,c1=S.deck[n-1],c2=n>1?S.deck[n-2]:null;
-    showScryModal(c1,c2,()=>{S.log.push({p:0,t:'Kader Kehaneti kullandı (sırayı korudu)'});R()},()=>{if(c2){S.deck[n-1]=c2;S.deck[n-2]=c1}S.log.push({p:0,t:'Kader Kehaneti kullandı (sırayı değiştirdi)'});R()});
+    if(!S.pl[1].closed.length)return;
+    if(MODE==='guest'){snd('flip');return conn.send({k:'hp_peek'})}
+    S.oppPeek=S.pl[1].closed.map(c=>c.id);
+    S.hpUsed[0]=true;
+    snd('flip');R();
   }else if(hid==='w'){
-    if(!canDraw(S,0))return box('<h3>Mezar Çağrısı</h3><p>Desteden kart çekilemiyor.</p>');
+    if(!canDraw(S,0))return box('<h3>Kara Ayin</h3><p>Desteden kart çekilemiyor.</p>');
     if(MODE==='guest'){snd('draw');return conn.send({k:'hp_necro'})}
     const c=S.deck.pop();S.pl[0].closed.push(c);
     S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
-    S.log.push({p:0,t:'Mezar Çağrısı kullandı (1 kapalı kart çekti)'});snd('draw');R();
+    S.log.push({p:0,t:'Kara Ayin kullandı (1 kapalı kart çekti)'});snd('draw');R();
   }else if(hid==='l'){
+    if(!(S.pl[0].open.length||S.pl[0].closed.length)||!(S.pl[1].open.length||S.pl[1].closed.length))return box('<h3>Vahşi Pençe</h3><p>İmha edilecek yeterli kart yok.</p>');
     if(MODE==='guest'){snd('play');return conn.send({k:'hp_wolf'})}
-    S.hpMod[1]=(S.hpMod[1]||0)+2;S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
-    S.log.push({p:0,t:'Vahşi Pençe kullandı (Rakip +2)'});snd('play');R();
+    const destroyRand=side=>{const pool=S.pl[side].open.length?S.pl[side].open:S.pl[side].closed;return pool.length?pool.splice(Math.floor(Math.random()*pool.length),1)[0]:null};
+    destroyRand(0);destroyRand(1);
+    S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
+    S.log.push({p:0,t:'Vahşi Pençe kullandı (İki taraftan 1\'er kart imha edildi)'});snd('play');R();
   }else{
     return;
   }
@@ -1531,14 +1532,14 @@ let MODE='bot',peer,conn,spectators=[],specCount=0,waitM=false;
 const MAX_SPECTATORS = 5;
 function view(S){ // rakibe gidecek, gizli bilgisi temizlenmiş ve aynalanmış durum
   const f=a=>[a[1],a[0]],pk1=S.oppPeek1||[];
-  return {av:f(S.av),hero:S.hero?f(S.hero):f(S.av),hpUsed:S.hpUsed?f(S.hpUsed):[false,false],hpMod:S.hpMod?f(S.hpMod):[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?f(S.uRevived):[false,false],oppPeek:pk1,mast:f(S.mast),turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:1-S.turn,clocks:S.clocks?f(S.clocks):[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?f(S.timeOut):[false,false],hadTimeout:!!S.hadTimeout,pts:f(S.pts),rev:S.rev,winSide:S.winSide==null?null:-S.winSide,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),jTurn:S.jTurn?f(S.jTurn):[0,0],noJ:f(S.noJ),
+  return {av:f(S.av),hero:S.hero?f(S.hero):f(S.av),hpUsed:S.hpUsed?f(S.hpUsed):[false,false],hpMod:S.hpMod?f(S.hpMod):[0,0],plagueMod:S.plagueMod?f(S.plagueMod):[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?f(S.uRevived):[false,false],oppPeek:pk1,mast:f(S.mast),turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:1-S.turn,clocks:S.clocks?f(S.clocks):[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?f(S.timeOut):[false,false],hadTimeout:!!S.hadTimeout,pts:f(S.pts),rev:S.rev,winSide:S.winSide==null?null:-S.winSide,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),jTurn:S.jTurn?f(S.jTurn):[0,0],noJ:f(S.noJ),
     hand:[S.hand[1],S.hand[0].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
     pl:[S.pl[1],{open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:(S.rev||pk1.includes(c.id))?c.n:0,o:c.o}))}],
     eff:S.eff.map(e=>({...e,o:1-e.o})),pj:(S.pj||[]).map(e=>({...e,o:1-e.o})),log:S.log.slice(-6).map(l=>({...l,p:l.p<0?-1:1-l.p}))};
 }
 function specView(S){ // izleyicilere gidecek durum (0 = host/oda sahibi, 1 = misafir oyuncu, kapalı kartlar rev olmadan görünmez)
   return {
-    av:[S.av[0],S.av[1]],hero:S.hero?[...S.hero]:[S.av[0],S.av[1]],hpUsed:S.hpUsed?[...S.hpUsed]:[false,false],hpMod:S.hpMod?[...S.hpMod]:[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?[...S.uRevived]:[false,false],mast:[S.mast[0],S.mast[1]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:S.turn,clocks:S.clocks?[...S.clocks]:[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?[...S.timeOut]:[false,false],hadTimeout:!!S.hadTimeout,pts:S.pts,rev:S.rev,winSide:S.winSide,res:S.res,jUsed:S.jUsed,jTurn:S.jTurn?[...S.jTurn]:[0,0],noJ:S.noJ,
+    av:[S.av[0],S.av[1]],hero:S.hero?[...S.hero]:[S.av[0],S.av[1]],hpUsed:S.hpUsed?[...S.hpUsed]:[false,false],hpMod:S.hpMod?[...S.hpMod]:[0,0],plagueMod:S.plagueMod?[...S.plagueMod]:[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?[...S.uRevived]:[false,false],mast:[S.mast[0],S.mast[1]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:S.turn,clocks:S.clocks?[...S.clocks]:[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?[...S.timeOut]:[false,false],hadTimeout:!!S.hadTimeout,pts:S.pts,rev:S.rev,winSide:S.winSide,res:S.res,jUsed:S.jUsed,jTurn:S.jTurn?[...S.jTurn]:[0,0],noJ:S.noJ,
     hand:[S.hand[0].map(()=>0),S.hand[1].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
     pl:[
       {open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:c.o}))},
@@ -1633,23 +1634,17 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     R();
   }
   else if(m.k=='hp_peek'){
-    if(avKey(S,1)!=='p'||(S.hpUsed&&S.hpUsed[1])||!S.pl[0].closed.length)return;
+    if(avKey(S,1)!=='s'||(S.hpUsed&&S.hpUsed[1])||!S.pl[0].closed.length)return;
     S.oppPeek1=S.pl[0].closed.map(c=>c.id);
     S.hpUsed[1]=true;
     R();
   }
-  else if(m.k=='hp_tg'){
-    if(avKey(S,1)!=='k'||(S.hpUsed&&S.hpUsed[1]))return;
-    const dlt=m.delta>0?2:-2;
-    S.hpTgMod=(S.hpTgMod||0)+dlt;S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
-    S.log.push({p:1,t:`Kraliyet Fermanı kullandı (Hedef ${dlt>0?'+2':'−2'})`});
-    R();
-  }
-  else if(m.k=='hp_knight'){
-    if(avKey(S,1)!=='n'||(S.hpUsed&&S.hpUsed[1])||!S.pl[0].open.length)return;
-    const c=S.pl[0].open[S.pl[0].open.length-1],cur=c.o??c.n;
-    c.o=Math.max(1,cur-2);S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
-    S.log.push({p:1,t:`Kara Darbe kullandı (${cur} → ${c.o})`});
+  else if(m.k=='hp_plague'){
+    if(avKey(S,1)!=='p'||(S.hpUsed&&S.hpUsed[1]))return;
+    const dlt=m.delta>0?1:-1;
+    S.plagueMod=S.plagueMod||[0,0];
+    S.plagueMod[0]=dlt;S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
+    S.log.push({p:1,t:`Veba Laneti kullandı (Rakip tüm kartlar ${dlt>0?'+1':'−1'})`});
     R();
   }
   else if(m.k=='hp_alch'){
@@ -1664,13 +1659,15 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     if(avKey(S,1)!=='w'||(S.hpUsed&&S.hpUsed[1])||!canDraw(S,1))return;
     const c=S.deck.pop();S.pl[1].closed.push(c);
     S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
-    S.log.push({p:1,t:'Mezar Çağrısı kullandı (1 kapalı kart çekti)'});
+    S.log.push({p:1,t:'Kara Ayin kullandı (1 kapalı kart çekti)'});
     R();
   }
   else if(m.k=='hp_wolf'){
     if(avKey(S,1)!=='l'||(S.hpUsed&&S.hpUsed[1]))return;
-    S.hpMod[0]=(S.hpMod[0]||0)+2;S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
-    S.log.push({p:1,t:'Vahşi Pençe kullandı (Rakip +2)'});
+    const destroyRand=side=>{const pool=S.pl[side].open.length?S.pl[side].open:S.pl[side].closed;return pool.length?pool.splice(Math.floor(Math.random()*pool.length),1)[0]:null};
+    destroyRand(0);destroyRand(1);
+    S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
+    S.log.push({p:1,t:'Vahşi Pençe kullandı (İki taraftan 1\'er kart imha edildi)'});
     R();
   }
 }
