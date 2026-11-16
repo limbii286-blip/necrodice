@@ -1718,6 +1718,10 @@ document.addEventListener('click',e=>{
   if(t.dataset.j){
     if(window._suppressJokerClick)return;
     const id=+t.dataset.j;
+    if(window.matchMedia&&window.matchMedia('(max-width: 760px)').matches){
+      const canUse=S.turn==0&&!S.wait&&MODE!=='spectator'&&playable(S,0,id);
+      return preview(id,canUse,BLOCK.has(id)?'Etkisiz kılınabilir':'Etkisiz kılınamaz');
+    }
     if(S.turn==0&&!S.wait&&MODE!=='spectator'&&playable(S,0,id)){
       document.querySelectorAll('#hand .j.pinned,#hand .j.hovered').forEach(el=>el.classList.remove('pinned','hovered'));
       return startJoker(id);
