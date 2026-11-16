@@ -1178,7 +1178,6 @@ html::after {
   background: transparent !important;
 }
 #me.zone .cards {
-  margin-bottom: auto;
   margin-top: -10px;
 }
 #me.zone.act {
@@ -1253,13 +1252,11 @@ body.dragging-joker #fx::after {
   width: clamp(76px, 11.4dvh, 108px) !important;
   height: clamp(76px, 11.4dvh, 108px) !important;
   border-radius: 10px !important;
-  padding: 4px;
-  border: 1.5px solid #8a6432 !important;
-  box-shadow:
-    0 0 0 1.5px #160c05,
-    0 8px 20px rgba(0, 0, 0, 0.94) !important;
+  padding: 0;
+  border: none !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.94) !important;
   margin: -14px 0 -10px !important;
-  background: url('wood_plank.jpg?v=20261116_w2') center / cover no-repeat;
+  background: #0c080a;
   object-fit: cover;
   object-position: 50% 50%;
   z-index: 2;
@@ -2661,9 +2658,8 @@ body.dragging-joker #fx::after {
   z-index: 95;
   margin: 0 !important;
   border-radius: 10px !important;
-  padding: 4px;
-  border: 1.5px solid #8a6432;
-  background: url('wood_plank.jpg?v=20261116_w2') center / cover no-repeat;
+  padding: 0;
+  border: none;
   object-fit: cover;
   pointer-events: none;
   box-shadow:
