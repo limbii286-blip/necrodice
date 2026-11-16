@@ -3415,9 +3415,56 @@ body.dragging-joker #fx::after {
     width: 28px;
     height: 28px;
   }
+  #mb:has(.d20-box) {
+    padding: 10px 12px !important;
+    font-size: 13.5px !important;
+    line-height: 1.25 !important;
+    max-height: 92dvh !important;
+  }
+  #mb:has(.d20-box) .d20-box {
+    margin: 6px auto !important;
+  }
+  #mb:has(.d20-box) .bg3-roll-card {
+    width: min(226px, 72vw) !important;
+    padding: 9px 10px 10px !important;
+  }
+  #mb:has(.d20-box) .bg3-dc-arch {
+    padding: 2px 0 6px !important;
+  }
+  #mb:has(.d20-box) .bg3-dc-arch .lbl {
+    font-size: 10px !important;
+    margin-bottom: 2px !important;
+  }
+  #mb:has(.d20-box) .bg3-dc-arch .val {
+    font-size: 26px !important;
+  }
+  #mb:has(.d20-box) .d20-stage {
+    width: 140px !important;
+    height: 140px !important;
+    margin: 4px 0 !important;
+  }
   .d20-canvas {
-    width: 210px !important;
-    height: 210px !important;
+    width: 134px !important;
+    height: 134px !important;
+  }
+  #mb:has(.d20-box) .d20-btn {
+    margin: 4px auto 0 !important;
+    padding: 8px 16px !important;
+    font-size: 12px !important;
+  }
+  #mb:has(.d20-box) .after {
+    margin-top: 4px !important;
+    font-size: 13px !important;
+    line-height: 1.25 !important;
+  }
+  #mb:has(.d20-box) br {
+    display: none;
+  }
+  #mb:has(.d20-box) #mo,
+  #mb:has(.d20-box) #mx {
+    margin-top: 6px !important;
+    padding: 8px 14px !important;
+    font-size: 12.5px !important;
   }
 }
 
