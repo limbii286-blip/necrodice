@@ -1336,8 +1336,8 @@ function R(){
   const sc0=$('#sc-0'),sc1=$('#sc-1'),scSec0=$('#sc-sec-0'),scSec1=$('#sc-sec-1');
   if(scSec0)scSec0.textContent=(meTimeOut||c0<=0)?'✕':String(c0);
   if(scSec1)scSec1.textContent=(oppTimeOut||c1<=0)?'✕':String(c1);
-  if(sc0){sc0.classList.toggle('ticking',S.turn==0&&!S.wait&&!(S.graceLeft>0)&&!meTimeOut);sc0.classList.toggle('low',c0<=10&&c0>0);sc0.classList.toggle('out',meTimeOut||c0<=0)}
-  if(sc1){sc1.classList.toggle('ticking',S.turn==1&&!S.wait&&!(S.graceLeft>0)&&!oppTimeOut);sc1.classList.toggle('low',c1<=10&&c1>0);sc1.classList.toggle('out',oppTimeOut||c1<=0)}
+  if(sc0){sc0.classList.toggle('ticking',S.turn==0&&!S.wait&&!(S.graceLeft>0)&&!meTimeOut);sc0.classList.toggle('low',c0<=10&&c0>0);sc0.classList.toggle('out',meTimeOut||c0<=0);sc0.classList.toggle('turn-on',S.turn==0&&!S.wait&&!S.over);sc0.classList.toggle('turn-off',S.turn!=0&&!S.wait&&!S.over)}
+  if(sc1){sc1.classList.toggle('ticking',S.turn==1&&!S.wait&&!(S.graceLeft>0)&&!oppTimeOut);sc1.classList.toggle('low',c1<=10&&c1>0);sc1.classList.toggle('out',oppTimeOut||c1<=0);sc1.classList.toggle('turn-on',S.turn==1&&!S.wait&&!S.over);sc1.classList.toggle('turn-off',S.turn!=1&&!S.wait&&!S.over)}
   const oppHandHtml=`<div class="opp-jhand" title="Rakibin elindeki kapalı jokerler (${S.hand[1].length})">${S.hand[1].map((_,i)=>`<img class="oj" style="--r:${((i-(S.hand[1].length-1)/2)*4.5).toFixed(1)}deg" src="${IMG.bj}" alt="">`).join('')}</div>`;
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'')+(S.winSide!=null?(S.winSide>0?' round-lose':S.winSide===0?' round-tie':''):'');
   const myHId=avKey(S,0),oppHId=avKey(S,1);
@@ -2912,8 +2912,8 @@ function createSmoothDragLoop(onFrame){
     const isMenuModal=!!(modalEl&&!modalEl.hidden&&mbEl&&!mbEl.querySelector('.d20-box,.scry-row,#hp-p2,.hero-grid'));
     const active=!!(G && !G.over && !G.wait && (!lock || (MODE!=='bot' && isMenuModal)) && (!menu || menu.hidden));
     if(!active){
-      if(sc0) sc0.classList.remove('ticking','low');
-      if(sc1) sc1.classList.remove('ticking','low');
+      if(sc0){sc0.classList.remove('ticking','low');sc0.classList.toggle('turn-on',G.turn===0);sc0.classList.toggle('turn-off',G.turn!==0)}
+      if(sc1){sc1.classList.remove('ticking','low');sc1.classList.toggle('turn-on',G.turn===1);sc1.classList.toggle('turn-off',G.turn!==1)}
       lastTickSec=-1;
       return;
     }
@@ -2930,8 +2930,8 @@ function createSmoothDragLoop(onFrame){
       const s0=Math.ceil(G.clocks[0]), s1=Math.ceil(G.clocks[1]);
       if(scSec0) scSec0.textContent=(G.timeOut[0]||s0<=0)?'✕':String(s0);
       if(scSec1) scSec1.textContent=(G.timeOut[1]||s1<=0)?'✕':String(s1);
-      if(sc0) sc0.classList.remove('ticking','low');
-      if(sc1) sc1.classList.remove('ticking','low');
+      if(sc0){sc0.classList.remove('ticking','low');sc0.classList.toggle('turn-on',G.turn===0);sc0.classList.toggle('turn-off',G.turn!==0)}
+      if(sc1){sc1.classList.remove('ticking','low');sc1.classList.toggle('turn-on',G.turn===1);sc1.classList.toggle('turn-off',G.turn!==1)}
       lastTickSec=-1;
       return;
     }
@@ -2950,11 +2950,15 @@ function createSmoothDragLoop(onFrame){
       sc0.classList.toggle('ticking', myTurn && !G.timeOut[0]);
       sc0.classList.toggle('low', G.clocks[0]<=10 && G.clocks[0]>0);
       sc0.classList.toggle('out', !!G.timeOut[0] || G.clocks[0]<=0);
+      sc0.classList.toggle('turn-on', myTurn);
+      sc0.classList.toggle('turn-off', !myTurn);
     }
     if(sc1){
       sc1.classList.toggle('ticking', !myTurn && !G.timeOut[1]);
       sc1.classList.toggle('low', G.clocks[1]<=10 && G.clocks[1]>0);
       sc1.classList.toggle('out', !!G.timeOut[1] || G.clocks[1]<=0);
+      sc1.classList.toggle('turn-on', !myTurn);
+      sc1.classList.toggle('turn-off', myTurn);
     }
 
     if(curLeft<=5 && curLeft>0){

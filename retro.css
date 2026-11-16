@@ -1835,6 +1835,7 @@ body.dragging-joker #fx::after {
   height: clamp(86px, 12.6dvh, 108px);
   padding: 4px;
   border-radius: 50%;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease, border-color 0.22s ease, box-shadow 0.22s ease;
   background:
     repeating-conic-gradient(from -2deg, rgba(212, 168, 85, 0.28) 0deg 3deg, transparent 3deg 30deg),
     radial-gradient(circle at 38% 30%, #2c231c 0%, #15100c 68%, #0b0807 100%);
@@ -1903,6 +1904,14 @@ body.dragging-joker #fx::after {
   font-size: clamp(22px, 3.6dvh, 30px) !important;
   font-weight: 900 !important;
   text-shadow: 0 0 12px rgba(239, 68, 68, 0.9), 0 2px 4px #000 !important;
+}
+.side-clock.turn-on {
+  transform: scale(1.14);
+  z-index: 3;
+}
+.side-clock.turn-off {
+  transform: scale(0.84);
+  opacity: 0.74;
 }
 @keyframes scLowPulse {
   0%, 100% { transform: scale(1); }
@@ -2477,6 +2486,8 @@ body.dragging-joker #fx::after {
     height: 28px !important;
   }
   .who {
+    position: relative;
+    z-index: 6;
     min-width: 0 !important;
     width: min(96vw, 390px);
     padding: 4px 12px;
@@ -2510,10 +2521,23 @@ body.dragging-joker #fx::after {
     width: 100%;
     max-width: 100%;
     justify-content: center;
+    align-content: center;
     gap: 4px !important;
     padding: 2px !important;
     margin-top: 0 !important;
     margin-bottom: 0 !important;
+  }
+  .cards:has(> .c:nth-child(5)) {
+    flex-wrap: wrap !important;
+    gap: 3px !important;
+  }
+  .cards:has(> .c:nth-child(5)) .c {
+    flex: 0 0 34px !important;
+    width: 34px !important;
+    font-size: 16px !important;
+  }
+  .cards:has(> .c:nth-child(5)) .c:not(.n):not(.bk) {
+    font-size: 20px !important;
   }
   #opp .cards {
     padding: 2px 2px 0 !important;
@@ -3516,6 +3540,11 @@ body.dragging-joker #fx::after {
     font-size: 13.5px !important;
     line-height: 1.25 !important;
     max-height: 92dvh !important;
+  }
+  #mb:has(.d20-box)::before {
+    margin: -10px -12px 8px !important;
+    padding: 5px 10px !important;
+    font-size: 12px !important;
   }
   #mb:has(.d20-box) .d20-box {
     margin: 6px auto !important;
