@@ -2494,23 +2494,24 @@ body.dragging-joker #fx::after {
     letter-spacing: 0.4px;
   }
   #opp.zone {
-    justify-content: flex-start !important;
+    justify-content: flex-end !important;
+    gap: 10px !important;
     padding-top: calc(max(6px, env(safe-area-inset-top, 6px)) + 42px) !important;
     padding-bottom: 0 !important;
   }
   #opp.zone .who {
-    margin-bottom: auto !important;
+    margin-bottom: 0 !important;
   }
   .opp-jhand {
     position: relative;
     top: 0 !important;
-    margin: 0 !important;
+    margin: 0 0 auto !important;
     gap: 4px !important;
-    min-height: 28px !important;
+    min-height: 40px !important;
   }
   .opp-jhand .oj {
     width: auto !important;
-    height: 28px !important;
+    height: 40px !important;
   }
   .who {
     position: relative;
@@ -2663,12 +2664,13 @@ body.dragging-joker #fx::after {
     height: 30px !important;
   }
   #me.zone {
-    gap: 4px !important;
+    justify-content: flex-end !important;
+    gap: 10px !important;
     padding-top: 0 !important;
     padding-bottom: clamp(78px, 11.5dvh, 98px) !important;
   }
   #me.zone .who {
-    margin-top: auto !important;
+    margin-top: 0 !important;
   }
   #hand {
     bottom: max(4px, env(safe-area-inset-bottom, 4px)) !important;
