@@ -854,7 +854,7 @@ function heroAttack(winIdx,tanked=false){
         fx.className='hp-cast-fx'+(winIdx===0?' opp':'');
         fx.style.left=(hr.left+hr.width/2)+'px';
         fx.style.top=(hr.top+hr.height/2)+'px';
-        fx.innerHTML='<i class="hp-cast-ring"></i><span class="hp-cast-pop">Demir İrade!</span>';
+        fx.innerHTML='<i class="hp-cast-ring"></i><span class="hp-cast-pop">Çelikten Azim!</span>';
         document.body.appendChild(fx);
         setTimeout(()=>fx.remove(),1350);
       }
@@ -960,7 +960,7 @@ function heroVampTie(vampIdx){
       fx.className='hp-cast-fx'+(vampIdx===1?' opp':'');
       fx.style.left=(hr.left+hr.width/2)+'px';
       fx.style.top=(hr.top+hr.height/2)+'px';
-      fx.innerHTML='<i class="hp-cast-ring"></i><span class="hp-cast-pop">Kan Antlaşması!</span>';
+      fx.innerHTML='<i class="hp-cast-ring"></i><span class="hp-cast-pop">Kanla Mühürlenen Kader!</span>';
       document.body.appendChild(fx);
       setTimeout(()=>fx.remove(),1350);
     }
@@ -988,7 +988,7 @@ function endRound(){
     const loser=r<0?0:1;
     if(avKey(S,loser)==='n'&&Math.random()<0.20){
       r=0;tankedSide=loser;
-      S.log.push({p:loser,t:'Demir İrade! Hasarı tanklayıp turu berabereye çevirdi!'});
+      S.log.push({p:loser,t:'Çelikten Azim! Hasarı savuşturup turu berabereye çevirdi!'});
     }
   }
   if(r===0){
@@ -998,7 +998,7 @@ function endRound(){
       r=vp===0?1:-1;vampWinSide=vp;
       S.vampUsed=S.vampUsed||[false,false];S.vampUsed[vp]=true;
       S.hpUsed=S.hpUsed||[false,false];S.hpUsed[vp]=true;
-      S.log.push({p:vp,t:'Kan Antlaşması! Beraberliği galibiyete çevirdi!'});
+      S.log.push({p:vp,t:'Kanla Mühürlenen Kader! Beraberliği galibiyete çevirdi!'});
     }
   }
   if(r!==0){S.cWins=S.cWins||[0,0];S.cWins[r>0?0:1]++;}
@@ -1056,10 +1056,10 @@ function endRound(){
           <div class="d20-glow"></div>
           <canvas id="d20cv" class="d20-canvas" width="280" height="280"></canvas>
         </div>
-        ${(hpB||execPen)?`<div class="d20-hp-mod">${hpB?`<span class="d20-mod-pill pos"><b>Kader Mühürü</b><i>+${hpB}</i></span>`:''}${execPen?`<span class="d20-mod-pill neg"><b>İnfaz Hükmü</b><i>−2</i></span>`:''}</div>`:''}
+        ${(hpB||execPen)?`<div class="d20-hp-mod">${hpB?`<span class="d20-mod-pill pos"><b>Ölümün Takdiri</b><i>+${hpB}</i></span>`:''}${execPen?`<span class="d20-mod-pill neg"><b>Ölümün Cezası</b><i>−2</i></span>`:''}</div>`:''}
         ${L==v?'<button id="rl" class="btn d20-btn">ÖLÜM ZARINI AT</button>':''}
       </div>
-    </div><div class="after"><b>Zar Sonucu: ${roll}${(hpB||execPen)?` (${rawRoll}${hpB?`+${hpB} Kader Mühürü`:''}${execPen?`−2 İnfaz Hükmü`:''})`:''}</b><br>`+(surv?(L==v?'Kurtuldun! Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
+    </div><div class="after"><b>Zar Sonucu: ${roll}${(hpB||execPen)?` (${rawRoll}${hpB?`+${hpB} Ölümün Takdiri`:''}${execPen?`−2 Ölümün Cezası`:''})`:''}</b><br>`+(surv?(L==v?'Kurtuldun! Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
     const full=v=>mk(v,roll,surv),rig=MODE=='bot'&&DIFF=='imp'&&L==1&&!surv&&!S.rigDone; // sahne oyun başına bir kez; ikinci ölümde gerçekten ölür
     const uRev=(MODE==='host'?(L===0||L===1):L===0)&&avKey(S,L)==='u'&&!surv&&!(S.uRevived&&S.uRevived[L]);
     if(surv||rig||uRev){const n=S.bo+2;
@@ -1090,17 +1090,17 @@ function veil(ms=2000){const v=document.createElement('div');v.className='veil';
 function enter(fn){if(entering)return;entering=true;veil();setMusic('game');setTimeout(()=>{$('#menu').hidden=true;entering=false;fn()},1700)}
 let MY_HERO='c',OPP_HERO='n';
 const HEROES=[
-  {id:'c',name:'Lanetli Tüccar',hpName:'Zaman Geri Aksın',desc:'4 tur galibiyeti alınca aktif olur. Kullanıldığında ortadaki bütün sayı kartları desteye geri girer. Kullanılmış jokerler yanar. Yeniden sayı kartı destesi dağıtılır.'},
-  {id:'p',name:'Veba Doktoru',hpName:'Veba İksiri',desc:'Elindeki bir joker kartını yakıp, rastgele 2 joker kartı çekersin.'},
-  {id:'n',name:'Kara Şövalye',passive:true,hpName:'Demir İrade',desc:'Kaybettiğin her turda %20 ihtimalle gelen hasarı tanklayıp turu berabereye çevirirsin.'},
-  {id:'a',name:'Simyacı',hpName:'Dönüşüm İksiri',desc:'Destenin en üstündeki 2 karta bak, istersen yerlerini değiştir.'},
-  {id:'s',name:'Büyücü',passive:true,hpName:'Hırsız Jokeri',desc:'Hırsız jokeri ile oyuna başlar.'},
-  {id:'e',name:'Cellat',passive:true,hpName:'İnfaz Hükmü',desc:'Rakibin attığı her ölüm zarından 2 eksiltir.'},
-  {id:'m',name:'Ölümün Efendisi',passive:true,hpName:'Kader Mühürü',desc:'Attığın her ölüm zarına +2 bonus kazanırsın.'},
-  {id:'w',name:'Cadı',hpName:'Kuzgun Gözü',desc:'Rakibin kapalı sayı kartına gizlice bak.'},
-  {id:'l',name:'Kurt Adam',hpName:'Vahşi Pençe',desc:'İki tarafın da masadaki rastgele bir sayı kartını imha eder.'},
-  {id:'v',name:'Vampir',passive:true,hpName:'Kan Antlaşması',desc:'İlk beraberlikte turu kazanmış sayılırsın. (Oyunda bir kez)'},
-  {id:'u',name:'Bilinmeyen',passive:true,bossOnly:true,hpName:'Hiçlikten Dönüş',desc:'Ölüm zarında hedeflenen sayıdan düşük atarsa, bir kereliğine hayata geri döner.'}
+  {id:'c',name:'Lanetli Tüccar',hpName:'Zamanın İadesi',desc:'4 tur galibiyet elde ettiğinde aktifleşir. Kullanıldığında masadaki tüm sayı kartları desteye geri karıştırılır. Kullanılmış Joker kartları yakılır ve yeni bir sayı kartı destesi dağıtılır.'},
+  {id:'p',name:'Veba Doktoru',hpName:'Vebalı Takas',desc:'Elindeki 1 Joker kartını yakarak desteden rastgele 2 yeni Joker kartı çek.'},
+  {id:'n',name:'Kara Şövalye',passive:true,hpName:'Çelikten Azim',desc:'Kaybettiğin her turda %20 ihtimalle gelen hasarı tamamen savuşturur ve turu beraberliğe dönüştürür.'},
+  {id:'a',name:'Simyacı',hpName:'Kaderin Damıtılması',desc:'Destenin en üstündeki 2 kartı gizlice incele. Dilersen bu kartların yerlerini değiştir.'},
+  {id:'s',name:'Büyücü',passive:true,hpName:'Gölge Hırsızı',desc:'Oyuna 1 adet Hırsız Jokeri ile başla.'},
+  {id:'e',name:'Cellat',passive:true,hpName:'Ölümün Cezası',desc:'Rakibinin attığı her Ölüm Zarı sonucundan 2 çıkar.'},
+  {id:'m',name:'Ölümün Efendisi',passive:true,hpName:'Ölümün Takdiri',desc:'Attığın her Ölüm Zarı sonucuna +2 bonus kazan.'},
+  {id:'w',name:'Cadı',hpName:'Kuzgunun Kehaneti',desc:'Rakibinin kapalı sayı kartını gizlice incele.'},
+  {id:'l',name:'Kurt Adam',hpName:'Kanlı Dolunay',desc:'Her iki oyuncunun da masadaki rastgele 1 sayı kartını imha et.'},
+  {id:'v',name:'Vampir',passive:true,hpName:'Kanla Mühürlenen Kader',desc:'İlk beraberlikte turu kazanmış sayılırsın. Bu güç oyun boyunca yalnızca 1 kez kullanılabilir.'},
+  {id:'u',name:'Bilinmeyen',passive:true,bossOnly:true,hpName:'Hiçlikten Dönüş',desc:'Ölüm zarında hedef sayının altında atarsan, ölümden bir kereliğine geri dönersin.'}
 ];
 const HERO_MAP=Object.fromEntries(HEROES.map(h=>[h.id,h]));
 const HP_IC={
@@ -1469,7 +1469,7 @@ function chooseHero(onPick,onCancel){
 }
 function showScryModal(c1,c2,onKeep,onSwap){
   const cardHtml=c=>`<div class="scry-card"><img src="${IMG.n[c.n]}" alt="${c.n}"><span>${c.n}</span></div>`;
-  box(`<h3>Dönüşüm İksiri — Deste Üstü</h3><p>${c2?'En üstteki 2 kartı görüyorsun (soldaki sıradaki çekilecek kart). İstersen yerlerini değiştir:':'Destede yalnızca 1 kart kaldı:'}</p><div class="scry-row">${cardHtml(c1)}${c2?cardHtml(c2):''}</div>${c2?'<div class="row"><button id="scry-keep" class="btn sm">Sırayı Koru</button><button id="scry-swap" class="btn sm alt">Yerlerini Değiştir</button></div>':''}`, !c2);
+  box(`<h3>Kaderin Damıtılması — Deste Üstü</h3><p>${c2?'En üstteki 2 kartı görüyorsun (soldaki sıradaki çekilecek kart). İstersen yerlerini değiştir:':'Destede yalnızca 1 kart kaldı:'}</p><div class="scry-row">${cardHtml(c1)}${c2?cardHtml(c2):''}</div>${c2?'<div class="row"><button id="scry-keep" class="btn sm">Sırayı Koru</button><button id="scry-swap" class="btn sm alt">Yerlerini Değiştir</button></div>':''}`, !c2);
   if(c2){
     $('#scry-keep').onclick=()=>{$('#m').hidden=true;lock=false;onKeep()};
     $('#scry-swap').onclick=()=>{$('#m').hidden=true;lock=false;snd('flip');onSwap()};
@@ -1499,7 +1499,7 @@ function execRewind(S,p){
   S.eff=[];S.pj=[];S.noJ=[false,false];S.dead=[];
   S.hpMod=[0,0];S.plagueMod=[0,0];S.hpTgMod=0;S.oppPeek=[];S.oppPeek1=[];
   S.hpUsed=S.hpUsed||[false,false];S.hpUsed[p]=true;S.acted=true;S.graceLeft=0;
-  S.log.push({p,t:'Zaman Geri Aksın kullandı! Kartlar desteye döndü ve yeniden dağıtıldı.'});
+  S.log.push({p,t:'Zamanın İadesi kullandı! Kartlar desteye döndü ve yeniden dağıtıldı.'});
   snd('flip');R();
 }
 function useHeroPower(){
@@ -1508,14 +1508,14 @@ function useHeroPower(){
   const hid=avKey(S,0);
   if(hid==='c'){
     const wins=(S.cWins&&S.cWins[0])||0;
-    if(wins<4)return box(`<h3>Zaman Geri Aksın</h3><p>4 tur galibiyeti alınca aktif olur. (Şu an: ${wins}/4)</p>`);
+    if(wins<4)return box(`<h3>Zamanın İadesi</h3><p>4 tur galibiyet elde ettiğinde aktifleşir. (Şu an: ${wins}/4)</p>`);
     if(MODE==='guest'){S.hpUsed[0]=true;snd('flip');R();return conn.send({k:'hp_rewind'})}
     execRewind(S,0);
   }else if(hid==='p'){
-    if(!S.hand[0].length)return box('<h3>Veba İksiri</h3><p>Elinde yakılacak joker kartı yok.</p>');
-    if(!S.jdeck.length)return box('<h3>Veba İksiri</h3><p>Joker destesinde çekilecek kart kalmadı.</p>');
+    if(!S.hand[0].length)return box('<h3>Vebalı Takas</h3><p>Elinde yakılacak Joker kartı yok.</p>');
+    if(!S.jdeck.length)return box('<h3>Vebalı Takas</h3><p>Joker destesinde çekilecek kart kalmadı.</p>');
     const jBtns=S.hand[0].map((jid,i)=>`<button class="btn sm" data-pburn="${i}">${J[jid]}</button>`).join('');
-    box(`<h3>Veba İksiri</h3><p>Yakmak istediğin joker kartını seç (yerine desteden rastgele 2 joker çekeceksin):</p><div class="row" style="flex-wrap:wrap;gap:8px">${jBtns}</div>`, true);
+    box(`<h3>Vebalı Takas</h3><p>Yakmak istediğin Joker kartını seç (desteden rastgele 2 yeni Joker çekeceksin):</p><div class="row" style="flex-wrap:wrap;gap:8px">${jBtns}</div>`, true);
     document.querySelectorAll('[data-pburn]').forEach(btn=>{
       btn.onclick=()=>{
         const idx=+btn.dataset.pburn;
@@ -1530,17 +1530,17 @@ function useHeroPower(){
         }
         S.hand[0].push(...drawn);
         S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
-        S.log.push({p:0,t:`Veba İksiri kullandı (${J[burned]} yaktı, ${drawn.length} joker çekti)`});R();
+        S.log.push({p:0,t:`Vebalı Takas kullandı (${J[burned]} yaktı, ${drawn.length} joker çekti)`});R();
       };
     });
   }else if(hid==='a'){
-    if(!S.deck.length)return box('<h3>Dönüşüm İksiri</h3><p>Destede kart kalmadı.</p>');
+    if(!S.deck.length)return box('<h3>Kaderin Damıtılması</h3><p>Destede kart kalmadı.</p>');
     if(MODE==='guest'){S.hpUsed[0]=true;R();return conn.send({k:'hp_scry'})}
     S.hpUsed[0]=true;S.graceLeft=0;
     const n=S.deck.length,c1=S.deck[n-1],c2=n>1?S.deck[n-2]:null;
-    showScryModal(c1,c2,()=>{S.log.push({p:0,t:'Dönüşüm İksiri kullandı (sırayı korudu)'});R()},()=>{
+    showScryModal(c1,c2,()=>{S.log.push({p:0,t:'Kaderin Damıtılması kullandı (sırayı korudu)'});R()},()=>{
       if(n>1){const tmp=S.deck[n-1];S.deck[n-1]=S.deck[n-2];S.deck[n-2]=tmp}
-      S.log.push({p:0,t:'Dönüşüm İksiri kullandı (sırayı değiştirdi)'});R();
+      S.log.push({p:0,t:'Kaderin Damıtılması kullandı (sırayı değiştirdi)'});R();
     });
   }else if(hid==='w'){
     if(!S.pl[1].closed.length)return;
@@ -1549,12 +1549,12 @@ function useHeroPower(){
     S.hpUsed[0]=true;
     snd('flip');R();
   }else if(hid==='l'){
-    if(!(S.pl[0].open.length||S.pl[0].closed.length)||!(S.pl[1].open.length||S.pl[1].closed.length))return box('<h3>Vahşi Pençe</h3><p>İmha edilecek yeterli kart yok.</p>');
+    if(!(S.pl[0].open.length||S.pl[0].closed.length)||!(S.pl[1].open.length||S.pl[1].closed.length))return box('<h3>Kanlı Dolunay</h3><p>İmha edilecek yeterli kart yok.</p>');
     if(MODE==='guest'){S.hpUsed[0]=true;snd('play');R();return conn.send({k:'hp_wolf'})}
     const destroyRand=side=>{const pool=S.pl[side].open.length?S.pl[side].open:S.pl[side].closed;return pool.length?pool.splice(Math.floor(Math.random()*pool.length),1)[0]:null};
     destroyRand(0);destroyRand(1);
     S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
-    S.log.push({p:0,t:'Vahşi Pençe kullandı (İki taraftan 1\'er kart imha edildi)'});snd('play');R();
+    S.log.push({p:0,t:'Kanlı Dolunay kullandı (İki taraftan 1\'er kart imha edildi)'});snd('play');R();
   }else{
     return;
   }
@@ -1874,8 +1874,8 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
   else if(m.k=='hp_scry_done'){
     if(avKey(S,1)!=='a')return;
     const n=S.deck.length;
-    if(m.swap&&n>1){const tmp=S.deck[n-1];S.deck[n-1]=S.deck[n-2];S.deck[n-2]=tmp;S.log.push({p:1,t:'Dönüşüm İksiri kullandı (sırayı değiştirdi)'})}
-    else S.log.push({p:1,t:'Dönüşüm İksiri kullandı (sırayı korudu)'});
+    if(m.swap&&n>1){const tmp=S.deck[n-1];S.deck[n-1]=S.deck[n-2];S.deck[n-2]=tmp;S.log.push({p:1,t:'Kaderin Damıtılması kullandı (sırayı değiştirdi)'})}
+    else S.log.push({p:1,t:'Kaderin Damıtılması kullandı (sırayı korudu)'});
     R();
   }
   else if(m.k=='hp_rewind'){
@@ -1903,7 +1903,7 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     }
     S.hand[1].push(...drawn);
     S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
-    S.log.push({p:1,t:`Veba İksiri kullandı (1 joker yaktı, ${drawn.length} joker çekti)`});
+    S.log.push({p:1,t:`Vebalı Takas kullandı (1 joker yaktı, ${drawn.length} joker çekti)`});
     R();
   }
   else if(m.k=='hp_alch'){
@@ -1928,7 +1928,7 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     const destroyRand=side=>{const pool=S.pl[side].open.length?S.pl[side].open:S.pl[side].closed;return pool.length?pool.splice(Math.floor(Math.random()*pool.length),1)[0]:null};
     destroyRand(0);destroyRand(1);
     S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
-    S.log.push({p:1,t:'Vahşi Pençe kullandı (İki taraftan 1\'er kart imha edildi)'});
+    S.log.push({p:1,t:'Kanlı Dolunay kullandı (İki taraftan 1\'er kart imha edildi)'});
     R();
   }
   else if(m.k=='hp_vamp'){
