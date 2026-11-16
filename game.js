@@ -802,12 +802,13 @@ function heroAttack(winIdx){
 
   const anim=clone.animate([
     {transform:'translate3d(0,0,0) scale(1) rotate(0deg)',offset:0},
-    {transform:`translate3d(${(-dx*0.10).toFixed(1)}px,${(-dy*0.10).toFixed(1)}px,0) scale(1.22) rotate(-5deg)`,offset:0.24},
-    {transform:`translate3d(${(dx*0.42).toFixed(1)}px,${(dy*0.42).toFixed(1)}px,0) scale(1.28) rotate(3deg)`,offset:0.40},
-    {transform:`translate3d(${(dx*0.92).toFixed(1)}px,${(dy*0.92).toFixed(1)}px,0) scale(1.24) rotate(0deg)`,offset:0.50},
-    {transform:`translate3d(${(dx*0.84).toFixed(1)}px,${(dy*0.84).toFixed(1)}px,0) scale(1.16) rotate(0deg)`,offset:0.58},
+    {transform:`translate3d(${(-dx*0.06).toFixed(1)}px,${(-dy*0.06).toFixed(1)}px,0) scale(1.14) rotate(-3deg)`,offset:0.22},
+    {transform:`translate3d(${(-dx*0.12).toFixed(1)}px,${(-dy*0.12).toFixed(1)}px,0) scale(1.24) rotate(-6deg)`,offset:0.38},
+    {transform:`translate3d(${(dx*0.28).toFixed(1)}px,${(dy*0.28).toFixed(1)}px,0) scale(1.28) rotate(2deg)`,offset:0.52},
+    {transform:`translate3d(${(dx*0.92).toFixed(1)}px,${(dy*0.92).toFixed(1)}px,0) scale(1.26) rotate(0deg)`,offset:0.62},
+    {transform:`translate3d(${(dx*0.84).toFixed(1)}px,${(dy*0.84).toFixed(1)}px,0) scale(1.16) rotate(0deg)`,offset:0.69},
     {transform:'translate3d(0,0,0) scale(1) rotate(0deg)',offset:1}
-  ],{duration:1850,easing:'cubic-bezier(0.22,1,0.36,1)',fill:'forwards'});
+  ],{duration:2550,easing:'cubic-bezier(0.22,1,0.36,1)',fill:'forwards'});
 
   setTimeout(()=>{
     if(!dstAv.isConnected)return;
@@ -825,7 +826,7 @@ function heroAttack(winIdx){
     document.body.appendChild(imp);
     document.body.appendChild(dmg);
     setTimeout(()=>{imp.remove();dmg.remove()},1250);
-  },925);
+  },1580);
 
   anim.onfinish=()=>{
     clone.remove();
@@ -853,13 +854,14 @@ function heroClash(){
     return c;
   };
   const c0=mkClone(av0,r0),c1=mkClone(av1,r1);
-  const dur=2100;
+  const dur=2800;
   const run=(c,dx,dy,tilt)=>c.animate([
     {transform:'translate3d(0,0,0) scale(1) rotate(0deg)',offset:0},
-    {transform:`translate3d(${(-dx*0.10).toFixed(1)}px,${(-dy*0.14).toFixed(1)}px,0) scale(1.18) rotate(${-tilt}deg)`,offset:0.24},
-    {transform:`translate3d(${(dx*0.45).toFixed(1)}px,${(dy*0.45).toFixed(1)}px,0) scale(1.24) rotate(${tilt*0.6}deg)`,offset:0.40},
-    {transform:`translate3d(${dx.toFixed(1)}px,${dy.toFixed(1)}px,0) scale(1.22) rotate(0deg)`,offset:0.50},
-    {transform:`translate3d(${(dx*0.80).toFixed(1)}px,${(dy*0.80).toFixed(1)}px,0) scale(1.14) rotate(${-tilt*0.4}deg)`,offset:0.58},
+    {transform:`translate3d(${(-dx*0.06).toFixed(1)}px,${(-dy*0.08).toFixed(1)}px,0) scale(1.12) rotate(${-tilt*0.6}deg)`,offset:0.22},
+    {transform:`translate3d(${(-dx*0.12).toFixed(1)}px,${(-dy*0.16).toFixed(1)}px,0) scale(1.20) rotate(${-tilt}deg)`,offset:0.38},
+    {transform:`translate3d(${(dx*0.30).toFixed(1)}px,${(dy*0.30).toFixed(1)}px,0) scale(1.25) rotate(${tilt*0.5}deg)`,offset:0.52},
+    {transform:`translate3d(${dx.toFixed(1)}px,${dy.toFixed(1)}px,0) scale(1.24) rotate(0deg)`,offset:0.62},
+    {transform:`translate3d(${(dx*0.80).toFixed(1)}px,${(dy*0.80).toFixed(1)}px,0) scale(1.14) rotate(${-tilt*0.4}deg)`,offset:0.69},
     {transform:'translate3d(0,0,0) scale(1) rotate(0deg)',offset:1}
   ],{duration:dur,easing:'cubic-bezier(0.22,1,0.36,1)',fill:'forwards'});
   const a0=run(c0,dx0,dy0,5),a1=run(c1,dx1,dy1,-5);
@@ -872,7 +874,7 @@ function heroClash(){
     imp.style.top=my+'px';
     document.body.appendChild(imp);
     setTimeout(()=>imp.remove(),1100);
-  },1050);
+  },1736);
   a0.onfinish=()=>{c0.remove();if(av0.isConnected)av0.style.opacity='';};
   a1.onfinish=()=>{c1.remove();if(av1.isConnected)av1.style.opacity='';};
 }
@@ -905,7 +907,7 @@ function endRound(){
       // 3) Yerdeki bütün sayı kartları tozlaşır gibi yok olur, sonra diğer tura geçilir
       dustTableCards();
       setTimeout(()=>{if(S!==G)return;lock=false;fin()},820);
-    },3400);
+    },4100);
   },750);
   function fin(){
     S.winSide=null;
