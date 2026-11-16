@@ -2642,6 +2642,7 @@ body.dragging-joker #fx::after {
     height: 30px !important;
   }
   #me.zone {
+    gap: 4px !important;
     padding-top: 0 !important;
     padding-bottom: clamp(78px, 11.5dvh, 98px) !important;
   }
