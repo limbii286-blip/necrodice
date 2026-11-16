@@ -1135,11 +1135,12 @@ html::after {
   background: transparent !important;
 }
 #opp.zone .cards {
-  margin-top: auto;
-  margin-bottom: -10px;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
 }
 #opp.zone .who {
   margin-top: 0 !important;
+  margin-bottom: auto !important;
 }
 #opp.zone.act {
   background: radial-gradient(72% 95% at 50% 52%, rgba(225, 68, 52, 0.28), rgba(145, 32, 24, 0.12) 52%, transparent 80%) !important;
@@ -1178,7 +1179,12 @@ html::after {
   background: transparent !important;
 }
 #me.zone .cards {
-  margin-top: -10px;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+#me.zone .who {
+  margin-top: auto !important;
+  margin-bottom: 0 !important;
 }
 #me.zone.act {
   background: radial-gradient(68% 92% at 50% 35%, rgba(234, 179, 84, 0.19), rgba(168, 112, 34, 0.07) 52%, transparent 78%) !important;
@@ -1417,13 +1423,11 @@ body.dragging-joker #fx::after {
 }
 #opp .cards {
   align-items: flex-end;
-  padding-top: 0;
-  padding-bottom: clamp(12px, 1.8dvh, 22px);
+  padding: 0 12px clamp(10px, 1.5dvh, 18px) !important;
 }
 #me .cards {
   align-items: flex-start;
-  padding-top: clamp(12px, 1.8dvh, 22px);
-  padding-bottom: 0;
+  padding: clamp(10px, 1.5dvh, 18px) 12px 0 !important;
 }
 
 .cards .c {
@@ -2419,7 +2423,7 @@ body.dragging-joker #fx::after {
   #fx {
     width: calc(100vw - 8px) !important;
     height: 88px !important;
-    margin: 2px auto !important;
+    margin: 0 auto !important;
     padding: 0 4px !important;
   }
   #hdr {
@@ -2472,7 +2476,7 @@ body.dragging-joker #fx::after {
   }
   #opp.zone {
     padding-top: calc(max(6px, env(safe-area-inset-top, 6px)) + 42px) !important;
-    padding-bottom: 2px !important;
+    padding-bottom: 0 !important;
   }
   .opp-jhand {
     position: relative;
@@ -2540,10 +2544,10 @@ body.dragging-joker #fx::after {
     font-size: 20px !important;
   }
   #opp .cards {
-    padding: 2px 2px 0 !important;
+    padding: 0 2px 6px !important;
   }
   #me .cards {
-    padding: 0 2px 2px !important;
+    padding: 6px 2px 0 !important;
   }
   .cards .gap {
     flex: 0 0 4px !important;
@@ -2636,7 +2640,7 @@ body.dragging-joker #fx::after {
     height: 30px !important;
   }
   #me.zone {
-    padding-top: 2px !important;
+    padding-top: 0 !important;
     padding-bottom: clamp(78px, 11.5dvh, 98px) !important;
   }
   #hand {
