@@ -713,10 +713,14 @@ try{
 
 function mergeGlobalLRN(g){
   if(!g)return;
-  if(Array.isArray(g.dp)&&g.dp.length==19){
+  if(Array.isArray(g.dp_d)&&Array.isArray(g.dp_p)&&g.dp_d.length==19){
+    for(let i=0;i<19;i++){LRN.dp[i][0]=Math.max(LRN.dp[i][0],g.dp_d[i]||0);LRN.dp[i][1]=Math.max(LRN.dp[i][1],g.dp_p[i]||0)}
+  }else if(Array.isArray(g.dp)&&g.dp.length==19){
     for(let i=0;i<19;i++){LRN.dp[i][0]=Math.max(LRN.dp[i][0],g.dp[i][0]||0);LRN.dp[i][1]=Math.max(LRN.dp[i][1],g.dp[i][1]||0)}
   }
-  if(Array.isArray(g.arm)&&g.arm.length==ARMS.length){
+  if(Array.isArray(g.arm_n)&&Array.isArray(g.arm_s)&&g.arm_n.length==ARMS.length){
+    for(let i=0;i<ARMS.length;i++){LRN.arm[i][0]=Math.max(LRN.arm[i][0],g.arm_n[i]||0);LRN.arm[i][1]=Math.max(LRN.arm[i][1],g.arm_s[i]||0)}
+  }else if(Array.isArray(g.arm)&&g.arm.length==ARMS.length){
     for(let i=0;i<ARMS.length;i++){LRN.arm[i][0]=Math.max(LRN.arm[i][0],g.arm[i][0]||0);LRN.arm[i][1]=Math.max(LRN.arm[i][1],g.arm[i][1]||0)}
   }
   LRN.ht=Math.max(LRN.ht,g.ht||0);
@@ -741,7 +745,8 @@ function syncToFirebase(){
   if(!fbDoc)return;
   clearTimeout(fbSyncTimer);
   fbSyncTimer=setTimeout(()=>{
-    fbDoc.set({LRN,PROF,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})
+    const flatLRN={v:LRN.v,dp_d:LRN.dp.map(x=>x[0]),dp_p:LRN.dp.map(x=>x[1]),arm_n:LRN.arm.map(x=>x[0]),arm_s:LRN.arm.map(x=>x[1]),ht:LRN.ht,hj:LRN.hj,jp:LRN.jp,cur:LRN.cur,g:LRN.g,r:LRN.r};
+    fbDoc.set({LRN:flatLRN,PROF,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})
       .catch(e=>console.warn('Firebase sync error:',e));
   },1500);
 }
