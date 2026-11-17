@@ -1682,9 +1682,9 @@ function settings(){
   $('#sr').onchange=e=>{RM=e.target.checked;LS('rm',RM?1:0);document.body.classList.toggle('rm',RM)};
   $('#sv').onchange=e=>{VB=e.target.checked;LS('vb',VB?1:0)};
   if($('#sk'))$('#sk').onclick=codex;if($('#sg'))$('#sg').onclick=guide;
-  if($('#sa'))$('#sa').onclick=()=>{ // aynı botla baştan başla, mevcut oyun iptal
+  if($('#sa'))$('#sa').onclick=()=>{ // kahraman seçtirip aynı botla baştan başla
     botGen++;thinkOn=false;const c=$('#cast');if(c)c.remove();$('#m').hidden=true;lock=false;P=null;
-    G.over=true;start()};
+    G.over=true;chooseHero(hid=>{MY_HERO=hid;start()},()=>settings())};
   if($('#sx'))$('#sx').onclick=exitGame;
 }
 let leaving=false;
