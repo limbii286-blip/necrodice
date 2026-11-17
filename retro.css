@@ -2495,8 +2495,8 @@ body.dragging-joker #fx::after {
   }
   #opp.zone {
     justify-content: flex-end !important;
-    gap: 10px !important;
-    padding-top: calc(max(6px, env(safe-area-inset-top, 6px)) + 42px) !important;
+    gap: 20px !important;
+    padding-top: calc(max(6px, env(safe-area-inset-top, 6px)) + 38px) !important;
     padding-bottom: 0 !important;
   }
   #opp.zone .who {
@@ -2506,12 +2506,12 @@ body.dragging-joker #fx::after {
     position: relative;
     top: 0 !important;
     margin: 0 0 auto !important;
-    gap: 4px !important;
-    min-height: 40px !important;
+    gap: 5px !important;
+    min-height: 52px !important;
   }
   .opp-jhand .oj {
     width: auto !important;
-    height: 40px !important;
+    height: 52px !important;
   }
   .who {
     position: relative;
@@ -2656,16 +2656,19 @@ body.dragging-joker #fx::after {
   }
   #fx .jh.m {
     padding-left: 23px !important;
-    padding-right: 96px !important;
+    padding-right: 92px !important;
   }
   #fx .e {
-    flex: 0 0 30px !important;
-    width: 30px !important;
-    height: 30px !important;
+    flex: 0 1 35px !important;
+    min-width: 0 !important;
+    width: 35px !important;
+    max-width: 35px !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1 !important;
   }
   #me.zone {
     justify-content: flex-end !important;
-    gap: 10px !important;
+    gap: 20px !important;
     padding-top: 0 !important;
     padding-bottom: clamp(78px, 11.5dvh, 98px) !important;
   }
