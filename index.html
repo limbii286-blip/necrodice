@@ -15,9 +15,9 @@
 <link rel="apple-touch-icon" href="icon-192.png?v=limbi3">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@600;700;800;900&family=Cormorant+Garamond:wght@600;700&family=Grenze+Gotisch:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Cormorant+Garamond:wght@600;700&family=Grenze+Gotisch:wght@600;700;800;900&family=Metamorphous&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=20261115_hs19">
-<link rel="stylesheet" href="retro.css?v=20261118_logo4">
+<link rel="stylesheet" href="retro.css?v=20261118_logo5">
 </head>
 <body>
 <div id="splash"><img id="slogo" alt=""><b>limbigames</b></div>
@@ -46,44 +46,40 @@
   <div id="mb2">
     <div class="hs-header">
       <h1 class="hs-title" aria-label="NECRODICE">
-        <svg viewBox="0 0 540 82" class="hs-wordmark-svg" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 540 94" class="hs-wordmark-svg" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <linearGradient id="hsBoneGold" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#fffdf2"/>
-              <stop offset="26%" stop-color="#f0deb4"/>
-              <stop offset="56%" stop-color="#cca052"/>
-              <stop offset="86%" stop-color="#7c5218"/>
-              <stop offset="100%" stop-color="#482908"/>
+            <path id="hsArc" d="M 32 72 Q 270 46 508 72"/>
+            <path id="hsArcD1" d="M 32 75.5 Q 270 49.5 508 75.5"/>
+            <path id="hsArcD2" d="M 32 79 Q 270 53 508 79"/>
+            <linearGradient id="hsTavernGold" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#fffce6"/>
+              <stop offset="22%" stop-color="#fde38e"/>
+              <stop offset="52%" stop-color="#de9b32"/>
+              <stop offset="82%" stop-color="#9e5912"/>
+              <stop offset="100%" stop-color="#5e2d06"/>
             </linearGradient>
-            <linearGradient id="hsBloodRuby" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#ffe0e3"/>
-              <stop offset="26%" stop-color="#f25764"/>
-              <stop offset="58%" stop-color="#b81927"/>
-              <stop offset="88%" stop-color="#690913"/>
-              <stop offset="100%" stop-color="#3b0409"/>
-            </linearGradient>
-            <linearGradient id="hsGoldTrim" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#ffe7a3"/>
-              <stop offset="50%" stop-color="#b58334"/>
-              <stop offset="100%" stop-color="#3d2308"/>
+            <linearGradient id="hsBevelRim" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#fff4c2"/>
+              <stop offset="45%" stop-color="#c48224"/>
+              <stop offset="100%" stop-color="#3a1a05"/>
             </linearGradient>
             <linearGradient id="hsFireSweep" x1="-0.3" y1="0" x2="0.1" y2="0.2">
-              <stop offset="0%" stop-color="#fff4cc" stop-opacity="0"/>
-              <stop offset="50%" stop-color="#fff4cc" stop-opacity="0.38"/>
-              <stop offset="100%" stop-color="#fff4cc" stop-opacity="0"/>
+              <stop offset="0%" stop-color="#fff8d6" stop-opacity="0"/>
+              <stop offset="50%" stop-color="#fff8d6" stop-opacity="0.42"/>
+              <stop offset="100%" stop-color="#fff8d6" stop-opacity="0"/>
               <animate attributeName="x1" values="-0.4;1.4;1.4" keyTimes="0;0.35;1" dur="6.5s" repeatCount="indefinite"/>
               <animate attributeName="x2" values="0;1.8;1.8" keyTimes="0;0.35;1" dur="6.5s" repeatCount="indefinite"/>
             </linearGradient>
           </defs>
-          <!-- 3D extruded obsidian & dark-bronze depth -->
-          <text x="270" y="59" text-anchor="middle" class="hs-wm-depth2"><tspan class="hs-wm-cap">N</tspan>ECRODIC<tspan class="hs-wm-cap">E</tspan></text>
-          <text x="270" y="56" text-anchor="middle" class="hs-wm-depth1"><tspan class="hs-wm-cap">N</tspan>ECRODIC<tspan class="hs-wm-cap">E</tspan></text>
-          <!-- Burnished gold outer trim -->
-          <text x="270" y="53" text-anchor="middle" class="hs-wm-trim"><tspan class="hs-wm-cap">N</tspan>ECRODIC<tspan class="hs-wm-cap">E</tspan></text>
-          <!-- Split Bone-Gold NECRO + Blood-Ruby DICE -->
-          <text x="270" y="53" text-anchor="middle" class="hs-wm-face"><tspan class="hs-wm-necro"><tspan class="hs-wm-cap">N</tspan>ECRO</tspan><tspan class="hs-wm-dice">DIC<tspan class="hs-wm-cap">E</tspan></tspan></text>
-          <!-- Subtle tavern firelight sweep -->
-          <text x="270" y="53" text-anchor="middle" class="hs-wm-sheen"><tspan class="hs-wm-cap">N</tspan>ECRODIC<tspan class="hs-wm-cap">E</tspan></text>
+          <!-- 3D extruded dark-bronze & obsidian depth -->
+          <text class="hs-wm-depth2"><textPath href="#hsArcD2" startOffset="50%" text-anchor="middle"><tspan class="hs-wm-cap">N</tspan>ECRODIC<tspan class="hs-wm-cap">E</tspan></textPath></text>
+          <text class="hs-wm-depth1"><textPath href="#hsArcD1" startOffset="50%" text-anchor="middle"><tspan class="hs-wm-cap">N</tspan>ECRODIC<tspan class="hs-wm-cap">E</tspan></textPath></text>
+          <!-- Burnished gold outer bevel -->
+          <text class="hs-wm-trim"><textPath href="#hsArc" startOffset="50%" text-anchor="middle"><tspan class="hs-wm-cap">N</tspan>ECRODIC<tspan class="hs-wm-cap">E</tspan></textPath></text>
+          <!-- Hearthstone-style sculpted molten tavern gold face -->
+          <text class="hs-wm-face"><textPath href="#hsArc" startOffset="50%" text-anchor="middle"><tspan class="hs-wm-cap">N</tspan>ECRODIC<tspan class="hs-wm-cap">E</tspan></textPath></text>
+          <!-- Subtle firelight sweep -->
+          <text class="hs-wm-sheen"><textPath href="#hsArc" startOffset="50%" text-anchor="middle"><tspan class="hs-wm-cap">N</tspan>ECRODIC<tspan class="hs-wm-cap">E</tspan></textPath></text>
         </svg>
       </h1>
     </div>

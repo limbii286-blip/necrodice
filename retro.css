@@ -248,12 +248,12 @@ body:has(#menu:not([hidden])) #fl {
 
 .hs-title {
   margin: 0 !important;
-  width: min(92%, 450px);
+  width: min(94%, 460px);
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 1 !important;
-  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.94)) drop-shadow(0 0 22px rgba(207, 46, 60, 0.42)) drop-shadow(0 0 12px rgba(212, 168, 85, 0.28));
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.96)) drop-shadow(0 0 24px rgba(242, 175, 62, 0.42)) drop-shadow(0 0 10px rgba(185, 40, 35, 0.35));
 }
 
 .hs-wordmark-svg {
@@ -264,10 +264,10 @@ body:has(#menu:not([hidden])) #fl {
 }
 
 .hs-wordmark-svg text {
-  font-family: 'Cinzel Decorative', 'Cinzel', Georgia, serif;
-  font-weight: 900;
+  font-family: 'Metamorphous', 'Cinzel', Georgia, serif;
+  font-weight: 400;
   font-size: 46px;
-  letter-spacing: 3.5px;
+  letter-spacing: 3px;
   paint-order: stroke fill;
   stroke-linejoin: round;
   stroke-linecap: round;
@@ -278,34 +278,27 @@ body:has(#menu:not([hidden])) #fl {
 }
 
 .hs-wordmark-svg .hs-wm-depth2 {
-  fill: #070304;
-  stroke: #070304;
-  stroke-width: 11px;
+  fill: #0b0502;
+  stroke: #0b0502;
+  stroke-width: 12px;
 }
 
 .hs-wordmark-svg .hs-wm-depth1 {
-  fill: #240c0d;
-  stroke: #1b090a;
-  stroke-width: 9.5px;
+  fill: #3d1c07;
+  stroke: #2c1204;
+  stroke-width: 10px;
 }
 
 .hs-wordmark-svg .hs-wm-trim {
   fill: none;
-  stroke: url(#hsGoldTrim);
-  stroke-width: 6px;
+  stroke: url(#hsBevelRim);
+  stroke-width: 6.5px;
 }
 
 .hs-wordmark-svg .hs-wm-face {
-  stroke: #140806;
+  fill: url(#hsTavernGold);
+  stroke: #220e03;
   stroke-width: 3px;
-}
-
-.hs-wordmark-svg .hs-wm-necro {
-  fill: url(#hsBoneGold);
-}
-
-.hs-wordmark-svg .hs-wm-dice {
-  fill: url(#hsBloodRuby);
 }
 
 .hs-wordmark-svg .hs-wm-sheen {
