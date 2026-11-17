@@ -857,7 +857,7 @@ function heroAttack(winIdx,tanked=false){
         fx.className='hp-cast-fx'+(winIdx===0?' opp':'');
         fx.style.left=(hr.left+hr.width/2)+'px';
         fx.style.top=(hr.top+hr.height/2)+'px';
-        fx.innerHTML='<i class="hp-cast-ring"></i><span class="hp-cast-pop">Çelikten Azim!</span>';
+        fx.innerHTML='<i class="hp-cast-ring"></i><span class="hp-cast-pop">Kadim Direnç!</span>';
         document.body.appendChild(fx);
         setTimeout(()=>fx.remove(),1350);
       }
@@ -989,9 +989,9 @@ function endRound(){
   let r=outc(S,0),tankedSide=-1,vampWinSide=-1;
   if(r!==0){
     const loser=r<0?0:1;
-    if(avKey(S,loser)==='n'&&Math.random()<0.20){
+    if(avKey(S,loser)==='e'&&Math.random()<0.20){
       r=0;tankedSide=loser;
-      S.log.push({p:loser,t:'Çelikten Azim! Hasarı savuşturup turu berabereye çevirdi!'});
+      S.log.push({p:loser,t:'Kadim Direnç! Hasarı savuşturup turu berabereye çevirdi!'});
     }
   }
   if(r===0){
@@ -1039,7 +1039,7 @@ function endRound(){
       if(j[0]!=j[1]){L=j[0]<j[1]?0:1;how='joker'}
       else{let x,y;do{x=d6()+d6();y=d6()+d6()}while(x==y);L=x<y?0:1;hx=[x,y];how='zar'}
     }
-    const th=TH[Math.min(S.bo,3)],rawRoll=d20(),hpB=avKey(S,L)==='m'?2:0,execPen=avKey(S,1-L)==='e'?-2:0,roll=Math.max(1,Math.min(20,rawRoll+hpB+execPen)),surv=roll>=th;
+    const th=TH[Math.min(S.bo,3)],rawRoll=d20(),hpB=avKey(S,L)==='m'?2:0,execPen=avKey(S,1-L)==='n'?-2:0,roll=Math.max(1,Math.min(20,rawRoll+hpB+execPen)),surv=roll>=th;
     const mk=(v,roll,surv,rawOv)=>{const rr=rawOv!=null?rawOv:rawRoll;return `Düelloyu ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısına göre)':how=='zar'?` (beraberlik zarı: ${hx[v]}–${hx[1-v]})`:''}.<br>Ölüm zarını ${L==v?'sen atıyorsun':'rakip atıyor'}<div class="d20-box" data-roll="${roll}" data-raw="${rr}" data-mod="${rawOv!=null?0:(hpB+execPen)}" data-dc="${th}" data-m="${L==v?1:0}" data-s="${surv?'ok':L==v?'death':'win'}">
       <div class="bg3-roll-card">
         <div class="bg3-card-border"></div>
@@ -1052,10 +1052,10 @@ function endRound(){
           <div class="d20-glow"></div>
           <canvas id="d20cv" class="d20-canvas" width="280" height="280"></canvas>
         </div>
-        ${(hpB||execPen)?`<div class="d20-hp-mod">${hpB?`<span class="d20-mod-pill pos"><b>Ölümün Takdiri</b><i>+${hpB}</i></span>`:''}${execPen?`<span class="d20-mod-pill neg"><b>Ölümün Cezası</b><i>−2</i></span>`:''}</div>`:''}
+        ${(hpB||execPen)?`<div class="d20-hp-mod">${hpB?`<span class="d20-mod-pill pos"><b>Ölümün Takdiri</b><i>+${hpB}</i></span>`:''}${execPen?`<span class="d20-mod-pill neg"><b>Ölüm Fermanı</b><i>−2</i></span>`:''}</div>`:''}
         ${L==v?'<button id="rl" class="btn d20-btn">ÖLÜM ZARINI AT</button>':''}
       </div>
-    </div><div class="after"><b>Zar Sonucu: ${roll}${(hpB||execPen)&&rawOv==null?` (${rr}${hpB?`+${hpB} Ölümün Takdiri`:''}${execPen?`−2 Ölümün Cezası`:''})`:''}</b><br>`+(surv?(L==v?'Kurtuldun! Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
+    </div><div class="after"><b>Zar Sonucu: ${roll}${(hpB||execPen)&&rawOv==null?` (${rr}${hpB?`+${hpB} Ölümün Takdiri`:''}${execPen?`−2 Ölüm Fermanı`:''})`:''}</b><br>`+(surv?(L==v?'Kurtuldun! Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
     const full=v=>mk(v,roll,surv),rig=MODE=='bot'&&DIFF=='imp'&&L==1&&!surv&&!S.rigDone; // sahne oyun başına bir kez; ikinci ölümde gerçekten ölür
     const uRev=(MODE==='host'?(L===0||L===1):L===0)&&avKey(S,L)==='u'&&!surv&&!(S.uRevived&&S.uRevived[L]);
     if(surv||rig||uRev){const n=S.bo+2;
@@ -1088,10 +1088,10 @@ let MY_HERO='c',OPP_HERO='n';
 const HEROES=[
   {id:'c',name:'Lanetli Tüccar',hpName:'Zamanın İadesi',desc:'4 tur galibiyet elde ettiğinde aktifleşir. Kullanıldığında masadaki tüm sayı kartları desteye geri karıştırılır. Kullanılmış Joker kartları yakılır ve yeni bir sayı kartı destesi dağıtılır.'},
   {id:'p',name:'Veba Doktoru',hpName:'Vebalı Takas',desc:'Elindeki 1 Joker kartını yakarak desteden rastgele 2 yeni Joker kartı çek.'},
-  {id:'n',name:'Kara Şövalye',passive:true,hpName:'Çelikten Azim',desc:'Kaybettiğin her turda %20 ihtimalle gelen hasarı tamamen savuşturur ve turu beraberliğe dönüştürür.'},
-  {id:'a',name:'Simyacı',hpName:'Kaderin Damıtılması',desc:'Destenin en üstündeki 2 kartı gizlice incele. Dilersen bu kartların yerlerini değiştir.'},
+  {id:'n',name:'Kara Şövalye',passive:true,hpName:'Ölüm Fermanı',desc:'Rakibinin attığı her Ölüm Zarı sonucundan 2 çıkar.'},
+  {id:'a',name:'Solmuş Kraliçe',hpName:'Yitik Yazgı',desc:'Destenin en üstündeki 2 kartı gizlice incele. Dilersen bu kartların yerlerini değiştir.'},
   {id:'s',name:'Büyücü',passive:true,hpName:'Gölge Hırsızı',desc:'Oyuna 1 adet Hırsız Jokeri ile başla.'},
-  {id:'e',name:'Cellat',passive:true,hpName:'Ölümün Cezası',desc:'Rakibinin attığı her Ölüm Zarı sonucundan 2 çıkar.'},
+  {id:'e',name:'Buz Devi',passive:true,hpName:'Kadim Direnç',desc:'Kaybettiğin her turda %20 ihtimalle gelen hasarı tamamen savuşturur ve turu beraberliğe dönüştürür.'},
   {id:'m',name:'Ölümün Efendisi',passive:true,hpName:'Ölümün Takdiri',desc:'Attığın her Ölüm Zarı sonucuna +2 bonus kazan.'},
   {id:'w',name:'Cadı',hpName:'Kuzgunun Kehaneti',desc:'Rakibinin kapalı sayı kartını gizlice incele.'},
   {id:'l',name:'Kurt Adam',hpName:'Kanlı Dolunay',desc:'Her iki oyuncunun da masadaki rastgele 1 sayı kartını imha et.'},
@@ -1103,10 +1103,10 @@ const HP_IC={
   c:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10M7 21h10M8 3c0 4 4 6 4 9s-4 5-4 9M16 3c0 4-4 6-4 9s4 5 4 9"/><path d="M4.5 9.5a8 8 0 0112-4.8M4.5 6v3.5H8" stroke-width="1.6"/></svg>',
   p:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="11" rx="1.5"/><rect x="13" y="9" width="8" height="11" rx="1.5"/><path d="M14 4l3-1.5L15.5 6M10 20l-3 1.5L8.5 18"/><path d="M7 8v3m-1.5-1.5h3"/></svg>',
   k:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18h18l-2-10-4.5 4L12 5l-2.5 7L5 8l-2 10z"/></svg>',
-  n:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5l7.5 3v6c0 4.8-3.2 8.2-7.5 10-4.3-1.8-7.5-5.2-7.5-10v-6l7.5-3z"/><path d="M12 6.5v10M8.5 10.5h7"/></svg>',
-  a:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 3h5M10 3v5.2L5.2 16.8A2.2 2.2 0 007.1 20h9.8a2.2 2.2 0 001.9-3.2L14 8.2V3"/><path d="M7.5 15.5h9M10.5 12.5h3"/></svg>',
+  n:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5v15M8.5 13.5h7M9.5 20.5h5M12 2.5l-2.5 3.5h5L12 2.5z"/></svg>',
+  a:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-9.5"/><path d="M12 16c-2.6 0-4.2-1.4-4.2-3.3 1.8 0 3.2.8 4.2 2.1"/><path d="M12 11.5c-2.4-.9-3.6-3-2.6-5.3.8-1.9 3.6-2.4 5.2-.9 1.6 1.5 1.1 4.2-1 5.4"/><path d="M13.6 9.5c2 .6 3 2.3 2.2 4-.6 1.3-2 1.8-3.8 1.3"/><path d="M9.5 5.2c1.2 1.1 3.1 1.2 4.3.1"/></svg>',
   s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11c2.5-3 6-3 9-1 3-2 6.5-2 9 1-1.5 4-4.5 5-9 3-4.5 2-7.5 1-9-3z"/><circle cx="8" cy="11.5" r="1.2" fill="currentColor"/><circle cx="16" cy="11.5" r="1.2" fill="currentColor"/><path d="M9 17.5h6l-1 3h-4z"/></svg>',
-  e:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5v19"/><path d="M12 5c5 0 8.5 2.4 8.5 6s-3.5 6-8.5 6"/><path d="M9 19.5h6"/></svg>',
+  e:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M4.5 6.3l15 11.4M19.5 6.3l-15 11.4"/><path d="M9.5 4.2L12 6.5l2.5-2.3M9.5 19.8L12 17.5l2.5 2.3"/></svg>',
   m:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 20.5 7 20.5 17 12 22 3.5 17 3.5 7"/><polygon points="12 6.5 17 15.5 7 15.5"/><path d="M12 2v4.5M3.5 7l3.5 8.5M20.5 7l-3.5 8.5"/></svg>',
   w:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18c1-7 4.5-12 9.5-13 2 0 4.5 1 6.5 3l-3 1.5c1 2.5.5 5.5-2 8.5H4z"/><circle cx="13.5" cy="9.5" r="1.3" fill="currentColor"/><path d="M2 12s3-4 7.5-4"/></svg>',
   l:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M7.5 6.5l3 11M12 5.5l1 13M16.5 6.5l-3 11"/></svg>',
@@ -1118,16 +1118,16 @@ function start(){hiPreload();setMusic('game');try{document.body.classList.remove
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
 let prevT=false,lastLk='',flipId=null,lastTot=[0,0],lastBust=false,prevSeal='',sayT='',prevHpAnim=[false,false];
-const NAMES={c:'Lanetli Tüccar',p:'Veba Doktoru',n:'Kara Şövalye',a:'Simyacı',s:'Büyücü',e:'Cellat',m:'Ölümün Efendisi',w:'Cadı',l:'Kurt Adam',v:'Vampir',u:'BİLİNMEYEN'};
+const NAMES={c:'Lanetli Tüccar',p:'Veba Doktoru',n:'Kara Şövalye',a:'Solmuş Kraliçe',s:'Büyücü',e:'Buz Devi',m:'Ölümün Efendisi',w:'Cadı',l:'Kurt Adam',v:'Vampir',u:'BİLİNMEYEN'};
 const avKey=(S,p)=>{if(p===0)return (S.hero&&S.hero[0])||MY_HERO||'c';if(MODE=='bot')return (S.hero&&S.hero[1])||{easy:'c',med:'p',hard:'m',imp:'u'}[DIFF];return (S.hero&&S.hero[p])||(S.av&&S.av[p])||'c'};
 const HD_PORTRAITS={
   c:'corrupted_merchant.jpg?v=20261116_t21',
   p:'plague_doctor.jpg?v=20261116_t21',
   n:'dark_knight.jpg?v=20261116_t74',
-  a:'shadow_alchemist.jpg?v=20261116_t21',
+  a:'withered_queen.jpg?v=20261116_t75',
   s:'crimson_oracle.jpg?v=20261116_t21',
-  e:'iron_executioner.jpg?v=20261116_t21',
-  m:'cursed_king.jpg?v=20261116_t21',
+  e:'frost_giant.jpg?v=20261116_t75',
+  m:'cursed_king.jpg?v=20261116_t75',
   w:'necromancer.jpg?v=20261116_t21',
   l:'werewolf.jpg?v=20261116_t21',
   v:'vampire.jpg?v=20261116_t39',
@@ -1466,7 +1466,7 @@ function execAlchSwap(cid){
 }
 function pick(v){if(P&&P.hp==='u'){const id=v;P=null;return execSwapDeckHeroPower(0,id)}if(P&&P.hp==='a'){const id=v;P=null;return execAlchSwap(id)}P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
 function startJoker(id){const ks=NEED[id]||[];if(ks.length){P={id,ks,pk:[]};R()}else doPlay(id,[])}
-const HERO_FOCUS={c:'44% 28%',p:'56% 24%',n:'56% 24%',a:'46% 25%',s:'48% 25%',e:'52% 22%',m:'48% 24%',w:'45% 23%',l:'68% 28%',v:'50% 25%'};
+const HERO_FOCUS={c:'44% 28%',p:'56% 24%',n:'56% 24%',a:'49% 25%',s:'48% 25%',e:'52% 28%',m:'50% 28%',w:'45% 23%',l:'68% 28%',v:'50% 25%'};
 function chooseHero(onPick,onCancel){
   lock=true;
   const cards=HEROES.filter(h=>!h.bossOnly).map(h=>{const dl=h.desc.length,dc=dl<=55?'hpc-desc-lg':dl<=105?'hpc-desc-md':'hpc-desc-sm';return `<button class="hero-pick-card${MY_HERO===h.id?' sel':''}" data-pick-hero="${h.id}">
@@ -1487,7 +1487,7 @@ function chooseHero(onPick,onCancel){
 }
 function showScryModal(c1,c2,onKeep,onSwap){
   const cardHtml=c=>`<div class="scry-card"><img src="${IMG.n[c.n]}" alt="${c.n}"><span>${c.n}</span></div>`;
-  box(`<h3>Kaderin Damıtılması — Deste Üstü</h3><p>${c2?'En üstteki 2 kartı görüyorsun (soldaki sıradaki çekilecek kart). İstersen yerlerini değiştir:':'Destede yalnızca 1 kart kaldı:'}</p><div class="scry-row">${cardHtml(c1)}${c2?cardHtml(c2):''}</div>${c2?'<div class="row"><button id="scry-keep" class="btn sm">Sırayı Koru</button><button id="scry-swap" class="btn sm alt">Yerlerini Değiştir</button></div>':''}`, !c2);
+  box(`<h3>Yitik Yazgı — Deste Üstü</h3><p>${c2?'En üstteki 2 kartı görüyorsun (soldaki sıradaki çekilecek kart). İstersen yerlerini değiştir:':'Destede yalnızca 1 kart kaldı:'}</p><div class="scry-row">${cardHtml(c1)}${c2?cardHtml(c2):''}</div>${c2?'<div class="row"><button id="scry-keep" class="btn sm">Sırayı Koru</button><button id="scry-swap" class="btn sm alt">Yerlerini Değiştir</button></div>':''}`, !c2);
   if(c2){
     $('#scry-keep').onclick=()=>{$('#m').hidden=true;lock=false;onKeep()};
     $('#scry-swap').onclick=()=>{$('#m').hidden=true;lock=false;snd('flip');onSwap()};
@@ -1552,7 +1552,7 @@ function useHeroPower(){
       };
     });
   }else if(hid==='a'){
-    if(!S.deck.length)return box('<h3>Kaderin Damıtılması</h3><p>Destede kart kalmadı.</p>');
+    if(!S.deck.length)return box('<h3>Yitik Yazgı</h3><p>Destede kart kalmadı.</p>');
     if(MODE==='guest'){S.hpUsed[0]=true;R();return conn.send({k:'hp_scry'})}
     S.hpUsed[0]=true;S.graceLeft=0;
     const n=S.deck.length,c1=S.deck[n-1],c2=n>1?S.deck[n-2]:null;
@@ -1606,9 +1606,9 @@ const HERO_LORE={
   p:'Gagalı maskesinin ardında ölümün izini süren, rakibin sırlarını okuyan gizemli hekim.',
   k:'Kafatası tahtından verdiği fermanla düellonun kader sınırını bile eğip büken ölümsüz hükümdar.',
   n:'Rünlü kalkanı ve ağır kılıcıyla düşmanın en güçlü hamlesini ezen yılmaz zırhlı savaşçı.',
-  a:'Yasak iksirlerle sayıları dönüştürüp kaderin sırasını laboratuvarında yeniden yazan bilgin.',
+  a:'Solmuş gül asası ve yakut tacıyla destenin üstündeki yazgıyı gizlice okuyan kraliçe.',
   s:'Kadim yazmalar ve mum ışığı eşliğinde destenin gelecekteki kartlarını önceden okuyan bilge.',
-  e:'Paslı baltası ve soğuk hükmüyle rakibin ölüm zarındaki son şansını bile gölgeleyen infazcı.',
+  e:'Buzul zırhı ve dikenli gürzüyle en ağır darbeleri bile dondurup savuşturan kadim dev.',
   m:'Ölümün kendisiyle pazarlık etmiş, her kader zarında karanlık lütufla kutsanan efendi.',
   w:'Kuzgun yoldaşı ve kemik tılsımlarıyla mezardan gizli kartlar çağıran kara büyücü.',
   l:'Dolunayın öfkesiyle avının üstüne atılıp rakibi sınırın ötesine sürükleyen vahşi canavar.',
