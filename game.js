@@ -2902,23 +2902,51 @@ function createSmoothDragLoop(onFrame){
         ctx.fillRect(0,0,W,H);
       }
 
-      // Süzülen mum kıvılcımları, ay ışığı tozları ve mor rün parıltıları
+      // Süzülen alev korları ve yanık kül tanecikleri (ateş külü efekti)
       motes.forEach(e=>{
         e.x+=e.vx;
         e.y+=e.vy;
-        if(e.y<-0.05){e.y=1.05;e.x=Math.random()}
-        if(e.x<0)e.x=1;
-        if(e.x>1)e.x=0;
-        const ex=e.x*W + Math.sin(t*1.6+e.phase)*10;
+        if(e.y<-0.06){e.y=1.06;e.x=Math.random()}
+        if(e.x<-0.02)e.x=1.02;
+        if(e.x>1.02)e.x=-0.02;
+        const drift=Math.sin(t*1.9+e.phase)*14+Math.cos(t*0.9+e.phase*1.7)*6;
+        const ex=e.x*W+drift;
         const ey=e.y*H;
-        const al=0.32+0.55*Math.abs(Math.sin(t*2.2+e.phase));
-        let col=`rgba(255, 200, 105, ${al})`;
-        if(e.kind===1) col=`rgba(165, 225, 255, ${al})`;
-        else if(e.kind===2) col=`rgba(216, 140, 255, ${al})`;
-        ctx.fillStyle=col;
-        ctx.beginPath();
-        ctx.arc(ex,ey,e.r,0,Math.PI*2);
-        ctx.fill();
+        const flick=0.45+0.55*Math.abs(Math.sin(t*3.1+e.phase));
+        const rot=t*1.4+e.phase;
+        ctx.save();
+        ctx.translate(ex,ey);
+        ctx.rotate(rot);
+        if(e.kind===0){
+          // Parlak turuncu-altın kor kıvılcımı (yumuşak alev haleli)
+          const gr=e.r*3.4;
+          const g=ctx.createRadialGradient(0,0,0,0,0,gr);
+          g.addColorStop(0,`rgba(255, 232, 160, ${0.95*flick})`);
+          g.addColorStop(0.35,`rgba(255, 118, 32, ${0.65*flick})`);
+          g.addColorStop(1,'rgba(255, 60, 10, 0)');
+          ctx.fillStyle=g;
+          ctx.beginPath();
+          ctx.arc(0,0,gr,0,Math.PI*2);
+          ctx.fill();
+        }else if(e.kind===1){
+          // Kızıl köz parçası (hafif oval, dönerek süzülür)
+          ctx.fillStyle=`rgba(255, 78, 22, ${0.78*flick})`;
+          ctx.shadowColor='rgba(255, 90, 20, 0.8)';
+          ctx.shadowBlur=6;
+          ctx.beginPath();
+          ctx.ellipse(0,0,e.r*1.4,e.r*0.7,0,0,Math.PI*2);
+          ctx.fill();
+        }else{
+          // Koyu yanık kül pulu (kenarında sönen turuncu kor izi)
+          ctx.fillStyle=`rgba(34, 24, 22, ${0.62+0.25*flick})`;
+          ctx.strokeStyle=`rgba(255, 110, 35, ${0.42*flick})`;
+          ctx.lineWidth=0.9;
+          ctx.beginPath();
+          ctx.ellipse(0,0,e.r*1.65,e.r*0.85,0,0,Math.PI*2);
+          ctx.fill();
+          ctx.stroke();
+        }
+        ctx.restore();
       });
     }
     if(!document.body.classList.contains('rm')||menuOpen){
