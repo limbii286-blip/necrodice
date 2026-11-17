@@ -410,7 +410,7 @@ function deal(S){
   S.deck=shuf(range(11).map(n=>({id:++S.u,n})));
   S.pl=[0,1].map(()=>({open:[S.deck.pop()],closed:[S.deck.pop()]}));
   S.eff=[];S.pj=[];S.jUsed=[0,0];S.jTurn=[0,0];S.noJ=[false,false];S.acted=false;S.turns=0;
-  S.hpMod=[0,0];S.plagueMod=[0,0];S.hpTgMod=0;S.oppPeek=[];S.oppPeek1=[];S.vampWinSide=-1;
+  S.hpMod=[0,0];S.plagueMod=[0,0];S.hpTgMod=0;S.oppPeek=[];S.oppPeek1=[];S.botPeekVal=null;S.botScry=null;S.vampWinSide=-1;
   S.turn=S.pl[0].open[0].n<S.pl[1].open[0].n?0:1;
   S.wait=false;S.rev=false;S.winSide=null;S.timeOut=[false,false];S.hadTimeout=false;S.dead=[];S.pa=[0,0];S.st={pb:0,ob:0,px:0};
   const cs=initClockSec();
@@ -464,7 +464,7 @@ function play(S,p,id,pk){
   S.jUsed[p]++;S.jTurn=S.jTurn||[0,0];S.jTurn[p]++;
   const uid=++S.u;(S.pj=S.pj||[]).push({id,o:p,uid});
   if(BLOCK.has(id))S.eff.push({id,o:p,uid,neg:false,s:pk[0]});
-  if(id==5)S.pl[q].open.push(S.deck.pop());
+  if(id==5){if(S.botScry&&S.botScry.length)S.botScry.shift();S.pl[q].open.push(S.deck.pop())}
   if(id==6||id==7){const[a,i]=find(pk[0]);a[i].o=id==6?0:12}
   if(id==12)S.eff.find(e=>e.uid==pk[0]).neg=true;
   if(id==13||id==14)(S.dead=S.dead||[]).push(take(pk[0]));
@@ -480,19 +480,34 @@ function play(S,p,id,pk){
 const PR={
   easy:{rand:.25,noise:.35,jc:.45,jp:.4,dm:.05,depth:0},
   med:{rand:.01,noise:.06,jc:.2,jp:1,dm:.03,depth:0},
-  hard:{rand:0,noise:0,jc:.2,jl:.08,jp:1,dm:.02,depth:2,beta:0,gap:6,mc:1,K:500,ms:2200,top:4,rjp:.5},
-  imp:{rand:0,noise:0,jc:.1,jl:.05,jp:1,dm:.02,depth:2,beta:.7,gap:7,mc:1,K:30000,ms:7200,top:6,rjp:.7,bo3:1,pf:1,learn:1} // imkansız: düello (BO3) skorunu ve joker eşitlik kuralını hesaba katar
+  hard:{rand:0,noise:0,jc:.2,jl:.08,jp:1,dm:.02,depth:2,beta:0,gap:6,mc:1,K:500,ms:2200,top:4,rjp:.5,hero:1},
+  imp:{rand:0,noise:0,jc:.1,jl:.05,jp:1,dm:.02,depth:2,beta:.7,gap:7,mc:1,K:30000,ms:7200,top:6,rjp:.7,bo3:1,pf:1,learn:1,hero:1} // imkansız: düello (BO3) skorunu, kahraman güçlerini ve joker eşitlik kuralını hesaba katar
 };
 let DIFF='med';
 const unk=(S,p)=>{const seen=new Set([...S.pl[p].open,...S.pl[p].closed,...S.pl[1-p].open,...(S.dead||[])].map(c=>c.n));return range(11).filter(n=>!seen.has(n))};
 let CUR=PR.med;
+function outcHero(S,p){
+  let r=outc(S,p);
+  if(r===0){
+    const v0=avKey(S,0)==='v'&&!(S.vampUsed&&S.vampUsed[0]);
+    const v1=avKey(S,1)==='v'&&!(S.vampUsed&&S.vampUsed[1]);
+    if(v0&&!v1)r=p===0?1:-1;
+    else if(v1&&!v0)r=p===1?1:-1;
+  }
+  if(r!==0){
+    const loser=r>0?1-p:p;
+    if(avKey(S,loser)==='e')r*=0.9; // Buz Devi %20 hasar savuşturup berabereye çevirebilir
+  }
+  return r;
+}
 function evalS(S,p){ // rakibin kapalı kartı bilinmiyor: olasılıklar üzerinden beklenen sonuç
-  const q=1-p,cl=S.pl[q].closed[0];
-  if(cl.o!=null)return outc(S,p);
-  const pool=unk(S,p);if(!pool.length)return outc(S,p);
+  const q=1-p,cl=S.pl[q].closed[0],useH=!!(CUR&&CUR.hero),ev=()=>useH?outcHero(S,p):outc(S,p);
+  if(cl.o!=null)return ev();
+  if(useH&&p===1&&S.botPeekVal!=null){cl.n=S.botPeekVal;return ev()}
+  const pool=unk(S,p);if(!pool.length)return ev();
   const use=CUR.beta&&S.pa&&S.pa[q]>0; // rakip pas geçtiyse toplamının hedefe yakın olma ihtimali artar
   let s=0,w=0;
-  pool.forEach(n=>{cl.n=n;let wt=1;if(use){const t=total(S,q),Tg=tg(S);if(t<=Tg&&t>=Tg-CUR.gap)wt=1+CUR.beta}s+=wt*outc(S,p);w+=wt});
+  pool.forEach(n=>{cl.n=n;let wt=1;if(use){const t=total(S,q),Tg=tg(S);if(t<=Tg&&t>=Tg-CUR.gap)wt=1+CUR.beta}s+=wt*ev();w+=wt});
   return s/w;
 }
 function look(S,p,d){ // d adım ileriye bakarak: pas mı, çekip tekrar karar vermek mi daha iyi
@@ -524,7 +539,7 @@ function decide(S,p,prm){ // en iyi hamleyi seç; null = pas
    Bilinmeyenleri (rakibin kapalı kartı, deste sırası, rakibin jokerleri) rastgele doldurup
    her aday hamleyi (pas / çek / joker) turun sonuna kadar oynatır; ortalama sonucu en iyi olanı seçer.
    Rakibin cevabını da hesaba kattığı için "pas deyip sonra yakalanma" hatalarını yapmaz. */
-const ROLL={rand:0,noise:0,jc:.25,jl:.15,jp:1,dm:.02,depth:0,beta:0,gap:6};
+const ROLL={rand:0,noise:0,jc:.25,jl:.15,jp:1,dm:.02,depth:0,beta:0,gap:6,hero:1};
 function listC(S,p,prm){
   CUR=prm;const d=prm.depth||0,out=[],pool=unk(S,p);
   out.push({a:null,v:evalS(clone(S),p)+prm.dm});
@@ -532,7 +547,7 @@ function listC(S,p,prm){
   const cost=S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc;
   if(!S.noJ[p])new Set(S.hand[p]).forEach(id=>{
     if(!playable(S,p,id))return;
-    if(id==16){const c=S.pl[p].closed[0],cv=c.o??c.n;if(cv<=5)out.push({a:{t:'j',id,pk:[]},v:-9});return}
+    if(id==16){const T=clone(S);T.log=[];T.deck=shuf(pool.map(n=>({id:++T.u,n}))).slice(0,S.deck.length);play(T,p,id,[]);out.push({a:{t:'j',id,pk:[]},v:look(T,p,d)-cost});return}
     combos((NEED[id]||[]).map(k=>opts(S,p,k))).forEach(pk=>{
       if(id==15&&pk[0]==pk[1])return;
       const T=clone(S);T.log=[];T.deck=shuf(pool.map(n=>({id:++T.u,n}))).slice(0,S.deck.length);play(T,p,id,pk);
@@ -544,21 +559,48 @@ function world(S,p,prm){ // bilinmeyenleri rastgele doldurulmuş bir "olası dü
   const T=clone(S),q=1-p;T.log=[];T.jdeck=[];
   let pool=shuf(unk(S,p));const cl=T.pl[q].closed[0];
   if(!pool.length)return T;
-  if(prm&&prm.beta&&S.pa&&S.pa[q]>0){const Tg=tg(S),base=total(S,q,false),Lr=prm.learn&&PROF.n>=6,w=pool.map(n=>{const t=base+n;if(Lr)return PROF.p[Math.max(-6,Math.min(12,Tg-t))+6]+.7;return t<=Tg&&t>=Tg-prm.gap?1+prm.beta:1}),sm=w.reduce((a,b)=>a+b,0);let r=Math.random()*sm,i=0;while(i<w.length-1&&(r-=w[i])>0)i++;pool=[pool[i],...pool.filter((_,j)=>j!=i)]}
-  cl.n=pool[0];T.deck=pool.slice(1,1+S.deck.length).map(n=>({id:++T.u,n}));
+  if(prm&&prm.hero&&p===1&&S.botPeekVal!=null){
+    cl.n=S.botPeekVal;
+    pool=pool.filter(n=>n!==S.botPeekVal);
+  }else{
+    if(prm&&prm.beta&&S.pa&&S.pa[q]>0){const Tg=tg(S),base=total(S,q,false),Lr=prm.learn&&PROF.n>=6,w=pool.map(n=>{const t=base+n;if(Lr)return PROF.p[Math.max(-6,Math.min(12,Tg-t))+6]+.7;return t<=Tg&&t>=Tg-prm.gap?1+prm.beta:1}),sm=w.reduce((a,b)=>a+b,0);let r=Math.random()*sm,i=0;while(i<w.length-1&&(r-=w[i])>0)i++;pool=[pool[i],...pool.filter((_,j)=>j!=i)]}
+    cl.n=pool[0];pool=pool.slice(1);
+  }
+  if(prm&&prm.hero&&p===1&&S.botScry&&S.botScry.length){
+    const scry=S.botScry.filter(n=>pool.includes(n));
+    const rest=pool.filter(n=>!scry.includes(n));
+    T.deck=rest.slice(0,Math.max(0,S.deck.length-scry.length)).concat([...scry].reverse()).map(n=>({id:++T.u,n}));
+  }else{
+    T.deck=pool.slice(0,S.deck.length).map(n=>({id:++T.u,n}));
+  }
   const known=new Set([...S.hand[p],...(S.dj||[])]);
-  T.hand[q]=shuf(range(24).filter(x=>!known.has(x))).slice(0,S.hand[q].length);
+  let oppHand=shuf(range(24).filter(x=>!known.has(x))).slice(0,S.hand[q].length);
+  if(prm&&prm.hero&&avKey(S,q)==='s'&&S.hand[q].length&&!(S.dj&&S.dj.includes(25))&&!oppHand.includes(25)){
+    oppHand[oppHand.length-1]=25;
+  }
+  T.hand[q]=oppHand;
   return T;
 }
-function bo3v(T,p,r){ // tur sonucu r (p açısından) -> düelloyu kazanma değeri [-1,1]; son turda eşitlikte fazla joker kazanır
+function bo3v(T,p,r){ // tur sonucu r (p açısından) -> düelloyu kazanma değeri [-1,1]; kahraman güçlerini ve joker eşitlik kuralını hesaba katar
   const q=1-p,np=T.pts[p]+(r>0?1:r==0?.5:0),nq=T.pts[q]+(r<0?1:r==0?.5:0);
-  if(np>=2||nq>=2||T.rounds+1>=3){let w;if(np>nq)w=1;else if(np<nq)w=0;else{const a=T.hand[p].length,b=T.hand[q].length;w=a>b?1:a<b?0:.5}return 2*w-1}
-  return Math.max(-.9,Math.min(.9,.55*(np-nq)+.03*(T.hand[p].length-T.hand[q].length)))}
+  if(np>=2||nq>=2||T.rounds+1>=3){
+    let w;if(np>nq)w=1;else if(np<nq)w=0;else{const a=T.hand[p].length,b=T.hand[q].length;w=a>b?1:a<b?0:.5}
+    let val=2*w-1;
+    if(avKey(T,1-p)==='n'&&val<0)val*=1.12; // Kara Şövalye karşısında düello kaybetmek çok tehlikeli
+    if(avKey(T,p)==='m'&&val<0)val*=0.9;   // Ölümün Efendisi (+2 zar) biraz daha dayanıklı
+    if(p===1&&avKey(T,1)==='u'&&!T.rigDone&&val<0)val*=0.72; // Bilinmeyen ilk ölümden döner
+    return Math.max(-1.12,Math.min(1,val));
+  }
+  let cBonus=0;
+  if(avKey(T,p)==='c'&&T.cWins){const cw=(T.cWins[p]||0)+(r>0?1:0);if(cw>=4)cBonus+=0.06}
+  if(avKey(T,q)==='c'&&T.cWins){const cw=(T.cWins[q]||0)+(r<0?1:0);if(cw>=4)cBonus-=0.06}
+  return Math.max(-.9,Math.min(.9,.55*(np-nq)+.03*(T.hand[p].length-T.hand[q].length)+cBonus));
+}
 function rollout(T,p,a,pol){
   let actor=p,n=0;
   const doPass=()=>{if(T.turns>0&&!T.acted)return true;(T.pa=T.pa||[0,0])[actor]++;T.turns++;T.acted=false;T.turn=1-T.turn;(T.jTurn=T.jTurn||[0,0])[T.turn]=0;actor=T.turn;n=0;return false};
   const doAct=(x,who)=>{if(x.t=='d')T.pl[who].open.push(T.deck.pop());else play(T,who,x.id,x.pk);T.acted=true};
-  const fin=()=>pol.bo3?bo3v(T,p,outc(T,p)):outc(T,p);
+  const fin=()=>pol.bo3?bo3v(T,p,pol.hero?outcHero(T,p):outc(T,p)):(pol.hero?outcHero(T,p):outc(T,p));
   if(!a){if(doPass())return fin()}else{doAct(a,p);n=1}
   for(let g=0;g<80;g++){
     const x=n++<8?(pol.hm&&actor!=p?hmove(T,actor,pol):decide(T,actor,pol)):null;
@@ -622,20 +664,62 @@ function bot(){
     thinkOn=false;
     if(S.hpUsed&&!S.hpUsed[1]){
       const bh=avKey(S,1),bt=total(S,1),bT=tg(S),low=lowW(S);
-      if(bh==='c'&&S.cWins&&S.cWins[1]>=4&&!low&&bt>bT){
+      if(bh==='c'&&S.cWins&&S.cWins[1]>=4&&!low&&(bt>bT||(prm.hero&&evalS(clone(S),1)<-0.35))){
         execRewind(S,1);return think(AFTER[DIFF]);
       }
-      if(bh==='p'&&S.hand[1].length>=1&&S.hand[1].length<=2&&S.jdeck.length>=2){
-        execPlague(S,1,0);R();return think(AFTER[DIFF]);
+      if(bh==='w'&&prm.hero&&S.pl[0].closed.length){
+        S.hpUsed[1]=true;S.botPeekVal=S.pl[0].closed[0].n;
+        S.log.push({p:1,t:'Kuzgunun Kehaneti kullandı (kapalı kartını inceledi)'});
+        playHeroPowerAnim('w',1,HERO_MAP.w);snd('flip');R();return think(AFTER[DIFF]);
       }
-      if(bh==='l'&&((!low&&bt>bT)||(total(S,0,false)>=bT-2))&&(S.pl[0].open.length||S.pl[0].closed.length)&&(S.pl[1].open.length||S.pl[1].closed.length)){
-        execWolf(S,1);snd('play');R();return think(AFTER[DIFF]);
+      if(bh==='a'&&prm.hero&&S.deck.length>=2){
+        const dn=S.deck.length,c1=S.deck[dn-1],c2=S.deck[dn-2];
+        const good1=!low?bt+c1.n<=bT:c1.n<=c2.n,good2=!low?bt+c2.n<=bT:c2.n<=c1.n;
+        const swap=(!low&&bt<=bT-2)?(good2&&(!good1||c2.n>c1.n)):(c1.n<c2.n);
+        if(swap){S.deck[dn-1]=c2;S.deck[dn-2]=c1}
+        S.botScry=[S.deck[dn-1].n,S.deck[dn-2].n];
+        S.hpUsed[1]=true;S.log.push({p:1,t:'Yitik Yazgı kullandı (destenin üstünü düzenledi)'});
+        playHeroPowerAnim('a',1,HERO_MAP.a);snd('flip');R();return think(AFTER[DIFF]);
+      }
+      if(bh==='p'&&S.hand[1].length>=1&&S.hand[1].length<=(prm.hero?3:2)&&S.jdeck.length>=2){
+        let bIdx=0;
+        if(prm.hero){
+          const cands=listC(S,1,prm),baseV=cands.find(x=>!x.a)?.v??0;
+          let worst=1e9;
+          S.hand[1].forEach((jid,idx)=>{
+            if(jid===25)return;
+            const bestForJ=cands.filter(x=>x.a&&x.a.id===jid).reduce((mx,x)=>Math.max(mx,x.v),-9);
+            if(bestForJ<worst){worst=bestForJ;bIdx=idx}
+          });
+          if(worst>baseV+0.25&&S.hand[1].length>2)bIdx=-1;
+        }
+        if(bIdx>=0){execPlague(S,1,bIdx);R();return think(AFTER[DIFF])}
+      }
+      if(bh==='l'&&(S.pl[0].open.length||S.pl[0].closed.length)&&(S.pl[1].open.length||S.pl[1].closed.length)){
+        let useW=false;
+        if(prm.hero){
+          CUR=prm;
+          const before=evalS(clone(S),1);
+          let sumA=0;const K=28;
+          for(let k=0;k<K;k++){
+            const T=clone(S);T.log=[];
+            const p0=T.pl[0].open.length?T.pl[0].open:T.pl[0].closed,p1=T.pl[1].open.length?T.pl[1].open:T.pl[1].closed;
+            p0.splice(Math.floor(Math.random()*p0.length),1);
+            p1.splice(Math.floor(Math.random()*p1.length),1);
+            sumA+=evalS(T,1);
+          }
+          const avgA=sumA/K;
+          if((!low&&bt>bT&&avgA>before)||(avgA>before+0.14))useW=true;
+        }else if((!low&&bt>bT)||(total(S,0,false)>=bT-2)){
+          useW=true;
+        }
+        if(useW){execWolf(S,1);snd('play');R();return think(AFTER[DIFF])}
       }
     }
     const a=plan?plan.a:(n++<8?(prm.mc?decideH:decide)(S,1,prm.mc?{...prm,K:90,ms:400}:prm):null);plan=null;pid++;
     if(!a){R();return pass()}
     S.acted=true;
-    if(a.t=='d'){const c=S.deck.pop();S.pl[1].open.push(c);S.log.push({p:1,t:`kart çekti (${c.n})`});R();talk('draw',0,.3);think(AFTER[DIFF])}
+    if(a.t=='d'){if(S.botScry&&S.botScry.length)S.botScry.shift();const c=S.deck.pop();S.pl[1].open.push(c);S.log.push({p:1,t:`kart çekti (${c.n})`});R();talk('draw',0,.3);think(AFTER[DIFF])}
     else{play(S,1,a.id,a.pk);S.log.push({p:1,t:`joker oynadı: ${J[a.id]}`});note(1,a.id,()=>{R();think(AFTER[DIFF])})}
   };
   think(THINK[DIFF]);
@@ -1891,7 +1975,7 @@ document.addEventListener('click',e=>{
     return;
   }
 });
-function drawFromDeck(){const S=G;if(!S||S.turn||lock||P||!canDraw(S,0))return;if(MODE=='guest')return conn.send({k:'draw'});S.graceLeft=0;lrnAct(S,'d');const c=S.deck.pop();S.pl[0].open.push(c);S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R()}
+function drawFromDeck(){const S=G;if(!S||S.turn||lock||P||!canDraw(S,0))return;if(MODE=='guest')return conn.send({k:'draw'});S.graceLeft=0;lrnAct(S,'d');if(S.botScry&&S.botScry.length)S.botScry.shift();const c=S.deck.pop();S.pl[0].open.push(c);S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R()}
 $('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE=='guest')conn.send({k:'pass'});else{lrnAct(G,'p');pass()}}};
 
 /* ---------- ONLINE (PeerJS) ---------- */
