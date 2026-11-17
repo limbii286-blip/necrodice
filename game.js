@@ -1018,13 +1018,13 @@ function endRound(){
     }
     snd(r>0?'win':r<0?'lose':'ok');
     R();
-    setTimeout(()=>{if(S===G){if(vampWinSide>=0)heroVampTie(vampWinSide);else if(tankedSide>=0)heroAttack(1-tankedSide,true);else if(r!==0)heroAttack(r>0?0:1);else heroClash();}},1000);
+    setTimeout(()=>{if(S===G){if(vampWinSide>=0){const btn=document.querySelector(vampWinSide===0?'#me .hp-btn':'#opp .hp-btn');if(btn){const hr=btn.getBoundingClientRect(),fx=document.createElement('div');fx.className='hp-cast-fx'+(vampWinSide===1?' opp':'');fx.style.left=(hr.left+hr.width/2)+'px';fx.style.top=(hr.top+hr.height/2)+'px';fx.innerHTML='<i class="hp-cast-ring"></i><span class="hp-cast-pop">Kanla Mühürlenen Kader!</span>';document.body.appendChild(fx);setTimeout(()=>fx.remove(),1350);}heroClash();}else if(tankedSide>=0)heroAttack(1-tankedSide,true);else if(r!==0)heroAttack(r>0?0:1);else heroClash();}},1000);
     setTimeout(()=>{
       if(S!==G)return;
       // 3) Yerdeki bütün sayı kartları tozlaşır gibi yok olur, sonra diğer tura geçilir
       dustTableCards();
       setTimeout(()=>{if(S!==G)return;lock=false;fin()},820);
-    },vampWinSide>=0?4900:4100);
+    },4100);
   },750);
   function fin(){
     S.winSide=null;S.vampWinSide=-1;
@@ -2018,8 +2018,8 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
     if(G.winSide!=null&&prevWin==null){
       snd(G.winSide>0?'win':G.winSide<0?'lose':'ok');
       const winW=G.winSide;
-      setTimeout(()=>{if(G&&G.winSide===winW){if(G.vampWinSide>=0)heroVampTie(G.vampWinSide);else if(winW!==0)heroAttack(winW>0?0:1);else heroClash();}},1000);
-      setTimeout(()=>{if(G&&G.winSide===winW)dustTableCards();},G.vampWinSide>=0?4200:3400);
+      setTimeout(()=>{if(G&&G.winSide===winW){if(G.vampWinSide>=0){const btn=document.querySelector(G.vampWinSide===0?'#me .hp-btn':'#opp .hp-btn');if(btn){const hr=btn.getBoundingClientRect(),fx=document.createElement('div');fx.className='hp-cast-fx'+(G.vampWinSide===1?' opp':'');fx.style.left=(hr.left+hr.width/2)+'px';fx.style.top=(hr.top+hr.height/2)+'px';fx.innerHTML='<i class="hp-cast-ring"></i><span class="hp-cast-pop">Kanla Mühürlenen Kader!</span>';document.body.appendChild(fx);setTimeout(()=>fx.remove(),1350);}heroClash();}else if(winW!==0)heroAttack(winW>0?0:1);else heroClash();}},1000);
+      setTimeout(()=>{if(G&&G.winSide===winW)dustTableCards();},3400);
     }
     if(waitM){$('#m').hidden=true;lock=false;waitM=false}
     if(MODE!='spectator'&&(G.turn!=0||G.wait))P=null;
