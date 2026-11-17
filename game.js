@@ -1135,7 +1135,7 @@ const HD_PORTRAITS={
   w:'necromancer.jpg?v=20261116_t21',
   l:'werewolf.jpg?v=20261116_t21',
   v:'vampire.jpg?v=20261116_t39',
-  u:'unknown.jpg?v=20261116_t21'
+  u:'unknown.jpg?v=20261116_t84'
 };
 const avSrc=k=>HD_PORTRAITS[k]||(k?AV[k]:IMG.bn),oppName=()=>NAMES[avKey(G,1)]||'Rakip';
 const prevAv=[undefined,undefined],morphT=[0,0];
