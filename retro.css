@@ -2555,17 +2555,17 @@ body.dragging-joker #fx::after {
     margin-top: 0 !important;
     margin-bottom: 0 !important;
   }
-  .cards:has(> .c:nth-child(5)) {
+  .cards.cards-2row {
     flex-wrap: wrap !important;
     gap: 3px !important;
   }
-  .cards:has(> .c:nth-child(5)) .c {
-    flex: 0 0 34px !important;
-    width: 34px !important;
-    font-size: 16px !important;
+  .cards.cards-2row .c {
+    flex: 0 0 38px !important;
+    width: 38px !important;
+    font-size: 17px !important;
   }
-  .cards:has(> .c:nth-child(5)) .c:not(.n):not(.bk) {
-    font-size: 20px !important;
+  .cards.cards-2row .c:not(.n):not(.bk) {
+    font-size: 21px !important;
   }
   #opp .cards {
     padding: 0 2px 6px !important;

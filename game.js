@@ -1350,7 +1350,7 @@ function R(){
   const isMob=window.matchMedia&&window.matchMedia('(max-width: 760px), (hover: none) and (pointer: coarse)').matches;
   const hpBtn0=isSpec?'':`<button id="hp-btn" class="hp-btn${hpObj0.passive?' passive':''}${hpUsed0?' used':canHp?' ready':''}" data-hp="1" data-hp-id="${myHId}" data-hp-side="0"${(canHp||isMob)?'':' disabled'}>${HP_IC[myHId]||HP_IC.c}${cProg}</button>`;
   const hpBtn1=`<span class="hp-btn opp-hp${hpObj1.passive?' passive':''}${hpUsed1?' used':''}" data-hp-id="${oppHId}" data-hp-side="1">${HP_IC[oppHId]||HP_IC.c}</span>`;
-  setH('#opp',`${oppHandHtml}<div class="who">${av1}${hpBtn1}<div class="nm"><b>${p1Name}</b>${MODE=='bot'?'':'<span class="meta">Online</span>'}</div><div class="tot${obust?' bust':oexact?' exact':''}"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${oppClosedKnown?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!(S.rev||c.o!=null||(S.oppPeek&&S.oppPeek.includes(c.id))),S.rev)).join('')}</div>`);
+  setH('#opp',`${oppHandHtml}<div class="who">${av1}${hpBtn1}<div class="nm"><b>${p1Name}</b>${MODE=='bot'?'':'<span class="meta">Online</span>'}</div><div class="tot${obust?' bust':oexact?' exact':''}"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${oppClosedKnown?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards${(S.pl[1].open.length+S.pl[1].closed.length>=6)?' cards-2row':''}">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!(S.rev||c.o!=null||(S.oppPeek&&S.oppPeek.includes(c.id))),S.rev)).join('')}</div>`);
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<span class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${(k=='eff'||k=='steal_j')&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}"><img src="${IMG.j[e.id]}" alt=""></span>`};
   $('#deck b').textContent=S.deck.length;
   const drawLocked=S.eff.some(e=>e.id==23&&!e.neg&&e.o!=0);
@@ -1364,7 +1364,7 @@ function R(){
   setH('#seal',`<b>${low?'En az':T}</b>`);
   if(prevSeal&&prevSeal!=seal){sl.classList.remove('stamp');void sl.offsetWidth;sl.classList.add('stamp')}
   $('#me').className='zone'+(my?' act':'')+(S.winSide!=null?(S.winSide<0?' round-lose':S.winSide===0?' round-tie':''):'');
-  setH('#me',`<div class="who">${av0}${hpBtn0}<div class="nm"><b>${p0Name}</b></div><div class="tot${bust?' bust':exact?' exact':''}"><small>Toplam</small><b>${lastTot[0]}</b></div></div><div class="cards">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||c.o!=null||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`);
+  setH('#me',`<div class="who">${av0}${hpBtn0}<div class="nm"><b>${p0Name}</b></div><div class="tot${bust?' bust':exact?' exact':''}"><small>Toplam</small><b>${lastTot[0]}</b></div></div><div class="cards${(S.pl[0].open.length+S.pl[0].closed.length>=6)?' cards-2row':''}">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||c.o!=null||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`);
   const pr=$('#prompt');
   pr.className=P?(P.hp?'ask':'ask has-joker'+(k==='sign'?' sign-mode':'')):'';
   if(!P){
