@@ -1095,7 +1095,7 @@ function veil(ms=2000){const v=document.createElement('div');v.className='veil';
 function enter(fn){if(entering)return;entering=true;veil();setMusic('game');setTimeout(()=>{$('#menu').hidden=true;entering=false;fn()},1700)}
 let MY_HERO='c',OPP_HERO='n';
 const HEROES=[
-  {id:'c',name:'Lanetli Tüccar',hpName:'Zamanın İadesi',desc:'4 tur galibiyet elde ettiğinde aktifleşir. Kullanıldığında masadaki tüm sayı kartları desteye geri karıştırılır. Kullanılmış Joker kartları yakılır ve yeni bir sayı kartı destesi dağıtılır.'},
+  {id:'c',name:'Lanetli Tüccar',hpName:'Zamanın İadesi',desc:'Kullanıldığında masadaki tüm sayı kartları desteye geri karıştırılır. Kullanılmış Joker kartları yakılır ve yeni bir sayı kartı destesi dağıtılır. 4 tur galibiyet elde ettiğinde aktifleşir.'},
   {id:'p',name:'Veba Doktoru',hpName:'Vebalı Takas',desc:'Elindeki 1 Joker kartını yakarak desteden rastgele 2 yeni Joker kartı çek.'},
   {id:'n',name:'Kara Şövalye',passive:true,hpName:'Ölüm Fermanı',desc:'Rakibinin attığı her Ölüm Zarı sonucundan 2 çıkar.'},
   {id:'a',name:'Solmuş Kraliçe',hpName:'Yitik Yazgı',desc:'Destenin en üstündeki 2 kartı gizlice incele. Dilersen bu kartların yerlerini değiştir.'},
@@ -1350,8 +1350,8 @@ function R(){
   const oppHandHtml=`<div class="opp-jhand" title="Rakibin elindeki kapalı jokerler (${S.hand[1].length})">${S.hand[1].map((_,i)=>`<img class="oj" style="--r:${((i-(S.hand[1].length-1)/2)*4.5).toFixed(1)}deg" src="${IMG.bj}" alt="">`).join('')}</div>`;
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'')+(S.winSide!=null?(S.winSide>0?' round-lose':S.winSide===0?' round-tie':''):'');
   const myHId=avKey(S,0),oppHId=avKey(S,1);
-  const hpUsed0=myHId==='u'?!!(S.uRevived&&S.uRevived[0]):myHId==='v'?!!(S.vampUsed&&S.vampUsed[0]):(myHId==='m'||myHId==='e'||myHId==='n'||myHId==='s')?false:!!(S.hpUsed&&S.hpUsed[0]);
-  const hpUsed1=oppHId==='u'?!!(MODE==='bot'?S.rigDone:(S.uRevived&&S.uRevived[1])):oppHId==='v'?!!(S.vampUsed&&S.vampUsed[1]):(oppHId==='m'||oppHId==='e'||oppHId==='n'||oppHId==='s'||oppHId==='w'||oppHId==='a')?false:!!(S.hpUsed&&S.hpUsed[1]);
+  const hpUsed0=myHId==='u'?!!(S.uRevived&&S.uRevived[0]):myHId==='v'?!!(S.vampUsed&&S.vampUsed[0]):(myHId==='m'||myHId==='e'||myHId==='n'||myHId==='s'||myHId==='c')?false:!!(S.hpUsed&&S.hpUsed[0]);
+  const hpUsed1=oppHId==='u'?!!(MODE==='bot'?S.rigDone:(S.uRevived&&S.uRevived[1])):oppHId==='v'?!!(S.vampUsed&&S.vampUsed[1]):(oppHId==='m'||oppHId==='e'||oppHId==='n'||oppHId==='s'||oppHId==='w'||oppHId==='a'||oppHId==='c')?false:!!(S.hpUsed&&S.hpUsed[1]);
   const hpObj0=HERO_MAP[myHId]||HEROES[0],hpObj1=HERO_MAP[oppHId]||HEROES[0];
   const cWins0=(S.cWins&&S.cWins[0])||0,cReady=myHId!=='c'||cWins0>=4;
   const canHp=!isSpec&&!hpObj0.passive&&my&&!P&&!hpUsed0&&cReady;
@@ -1525,9 +1525,11 @@ function execRewind(S,p){
   S.pl=[0,1].map(()=>({open:[S.deck.pop()],closed:[S.deck.pop()]}));
   S.eff=[];S.pj=[];S.noJ=[false,false];S.dead=[];
   S.hpMod=[0,0];S.plagueMod=[0,0];S.hpTgMod=0;S.oppPeek=[];S.oppPeek1=[];
-  S.hpUsed=S.hpUsed||[false,false];S.hpUsed[p]=true;S.acted=true;S.graceLeft=0;
+  S.cWins=S.cWins||[0,0];S.cWins[p]=0;
+  S.hpUsed=S.hpUsed||[false,false];S.hpUsed[p]=false;S.acted=true;S.graceLeft=0;
   S.log.push({p,t:'Zamanın İadesi kullandı! Kartlar desteye döndü ve yeniden dağıtıldı.'});
   snd('flip');R();
+  playHeroPowerAnim('c',p,HERO_MAP.c);
 }
 function useHeroPower(){
   const S=G;if(!S||S.over||S.wait||S.turn!==0||lock||P||(S.hpUsed&&S.hpUsed[0]))return;
@@ -1536,7 +1538,7 @@ function useHeroPower(){
   if(hid==='c'){
     const wins=(S.cWins&&S.cWins[0])||0;
     if(wins<4)return box(`<h3>Zamanın İadesi</h3><p>4 tur galibiyet elde ettiğinde aktifleşir. (Şu an: ${wins}/4)</p>`);
-    if(MODE==='guest'){S.hpUsed[0]=true;snd('flip');R();return conn.send({k:'hp_rewind'})}
+    if(MODE==='guest'){S.cWins[0]=0;snd('flip');playHeroPowerAnim('c',0,HERO_MAP.c);R();return conn.send({k:'hp_rewind'})}
     execRewind(S,0);
   }else if(hid==='p'){
     if(!S.hand[0].length)return box('<h3>Vebalı Takas</h3><p>Elinde yakılacak Joker kartı yok.</p>');
@@ -1929,8 +1931,7 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     R();
   }
   else if(m.k=='hp_rewind'){
-    S.hpUsed=S.hpUsed||[false,false];
-    if(avKey(S,1)!=='c'||S.hpUsed[1]||!(S.cWins&&S.cWins[1]>=4))return;
+    if(avKey(S,1)!=='c'||!(S.cWins&&S.cWins[1]>=4))return;
     execRewind(S,1);
   }
   else if(m.k=='hp_peek'){
