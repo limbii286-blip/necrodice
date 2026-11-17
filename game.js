@@ -392,8 +392,8 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı animas
 }
 
 /* ---------- MOTOR ---------- */
-const DUEL_CLOCK_INIT=33; // Her sırası gelen oyuncunun 33 saniyesi vardır
-const ONLINE_CLOCK_INIT=33;
+const DUEL_CLOCK_INIT=44; // Her sırası gelen oyuncunun 44 saniyesi vardır
+const ONLINE_CLOCK_INIT=44;
 const initClockSec=()=>((MODE==='host'||MODE==='guest'||MODE==='spectator')?ONLINE_CLOCK_INIT:DUEL_CLOCK_INIT);
 const GRACE_INIT=5;       // İlk düello ve geçişlerde jokerlere bakmak için 5 saniye hazırlık süresi
 function newBO3(S){
@@ -866,7 +866,7 @@ function heroAttack(winIdx,tanked=false){
         setTimeout(()=>fx.remove(),1350);
       }
     }
-  },1580);
+  },1180);
 
   anim.onfinish=()=>{
     clone.remove();
