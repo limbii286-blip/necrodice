@@ -3676,14 +3676,20 @@ body.dragging-joker #fx::after {
     justify-content: space-between;
   }
   #mb:has(.d20-box) .bg3-dc-arch {
-    padding: 2px 0 6px !important;
+    padding: 0 0 8px !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
   #mb:has(.d20-box) .bg3-dc-arch .lbl {
     font-size: 10.5px !important;
-    margin-bottom: 2px !important;
+    margin-bottom: 1px !important;
   }
   #mb:has(.d20-box) .bg3-dc-arch .val {
     font-size: 28px !important;
+    line-height: 0.95 !important;
+    margin-top: -1px !important;
   }
   #mb:has(.d20-box) .d20-stage {
     width: 156px !important;
@@ -3700,11 +3706,11 @@ body.dragging-joker #fx::after {
     font-size: 12px !important;
   }
   #mb:has(.d20-box) .after {
-    margin-top: 4px !important;
-    font-size: 13px !important;
-    line-height: 1.25 !important;
+    margin-top: 10px !important;
+    font-size: 13.5px !important;
+    line-height: 1.38 !important;
   }
-  #mb:has(.d20-box) br {
+  #mb:has(.d20-box) > br {
     display: none;
   }
   #mb:has(.d20-box) #mo,
