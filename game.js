@@ -1040,7 +1040,7 @@ function endRound(){
       else{let x,y;do{x=d6()+d6();y=d6()+d6()}while(x==y);L=x<y?0:1;hx=[x,y];how='zar'}
     }
     const th=TH[Math.min(S.bo,3)],rawRoll=d20(),hpB=avKey(S,L)==='m'?2:0,execPen=avKey(S,1-L)==='e'?-2:0,roll=Math.max(1,Math.min(20,rawRoll+hpB+execPen)),surv=roll>=th;
-    const mk=(v,roll,surv)=>{return `Düelloyu ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısına göre)':how=='zar'?` (beraberlik zarı: ${hx[v]}–${hx[1-v]})`:''}.<br>Ölüm zarını ${L==v?'sen atıyorsun':'rakip atıyor'}<div class="d20-box" data-roll="${roll}" data-raw="${rawRoll}" data-mod="${hpB+execPen}" data-dc="${th}" data-m="${L==v?1:0}" data-s="${surv?'ok':L==v?'death':'win'}">
+    const mk=(v,roll,surv,rawOv)=>{const rr=rawOv!=null?rawOv:rawRoll;return `Düelloyu ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısına göre)':how=='zar'?` (beraberlik zarı: ${hx[v]}–${hx[1-v]})`:''}.<br>Ölüm zarını ${L==v?'sen atıyorsun':'rakip atıyor'}<div class="d20-box" data-roll="${roll}" data-raw="${rr}" data-mod="${rawOv!=null?0:(hpB+execPen)}" data-dc="${th}" data-m="${L==v?1:0}" data-s="${surv?'ok':L==v?'death':'win'}">
       <div class="bg3-roll-card">
         <div class="bg3-card-border"></div>
         <i class="bg3-corner tl"></i><i class="bg3-corner tr"></i><i class="bg3-corner bl"></i><i class="bg3-corner br"></i>
@@ -1055,13 +1055,13 @@ function endRound(){
         ${(hpB||execPen)?`<div class="d20-hp-mod">${hpB?`<span class="d20-mod-pill pos"><b>Ölümün Takdiri</b><i>+${hpB}</i></span>`:''}${execPen?`<span class="d20-mod-pill neg"><b>Ölümün Cezası</b><i>−2</i></span>`:''}</div>`:''}
         ${L==v?'<button id="rl" class="btn d20-btn">ÖLÜM ZARINI AT</button>':''}
       </div>
-    </div><div class="after"><b>Zar Sonucu: ${roll}${(hpB||execPen)?` (${rawRoll}${hpB?`+${hpB} Ölümün Takdiri`:''}${execPen?`−2 Ölümün Cezası`:''})`:''}</b><br>`+(surv?(L==v?'Kurtuldun! Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
+    </div><div class="after"><b>Zar Sonucu: ${roll}${(hpB||execPen)&&rawOv==null?` (${rr}${hpB?`+${hpB} Ölümün Takdiri`:''}${execPen?`−2 Ölümün Cezası`:''})`:''}</b><br>`+(surv?(L==v?'Kurtuldun! Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
     const full=v=>mk(v,roll,surv),rig=MODE=='bot'&&DIFF=='imp'&&L==1&&!surv&&!S.rigDone; // sahne oyun başına bir kez; ikinci ölümde gerçekten ölür
     const uRev=(MODE==='host'?(L===0||L===1):L===0)&&avKey(S,L)==='u'&&!surv&&!(S.uRevived&&S.uRevived[L]);
     if(surv||rig||uRev){const n=S.bo+2;
       const lb=`Düello ${n} ile devam et`,go=()=>{try{document.body.classList.remove('dead')}catch(e){}S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()};
-      if(rig){S.rigDone=true;S.hpUsed[1]=true;impSave(mk(0,1,false),()=>M(mk(0,20,true),lb,go))}
-      else if(uRev){S.uRevived=S.uRevived||[false,false];S.uRevived[L]=true;S.hpUsed[L]=true;impSave(mk(0,roll,false),()=>MM(v=>mk(v,20,true),lb,go),'Hiçlik seni geri çevirdi… Bir kez daha ölümden döndün!')}
+      if(rig){S.rigDone=true;S.hpUsed[1]=true;impSave(mk(0,1,false,1),()=>M(mk(0,20,true,20),lb,go))}
+      else if(uRev){S.uRevived=S.uRevived||[false,false];S.uRevived[L]=true;S.hpUsed[L]=true;impSave(mk(0,roll,false),()=>MM(v=>mk(v,20,true,20),lb,go),'Hiçlik seni geri çevirdi… Bir kez daha ölümden döndün!')}
       else MM(full,lb,go)}
     else{S.over=true;lrnGame(L==0);rematchReady=[false,false];rematchHeroes=[null,null];MM(full,'Yeniden oyna',()=>chooseHero(hid=>{if(MODE==='host'){MY_HERO=hid;rematchReady[0]=true;rematchHeroes[0]=hid;checkStartOnlineRematch()}else{MY_HERO=hid;start()}},()=>{$('#menu').hidden=false;setMusic('menu')}),null,true)}
   }

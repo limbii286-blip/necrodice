@@ -676,6 +676,7 @@ body:has(#menu:not([hidden])) #fl {
   display: block;
   font: 700 12px/1.1 var(--mf);
   letter-spacing: 3px;
+  padding-left: 3px;
   color: #bfa67a;
   text-transform: uppercase;
   margin-bottom: 4px;
@@ -3660,8 +3661,9 @@ body.dragging-joker #fx::after {
     justify-content: space-between;
   }
   #mb:has(.d20-box)::before {
-    margin: -12px -14px 8px !important;
+    margin: 0 0 8px !important;
     padding: 6px 10px !important;
+    border-radius: 6px;
     font-size: 12.5px !important;
   }
   #mb:has(.d20-box) .d20-box {
