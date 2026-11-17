@@ -625,6 +625,12 @@ function bot(){
       if(bh==='c'&&S.cWins&&S.cWins[1]>=4&&!low&&bt>bT){
         execRewind(S,1);return think(AFTER[DIFF]);
       }
+      if(bh==='p'&&S.hand[1].length>=1&&S.hand[1].length<=2&&S.jdeck.length>=2){
+        execPlague(S,1,0);R();return think(AFTER[DIFF]);
+      }
+      if(bh==='l'&&((!low&&bt>bT)||(total(S,0,false)>=bT-2))&&(S.pl[0].open.length||S.pl[0].closed.length)&&(S.pl[1].open.length||S.pl[1].closed.length)){
+        execWolf(S,1);snd('play');R();return think(AFTER[DIFF]);
+      }
     }
     const a=plan?plan.a:(n++<8?(prm.mc?decideH:decide)(S,1,prm.mc?{...prm,K:90,ms:400}:prm):null);plan=null;pid++;
     if(!a){R();return pass()}
@@ -1065,7 +1071,7 @@ function endRound(){
         ${L==v?'<button id="rl" class="btn d20-btn">ÖLÜM ZARINI AT</button>':''}
       </div>
     </div><div class="after"><b>Zar Sonucu: ${roll}${(hpB||execPen)&&rawOv==null?` (${rr}${hpB?`+${hpB} Ölümün Takdiri`:''}${execPen?`−2 Ölüm Fermanı`:''})`:''}</b><br>`+(surv?(L==v?'Kurtuldun! Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
-    const full=v=>mk(v,roll,surv),rig=MODE=='bot'&&DIFF=='imp'&&L==1&&!surv&&!S.rigDone; // sahne oyun başına bir kez; ikinci ölümde gerçekten ölür
+    const full=v=>mk(v,roll,surv),rig=MODE=='bot'&&avKey(S,1)==='u'&&L==1&&!surv&&!S.rigDone; // Bilinmeyen (İmkansız bot): oyun başına bir kez ölümden döner
     const uRev=(MODE==='host'?(L===0||L===1):L===0)&&avKey(S,L)==='u'&&!surv&&!(S.uRevived&&S.uRevived[L]);
     if(surv||rig||uRev){const n=S.bo+2;
       const lb=`Düello ${n} ile devam et`,go=()=>{try{document.body.classList.remove('dead')}catch(e){}S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()};
@@ -1122,13 +1128,13 @@ const HP_IC={
   v:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14M7 4l2 8 2-8M13 4l2 8 2-8"/><path d="M12 13.5s-3.5 3.6-3.5 5.6a3.5 3.5 0 007 0c0-2-3.5-5.6-3.5-5.6z"/></svg>',
   u:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 21l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>'
 };
-function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}rematchReady=[false,false];rematchHeroes=[null,null];deathContReady=[false,false];deathContGo=null;const oppH=MODE=='bot'?({easy:'c',med:'p',hard:'m',imp:'u'}[DIFF]||'c'):(OPP_HERO||'n');G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],vampUsed:[false,false],cWins:[0,0],vampWinSide:-1,mast:[0,0]};prevAv[0]=prevAv[1]=undefined;prevHpAnim=[false,false];newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
+function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}rematchReady=[false,false];rematchHeroes=[null,null];deathContReady=[false,false];deathContGo=null;const botPool=HEROES.filter(h=>!h.bossOnly||DIFF==='imp').map(h=>h.id),oppH=MODE=='bot'?botPool[Math.floor(Math.random()*botPool.length)]:(OPP_HERO||'n');G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],vampUsed:[false,false],cWins:[0,0],vampWinSide:-1,mast:[0,0]};prevAv[0]=prevAv[1]=undefined;prevHpAnim=[false,false];newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
 
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
 let prevT=false,lastLk='',flipId=null,lastTot=[0,0],lastBust=false,prevSeal='',sayT='',prevHpAnim=[false,false];
 const NAMES={c:'Lanetli Tüccar',p:'Veba Doktoru',n:'Kara Şövalye',a:'Solmuş Kraliçe',s:'Büyücü',e:'Buz Devi',m:'Ölümün Efendisi',w:'Cadı',l:'Kurt Adam',v:'Vampir',u:'BİLİNMEYEN'};
-const avKey=(S,p)=>{if(p===0)return (S.hero&&S.hero[0])||MY_HERO||'c';if(MODE=='bot')return (S.hero&&S.hero[1])||{easy:'c',med:'p',hard:'m',imp:'u'}[DIFF];return (S.hero&&S.hero[p])||(S.av&&S.av[p])||'c'};
+const avKey=(S,p)=>{if(p===0)return (S.hero&&S.hero[0])||MY_HERO||'c';if(MODE=='bot')return (S.hero&&S.hero[1])||'c';return (S.hero&&S.hero[p])||(S.av&&S.av[p])||'c'};
 const HD_PORTRAITS={
   c:'corrupted_merchant.jpg?v=20261116_t21',
   p:'plague_doctor.jpg?v=20261116_t21',
@@ -1592,6 +1598,24 @@ function execRewind(S,p){
   snd('flip');R();
   playHeroPowerAnim('c',p,HERO_MAP.c);
 }
+function execPlague(S,p,idx){
+  if(idx<0||idx>=S.hand[p].length)return;
+  const burned=S.hand[p].splice(idx,1)[0];
+  const drawn=[];
+  for(let k=0;k<2&&S.jdeck.length;k++){
+    const rIdx=Math.floor(Math.random()*S.jdeck.length);
+    drawn.push(S.jdeck.splice(rIdx,1)[0]);
+  }
+  S.hand[p].push(...drawn);
+  S.hpUsed=S.hpUsed||[false,false];S.hpUsed[p]=true;S.acted=true;S.graceLeft=0;
+  S.log.push({p,t:`Vebalı Takas kullandı (${J[burned]} yaktı, ${drawn.length} joker çekti)`});
+}
+function execWolf(S,p){
+  const destroyRand=side=>{const pool=S.pl[side].open.length?S.pl[side].open:S.pl[side].closed;return pool.length?pool.splice(Math.floor(Math.random()*pool.length),1)[0]:null};
+  destroyRand(0);destroyRand(1);
+  S.hpUsed=S.hpUsed||[false,false];S.hpUsed[p]=true;S.acted=true;S.graceLeft=0;
+  S.log.push({p,t:'Kanlı Dolunay kullandı (İki taraftan 1\'er kart imha edildi)'});
+}
 function useHeroPower(){
   const S=G;if(!S||S.over||S.wait||S.turn!==0||lock||P||(S.hpUsed&&S.hpUsed[0]))return;
   S.hpUsed=S.hpUsed||[false,false];
@@ -1612,15 +1636,7 @@ function useHeroPower(){
         if(idx<0||idx>=S.hand[0].length)return;
         $('#m').hidden=true;lock=false;snd('play');
         if(MODE==='guest'){S.hpUsed[0]=true;R();return conn.send({k:'hp_plague',idx});}
-        const burned=S.hand[0].splice(idx,1)[0];
-        const drawn=[];
-        for(let k=0;k<2&&S.jdeck.length;k++){
-          const rIdx=Math.floor(Math.random()*S.jdeck.length);
-          drawn.push(S.jdeck.splice(rIdx,1)[0]);
-        }
-        S.hand[0].push(...drawn);
-        S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
-        S.log.push({p:0,t:`Vebalı Takas kullandı (${J[burned]} yaktı, ${drawn.length} joker çekti)`});R();
+        execPlague(S,0,idx);R();
       };
     });
   }else if(hid==='a'){
@@ -1641,10 +1657,7 @@ function useHeroPower(){
   }else if(hid==='l'){
     if(!(S.pl[0].open.length||S.pl[0].closed.length)||!(S.pl[1].open.length||S.pl[1].closed.length))return box('<h3>Kanlı Dolunay</h3><p>İmha edilecek yeterli kart yok.</p>');
     if(MODE==='guest'){S.hpUsed[0]=true;snd('play');R();return conn.send({k:'hp_wolf'})}
-    const destroyRand=side=>{const pool=S.pl[side].open.length?S.pl[side].open:S.pl[side].closed;return pool.length?pool.splice(Math.floor(Math.random()*pool.length),1)[0]:null};
-    destroyRand(0);destroyRand(1);
-    S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
-    S.log.push({p:0,t:'Kanlı Dolunay kullandı (İki taraftan 1\'er kart imha edildi)'});snd('play');R();
+    execWolf(S,0);snd('play');R();
   }else{
     return;
   }
