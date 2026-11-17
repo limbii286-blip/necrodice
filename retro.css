@@ -2647,23 +2647,23 @@ body.dragging-joker #fx::after {
   }
   #fx .jh {
     min-width: 0;
-    gap: 3px;
+    gap: 2px;
     flex-wrap: nowrap !important;
     align-items: center;
   }
   #fx .jh.o {
-    padding-left: 58px !important;
+    padding-left: 62px !important;
     padding-right: 23px !important;
   }
   #fx .jh.m {
     padding-left: 23px !important;
-    padding-right: 92px !important;
+    padding-right: 102px !important;
   }
   #fx .e {
-    flex: 0 1 35px !important;
+    flex: 0 1 30px !important;
     min-width: 0 !important;
-    width: 35px !important;
-    max-width: 35px !important;
+    width: 30px !important;
+    max-width: 30px !important;
     height: auto !important;
     aspect-ratio: 1 / 1 !important;
   }
