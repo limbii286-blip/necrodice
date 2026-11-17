@@ -3233,6 +3233,27 @@ body.dragging-joker #fx::after {
 .hp-cast-fx.opp .hp-cast-pop {
   top: 38px;
   border-color: #ef4444;
+}
+.hp-tip-jcard {
+  display: block;
+  width: 148px;
+  height: auto;
+  aspect-ratio: 120 / 170;
+  margin: 10px auto 2px;
+  border-radius: 9px;
+  border: 2px solid #d4af64;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.92), 0 0 14px rgba(212, 168, 85, 0.35);
+}
+.hp-mc-jcard {
+  display: block;
+  width: min(195px, 54vw);
+  height: auto;
+  aspect-ratio: 120 / 170;
+  margin: 4px auto 6px;
+  border-radius: 10px;
+  border: 2px solid #d4af64;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.94), 0 0 18px rgba(212, 168, 85, 0.45);
+}
   color: #fecaca;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.92), 0 0 18px rgba(220, 38, 38, 0.55);
 }

@@ -1653,7 +1653,7 @@ function preview(id,use,note,back){ // jokeri büyük göster: Kullan / Kapat
   $('#pc').onclick=()=>{if(back)return back();$('#m').hidden=true;lock=false;if(G)R()};
   if(use)$('#pu').onclick=()=>{$('#m').hidden=true;lock=false;startJoker(id)};
 }
-function codex(){box(`<h3>Joker Kodeksi</h3><div class="cdx">${range(25).map(i=>`<img src="${IMG.j[i]}" data-k="${i}" alt="${J[i]}">`).join('')}</div>`);
+function codex(){box(`<h3>Joker Kodeksi</h3><div class="cdx">${range(24).map(i=>`<img src="${IMG.j[i]}" data-k="${i}" alt="${J[i]}">`).join('')}</div>`);
   document.querySelectorAll('#mb .cdx img').forEach(im=>im.onclick=()=>preview(+im.dataset.k,false,BLOCK.has(+im.dataset.k)?'Etkisiz kılınabilir':'Etkisiz kılınamaz',codex))}
 function guide(){box(`<h3>Nasıl oynanır</h3>
 <p class="gd"><b>Amaç:</b> tur sonunda açık ve kapalı kartlarının toplamı <b>hedefe</b> (normalde 21) rakibinden daha yakın olsun. Hedefi aşarsan turu kaybedersin. İkiniz de aşarsanız tur berabere biter.</p>
@@ -1734,7 +1734,8 @@ document.addEventListener('click',e=>{
       const isUsed=t.classList.contains('used'),isReady=t.classList.contains('ready');
       const tagTxt=h.passive?(isUsed?'Pasif · Tükendi':'Pasif'):(isUsed?'Aktif, Kullanıldı':'Aktif, Her Düelloda 1 Kez');
       const canUse=side===0&&!h.passive&&isReady&&S.turn===0&&!S.wait&&MODE!=='spectator'&&!P;
-      box(`<div class="hp-mobile-card ${side===1?'opp':'mine'}${h.passive?' passive':''}${isUsed?' used':''}"><div class="hp-mc-ic">${HP_IC[hid]||HP_IC.c}</div><div class="hp-tip-title">${h.hpName}</div><div class="hp-tip-tag">${tagTxt}</div><p class="hp-tip-desc">${h.desc}</p>${canUse?'<div class="row"><button id="hp-mob-use" class="btn alt">Kullan</button><button id="pc" class="btn">Kapat</button></div>':''}</div>`, !canUse);
+      const thiefCard=hid==='s'&&IMG.j[25]?`<img class="hp-mc-jcard" src="${IMG.j[25]}" alt="Hırsız">`:'';
+      box(`<div class="hp-mobile-card ${side===1?'opp':'mine'}${h.passive?' passive':''}${isUsed?' used':''}"><div class="hp-mc-ic">${HP_IC[hid]||HP_IC.c}</div><div class="hp-tip-title">${h.hpName}</div><div class="hp-tip-tag">${tagTxt}</div><p class="hp-tip-desc">${h.desc}</p>${thiefCard}${canUse?'<div class="row"><button id="hp-mob-use" class="btn alt">Kullan</button><button id="pc" class="btn">Kapat</button></div>':''}</div>`, !canUse);
       if(canUse){
         $('#hp-mob-use').onclick=()=>{$('#m').hidden=true;lock=false;useHeroPower()};
         $('#pc').onclick=()=>{$('#m').hidden=true;lock=false;R()};
@@ -2589,8 +2590,9 @@ function createSmoothDragLoop(onFrame){
       tip.className='hp-tip';
       document.body.appendChild(tip);
     }
+    const thiefCard=hid==='s'&&IMG.j[25]?`<img class="hp-tip-jcard" src="${IMG.j[25]}" alt="Hırsız">`:'';
     tip.className=`hp-tip ${side===1?'opp':'mine'}${h.passive?' passive':''}${isUsed?' used':''}`;
-    tip.innerHTML=`<div class="hp-tip-head"><div class="hp-tip-title">${h.hpName}</div><div class="hp-tip-tag">${tagTxt}</div></div><div class="hp-tip-desc">${h.desc}</div>`;
+    tip.innerHTML=`<div class="hp-tip-head"><div class="hp-tip-title">${h.hpName}</div><div class="hp-tip-tag">${tagTxt}</div></div><div class="hp-tip-desc">${h.desc}</div>${thiefCard}`;
     const r=btn.getBoundingClientRect();
     const tw=tip.offsetWidth||290,th=tip.offsetHeight||120;
     const left=Math.max(10,Math.min(window.innerWidth-tw-10,r.left+r.width/2-tw/2));
