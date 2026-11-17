@@ -248,12 +248,12 @@ body:has(#menu:not([hidden])) #fl {
 
 .hs-title {
   margin: 0 !important;
-  width: min(92%, 440px);
+  width: min(92%, 450px);
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 1 !important;
-  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.92)) drop-shadow(0 0 22px rgba(242, 185, 75, 0.35));
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.94)) drop-shadow(0 0 22px rgba(207, 46, 60, 0.42)) drop-shadow(0 0 12px rgba(212, 168, 85, 0.28));
 }
 
 .hs-wordmark-svg {
@@ -278,21 +278,40 @@ body:has(#menu:not([hidden])) #fl {
 }
 
 .hs-wordmark-svg .hs-wm-depth2 {
-  fill: #0d0603;
-  stroke: #0d0603;
-  stroke-width: 10.5px;
+  fill: #070304;
+  stroke: #070304;
+  stroke-width: 11px;
 }
 
 .hs-wordmark-svg .hs-wm-depth1 {
-  fill: #3d1d08;
-  stroke: #2c1305;
-  stroke-width: 9px;
+  fill: #240c0d;
+  stroke: #1b090a;
+  stroke-width: 9.5px;
+}
+
+.hs-wordmark-svg .hs-wm-trim {
+  fill: none;
+  stroke: url(#hsGoldTrim);
+  stroke-width: 6px;
 }
 
 .hs-wordmark-svg .hs-wm-face {
-  fill: url(#hsGoldFill);
-  stroke: #220e04;
-  stroke-width: 7px;
+  stroke: #140806;
+  stroke-width: 3px;
+}
+
+.hs-wordmark-svg .hs-wm-necro {
+  fill: url(#hsBoneGold);
+}
+
+.hs-wordmark-svg .hs-wm-dice {
+  fill: url(#hsBloodRuby);
+}
+
+.hs-wordmark-svg .hs-wm-sheen {
+  fill: url(#hsFireSweep);
+  stroke: none;
+  pointer-events: none;
 }
 
 .hs-ribbon {
