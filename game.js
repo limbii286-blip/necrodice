@@ -1,7 +1,7 @@
 // NECRODICE - motor + bot + arayüz (online mod için motor UI'dan ayrı tutuldu)
 const $=s=>document.querySelector(s);
 const setH=(sel,h)=>{const e=$(sel);if(e&&e._h!==h){e.innerHTML=h;e._h=h}}; // aynı içerik tekrar yazılmaz: animasyon/titreme olmaz
-const TH=[4,9,15,18],EK={4:'e',9:'a',15:'e',18:'e'}; // D20 hayatta kalma eşikleri: 4'e, 9'a, 15'e, 18'e (BG3 DC mantığı)
+const TH=[4,8,14,18],EK={4:'e',8:'e',14:'e',18:'e'}; // D20 hayatta kalma eşikleri: 4, 8, 14, 18 (BG3 DC mantığı)
 const BLOCK=new Set([1,2,3,4,8,9,10,11,19,20,21,22,23]); // blok sembollü jokerler
 const J=['','Tekler ×2','Çiftler ÷2','+5','−5','Rakip kart çeker','Kart → 0','Kart → 12','Hedef 27','Hedef 24','Hedef 17','Hedef 15','Joker etkisiz','Kendi kartını imha','Rakip kartını imha','Açık kart takası','Kapalı kart takası','Kart çal','Kart hediye','En az kazanır','Kapalılar sayılmaz','Kapalılar ×2','Deste sayısı ±','Rakip kart çekemez','Rakip joker kullanamaz','Hırsız'];
 const NEED={6:['any'],7:['any'],12:['eff'],13:['my'],14:['opp'],15:['my','opp'],17:['opp'],18:['my'],22:['sign'],25:['steal_j']};
