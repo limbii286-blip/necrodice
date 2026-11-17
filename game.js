@@ -392,8 +392,8 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı animas
 }
 
 /* ---------- MOTOR ---------- */
-const DUEL_CLOCK_INIT=44; // Her tur için iki tarafın da 44 saniyesi vardır
-const ONLINE_CLOCK_INIT=44;
+const DUEL_CLOCK_INIT=33; // Her sırası gelen oyuncunun 33 saniyesi vardır
+const ONLINE_CLOCK_INIT=33;
 const initClockSec=()=>((MODE==='host'||MODE==='guest'||MODE==='spectator')?ONLINE_CLOCK_INIT:DUEL_CLOCK_INIT);
 const GRACE_INIT=5;       // İlk düello ve geçişlerde jokerlere bakmak için 5 saniye hazırlık süresi
 function newBO3(S){
@@ -556,7 +556,7 @@ function bo3v(T,p,r){ // tur sonucu r (p açısından) -> düelloyu kazanma değ
   return Math.max(-.9,Math.min(.9,.55*(np-nq)+.03*(T.hand[p].length-T.hand[q].length)))}
 function rollout(T,p,a,pol){
   let actor=p,n=0;
-  const doPass=()=>{if((T.timeOut&&T.timeOut[1-T.turn])||(T.turns>0&&!T.acted))return true;(T.pa=T.pa||[0,0])[actor]++;T.turns++;T.acted=false;T.turn=1-T.turn;(T.jTurn=T.jTurn||[0,0])[T.turn]=0;actor=T.turn;n=0;return false};
+  const doPass=()=>{if(T.turns>0&&!T.acted)return true;(T.pa=T.pa||[0,0])[actor]++;T.turns++;T.acted=false;T.turn=1-T.turn;(T.jTurn=T.jTurn||[0,0])[T.turn]=0;actor=T.turn;n=0;return false};
   const doAct=(x,who)=>{if(x.t=='d')T.pl[who].open.push(T.deck.pop());else play(T,who,x.id,x.pk);T.acted=true};
   const fin=()=>pol.bo3?bo3v(T,p,outc(T,p)):outc(T,p);
   if(!a){if(doPass())return fin()}else{doAct(a,p);n=1}
@@ -641,14 +641,18 @@ function pass(fromTimeout=false){
   S.log.push({p:S.turn,t:fromTimeout?'süresi bitti — sıra rakibe geçti':'pas dedi'});
   if(S.turn==1&&!fromTimeout)talk('pass',0,.35);
   const opp=1-S.turn;
-  if(fromTimeout&&S.timeOut&&S.timeOut[opp]){
-    S.wait=true;lock=true;R();
-    setTimeout(()=>{if(S===G)endRound()},1000);
-    return;
+  if(S.turns>0&&!S.acted){
+    if(fromTimeout){
+      S.wait=true;lock=true;R();
+      setTimeout(()=>{if(S===G)endRound()},1000);
+      return;
+    }
+    return endRound();
   }
-  // Karşı tarafın süresi zaten bittiyse (sıra tekrar süresi bitene geçmez!) veya normal iki pas olduysa tur biter:
-  if((S.timeOut&&S.timeOut[opp])||(!fromTimeout&&S.turns>0&&!S.acted))return endRound();
-  (S.pa=S.pa||[0,0])[S.turn]++;S.turns++;S.acted=false;S.turn=opp;(S.jTurn=S.jTurn||[0,0])[S.turn]=0;R();next();
+  (S.pa=S.pa||[0,0])[S.turn]++;S.turns++;S.acted=false;S.turn=opp;(S.jTurn=S.jTurn||[0,0])[S.turn]=0;
+  S.clocks=S.clocks||[initClockSec(),initClockSec()];S.clocks[opp]=initClockSec();
+  S.timeOut=S.timeOut||[false,false];S.timeOut[opp]=false;
+  R();next();
 }
 function next(){if(MODE=='bot'&&G.turn==1&&!lock&&!G.over)bot()}
 function M(html,btn,cb,end){lock=true;$('#mb').innerHTML=html+(btn?`<br><br><button id="mo" class="btn">${btn}</button>`:end?'':'<br><i>Oda sahibinin devam etmesi bekleniyor…</i>')+(end?'<br><br><button id="mx" class="btn alt">Ana menüye dön</button>':'');$('#m').hidden=false;
@@ -1379,7 +1383,7 @@ function R(){
     const jim=pr.querySelector('.pr-jcard');
     if(jim)hi(jim,P.id);
   }
-  const ends=(S.turns>0&&!S.acted)||oppTimeOut; // rakibin süresi bittiyse veya karşı taraf pas dediyse şimdi pas dersem tur biter
+  const ends=S.turns>0&&!S.acted; // karşı taraf hamle yapmadan pas/süre bitirdiyse şimdi pas dersem tur biter
   $('#pass').disabled=isSpec||!(my&&!P);
   if(isSpec){
     $('#pass').style.display='none';
