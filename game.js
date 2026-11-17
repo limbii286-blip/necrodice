@@ -622,7 +622,7 @@ function bot(){
     thinkOn=false;
     if(S.hpUsed&&!S.hpUsed[1]){
       const bh=avKey(S,1),bt=total(S,1),bT=tg(S),low=lowW(S);
-      if(bh==='c'&&S.cWins&&S.cWins[1]>=3&&!low&&bt>bT){
+      if(bh==='c'&&S.cWins&&S.cWins[1]>=4&&!low&&bt>bT){
         execRewind(S,1);return think(AFTER[DIFF]);
       }
     }
@@ -998,7 +998,7 @@ function endRound(){
   let r=outc(S,0),tankedSide=-1,vampWinSide=-1;
   if(r!==0){
     const loser=r<0?0:1;
-    if(avKey(S,loser)==='e'&&Math.random()<0.25){
+    if(avKey(S,loser)==='e'&&Math.random()<0.20){
       r=0;tankedSide=loser;
       S.log.push({p:loser,t:'Kadim Direnç! Hasarı savuşturup turu berabereye çevirdi!'});
     }
@@ -1095,15 +1095,15 @@ function veil(ms=2000){const v=document.createElement('div');v.className='veil';
 function enter(fn){if(entering)return;entering=true;veil();setMusic('game');setTimeout(()=>{$('#menu').hidden=true;entering=false;fn()},1700)}
 let MY_HERO='c',OPP_HERO='n';
 const HEROES=[
-  {id:'c',name:'Lanetli Tüccar',hpName:'Zamanın İadesi',desc:'3 tur galibiyet elde ettiğinde aktifleşir. Kullanıldığında masadaki tüm sayı kartları desteye geri karıştırılır. Kullanılmış Joker kartları yakılır ve yeni bir sayı kartı destesi dağıtılır.'},
-  {id:'p',name:'Veba Doktoru',hpName:'Vebalı Takas',desc:'Elindeki 1 Joker kartını yakarak desteden rastgele 2 yeni Joker kartı çek. (Bu tur 1 joker hakkı harcar.)'},
+  {id:'c',name:'Lanetli Tüccar',hpName:'Zamanın İadesi',desc:'4 tur galibiyet elde ettiğinde aktifleşir. Kullanıldığında masadaki tüm sayı kartları desteye geri karıştırılır. Kullanılmış Joker kartları yakılır ve yeni bir sayı kartı destesi dağıtılır.'},
+  {id:'p',name:'Veba Doktoru',hpName:'Vebalı Takas',desc:'Elindeki 1 Joker kartını yakarak desteden rastgele 2 yeni Joker kartı çek.'},
   {id:'n',name:'Kara Şövalye',passive:true,hpName:'Ölüm Fermanı',desc:'Rakibinin attığı her Ölüm Zarı sonucundan 2 çıkar.'},
   {id:'a',name:'Solmuş Kraliçe',hpName:'Yitik Yazgı',desc:'Destenin en üstündeki 2 kartı gizlice incele. Dilersen bu kartların yerlerini değiştir.'},
   {id:'s',name:'Büyücü',passive:true,hpName:'Gölge Hırsızı',desc:'Oyuna 1 adet Hırsız Jokeri ile başla.'},
-  {id:'e',name:'Buz Devi',passive:true,hpName:'Kadim Direnç',desc:'Kaybettiğin her turda %25 ihtimalle gelen hasarı tamamen savuşturur ve turu beraberliğe dönüştürür.'},
+  {id:'e',name:'Buz Devi',passive:true,hpName:'Kadim Direnç',desc:'Kaybettiğin her turda %20 ihtimalle gelen hasarı tamamen savuşturur ve turu beraberliğe dönüştürür.'},
   {id:'m',name:'Ölümün Efendisi',passive:true,hpName:'Ölümün Takdiri',desc:'Attığın her Ölüm Zarı sonucuna +2 bonus kazan.'},
   {id:'w',name:'Cadı',hpName:'Kuzgunun Kehaneti',desc:'Rakibinin kapalı sayı kartını gizlice incele.'},
-  {id:'l',name:'Kurt Adam',hpName:'Kanlı Dolunay',desc:'Kendi seçtiğin 1 sayı kartını ve rakibin masadaki rastgele 1 sayı kartını imha et.'},
+  {id:'l',name:'Kurt Adam',hpName:'Kanlı Dolunay',desc:'Her iki oyuncunun da masadaki rastgele 1 sayı kartını imha et.'},
   {id:'v',name:'Vampir',passive:true,hpName:'Kanla Mühürlenen Kader',desc:'İlk beraberlikte turu kazanmış sayılırsın. Bu güç oyun boyunca yalnızca 1 kez kullanılabilir.'},
   {id:'u',name:'Bilinmeyen',passive:true,bossOnly:true,hpName:'Hiçlikten Dönüş',desc:'Ölüm zarında hedef sayının altında atarsan, ölümden bir kereliğine geri dönersin.'}
 ];
@@ -1353,9 +1353,9 @@ function R(){
   const hpUsed0=myHId==='u'?!!(S.uRevived&&S.uRevived[0]):myHId==='v'?!!(S.vampUsed&&S.vampUsed[0]):(myHId==='m'||myHId==='e'||myHId==='n'||myHId==='s')?false:!!(S.hpUsed&&S.hpUsed[0]);
   const hpUsed1=oppHId==='u'?!!(MODE==='bot'?S.rigDone:(S.uRevived&&S.uRevived[1])):oppHId==='v'?!!(S.vampUsed&&S.vampUsed[1]):(oppHId==='m'||oppHId==='e'||oppHId==='n'||oppHId==='s'||oppHId==='w'||oppHId==='a')?false:!!(S.hpUsed&&S.hpUsed[1]);
   const hpObj0=HERO_MAP[myHId]||HEROES[0],hpObj1=HERO_MAP[oppHId]||HEROES[0];
-  const cWins0=(S.cWins&&S.cWins[0])||0,cReady=myHId!=='c'||cWins0>=3;
+  const cWins0=(S.cWins&&S.cWins[0])||0,cReady=myHId!=='c'||cWins0>=4;
   const canHp=!isSpec&&!hpObj0.passive&&my&&!P&&!hpUsed0&&cReady;
-  const cProg=(myHId==='c'&&!hpUsed0&&!cReady)?`<i class="hp-prog">${cWins0}/3</i>`:'';
+  const cProg=(myHId==='c'&&!hpUsed0&&!cReady)?`<i class="hp-prog">${cWins0}/4</i>`:'';
   const isMob=window.matchMedia&&window.matchMedia('(max-width: 760px), (hover: none) and (pointer: coarse)').matches;
   const hpBtn0=isSpec?'':`<button id="hp-btn" class="hp-btn${hpObj0.passive?' passive':''}${hpUsed0?' used':canHp?' ready':''}" data-hp="1" data-hp-id="${myHId}" data-hp-side="0"${(canHp||isMob)?'':' disabled'}>${HP_IC[myHId]||HP_IC.c}${cProg}</button>`;
   const hpBtn1=`<span class="hp-btn opp-hp${hpObj1.passive?' passive':''}${hpUsed1?' used':''}" data-hp-id="${oppHId}" data-hp-side="1">${HP_IC[oppHId]||HP_IC.c}</span>`;
@@ -1380,8 +1380,8 @@ function R(){
     setH('#prompt','');
   }else if(P.hp==='u'){
     setH('#prompt',`<div class="pr-box"><div class="pr-txt">Hiçlik Değişimi: ${KTXT[k]}</div><div class="pr-btns"><button class="btn sm alt" data-x="1">Vazgeç</button></div></div>`);
-  }else if(P.hp==='l'){
-    setH('#prompt',`<div class="pr-box"><div class="pr-txt">Kanlı Dolunay: İmha etmek istediğin kendi sayı kartını seç</div><div class="pr-btns"><button class="btn sm alt" data-x="1">Vazgeç</button></div></div>`);
+  }else if(P.hp==='a'){
+    setH('#prompt',`<div class="pr-box"><div class="pr-txt">Dönüşüm İksiri: Destenin en üstüyle değiştireceğin kendi sayı kartını seç</div><div class="pr-btns"><button class="btn sm alt" data-x="1">Vazgeç</button></div></div>`);
   }else{
     const btns=k==='sign'?'<button class="btn sm" data-s="1">Ekle (+)</button><button class="btn sm" data-s="-1">Çıkar (−)</button>':'';
     setH('#prompt',`<div class="pr-card-wrap"><img class="pr-jcard" src="${IMG.j[P.id]}" alt="${J[P.id]||''}"></div><div class="pr-box"><div class="pr-title">${J[P.id]}</div><div class="pr-txt">${KTXT[k]}</div><div class="pr-btns">${btns}<button class="btn sm alt" data-x="1">Vazgeç</button></div></div>`);
@@ -1473,22 +1473,7 @@ function execAlchSwap(cid){
     }
   }
 }
-function execWolfSwap(p,cid){
-  const S=G;if(!S)return;
-  const opp=1-p;
-  let removedMy=false;
-  for(const arr of [S.pl[p].open,S.pl[p].closed]){
-    const idx=arr.findIndex(c=>c.id===cid);
-    if(idx>=0){arr.splice(idx,1);removedMy=true;break}
-  }
-  if(!removedMy)return;
-  const pool=S.pl[opp].open.length?S.pl[opp].open:S.pl[opp].closed;
-  if(pool.length)pool.splice(Math.floor(Math.random()*pool.length),1);
-  S.hpUsed=S.hpUsed||[false,false];S.hpUsed[p]=true;S.acted=true;S.graceLeft=0;
-  S.log.push({p,t:'Kanlı Dolunay kullandı (Seçtiği kartı ve rakipten 1 kartı imha etti)'});
-  snd('play');R();
-}
-function pick(v){if(P&&P.hp==='u'){const id=v;P=null;return execSwapDeckHeroPower(0,id)}if(P&&P.hp==='a'){const id=v;P=null;return execAlchSwap(id)}if(P&&P.hp==='l'){const id=v;P=null;if(MODE==='guest'){G.hpUsed[0]=true;snd('play');R();return conn.send({k:'hp_wolf',cid:id})}return execWolfSwap(0,id)}P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
+function pick(v){if(P&&P.hp==='u'){const id=v;P=null;return execSwapDeckHeroPower(0,id)}if(P&&P.hp==='a'){const id=v;P=null;return execAlchSwap(id)}P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
 function startJoker(id){const ks=NEED[id]||[];if(ks.length){P={id,ks,pk:[]};R()}else doPlay(id,[])}
 const HERO_FOCUS={c:'44% 28%',p:'56% 24%',n:'64% 25%',a:'50% 24%',s:'48% 25%',e:'52% 28%',m:'50% 30%',w:'45% 23%',l:'68% 28%',v:'50% 25%'};
 function chooseHero(onPick,onCancel){
@@ -1550,15 +1535,14 @@ function useHeroPower(){
   const hid=avKey(S,0);
   if(hid==='c'){
     const wins=(S.cWins&&S.cWins[0])||0;
-    if(wins<3)return box(`<h3>Zamanın İadesi</h3><p>3 tur galibiyet elde ettiğinde aktifleşir. (Şu an: ${wins}/3)</p>`);
+    if(wins<4)return box(`<h3>Zamanın İadesi</h3><p>4 tur galibiyet elde ettiğinde aktifleşir. (Şu an: ${wins}/4)</p>`);
     if(MODE==='guest'){S.hpUsed[0]=true;snd('flip');R();return conn.send({k:'hp_rewind'})}
     execRewind(S,0);
   }else if(hid==='p'){
     if(!S.hand[0].length)return box('<h3>Vebalı Takas</h3><p>Elinde yakılacak Joker kartı yok.</p>');
     if(!S.jdeck.length)return box('<h3>Vebalı Takas</h3><p>Joker destesinde çekilecek kart kalmadı.</p>');
-    if(S.jUsed&&S.jUsed[0]>=2)return box('<h3>Vebalı Takas</h3><p>Bu tur 2 joker hakkını zaten kullandın.</p>');
     const jBtns=S.hand[0].map((jid,i)=>`<button class="btn sm" data-pburn="${i}">${J[jid]}</button>`).join('');
-    box(`<h3>Vebalı Takas</h3><p>Yakmak istediğin Joker kartını seç (desteden rastgele 2 yeni Joker çekeceksin, 1 joker hakkı harcar):</p><div class="row" style="flex-wrap:wrap;gap:8px">${jBtns}</div>`, true);
+    box(`<h3>Vebalı Takas</h3><p>Yakmak istediğin Joker kartını seç (desteden rastgele 2 yeni Joker çekeceksin):</p><div class="row" style="flex-wrap:wrap;gap:8px">${jBtns}</div>`, true);
     document.querySelectorAll('[data-pburn]').forEach(btn=>{
       btn.onclick=()=>{
         const idx=+btn.dataset.pburn;
@@ -1572,7 +1556,6 @@ function useHeroPower(){
           drawn.push(S.jdeck.splice(rIdx,1)[0]);
         }
         S.hand[0].push(...drawn);
-        S.jUsed=S.jUsed||[0,0];S.jUsed[0]++;
         S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
         S.log.push({p:0,t:`Vebalı Takas kullandı (${J[burned]} yaktı, ${drawn.length} joker çekti)`});R();
       };
@@ -1594,7 +1577,11 @@ function useHeroPower(){
     snd('flip');R();
   }else if(hid==='l'){
     if(!(S.pl[0].open.length||S.pl[0].closed.length)||!(S.pl[1].open.length||S.pl[1].closed.length))return box('<h3>Kanlı Dolunay</h3><p>İmha edilecek yeterli kart yok.</p>');
-    P={hp:'l',ks:['my_all'],pk:[]};R();
+    if(MODE==='guest'){S.hpUsed[0]=true;snd('play');R();return conn.send({k:'hp_wolf'})}
+    const destroyRand=side=>{const pool=S.pl[side].open.length?S.pl[side].open:S.pl[side].closed;return pool.length?pool.splice(Math.floor(Math.random()*pool.length),1)[0]:null};
+    destroyRand(0);destroyRand(1);
+    S.hpUsed[0]=true;S.acted=true;S.graceLeft=0;
+    S.log.push({p:0,t:'Kanlı Dolunay kullandı (İki taraftan 1\'er kart imha edildi)'});snd('play');R();
   }else{
     return;
   }
@@ -1943,7 +1930,7 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
   }
   else if(m.k=='hp_rewind'){
     S.hpUsed=S.hpUsed||[false,false];
-    if(avKey(S,1)!=='c'||S.hpUsed[1]||!(S.cWins&&S.cWins[1]>=3))return;
+    if(avKey(S,1)!=='c'||S.hpUsed[1]||!(S.cWins&&S.cWins[1]>=4))return;
     execRewind(S,1);
   }
   else if(m.k=='hp_peek'){
@@ -1955,7 +1942,7 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
   }
   else if(m.k=='hp_plague'){
     S.hpUsed=S.hpUsed||[false,false];
-    if(avKey(S,1)!=='p'||S.hpUsed[1]||(S.jUsed&&S.jUsed[1]>=2))return;
+    if(avKey(S,1)!=='p'||S.hpUsed[1])return;
     const idx=m.idx|0;
     if(idx<0||idx>=S.hand[1].length||!S.jdeck.length)return;
     S.hand[1].splice(idx,1);
@@ -1965,15 +1952,34 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
       drawn.push(S.jdeck.splice(rIdx,1)[0]);
     }
     S.hand[1].push(...drawn);
-    S.jUsed=S.jUsed||[0,0];S.jUsed[1]++;
     S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
     S.log.push({p:1,t:`Vebalı Takas kullandı (1 joker yaktı, ${drawn.length} joker çekti)`});
     R();
   }
+  else if(m.k=='hp_alch'){
+    if(avKey(S,1)!=='a'||(S.hpUsed&&S.hpUsed[1])||!S.pl[1].open.length||!S.deck.length)return;
+    const idx=S.pl[1].open.length-1,old=S.pl[1].open[idx],rep=S.deck.pop();
+    S.pl[1].open[idx]=rep;S.deck.push(old);
+    S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
+    S.log.push({p:1,t:'Dönüşüm İksiri kullandı'});
+    R();
+  }
+  else if(m.k=='hp_witch'){
+    S.hpUsed=S.hpUsed||[false,false];
+    if(avKey(S,1)!=='w'||S.hpUsed[1])return;
+    const dlt=m.delta>0?3:-3;
+    S.hpTgMod=(S.hpTgMod||0)+dlt;S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
+    S.log.push({p:1,t:`Kara Büyü kullandı (Hedef ${dlt>0?'+3':'−3'} → ${tg(S)})`});
+    R();
+  }
   else if(m.k=='hp_wolf'){
     S.hpUsed=S.hpUsed||[false,false];
-    if(avKey(S,1)!=='l'||S.hpUsed[1]||!m.cid)return;
-    execWolfSwap(1,m.cid);
+    if(avKey(S,1)!=='l'||S.hpUsed[1])return;
+    const destroyRand=side=>{const pool=S.pl[side].open.length?S.pl[side].open:S.pl[side].closed;return pool.length?pool.splice(Math.floor(Math.random()*pool.length),1)[0]:null};
+    destroyRand(0);destroyRand(1);
+    S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
+    S.log.push({p:1,t:'Kanlı Dolunay kullandı (İki taraftan 1\'er kart imha edildi)'});
+    R();
   }
   else if(m.k=='hp_vamp'){
     S.hpUsed=S.hpUsed||[false,false];
