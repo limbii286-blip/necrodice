@@ -481,10 +481,10 @@ const PR={
   easy:{rand:.25,noise:.35,jc:.45,jp:.4,dm:.05,depth:0},
   med:{rand:.01,noise:.06,jc:.2,jp:1,dm:.03,depth:0},
   hard:{rand:0,noise:0,jc:.2,jl:.08,jp:1,dm:.02,depth:2,beta:0,gap:6,mc:1,K:500,ms:2200,top:4,rjp:.5,hero:1},
-  imp:{rand:0,noise:0,jc:.1,jl:.05,jp:1,dm:.02,depth:2,beta:.7,gap:7,mc:1,K:30000,ms:7200,top:6,rjp:.7,bo3:1,pf:1,learn:1,hero:1} // imkansız: düello (BO3) skorunu, kahraman güçlerini ve joker eşitlik kuralını hesaba katar
+  imp:{rand:0,noise:0,jc:.08,jl:.03,jp:1,dm:.015,depth:2,beta:.75,gap:7,mc:1,K:35000,ms:7500,top:10,rjp:.85,bo3:1,pf:1,learn:1,hero:1,deepRoll:1} // imkansız: derin tarama, tam kombo ve kahraman ustalığı
 };
 let DIFF='med';
-const unk=(S,p)=>{const seen=new Set([...S.pl[p].open,...S.pl[p].closed,...S.pl[1-p].open,...(S.dead||[])].map(c=>c.n));return range(11).filter(n=>!seen.has(n))};
+const unk=(S,p)=>{const seen=new Set([...S.pl[p].open,...S.pl[p].closed,...S.pl[1-p].open,...(S.dead||[])].map(c=>c.n));if(p===1&&S.botPeekVal!=null)seen.add(S.botPeekVal);return range(11).filter(n=>!seen.has(n))};
 let CUR=PR.med;
 function outcHero(S,p){
   let r=outc(S,p);
@@ -544,14 +544,19 @@ function listC(S,p,prm){
   CUR=prm;const d=prm.depth||0,out=[],pool=unk(S,p);
   out.push({a:null,v:evalS(clone(S),p)+prm.dm});
   if(canDraw(S,p)&&pool.length){let v=0;pool.forEach(x=>{const T=clone(S);T.log=[];T.deck.pop();T.pl[p].open.push({id:++T.u,n:x});v+=look(T,p,d)});out.push({a:{t:'d'},v:v/pool.length})}
-  const cost=S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc;
+  const matchPoint=S.rounds>=2||(S.pts&&(S.pts[0]>=1.5||S.pts[1]>=1.5));
+  const cost=matchPoint&&prm.deepRoll?0.015:(S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc);
+  const HI_THIEF=new Set([6,7,14,16,17,18,23,24]);
   if(!S.noJ[p])new Set(S.hand[p]).forEach(id=>{
     if(!playable(S,p,id))return;
     if(id==16){const T=clone(S);T.log=[];T.deck=shuf(pool.map(n=>({id:++T.u,n}))).slice(0,S.deck.length);play(T,p,id,[]);out.push({a:{t:'j',id,pk:[]},v:look(T,p,d)-cost});return}
     combos((NEED[id]||[]).map(k=>opts(S,p,k))).forEach(pk=>{
       if(id==15&&pk[0]==pk[1])return;
-      const T=clone(S);T.log=[];T.deck=shuf(pool.map(n=>({id:++T.u,n}))).slice(0,S.deck.length);play(T,p,id,pk);
-      out.push({a:{t:'j',id,pk},v:look(T,p,d)-cost})});
+      const T=clone(S);T.log=[];T.deck=shuf(pool.map(n=>({id:++T.u,n}))).slice(0,S.deck.length);
+      let bonus=0;
+      if(id===25&&prm.hero){const st=(S.pj||[]).find(e=>e.uid===pk[0]);if(st&&HI_THIEF.has(st.id))bonus=0.12}
+      play(T,p,id,pk);
+      out.push({a:{t:'j',id,pk},v:look(T,p,d)+bonus-(id===25?0:cost)})});
   });
   return out;
 }
@@ -633,9 +638,14 @@ function decideHA(S,p,prm,done){ // zaman dilimli Monte-Carlo: ekranı dondurmad
   if(!lowW(S)&&total(S,p,true)>=tg(S))all=all.filter(c=>!(c.a&&c.a.t=='d')); // hedefte/üstündeyken kart çekmek yalnızca batırır
   const pass=all.find(c=>!c.a),draw=all.find(c=>c.a&&c.a.t=='d');
   const top=all.slice(0,prm.top||4);[pass,draw].forEach(c=>{if(c&&!top.includes(c))top.push(c)});
-  all.filter(c=>c.a&&c.a.id==16&&!top.includes(c)).forEach(c=>top.push(c));
+  const TACTICAL=new Set([12,16,23,24,25]);
+  TACTICAL.forEach(tid=>{const bestT=all.find(c=>c.a&&c.a.id===tid&&!top.includes(c));if(bestT)top.push(bestT)});
   if(top.length==1)return done(top[0].a);
-  const cost=S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc,sum=top.map(()=>0),RP={...ROLL,...(prm.rjp!=null?{jp:prm.rjp}:{}),bo3:prm.bo3,hm:prm.learn&&LRN.ht>=15},K=prm.K||40,bud=prm.ms||0,t0=now();let k=0;
+  const matchPoint=S.rounds>=2||(S.pts&&(S.pts[0]>=1.5||S.pts[1]>=1.5));
+  const cost=matchPoint&&prm.deepRoll?0.015:(S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc);
+  const sum=top.map(()=>0),RP={...ROLL,...(prm.rjp!=null?{jp:prm.rjp}:{}),...(prm.deepRoll?{depth:1,jc:0.08,jl:0.04,jp:1}:{}),bo3:prm.bo3,hm:prm.learn&&LRN.ht>=15};
+  const clkMs=S.clocks&&S.clocks[p]!=null?Math.max(1200,Math.round(S.clocks[p]*220)):99999;
+  const K=prm.K||40,bud=Math.min(prm.ms||0,clkMs),t0=now();let k=0;
   if(prm.pf&&pass){top.splice(top.indexOf(pass),1);top.unshift(pass)} // eşitlikte paslamak öncelikli
   const fin=()=>{const sc=sum.map((v,i)=>v/Math.max(1,k)+(prm.w||0)*top[i].v);let bi=0;sc.forEach((v,i)=>{if(v>sc[bi]+1e-9)bi=i});done(top[bi].a)};
   const tick=()=>{const t1=now();
