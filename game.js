@@ -1123,7 +1123,7 @@ const avKey=(S,p)=>{if(p===0)return (S.hero&&S.hero[0])||MY_HERO||'c';if(MODE=='
 const HD_PORTRAITS={
   c:'corrupted_merchant.jpg?v=20261116_t21',
   p:'plague_doctor.jpg?v=20261116_t21',
-  n:'dark_knight.jpg?v=20261116_t21',
+  n:'dark_knight.jpg?v=20261116_t74',
   a:'shadow_alchemist.jpg?v=20261116_t21',
   s:'crimson_oracle.jpg?v=20261116_t21',
   e:'iron_executioner.jpg?v=20261116_t21',
@@ -1466,7 +1466,7 @@ function execAlchSwap(cid){
 }
 function pick(v){if(P&&P.hp==='u'){const id=v;P=null;return execSwapDeckHeroPower(0,id)}if(P&&P.hp==='a'){const id=v;P=null;return execAlchSwap(id)}P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
 function startJoker(id){const ks=NEED[id]||[];if(ks.length){P={id,ks,pk:[]};R()}else doPlay(id,[])}
-const HERO_FOCUS={c:'44% 28%',p:'56% 24%',n:'50% 22%',a:'46% 25%',s:'48% 25%',e:'52% 22%',m:'48% 24%',w:'45% 23%',l:'68% 28%',v:'50% 25%'};
+const HERO_FOCUS={c:'44% 28%',p:'56% 24%',n:'56% 24%',a:'46% 25%',s:'48% 25%',e:'52% 22%',m:'48% 24%',w:'45% 23%',l:'68% 28%',v:'50% 25%'};
 function chooseHero(onPick,onCancel){
   lock=true;
   const cards=HEROES.filter(h=>!h.bossOnly).map(h=>{const dl=h.desc.length,dc=dl<=55?'hpc-desc-lg':dl<=105?'hpc-desc-md':'hpc-desc-sm';return `<button class="hero-pick-card${MY_HERO===h.id?' sel':''}" data-pick-hero="${h.id}">
