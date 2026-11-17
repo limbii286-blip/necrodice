@@ -1257,6 +1257,66 @@ function talk(cat,pri=0,prob=1){
   const s=pickSay(cat);if(!s)return false;
   sayT=fillSay(s);sayAt=now;return true;
 }
+const EMOTES=['👋','😂','😱','🤔','👏','🔥','💀','😈'];
+const EMOTE_SET=new Set(EMOTES);
+let emoteAt=0;
+function closeEmoteMenu(){const el=$('#emote-pop');if(el)el.remove()}
+function showEmote(side,em){
+  if(!EMOTE_SET.has(em))return;
+  const av=document.querySelector((side===0?'#me':'#opp')+' .who .av');
+  if(!av||!av.getBoundingClientRect)return;
+  const r=av.getBoundingClientRect();
+  document.querySelectorAll(`.emote-bubble.s${side}`).forEach(x=>x.remove());
+  const b=document.createElement('div');
+  b.className=`emote-bubble s${side}`;
+  b.textContent=em;
+  b.style.left=Math.round(r.left+r.width/2)+'px';
+  b.style.top=Math.round(side===0?r.top-8:r.bottom+8)+'px';
+  document.body.appendChild(b);
+  setTimeout(()=>{if(b.isConnected)b.remove()},2100);
+}
+function sendEmote(em){
+  if(!G||MODE==='spectator'||!EMOTE_SET.has(em))return;
+  const now=performance.now();
+  if(now-emoteAt<1500)return;
+  emoteAt=now;
+  closeEmoteMenu();
+  showEmote(0,em);
+  snd('ok');
+  if(MODE==='guest'){
+    if(conn&&conn.open)conn.send({k:'emote',e:em});
+  }else if(MODE==='host'){
+    if(conn&&conn.open)conn.send({k:'emote',e:em});
+    spectators.forEach(s=>{try{if(s.open)s.send({k:'emote',e:em,side:0})}catch(e){}});
+  }else if(MODE==='bot'){
+    const map={'👋':['👋','😈'],'😂':['💀','😈'],'😱':['😂','🔥'],'🤔':['🤔','👏'],'👏':['👋','🔥'],'🔥':['🔥','😈'],'💀':['💀','😱'],'😈':['😈','💀']};
+    const pool=map[em]||EMOTES;
+    if(Math.random()<0.72){
+      setTimeout(()=>{if(G&&!G.over&&MODE==='bot')showEmote(1,pool[Math.floor(Math.random()*pool.length)])},750+Math.random()*550);
+    }
+  }
+}
+function toggleEmoteMenu(){
+  if(!G||MODE==='spectator'||lock)return;
+  const ex=$('#emote-pop');
+  if(ex){ex.remove();return}
+  const av=document.querySelector('#me .who .av');
+  if(!av||!av.getBoundingClientRect)return;
+  const r=av.getBoundingClientRect();
+  const pop=document.createElement('div');
+  pop.id='emote-pop';
+  pop.innerHTML=EMOTES.map(em=>`<button type="button" class="emote-btn" data-em="${em}" aria-label="${em}">${em}</button>`).join('');
+  document.body.appendChild(pop);
+  const pw=pop.offsetWidth||184,ph=pop.offsetHeight||96;
+  const left=Math.max(10,Math.min(window.innerWidth-pw-10,r.left+r.width/2-pw/2));
+  let top=r.top-ph-10;
+  if(top<10)top=r.bottom+10;
+  pop.style.left=Math.round(left)+'px';
+  pop.style.top=Math.round(top)+'px';
+  pop.querySelectorAll('.emote-btn').forEach(btn=>{
+    btn.onclick=ev=>{ev.stopPropagation();sendEmote(btn.dataset.em)};
+  });
+}
 function watch(){ // açık kartlar hedefi geçtiyse ya da tam hedefteyse bot yorum yapar (kapalı kart hesaba katılmaz)
   const S=G;if(MODE!='bot'||!S||!S.pl||S.over||S.wait||S.rev||!S.st||lowW(S))return;
   const T=tg(S),o=total(S,0,false),b=total(S,1,false),st=S.st;
@@ -1374,6 +1434,7 @@ function R(){
   if(prevSeal&&prevSeal!=seal){sl.classList.remove('stamp');void sl.offsetWidth;sl.classList.add('stamp')}
   $('#me').className='zone'+(my?' act':'')+(S.winSide!=null?(S.winSide<0?' round-lose':S.winSide===0?' round-tie':''):'');
   setH('#me',`<div class="who">${av0}${hpBtn0}<div class="nm"><b>${p0Name}</b></div><div class="tot${bust?' bust':exact?' exact':''}"><small>Toplam</small><b>${lastTot[0]}</b></div></div><div class="cards${(S.pl[0].open.length+S.pl[0].closed.length>=6)?' cards-2row':''}">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||c.o!=null||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`);
+  const myAv=$('#me .who .av');if(myAv)myAv.onclick=e=>{e.stopPropagation();toggleEmoteMenu()};
   const pr=$('#prompt');
   pr.className=P?(P.hp?'ask':'ask has-joker'+(k==='sign'?' sign-mode':'')):'';
   if(!P){
@@ -1657,22 +1718,53 @@ function preview(id,use,note,back){ // jokeri büyük göster: Kullan / Kapat
 }
 function codex(){box(`<h3>Joker Kodeksi</h3><div class="cdx">${range(24).map(i=>`<img src="${IMG.j[i]}" data-k="${i}" alt="${J[i]}">`).join('')}</div>`);
   document.querySelectorAll('#mb .cdx img').forEach(im=>im.onclick=()=>preview(+im.dataset.k,false,BLOCK.has(+im.dataset.k)?'Etkisiz kılınabilir':'Etkisiz kılınamaz',codex))}
-function guide(){box(`<h3>Nasıl oynanır</h3>
-<p class="gd"><b>Amaç:</b> tur sonunda açık ve kapalı kartlarının toplamı <b>hedefe</b> (normalde 21) rakibinden daha yakın olsun. Hedefi aşarsan turu kaybedersin. İkiniz de aşarsanız tur berabere biter.</p>
-<p class="gd"><b>Başlangıç:</b> her tur herkes bir açık, bir kapalı kart alır (kartlar 1–11). Açık kartı küçük olan başlar. Kapalı kartına dokunarak kendi kartına bakabilirsin, rakibinki tur sonuna kadar gizlidir. Her oyuncunun elinde 4 joker vardır.</p>
-<p class="gd"><b>Sıranda:</b> istediğin kadar <b>Kart çek</b> diyebilir (çekilen kart açık gelir), sıra sendeyken en fazla <b>1 joker</b> oynayabilir ve 30 saniyelik hamle süresi dolmadan <b>Pas</b> dersin. Orta kutudaki ok ve kum saati sıranın kimde olduğunu ve kalan süreyi gösterir.</p>
-<p class="gd"><b>Turun bitmesi:</b> sırası gelen oyuncu kart çekmeden ve joker oynamadan pas derse tur biter ve kapalı kartlar açılır (oyunun ilk sırası hariç). Böyle bir durumda Pas düğmesi <b>Turu bitir</b> olur.</p>
-<p class="gd"><b>Düello:</b> 3 turluk bir düellodur (galibiyet 1, beraberlik yarım puan). Kaybeden kırmızı D20 ölüm zarını atar, sonuç ölüm eşiğinden küçükse ölür. Eşikler 4, 9, 15 ve 18'dir (BG3 DC mantığı), her yeni düelloda yükselir. Puanlar eşitse elinde daha az joker kalan kaybeder, o da eşitse zar karar verir. Berabere biten turda ikiniz de birer joker çekersiniz.</p>
-<hr>
-<h3>Orta kutu</h3>
-<p class="gd">Ortadaki yuvarlak güncel hedefi gösterir. Soldaki kırmızı alanda rakibin, sağdaki yeşil alanda senin oynadığın jokerler durur. Üzerlerine dokunarak ne yaptıklarını görebilirsin.</p>
-<hr>
-<h3>Blok jokerler</h3>
-<p class="gd">Bu jokerler oynandıktan sonra tur sonuna kadar masada kalır ve etkisini sürdürür. Kodekste "etkisiz kılınabilir" yazar. <b>Joker etkisiz</b> ile iptal edilebilen tek grup budur. Etkisiz kılınan joker soluklaşır.</p>
-<p class="gd"><b>Tekler ×2:</b> herkesin tek sayılı kartları iki katı sayılır.<br><b>Çiftler ÷2:</b> herkesin çift sayılı kartları yarıya iner.<br><b>+5 / −5:</b> yalnızca oynayanın toplamına eklenir ya da çıkarılır.<br><b>Hedef 27 / 24 / 17 / 15 ve En az kazanır:</b> hedefi değiştirir. Hepsi aynı yuvayı paylaşır, yani sonradan oynanan öncekinin yerine geçer. En az kazanır'dan sonra bir hedef jokeri oynanırsa o geçerli olur.<br><b>Kapalılar sayılmaz:</b> kapalı kartlar 0 sayılır.<br><b>Kapalılar ×2:</b> kapalı kartlar iki katı sayılır.<br><b>Deste sayısı ±:</b> destede kalan kart sayısı, oynayanın toplamına eklenir ya da çıkarılır. Deste azaldıkça değişir.<br><b>Rakip kart çekemez:</b> rakip bu tur kart çekemez.</p>
-<h3>Anlık jokerler</h3>
-<p class="gd">Oynandığı anda etki eder, masada kalmaz ve etkisiz kılınamaz: rakibe kart çektirme, kartı 0 ya da 12 yapma, kart imha etme, açık ya da kapalı kart takası, kart çalma, kart hediye etme, rakibin joker kullanmasını engelleme ve Joker etkisiz'in kendisi.</p>
-<p class="gd">Hepsini Joker Kodeksi'nde görebilirsin.</p>`)}
+function guide(){box(`<h3>Nasıl Oynanır</h3>
+<div class="gd-wrap">
+  <div class="gd-sec">
+    <h4 class="gd-h">1. Temel Amaç</h4>
+    <p class="gd">Her tur sonunda açık ve kapalı sayı kartlarının toplamını <b>hedef sayıya</b> (varsayılan <b>21</b>) rakibinden daha yakın tut. Hedefi aşarsan turu kaybedersin; iki taraf da hedefi aşarsa tur berabere biter.</p>
+  </div>
+  <div class="gd-sec">
+    <h4 class="gd-h">2. Başlangıç &amp; Kartlar</h4>
+    <p class="gd">Her tur oyunculara <b>1–11</b> aralığından <b>1 açık</b> ve <b>1 kapalı</b> sayı kartı dağıtılır. Açık kartı daha küçük olan oyuncu tura başlar. Kendi kapalı kartına dokunarak değerine bakabilirsin; rakibin kapalı kartı tur sonuna kadar gizli kalır.</p>
+    <p class="gd">Her oyuncunun elinde <b>4 joker</b> bulunur (Büyücü her düelloya 4. kart olarak <b>Hırsız</b> jokeriyle başlar). Berabere biten turlarda iki taraf da 1'er yeni joker çeker.</p>
+  </div>
+  <div class="gd-sec">
+    <h4 class="gd-h">3. Sıran Geldiğinde</h4>
+    <ul class="gd-ul">
+      <li><b>Satranç Saati (44 sn):</b> Sıra sendeyken yalnızca senin saatin akar (ilk düello ve geçişlerde 5 sn hazırlık süresi vardır). Süre biterse turu kaybedersin.</li>
+      <li><b>Kart Çek:</b> Destedeki kartlara dokunarak veya sürükleyerek istediğin kadar açık kart çekebilirsin.</li>
+      <li><b>Joker Oyna:</b> Bir turda en fazla <b>2 joker</b> oynayabilirsin (Hırsız jokeri bu limitten bağımsızdır). Kartı sürükleyip masaya bırakabilir veya tıklayıp <b>Oyna</b> diyebilirsin.</li>
+      <li><b>Kahraman Gücü:</b> Aktif güce sahip bir kahramanın varsa, sıra sendeyken portre yanındaki güç düğmesinden kullanabilirsin. Pasif güçler otomatik çalışır.</li>
+      <li><b>Pas / Turu Bitir:</b> Kart çekmeden, joker oynamadan ve aktif güç kullanmadan pas dersen düğme <b>Turu bitir</b> olur ve kapalı kartlar açılır (ilk tur hamlesi hariç).</li>
+    </ul>
+  </div>
+  <div class="gd-sec">
+    <h4 class="gd-h">4. Düello &amp; Ölüm Zarı (D20)</h4>
+    <p class="gd">Her düello <b>3 turdan</b> oluşur (galibiyet <b>1</b>, beraberlik <b>0.5</b> puan). Puanlar eşitse elinde daha az joker kalan kaybeder; o da eşitse zar belirler.</p>
+    <p class="gd">Kaybeden oyuncu kırmızı <b>D20 Ölüm Zarı</b> atar. Zar sonucu ölüm eşiğinin altında kalırsa ölür ve maçı kaybeder. Eşikler her yeni düelloda yükselir: <b>4 → 8 → 14 → 18</b>.</p>
+  </div>
+  <div class="gd-sec">
+    <h4 class="gd-h">5. Masa &amp; Orta Mühür</h4>
+    <p class="gd">Ortadaki mühür güncel <b>hedefi</b> gösterir. Soldaki kırmızı alan rakibin, sağdaki yeşil alan senin masadaki aktif jokerlerini tutar. Üzerlerine dokunarak ne yaptıklarını görebilirsin.</p>
+  </div>
+  <div class="gd-sec">
+    <h4 class="gd-h">6. Blok Jokerler <span class="gd-tag">Etkisiz Kılınabilir</span></h4>
+    <p class="gd">Oynandıktan sonra tur sonuna kadar masada kalırlar. Yalnızca bu grup <b>Joker etkisiz</b> ile iptal edilebilir (iptal edilen kart soluklaşır):</p>
+    <ul class="gd-ul">
+      <li><b>Tekler ×2 / Çiftler ÷2:</b> Masadaki tüm tek/çift sayılı kartları etkiler.</li>
+      <li><b>+5 / −5:</b> Yalnızca oynayanın toplamına eklenir veya çıkarılır.</li>
+      <li><b>Hedef 27 / 24 / 17 / 15 &amp; En az kazanır:</b> Aynı hedef yuvasını paylaşır; son oynanan öncekinin yerine geçer.</li>
+      <li><b>Kapalılar sayılmaz / Kapalılar ×2:</b> Kapalı kartların toplam etkisini değiştirir.</li>
+      <li><b>Deste sayısı ±:</b> Destede kalan kart sayısını toplamına ekler veya çıkarır (deste azaldıkça güncellenir).</li>
+      <li><b>Rakip kart çekemez:</b> Rakibin bu tur kart çekmesini engeller.</li>
+    </ul>
+  </div>
+  <div class="gd-sec">
+    <h4 class="gd-h">7. Anlık Jokerler <span class="gd-tag alt">Etkisiz Kılınamaz</span></h4>
+    <p class="gd">Oynandığı anda etki eder, masada kalmaz ve iptal edilemez: <b>Rakip kart çeker</b>, <b>Kart → 0 / 12</b>, <b>Kendi/Rakip kartını imha</b>, <b>Açık/Kapalı kart takası</b>, <b>Kart çal</b>, <b>Kart hediye</b>, <b>Rakip joker kullanamaz</b>, <b>Joker etkisiz</b> ve Büyücü'ye özel <b>Hırsız</b>. Tüm detayları <b>Joker Kodeksi</b>'nde görebilirsin.</p>
+  </div>
+</div>`)}
 function settings(){
   const inGame=$('#menu').hidden&&!!G;
   box(`<h3>Ayarlar</h3><label>Müzik<input type="range" id="sm" min="0" max="1" step=".05" value="${VM}"></label><label>Efektler<input type="range" id="ss" min="0" max="1" step=".05" value="${VS}"></label><label class="chk"><input type="checkbox" id="sr" ${RM?'checked':''}> Hareketi azalt</label><label class="chk"><input type="checkbox" id="sv" ${VB?'checked':''}> Titreşim</label>${inGame?`<div class="menu-stack"><button class="btn alt" id="sk">Joker Kodeksi</button><button class="btn alt" id="sg">Nasıl oynanır</button>${MODE=='bot'?'<button class="btn alt" id="sa">Tekrar oyna</button>':''}<button class="btn alt" id="sx">Ana menüye dön</button><button class="btn" id="pc">Kapat</button></div>`:''}`, !inGame);
@@ -1893,6 +1985,11 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     }
     return;
   }
+  if(m.k=='emote'&&EMOTE_SET.has(m.e)){
+    showEmote(1,m.e);
+    spectators.forEach(s=>{try{if(s.open)s.send({k:'emote',e:m.e,side:1})}catch(e){}});
+    return;
+  }
 
   if(m.k=='rematch_ready'){
     if(fromConn!==conn)return;
@@ -2020,6 +2117,11 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
       st('Odaya oyuncu olarak katıldın.');
       veil();setMusic('game');
     }
+    return;
+  }
+  if(m.k=='emote'&&EMOTE_SET.has(m.e)){
+    const s=MODE==='spectator'?(m.side===1?1:0):1;
+    showEmote(s,m.e);
     return;
   }
   if(m.k=='s'){
@@ -2514,6 +2616,13 @@ function createSmoothDragLoop(onFrame){
       clearHover();
     }
   });
+  document.addEventListener('pointerdown',e=>{
+    if(e.target&&e.target.matches&&e.target.matches('input[type="range"]'))document.body.classList.add('dragging-range');
+  });
+  const endRangeDrag=()=>document.body.classList.remove('dragging-range');
+  document.addEventListener('pointerup',endRangeDrag);
+  document.addEventListener('pointercancel',endRangeDrag);
+  window.addEventListener('blur',endRangeDrag);
 
   document.addEventListener('pointerleave',clearHover);
 })();
@@ -2625,6 +2734,11 @@ function createSmoothDragLoop(onFrame){
 
   document.addEventListener('pointerdown',()=>{
     if(activeKey!==null||hoverTimer)hideHpTip();
+  });
+
+  document.addEventListener('click',e=>{
+    if(e.target&&e.target.closest&&e.target.closest('#emote-pop'))return;
+    closeEmoteMenu();
   });
 
   document.addEventListener('pointerleave',hideHpTip);

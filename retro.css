@@ -83,7 +83,9 @@ html::after {
 body.dragging-deck,
 body.dragging-deck *,
 body.dragging-joker,
-body.dragging-joker * {
+body.dragging-joker *,
+body.dragging-range,
+body.dragging-range * {
   user-select: none !important;
   -webkit-user-select: none !important;
   cursor: var(--cur-grab), grabbing !important;
@@ -246,14 +248,51 @@ body:has(#menu:not([hidden])) #fl {
 
 .hs-title {
   margin: 0 !important;
-  font: 900 clamp(30px, 5.2dvh, 46px)/1 var(--hf) !important;
-  letter-spacing: 5px !important;
-  background: linear-gradient(180deg, #fff7e0 0%, #ebd098 42%, #c99b4e 78%, #7d5720 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent !important;
-  filter: drop-shadow(0 3px 0 #09060e) drop-shadow(0 0 18px rgba(192, 132, 252, 0.45));
-  text-shadow: none !important;
+  width: min(92%, 440px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1 !important;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.92)) drop-shadow(0 0 22px rgba(242, 185, 75, 0.35));
+}
+
+.hs-wordmark-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.hs-wordmark-svg text {
+  font-family: 'Cinzel Decorative', 'Cinzel', Georgia, serif;
+  font-weight: 900;
+  font-size: 46px;
+  letter-spacing: 3.5px;
+  paint-order: stroke fill;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.hs-wordmark-svg .hs-wm-cap {
+  font-size: 56px;
+}
+
+.hs-wordmark-svg .hs-wm-depth2 {
+  fill: #0d0603;
+  stroke: #0d0603;
+  stroke-width: 10.5px;
+}
+
+.hs-wordmark-svg .hs-wm-depth1 {
+  fill: #3d1d08;
+  stroke: #2c1305;
+  stroke-width: 9px;
+}
+
+.hs-wordmark-svg .hs-wm-face {
+  fill: url(#hsGoldFill);
+  stroke: #220e04;
+  stroke-width: 7px;
 }
 
 .hs-ribbon {
@@ -488,7 +527,8 @@ body:has(#menu:not([hidden])) #fl {
   position: relative;
   max-width: min(92vw, 460px);
   max-height: 90dvh;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 24px 22px 20px;
   border: 2px solid #8a6432;
   border-radius: 12px;
@@ -553,9 +593,55 @@ body:has(#menu:not([hidden])) #fl {
 }
 .gd {
   text-align: left;
-  font: 600 18px/1.45 var(--bf);
+  font: 600 17px/1.48 var(--bf);
   color: #dfd2b8;
-  margin: 8px 0;
+  margin: 6px 0;
+}
+.gd-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+  margin-top: 6px;
+}
+.gd-sec {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(16, 11, 8, 0.72);
+  border: 1px solid rgba(156, 116, 56, 0.38);
+}
+.gd-h {
+  margin: 0 0 6px;
+  font: 800 16px/1.25 var(--sf);
+  letter-spacing: 0.7px;
+  color: var(--gold-bright);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.gd-tag {
+  font: 700 11px/1.2 var(--sf);
+  letter-spacing: 0.6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  color: #ffd79a;
+  background: rgba(143, 22, 32, 0.55);
+  border: 1px solid rgba(207, 46, 60, 0.6);
+}
+.gd-tag.alt {
+  color: #e6d7b8;
+  background: rgba(65, 48, 30, 0.75);
+  border-color: rgba(212, 168, 85, 0.45);
+}
+.gd-ul {
+  margin: 6px 0 2px;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font: 600 16.5px/1.45 var(--bf);
+  color: #dfd2b8;
 }
 .pn {
   font: 600 18px/1.3 var(--bf);
@@ -593,7 +679,8 @@ body:has(#menu:not([hidden])) #fl {
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
   max-height: 56dvh;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   margin-bottom: 12px;
   padding: 4px;
 }
@@ -2420,8 +2507,7 @@ body.dragging-joker #fx::after {
     gap: 8px !important;
   }
   .hs-title {
-    font-size: clamp(26px, 7vw, 34px) !important;
-    letter-spacing: 3px !important;
+    width: min(94%, 330px);
   }
   #mb2 .grp.hs-plaque {
     padding: 10px 10px !important;
@@ -3844,14 +3930,96 @@ label,
 #mute,
 .d,
 [data-j],
-[data-c] {
+[data-c],
+input[type="range"] {
   cursor: var(--cur-point), pointer !important;
 }
 .deck:not(.empty):not(.draw-locked),
 .deck:not(.empty):not(.draw-locked) *,
+input[type="range"]:active,
 body.dragging-deck,
 body.dragging-deck *,
 body.dragging-joker,
-body.dragging-joker * {
+body.dragging-joker *,
+body.dragging-range,
+body.dragging-range * {
   cursor: var(--cur-grab), grab !important;
+}
+
+/* ============================================================
+   OYUN İÇİ EMOJİ / İFADE BALONU (#emote-pop & .emote-bubble)
+   ============================================================ */
+#emote-pop {
+  position: fixed;
+  z-index: 65;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 8px;
+  border-radius: 12px;
+  border: 2px solid #b58a44;
+  background:
+    linear-gradient(180deg, rgba(36, 23, 14, 0.96) 0%, rgba(16, 10, 6, 0.98) 100%);
+  box-shadow:
+    0 0 0 2px #090503,
+    0 12px 28px rgba(0, 0, 0, 0.92),
+    inset 0 1px 0 rgba(255, 224, 160, 0.25);
+  animation: gothicPop 0.16s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+.emote-btn {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 21px;
+  line-height: 1;
+  border-radius: 8px;
+  border: 1px solid rgba(156, 116, 56, 0.4);
+  background: rgba(255, 235, 195, 0.05);
+  cursor: var(--cur-point), pointer !important;
+  transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+}
+.emote-btn:hover {
+  transform: scale(1.16);
+  background: rgba(212, 168, 85, 0.22);
+  border-color: #e6c36a;
+}
+.emote-btn:active {
+  transform: scale(0.95);
+}
+
+.emote-bubble {
+  position: fixed;
+  z-index: 66;
+  pointer-events: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 2px solid #d4a855;
+  background: linear-gradient(180deg, #2a1b10 0%, #140c07 100%);
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.9),
+    0 0 14px rgba(212, 168, 85, 0.35);
+  font-size: 26px;
+  line-height: 1.1;
+  transform: translate(-50%, -100%);
+  animation: emoteFloatUp 2.1s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+.emote-bubble.s1 {
+  transform: translate(-50%, 0);
+  animation: emoteFloatDown 2.1s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+@keyframes emoteFloatUp {
+  0% { opacity: 0; transform: translate(-50%, -70%) scale(0.5); }
+  14% { opacity: 1; transform: translate(-50%, -105%) scale(1.12); }
+  26% { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+  80% { opacity: 1; transform: translate(-50%, -115%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -135%) scale(0.9); }
+}
+@keyframes emoteFloatDown {
+  0% { opacity: 0; transform: translate(-50%, -20%) scale(0.5); }
+  14% { opacity: 1; transform: translate(-50%, 6px) scale(1.12); }
+  26% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  80% { opacity: 1; transform: translate(-50%, 10px) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, 24px) scale(0.9); }
 }
