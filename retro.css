@@ -2644,7 +2644,7 @@ body.dragging-joker #fx::after {
   }
   #opp.zone {
     justify-content: flex-end !important;
-    gap: 20px !important;
+    gap: 18px !important;
     padding-top: calc(max(6px, env(safe-area-inset-top, 6px)) + 38px) !important;
     padding-bottom: 0 !important;
   }
@@ -2654,13 +2654,13 @@ body.dragging-joker #fx::after {
   .opp-jhand {
     position: relative;
     top: 0 !important;
-    margin: 0 0 auto !important;
+    margin: 4px 0 auto !important;
     gap: 5px !important;
-    min-height: 52px !important;
+    min-height: 56px !important;
   }
   .opp-jhand .oj {
     width: auto !important;
-    height: 52px !important;
+    height: 56px !important;
   }
   .who {
     position: relative;
@@ -2678,7 +2678,7 @@ body.dragging-joker #fx::after {
   .who .av {
     width: 82px !important;
     height: 82px !important;
-    margin: -13px 0 -11px !important;
+    margin: -14px 0 -10px !important;
     align-self: center !important;
     justify-self: center !important;
   }
@@ -2689,7 +2689,7 @@ body.dragging-joker #fx::after {
     padding-left: 2px;
   }
   .who .nm b {
-    font-size: clamp(12px, 3.2vw, 15px) !important;
+    font-size: clamp(12.5px, 3.5vw, 15.5px) !important;
   }
   .who .tot {
     justify-self: end;
@@ -2824,22 +2824,22 @@ body.dragging-joker #fx::after {
   }
   #me.zone {
     justify-content: flex-end !important;
-    gap: 20px !important;
+    gap: 18px !important;
     padding-top: 0 !important;
-    padding-bottom: clamp(78px, 11.5dvh, 98px) !important;
+    padding-bottom: clamp(92px, 12.8dvh, 112px) !important;
   }
   #me.zone .who {
     margin-top: 0 !important;
   }
   #hand {
-    bottom: max(4px, env(safe-area-inset-bottom, 4px)) !important;
-    gap: 6px !important;
+    bottom: max(5px, env(safe-area-inset-bottom, 5px)) !important;
+    gap: 7px !important;
     padding: 2px 6px 0 !important;
     max-width: calc(100vw - 8px) !important;
   }
   #hand .jslot {
-    width: clamp(46px, 12.2vw, 60px);
-    height: calc(clamp(46px, 12.2vw, 60px) * 1.5);
+    width: clamp(56px, 15.2vw, 68px);
+    height: calc(clamp(56px, 15.2vw, 68px) * 1.5);
   }
   #hand .j:not(.dim):not(.drag-source-hidden):hover,
   #hand .j.pinned:not(.drag-source-hidden),
