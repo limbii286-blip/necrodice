@@ -26,7 +26,7 @@ let G,P=null,lock=false;
 const LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem('nd_'+k);localStorage.setItem('nd_'+k,v)}catch(e){}return null};
 let AC,SG,MG,VM=+(LS('vm')??.45),VS=+(LS('vs')??.8),RM=LS('rm')=='1',VB=LS('vb')!='0',CRT=LS('crt')!='0';
 const ac=()=>{
-  if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();SG=AC.createGain();MG=AC.createGain();SG.gain.value=VS;MG.gain.value=VM*.45;SG.connect(AC.destination);MG.connect(AC.destination);loadSfx();playM()}
+  if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();SG=AC.createGain();MG=AC.createGain();SG.gain.value=VS*.45;MG.gain.value=VM*.22;SG.connect(AC.destination);MG.connect(AC.destination);loadSfx();playM()}
   if(AC.state!=='running'){try{AC.resume().catch(()=>{})}catch(e){}}return AC;
 };
 /* Müzik: menüde menu.m4a, oyunda game1/game2 sırayla. Web Audio'ya bağlı olduğu için ses ayarı iOS'ta da çalışır. */
@@ -139,7 +139,7 @@ function playM(){
     };
     el.src=src;
     if(FILE){
-      const tv=Math.min(1,VM*.45);
+      const tv=Math.min(1,VM*.22);
       if(fadeIn){
         el.volume=0;let k=0;
         const iv=setInterval(()=>{k++;el.volume=Math.min(tv,tv*(k/20));if(k>=20)clearInterval(iv)},100);
@@ -191,10 +191,11 @@ function sfx(k,v=1){
   if(typeof BUF[k]=='string'||!BUF[k]){
     const soundKey=BUF[k]||(k=='draw'?'kart_cekme':k=='play'?'joker_oynama':k=='flip'?'kart_cevirme':k=='tap'?'kart_tiklama':'buton_tik');
     const a=new Audio(typeof SFXD!='undefined'&&SFXD[soundKey]||'audio/'+soundKey+'.wav');
-    a.volume=Math.min(1,VS*v);a.play().catch(()=>{});return;
+    a.volume=Math.min(1,VS*.45*v);a.play().catch(()=>{});return;
   }
-  const s=AC.createBufferSource(),g=AC.createGain();s.buffer=BUF[k];g.gain.value=Math.min(1,VS*v);s.connect(g);g.connect(SG);s.start();
+  const s=AC.createBufferSource(),g=aC_g(v);s.buffer=BUF[k];s.connect(g);g.connect(SG);s.start();
 }
+function aC_g(v){const g=AC.createGain();g.gain.value=Math.min(1,v);return g}
 /* Joker büyük görünümü: önce gömülü küçük görsel, yüksek çözünürlüklü img/j/ID.webp yüklenince değişir */
 const HC={};
 function hiLoad(id,cb){
@@ -2091,8 +2092,8 @@ function settings(){
   const langBtnTxt=tr('İngilizceye Geç (English)','Türkçeye Geç (Turkish)');
   box(`<h3>${tr('Ayarlar','Settings')}</h3><label>${tr('Müzik','Music')}<input type="range" id="sm" min="0" max="1" step=".05" value="${VM}"></label><label>${tr('Efektler','Sound Effects')}<input type="range" id="ss" min="0" max="1" step=".05" value="${VS}"></label><label class="chk"><input type="checkbox" id="sr" ${RM?'checked':''}> ${tr('Hareketi azalt','Reduce Motion')}</label><label class="chk"><input type="checkbox" id="sv" ${VB?'checked':''}> ${tr('Titreşim','Vibration')}</label><div class="row" style="margin:10px 0 4px"><button class="btn alt sm" id="slang" style="width:100%">${langBtnTxt}</button></div>${inGame?`<div class="menu-stack"><button class="btn alt" id="sk">${tr('Joker Kodeksi','Joker Codex')}</button><button class="btn alt" id="sg">${tr('Nasıl oynanır','How to Play')}</button>${MODE=='bot'?`<button class="btn alt" id="sa">${tr('Tekrar oyna','Play Again')}</button>`:''}<button class="btn alt" id="sx">${tr('Ana menüye dön','Return to Main Menu')}</button><button class="btn" id="pc">${tr('Kapat','Close')}</button></div>`:''}`, !inGame);
   if(inGame&&$('#pc'))$('#pc').onclick=()=>{$('#m').hidden=true;lock=false;if(G)R()};
-  $('#sm').oninput=e=>{VM=+e.target.value;LS('vm',VM);ac();MG.gain.value=VM*.45;if(FILE&&mel)mel.volume=Math.min(1,VM*.45)};
-  $('#ss').oninput=e=>{VS=+e.target.value;LS('vs',VS);ac();SG.gain.value=VS};$('#ss').onchange=()=>snd('draw');
+  $('#sm').oninput=e=>{VM=+e.target.value;LS('vm',VM);ac();MG.gain.value=VM*.22;if(FILE&&mel)mel.volume=Math.min(1,VM*.22)};
+  $('#ss').oninput=e=>{VS=+e.target.value;LS('vs',VS);ac();SG.gain.value=VS*.45};$('#ss').onchange=()=>snd('draw');
   $('#sr').onchange=e=>{RM=e.target.checked;LS('rm',RM?1:0);document.body.classList.toggle('rm',RM)};
   $('#sv').onchange=e=>{VB=e.target.checked;LS('vb',VB?1:0)};
   if($('#slang'))$('#slang').onclick=()=>{toggleLang();settings()};
