@@ -577,6 +577,12 @@ body:has(#menu:not([hidden])) #fl {
   text-align: center;
   letter-spacing: 3px;
 }
+@media (max-width: 760px) {
+  #mb::before {
+    content: none !important;
+    display: none !important;
+  }
+}
 
 #mb h3 {
   margin: 0 0 12px;
@@ -3915,6 +3921,16 @@ html, body, body * {
 }
 input, textarea, select {
   cursor: text !important;
+}
+input[type="checkbox"],
+input[type="radio"] {
+  cursor: var(--cur-point), pointer !important;
+}
+label:active,
+label:active *,
+input[type="checkbox"]:active,
+input[type="radio"]:active {
+  cursor: var(--cur-grab), grabbing !important;
 }
 button:not(:disabled),
 button:not(:disabled) *,

@@ -895,7 +895,7 @@ function dustTableCards(){
     const r=rects[idx];
     c.style.animationDelay=(idx*28)+'ms';
     c.classList.add('dust-out');
-    if(r.width>0&&r.height>0){
+    if(!RM&&r.width>0&&r.height>0){
       for(let i=0;i<perCard;i++){
         const m=document.createElement('span');
         m.className='dust-mote';
@@ -2917,12 +2917,14 @@ function createSmoothDragLoop(onFrame){
 
   let lastRender=0;
   function render(now){
+    requestAnimationFrame(render);
     const mob=isMobilePerf();
     const mn=document.getElementById('menu');
     const menuOpen=mn&&!mn.hidden;
-    if(!menuOpen&&(!mob||now-lastRender>=36)){
+    const rm=document.body.classList.contains('rm');
+    if(!menuOpen&&(rm?now-lastRender>=400:(!mob||now-lastRender>=36))){
       lastRender=now;
-      const t=now*0.001;
+      const t=rm?0:now*0.001;
       ctx.clearRect(0,0,W,H);
 
       // 1. ARKA PLAN: Üstten Görünümlü Gotik Taş Arena, 4 Çeyrekli Rünik Çember ve Orta Rün Yarığı
@@ -2957,7 +2959,7 @@ function createSmoothDragLoop(onFrame){
       }
 
       // 2. CANLI ATMOSFER PARÇACIKLARI (Meşale Kıvılcımları ve Rün Tozları)
-      particles.forEach(p => {
+      if(!rm)particles.forEach(p => {
         p.x += p.vx;
         p.y += p.vy;
         if(p.y < -0.04) { p.y = 1.04; p.x = Math.random(); }
@@ -2975,10 +2977,6 @@ function createSmoothDragLoop(onFrame){
         ctx.arc(px, py, p.r, 0, Math.PI*2);
         ctx.fill();
       });
-    }
-
-    if(!document.body.classList.contains('rm')||menuOpen){
-      requestAnimationFrame(render);
     }
   }
   requestAnimationFrame(render);
@@ -3030,10 +3028,15 @@ function createSmoothDragLoop(onFrame){
   window.addEventListener('resize',resize);
   resize();
 
+  let lastMenuDraw=0;
   function render(now){
+    requestAnimationFrame(render);
     const menuEl=document.getElementById('menu');
-    if(menuEl&&!menuEl.hidden){
-      const t=now*0.001;
+    const rm=document.body.classList.contains('rm');
+    // Hareketi azalt: kül/kıvılcım yok, titreşen ışık yok; sahne seyrek ve sabit çizilir
+    if(menuEl&&!menuEl.hidden&&(!rm||now-lastMenuDraw>=400)){
+      lastMenuDraw=now;
+      const t=rm?0:now*0.001;
       ctx.clearRect(0,0,W,H);
 
       if(menuImgLoaded && menuImg.naturalWidth>0){
@@ -3128,7 +3131,7 @@ function createSmoothDragLoop(onFrame){
       }
 
       // Süzülen alev korları ve yanık kül tanecikleri (ateş külü efekti)
-      motes.forEach(e=>{
+      if(!rm)motes.forEach(e=>{
         e.x+=e.vx;
         e.y+=e.vy;
         if(e.y<-0.06){e.y=1.06;e.x=Math.random()}
@@ -3173,9 +3176,6 @@ function createSmoothDragLoop(onFrame){
         }
         ctx.restore();
       });
-    }
-    if(!document.body.classList.contains('rm')||menuOpen){
-      requestAnimationFrame(render);
     }
   }
   requestAnimationFrame(render);
