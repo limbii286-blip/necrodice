@@ -27,7 +27,7 @@ const LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem('nd_'+k);local
 let AC,SG,MG,VM=+(LS('vm')??.45),VS=+(LS('vs')??.8),RM=LS('rm')=='1',VB=LS('vb')!='0',CRT=LS('crt')!='0';
 const ac=()=>{
   if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();SG=AC.createGain();MG=AC.createGain();SG.gain.value=VS;MG.gain.value=VM*.45;SG.connect(AC.destination);MG.connect(AC.destination);loadSfx();playM()}
-  if(AC.state=='suspended')AC.resume();return AC;
+  if(AC.state!=='running'){try{AC.resume().catch(()=>{})}catch(e){}}return AC;
 };
 /* Müzik: menüde menu.m4a, oyunda game1/game2 sırayla. Web Audio'ya bağlı olduğu için ses ayarı iOS'ta da çalışır. */
 (()=>{try{if(typeof HDAV=='undefined'){const h=document.createElement('script');h.src='hd.js?v=20261113_art';h.async=true;document.head.appendChild(h)}}catch(e){}})(); // HD görseller (gömülü): HDJ jokerler, HDAV karakterler
@@ -166,7 +166,8 @@ document.addEventListener('visibilitychange',()=>{if(syn&&AC){document.hidden?AC
 /* Ses efektleri (wav): bir kez çözülüp bellekte tutulur */
 const BUF={};
 const getA=f=>{const k=f.replace('.wav',''),ok=r=>{if(!r.ok)throw 0;return r.arrayBuffer()};
-  return fetch('audio/'+f).then(ok).catch(()=>fetch(f).then(ok)).catch(()=>{if(typeof SFXD=='undefined'||!SFXD[k])throw 0;return fetch(SFXD[k]).then(ok)})}; // bulunamazsa gömülü kopya
+  if(typeof SFXD!='undefined'&&SFXD[k])return fetch(SFXD[k]).then(ok).catch(()=>fetch('audio/'+f).then(ok));
+  return fetch('audio/'+f).then(ok).catch(()=>fetch(f).then(ok))}; // gömülü SFXD varsa ağ beklemeden anında çözülür
 function loadSfx(){
   const list=[
     ['draw','kart_cekme'],
@@ -221,8 +222,9 @@ function hi(el,id){if(!el)return;if(id===25){if(IMG.j&&IMG.j[25])el.src=IMG.j[25
   hiLoad(id,u=>{if(el.isConnected)el.src=u})}
 function tone(f,d,ty='sine',v=.12,w=0,sl=0){const a=ac(),t=a.currentTime+w,o=a.createOscillator(),g=a.createGain();o.type=ty;o.frequency.setValueAtTime(f,t);if(sl)o.frequency.linearRampToValueAtTime(Math.max(30,f+sl),t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(SG);o.start(t);o.stop(t+d)}
 function noise(d,v=.2,hp=2500,w=0){const a=ac(),t=a.currentTime+w,n=a.sampleRate*d|0,b=a.createBuffer(1,n,a.sampleRate),x=b.getChannelData(0);for(let i=0;i<n;i++)x[i]=Math.random()*2-1;const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=b;f.type='highpass';f.frequency.value=hp;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);s.connect(f);f.connect(g);g.connect(SG);s.start(t)}
+let lastDrawSnd=0;
 const SND={
-  draw(){sfx('draw',1)},
+  draw(){const now=performance.now();if(now-lastDrawSnd<60)return;lastDrawSnd=now;sfx('draw',1)},
   tap(){sfx('tap',.9)},
   flip(){sfx('flip',1)},
   info(){sfx('info',.85)},
@@ -2198,7 +2200,7 @@ document.addEventListener('click',e=>{
     return;
   }
 });
-function drawFromDeck(){const S=G;if(!S||S.turn||lock||P||!canDraw(S,0))return;if(MODE=='guest')return conn.send({k:'draw'});S.graceLeft=0;lrnAct(S,'d');if(S.botScry&&S.botScry.length)S.botScry.shift();const c=S.deck.pop();S.pl[0].open.push(c);S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R()}
+function drawFromDeck(){const S=G;if(!S||S.turn||lock||P||!canDraw(S,0))return;snd('draw');if(MODE=='guest')return conn.send({k:'draw'});S.graceLeft=0;lrnAct(S,'d');if(S.botScry&&S.botScry.length)S.botScry.shift();const c=S.deck.pop();S.pl[0].open.push(c);S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R()}
 $('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE=='guest')conn.send({k:'pass'});else{lrnAct(G,'p');pass()}}};
 
 /* ---------- ONLINE (PeerJS) ---------- */
@@ -2737,6 +2739,7 @@ function createSmoothDragLoop(onFrame){
     if(e.button!=null&&e.button!==0)return;
     const dk=e.target.closest&&e.target.closest('#deck');
     if(!dk||!canDrawNow())return;
+    try{ac()}catch(err){}
     e.preventDefault();
     try{window.getSelection&&window.getSelection().removeAllRanges&&window.getSelection().removeAllRanges()}catch(err){}
     dragging=false;
