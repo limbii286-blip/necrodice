@@ -3,10 +3,19 @@ const $=s=>document.querySelector(s);
 const setH=(sel,h)=>{const e=$(sel);if(e&&e._h!==h){e.innerHTML=h;e._h=h}}; // aynı içerik tekrar yazılmaz: animasyon/titreme olmaz
 const TH=[4,8,14,18],EK={4:'e',8:'e',14:'e',18:'e'}; // D20 hayatta kalma eşikleri: 4, 8, 14, 18 (BG3 DC mantığı)
 const BLOCK=new Set([1,2,3,4,8,9,10,11,19,20,21,22,23]); // blok sembollü jokerler
-const J=['','Tekler ×2','Çiftler ÷2','+5','−5','Rakip kart çeker','Kart → 0','Kart → 12','Hedef 27','Hedef 24','Hedef 17','Hedef 15','Joker etkisiz','Kendi kartını imha','Rakip kartını imha','Açık kart takası','Kapalı kart takası','Kart çal','Kart hediye','En az kazanır','Kapalılar sayılmaz','Kapalılar ×2','Deste sayısı ±','Rakip kart çekemez','Rakip joker kullanamaz','Hırsız'];
+let LANG='tr'; // Oyun her zaman varsayılan olarak Türkçe açılır
+const isEn=()=>LANG==='en';
+const tr=(t,e)=>LANG==='en'?e:t;
+const J_TR=['','Tekler ×2','Çiftler ÷2','+5','−5','Rakip kart çeker','Kart → 0','Kart → 12','Hedef 27','Hedef 24','Hedef 17','Hedef 15','Joker etkisiz','Kendi kartını imha','Rakip kartını imha','Açık kart takası','Kapalı kart takası','Kart çal','Kart hediye','En az kazanır','Kapalılar sayılmaz','Kapalılar ×2','Deste sayısı ±','Rakip kart çekemez','Rakip joker kullanamaz','Hırsız'];
+const J_EN=['','Odds ×2','Evens ÷2','+5','−5','Opponent draws a card','Card → 0','Card → 12','Target 27','Target 24','Target 17','Target 15','Negate Joker','Destroy own card','Destroy opponent card','Swap open cards','Swap hidden cards','Steal card','Gift card','Lowest wins','Hidden cards = 0','Hidden cards ×2','Deck count ±','Block opponent draw','Block opponent jokers','Thief'];
+let J=[...J_TR];
 const NEED={6:['any'],7:['any'],12:['eff'],13:['my'],14:['opp'],15:['my','opp'],17:['opp'],18:['my'],22:['sign'],25:['steal_j']};
-const KTXT={any:'bir sayı kartı seç',my:'kendi açık kartını seç',opp:'rakibin açık kartını seç',eff:'etkisiz kılınacak jokeri seç',sign:'ekle mi çıkar mı?',steal_j:'yerden çalınacak jokeri seç'};
-if(typeof IMG!=='undefined'&&IMG.j){IMG.j[25]='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 170"><rect width="120" height="170" rx="10" fill="#efe3c4" stroke="#8a6432" stroke-width="4"/><rect x="6" y="6" width="108" height="158" rx="6" fill="none" stroke="#b99352" stroke-width="1.4"/><g transform="translate(18,16) scale(3.5)" fill="none" stroke="#221712" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11c2.5-3 6-3 9-1 3-2 6.5-2 9 1-1.5 4-4.5 5-9 3-4.5 2-7.5 1-9-3z" fill="#3a231c"/><circle cx="8" cy="11.5" r="1.25" fill="#fde68a" stroke="none"/><circle cx="16" cy="11.5" r="1.25" fill="#fde68a" stroke="none"/><path d="M9 17.5h6l-1 3h-4z" fill="#221712"/></g><line x1="16" y1="92" x2="104" y2="92" stroke="#8a6432" stroke-width="1.2" opacity="0.6"/><text x="60" y="106" text-anchor="middle" fill="#1c120d" font-family="Georgia,serif" font-size="8.2" font-weight="bold"><tspan x="60" dy="0">Kullanılmış bir joker</tspan><tspan x="60" dy="10.5">kartını çal. Eğer kartın</tspan><tspan x="60" dy="10.5">aktif etkisi varsa sona</tspan><tspan x="60" dy="10.5">erer. (Bu kart 2 joker</tspan><tspan x="60" dy="10.5">limitinden bağımsızdır)</tspan></text></svg>');}
+const KTXT_TR={any:'bir sayı kartı seç',my:'kendi açık kartını seç',opp:'rakibin açık kartını seç',eff:'etkisiz kılınacak jokeri seç',sign:'ekle mi çıkar mı?',steal_j:'yerden çalınacak jokeri seç'};
+const KTXT_EN={any:'select a number card',my:'select your open card',opp:'select opponent\'s open card',eff:'select a joker to negate',sign:'add or subtract?',steal_j:'select a used joker to steal'};
+let KTXT={...KTXT_TR};
+const THIEF_SVG_TR='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 170"><rect width="120" height="170" rx="10" fill="#efe3c4" stroke="#8a6432" stroke-width="4"/><rect x="6" y="6" width="108" height="158" rx="6" fill="none" stroke="#b99352" stroke-width="1.4"/><g transform="translate(18,16) scale(3.5)" fill="none" stroke="#221712" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11c2.5-3 6-3 9-1 3-2 6.5-2 9 1-1.5 4-4.5 5-9 3-4.5 2-7.5 1-9-3z" fill="#3a231c"/><circle cx="8" cy="11.5" r="1.25" fill="#fde68a" stroke="none"/><circle cx="16" cy="11.5" r="1.25" fill="#fde68a" stroke="none"/><path d="M9 17.5h6l-1 3h-4z" fill="#221712"/></g><line x1="16" y1="92" x2="104" y2="92" stroke="#8a6432" stroke-width="1.2" opacity="0.6"/><text x="60" y="106" text-anchor="middle" fill="#1c120d" font-family="Georgia,serif" font-size="8.2" font-weight="bold"><tspan x="60" dy="0">Kullanılmış bir joker</tspan><tspan x="60" dy="10.5">kartını çal. Eğer kartın</tspan><tspan x="60" dy="10.5">aktif etkisi varsa sona</tspan><tspan x="60" dy="10.5">erer. (Bu kart 2 joker</tspan><tspan x="60" dy="10.5">limitinden bağımsızdır)</tspan></text></svg>');
+const THIEF_SVG_EN='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 170"><rect width="120" height="170" rx="10" fill="#efe3c4" stroke="#8a6432" stroke-width="4"/><rect x="6" y="6" width="108" height="158" rx="6" fill="none" stroke="#b99352" stroke-width="1.4"/><g transform="translate(18,16) scale(3.5)" fill="none" stroke="#221712" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11c2.5-3 6-3 9-1 3-2 6.5-2 9 1-1.5 4-4.5 5-9 3-4.5 2-7.5 1-9-3z" fill="#3a231c"/><circle cx="8" cy="11.5" r="1.25" fill="#fde68a" stroke="none"/><circle cx="16" cy="11.5" r="1.25" fill="#fde68a" stroke="none"/><path d="M9 17.5h6l-1 3h-4z" fill="#221712"/></g><line x1="16" y1="92" x2="104" y2="92" stroke="#8a6432" stroke-width="1.2" opacity="0.6"/><text x="60" y="106" text-anchor="middle" fill="#1c120d" font-family="Georgia,serif" font-size="8.2" font-weight="bold"><tspan x="60" dy="0">Steal one used joker</tspan><tspan x="60" dy="10.5">card. If it has an active</tspan><tspan x="60" dy="10.5">effect, that effect ends.</tspan><tspan x="60" dy="10.5">(Ignores the 2-joker</tspan><tspan x="60" dy="10.5">per round limit.)</tspan></text></svg>');
+if(typeof IMG!=='undefined'&&IMG.j){IMG.j[25]=THIEF_SVG_TR;if(IMG.j_tr)IMG.j_tr[25]=THIEF_SVG_TR;if(IMG.j_en)IMG.j_en[25]=THIEF_SVG_EN;}
 const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 const range=n=>[...Array(n)].map((_,i)=>i+1);
 const clone=o=>JSON.parse(JSON.stringify(o));
@@ -187,14 +196,26 @@ function sfx(k,v=1){
 }
 /* Joker büyük görünümü: önce gömülü küçük görsel, yüksek çözünürlüklü img/j/ID.webp yüklenince değişir */
 const HC={};
-function hiLoad(id,cb){let i=HC[id];if(i&&i._x&&typeof HDJ!='undefined'&&HDJ[id]){i._x=0;i._e=1;i.src=HDJ[id]} // hd.js geç yüklendiyse yeniden dene
-  if(!i){i=HC[id]=new Image();const pd=String(id).padStart(2,'0'),cs=['img/j/'+id+'.png','img/j/'+id+'.webp','j'+id+'.webp',id+'.webp','img/j'+id+'.webp','img/j/'+pd+'.webp','/img/j/'+id+'.webp','img/j/'+id+'.jpg','img/j/'+id+'.avif','img/j/j'+id+'.webp','jokers/'+id+'.webp'];i._i=0;
-  i.onload=()=>{AUD.hd='ok';try{i.decode&&i.decode().catch(()=>{})}catch(e){}};if(typeof HDJ!='undefined'&&HDJ[id])cs.unshift(HDJ[id]); // gömülü HD kopya: klasör olmasa da, çevrimdışı da çalışır
-  cs.push('img/j/'+id+'.PNG',id+'.png','j/'+id+'.png','jokers/'+id+'.png');
-  i.onerror=()=>{if(++i._i<cs.length)i.src=cs[i._i];else if(!i._e&&typeof HDJ!='undefined'&&HDJ[id]){i._e=1;i.src=HDJ[id]}else{i._x=1;if(AUD.hd!='ok')AUD.hd='fb';miss(cs[0])}};i.src=cs[0]}
+function hiLoad(id,cb){
+  const cacheKey=LANG+'_'+id;
+  let i=HC[cacheKey];
+  if(LANG!=='en'&&i&&i._x&&typeof HDJ!='undefined'&&HDJ[id]){i._x=0;i._e=1;i.src=HDJ[id]}
+  if(!i){
+    i=HC[cacheKey]=new Image();
+    const pd=String(id).padStart(2,'0');
+    const cs=LANG==='en'
+      ?['img/j_en/'+id+'.png',IMG.j_en&&IMG.j_en[id]?IMG.j_en[id]:'img/j/'+id+'.png']
+      :['img/j/'+id+'.png','img/j/'+id+'.webp','j'+id+'.webp',id+'.webp','img/j'+id+'.webp','img/j/'+pd+'.webp','/img/j/'+id+'.webp','img/j/'+id+'.jpg','img/j/'+id+'.avif','img/j/j'+id+'.webp','jokers/'+id+'.webp'];
+    i._i=0;
+    i.onload=()=>{AUD.hd='ok';try{i.decode&&i.decode().catch(()=>{})}catch(e){}};
+    if(LANG!=='en'&&typeof HDJ!='undefined'&&HDJ[id])cs.unshift(HDJ[id]);
+    if(LANG!=='en')cs.push('img/j/'+id+'.PNG',id+'.png','j/'+id+'.png','jokers/'+id+'.png');
+    i.onerror=()=>{if(++i._i<cs.length)i.src=cs[i._i];else if(LANG!=='en'&&!i._e&&typeof HDJ!='undefined'&&HDJ[id]){i._e=1;i.src=HDJ[id]}else{i._x=1;if(AUD.hd!='ok')AUD.hd='fb';miss(cs[0])}};
+    i.src=cs[0];
+  }
   if(cb){if(i.complete&&i.naturalWidth)cb(i.src);else i.addEventListener('load',()=>cb(i.src),{once:true})}}
 let hiPre=false;
-function hiPreload(){if(hiPre)return;hiPre=true;range(24).forEach((id,n)=>setTimeout(()=>hiLoad(id),400+n*120))} // tüm HD jokerler arka planda önceden yüklenir, tıklayınca anında hazır olur
+function hiPreload(){if(hiPre)return;hiPre=true;range(24).forEach((id,n)=>setTimeout(()=>hiLoad(id),200+n*80))} // tüm HD jokerler arka planda önceden yüklenir, tıklayınca anında hazır olur
 function hi(el,id){if(!el)return;const fb=IMG.j[id];el.onerror=()=>{el.onerror=null;if(fb)el.src=fb}; // HD açılmazsa gömülü görsele dön
   hiLoad(id,u=>{if(el.isConnected)el.src=u})}
 function tone(f,d,ty='sine',v=.12,w=0,sl=0){const a=ac(),t=a.currentTime+w,o=a.createOscillator(),g=a.createGain();o.type=ty;o.frequency.setValueAtTime(f,t);if(sl)o.frequency.linearRampToValueAtTime(Math.max(30,f+sl),t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(SG);o.start(t);o.stop(t+d)}
@@ -755,7 +776,7 @@ function pass(fromTimeout=false){
   R();next();
 }
 function next(){if(MODE=='bot'&&G.turn==1&&!lock&&!G.over)bot()}
-function M(html,btn,cb,end){lock=true;$('#mb').innerHTML=html+(btn?`<br><br><button id="mo" class="btn">${btn}</button>`:end?'':'<br><i>Oda sahibinin devam etmesi bekleniyor…</i>')+(end?'<br><br><button id="mx" class="btn alt">Ana menüye dön</button>':'');$('#m').hidden=false;
+function M(html,btn,cb,end){lock=true;$('#mb').innerHTML=html+(btn?`<br><br><button id="mo" class="btn">${btn}</button>`:end?'':`<br><i>${tr('Oda sahibinin devam etmesi bekleniyor…','Waiting for the host to continue…')}</i>`)+(end?`<br><br><button id="mx" class="btn alt">${tr('Ana menüye dön','Return to Main Menu')}</button>`:'');$('#m').hidden=false;
   if(end&&$('#mb .dice'))$('#mx').style.visibility='hidden'; // zar atılmadan sonuç sızmasın
   anim();
   let done=false;
@@ -966,7 +987,7 @@ function heroAttack(winIdx,tanked=false){
         fx.className='hp-cast-fx'+(winIdx===0?' opp':'');
         fx.style.left=(hr.left+hr.width/2)+'px';
         fx.style.top=(hr.top+hr.height/2)+'px';
-        fx.innerHTML='<i class="hp-cast-ring"></i><span class="hp-cast-pop">Kadim Direnç!</span>';
+        fx.innerHTML=`<i class="hp-cast-ring"></i><span class="hp-cast-pop">${tr('Kadim Direnç!','Ancient Resilience!')}</span>`;
         document.body.appendChild(fx);
         setTimeout(()=>fx.remove(),1350);
       }
@@ -1072,7 +1093,7 @@ function heroVampTie(vampIdx){
       fx.className='hp-cast-fx'+(vampIdx===1?' opp':'');
       fx.style.left=(hr.left+hr.width/2)+'px';
       fx.style.top=(hr.top+hr.height/2)+'px';
-      fx.innerHTML='<i class="hp-cast-ring"></i><span class="hp-cast-pop">Kanla Mühürlenen Kader!</span>';
+      fx.innerHTML=`<i class="hp-cast-ring"></i><span class="hp-cast-pop">${tr('Kanla Mühürlenen Kader!','Blood-Sealed Fate!')}</span>`;
       document.body.appendChild(fx);
       setTimeout(()=>fx.remove(),1350);
     }
@@ -1127,7 +1148,7 @@ function endRound(){
     }
     snd(r>0?'win':r<0?'lose':'ok');
     R();
-    setTimeout(()=>{if(S===G){if(vampWinSide>=0){const btn=document.querySelector(vampWinSide===0?'#me .hp-btn':'#opp .hp-btn');if(btn){const hr=btn.getBoundingClientRect(),fx=document.createElement('div');fx.className='hp-cast-fx'+(vampWinSide===1?' opp':'');fx.style.left=(hr.left+hr.width/2)+'px';fx.style.top=(hr.top+hr.height/2)+'px';fx.innerHTML='<i class="hp-cast-ring"></i><span class="hp-cast-pop">Kanla Mühürlenen Kader!</span>';document.body.appendChild(fx);setTimeout(()=>fx.remove(),1350);}heroClash();}else if(tankedSide>=0)heroAttack(1-tankedSide,true);else if(r!==0)heroAttack(r>0?0:1);else heroClash();}},1000);
+    setTimeout(()=>{if(S===G){if(vampWinSide>=0){const btn=document.querySelector(vampWinSide===0?'#me .hp-btn':'#opp .hp-btn');if(btn){const hr=btn.getBoundingClientRect(),fx=document.createElement('div');fx.className='hp-cast-fx'+(vampWinSide===1?' opp':'');fx.style.left=(hr.left+hr.width/2)+'px';fx.style.top=(hr.top+hr.height/2)+'px';fx.innerHTML=`<i class="hp-cast-ring"></i><span class="hp-cast-pop">${tr('Kanla Mühürlenen Kader!','Blood-Sealed Fate!')}</span>`;document.body.appendChild(fx);setTimeout(()=>fx.remove(),1350);}heroClash();}else if(tankedSide>=0)heroAttack(1-tankedSide,true);else if(r!==0)heroAttack(r>0?0:1);else heroClash();}},1000);
     setTimeout(()=>{
       if(S!==G)return;
       // 3) Yerdeki bütün sayı kartları tozlaşır gibi yok olur, sonra diğer tura geçilir
@@ -1149,30 +1170,35 @@ function endRound(){
       else{let x,y;do{x=d6()+d6();y=d6()+d6()}while(x==y);L=x<y?0:1;hx=[x,y];how='zar'}
     }
     const th=TH[Math.min(S.bo,3)],rawRoll=d20(),hpB=avKey(S,L)==='m'?2:0,execPen=avKey(S,1-L)==='n'?-2:0,roll=Math.max(1,Math.min(20,rawRoll+hpB+execPen)),surv=roll>=th;
-    const mk=(v,roll,surv,rawOv)=>{const rr=rawOv!=null?rawOv:rawRoll;return `Düelloyu ${L==v?'rakip kazandı':'sen kazandın'}${how=='joker'?' (joker sayısına göre)':how=='zar'?` (beraberlik zarı: ${hx[v]}–${hx[1-v]})`:''}.<br>Ölüm zarını ${L==v?'sen atıyorsun':'rakip atıyor'}<div class="d20-box" data-roll="${roll}" data-raw="${rr}" data-mod="${rawOv!=null?0:(hpB+execPen)}" data-dc="${th}" data-m="${L==v?1:0}" data-s="${surv?'ok':L==v?'death':'win'}">
+    const mk=(v,roll,surv,rawOv)=>{const rr=rawOv!=null?rawOv:rawRoll;
+      const duelWinnerTxt=isEn()?(L==v?'Opponent won the duel':'You won the duel'):`Düelloyu ${L==v?'rakip kazandı':'sen kazandın'}`;
+      const howTxt=how=='joker'?tr(' (joker sayısına göre)',' (by remaining jokers)'):how=='zar'?tr(` (beraberlik zarı: ${hx[v]}–${hx[1-v]})`,` (tiebreaker dice: ${hx[v]}–${hx[1-v]})`):'';
+      const rollerTxt=isEn()?(L==v?'You roll the Death Die':'Opponent rolls the Death Die'):`Ölüm zarını ${L==v?'sen atıyorsun':'rakip atıyor'}`;
+      const blessingName=tr('Ölümün Takdiri','Death\'s Favor'),decreeName=tr('Ölüm Fermanı','Death Decree');
+      return `${duelWinnerTxt}${howTxt}.<br>${rollerTxt}<div class="d20-box" data-roll="${roll}" data-raw="${rr}" data-mod="${rawOv!=null?0:(hpB+execPen)}" data-dc="${th}" data-m="${L==v?1:0}" data-s="${surv?'ok':L==v?'death':'win'}">
       <div class="bg3-roll-card">
         <div class="bg3-card-border"></div>
         <i class="bg3-corner tl"></i><i class="bg3-corner tr"></i><i class="bg3-corner bl"></i><i class="bg3-corner br"></i>
         <div class="bg3-dc-arch">
-          <span class="lbl">HEDEF</span>
+          <span class="lbl">${tr('HEDEF','TARGET')}</span>
           <span class="val">${th}</span>
         </div>
         <div class="d20-stage">
           <div class="d20-glow"></div>
           <canvas id="d20cv" class="d20-canvas" width="280" height="280"></canvas>
         </div>
-        ${(hpB||execPen)?`<div class="d20-hp-mod">${hpB?`<span class="d20-mod-pill pos"><b>Ölümün Takdiri</b><i>+${hpB}</i></span>`:''}${execPen?`<span class="d20-mod-pill neg"><b>Ölüm Fermanı</b><i>−2</i></span>`:''}</div>`:''}
-        ${L==v?'<button id="rl" class="btn d20-btn">ÖLÜM ZARINI AT</button>':''}
+        ${(hpB||execPen)?`<div class="d20-hp-mod">${hpB?`<span class="d20-mod-pill pos"><b>${blessingName}</b><i>+${hpB}</i></span>`:''}${execPen?`<span class="d20-mod-pill neg"><b>${decreeName}</b><i>−2</i></span>`:''}</div>`:''}
+        ${L==v?`<button id="rl" class="btn d20-btn">${tr('ÖLÜM ZARINI AT','ROLL DEATH DIE')}</button>`:''}
       </div>
-    </div><div class="after"><b>Zar Sonucu: ${roll}${(hpB||execPen)&&rawOv==null?` (${rr}${hpB?`+${hpB} Ölümün Takdiri`:''}${execPen?`−2 Ölüm Fermanı`:''})`:''}</b><br>`+(surv?(L==v?'Kurtuldun! Hayatta kaldın.':'Rakip hayatta kaldı.'):`<b>${L==v?'Öldün. Oyunu rakip kazandı.':'Rakip öldü. Oyunu sen kazandın!'}</b>`)+'</div>'};
+    </div><div class="after"><b>${tr('Zar Sonucu','Roll Result')}: ${roll}${(hpB||execPen)&&rawOv==null?` (${rr}${hpB?`+${hpB} ${blessingName}`:''}${execPen?`−2 ${decreeName}`:''})`:''}</b><br>`+(surv?(L==v?tr('Kurtuldun! Hayatta kaldın.','You survived!'):tr('Rakip hayatta kaldı.','Opponent survived.')):(`<b>${L==v?tr('Öldün. Oyunu rakip kazandı.','You died. Opponent won the game.'):tr('Rakip öldü. Oyunu sen kazandın!','Opponent died. You won the game!')}</b>`))+'</div>'};
     const full=v=>mk(v,roll,surv),rig=MODE=='bot'&&avKey(S,1)==='u'&&L==1&&!surv&&!S.rigDone; // Bilinmeyen (İmkansız bot): oyun başına bir kez ölümden döner
     const uRev=(MODE==='host'?(L===0||L===1):L===0)&&avKey(S,L)==='u'&&!surv&&!(S.uRevived&&S.uRevived[L]);
     if(surv||rig||uRev){const n=S.bo+2;
-      const lb=`Düello ${n} ile devam et`,go=()=>{try{document.body.classList.remove('dead')}catch(e){}S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()};
+      const lb=tr(`Düello ${n} ile devam et`,`Continue to Duel ${n}`),go=()=>{try{document.body.classList.remove('dead')}catch(e){}S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()};
       if(rig){S.rigDone=true;S.hpUsed[1]=true;impSave(mk(0,1,false,1),()=>M(mk(0,20,true,20),lb,go))}
-      else if(uRev){S.uRevived=S.uRevived||[false,false];S.uRevived[L]=true;S.hpUsed[L]=true;impSave(mk(0,roll,false),()=>MM(v=>mk(v,20,true,20),lb,go),'Hiçlik seni geri çevirdi… Bir kez daha ölümden döndün!')}
+      else if(uRev){S.uRevived=S.uRevived||[false,false];S.uRevived[L]=true;S.hpUsed[L]=true;impSave(mk(0,roll,false),()=>MM(v=>mk(v,20,true,20),lb,go),tr('Hiçlik seni geri çevirdi… Bir kez daha ölümden döndün!','The Void refused you… You have returned from death once more!'))}
       else MM(full,lb,go)}
-    else{S.over=true;lrnGame(L==0);rematchReady=[false,false];rematchHeroes=[null,null];MM(full,'Yeniden oyna',()=>chooseHero(hid=>{if(MODE==='host'){MY_HERO=hid;rematchReady[0]=true;rematchHeroes[0]=hid;checkStartOnlineRematch()}else{MY_HERO=hid;start()}},()=>{$('#menu').hidden=false;setMusic('menu')}),null,true)}
+    else{S.over=true;lrnGame(L==0);rematchReady=[false,false];rematchHeroes=[null,null];MM(full,tr('Yeniden oyna','Play Again'),()=>chooseHero(hid=>{if(MODE==='host'){MY_HERO=hid;rematchReady[0]=true;rematchHeroes[0]=hid;checkStartOnlineRematch()}else{MY_HERO=hid;start()}},()=>{$('#menu').hidden=false;setMusic('menu')}),null,true)}
   }
 }
 function cutscene(txt,done){ // BİLİNMEYEN: ikonu ve konuşma balonu
@@ -1184,7 +1210,8 @@ function cutscene(txt,done){ // BİLİNMEYEN: ikonu ve konuşma balonu
   setTimeout(()=>{tm=setInterval(()=>{sp.textContent=txt.slice(0,++i);if(i>=txt.length){clearInterval(tm);setTimeout(out,2800)}},48)},500);
   el.onclick=()=>{if(i<txt.length){i=txt.length;clearInterval(tm);sp.textContent=txt;setTimeout(out,2200)}else out()};
 }
-function impSave(html,cont,msg='Bu kadar kolay olacağını mı sandın? Bu oyunun yaratıcısı benim.'){ // BİLİNMEYEN ölecekken: zar düşer, sahne girer, zar yeniden atılır (Nat 20)
+function impSave(html,cont,msg){ // BİLİNMEYEN ölecekken: zar düşer, sahne girer, zar yeniden atılır (Nat 20)
+  if(!msg)msg=tr('Bu kadar kolay olacağını mı sandın? Bu oyunun yaratıcısı benim.','Did you think it would be that easy? I am the creator of this game.');
   M(html,'.',()=>{});$('#mb').classList.add('rig');
   const d=document.querySelector('#mb .d20-box');let n=0;
   const w=setInterval(()=>{if(!d||!d.isConnected||++n>600){clearInterval(w);return}
@@ -1194,7 +1221,7 @@ let entering=false;
 function veil(ms=2000){const v=document.createElement('div');v.className='veil';v.style.animationDuration=ms+'ms';v.style.setProperty('--ms',ms*.9+'ms');v.innerHTML=`<img alt="" src="limbi_favicon.png?v=limbi3"><b>limbigames</b><span class="ldb"><i></i></span>`;document.body.appendChild(v);setTimeout(()=>v.remove(),ms+100)}
 function enter(fn){if(entering)return;entering=true;veil();setMusic('game');setTimeout(()=>{$('#menu').hidden=true;entering=false;fn()},1700)}
 let MY_HERO='c',OPP_HERO='n';
-const HEROES=[
+const HEROES_TR=[
   {id:'c',name:'Lanetli Tüccar',hpName:'Zamanın İadesi',desc:'Kullanıldığında masadaki tüm sayı kartları desteye geri karıştırılır. Kullanılmış Joker kartları yakılır ve yeni bir sayı kartı destesi dağıtılır. 4 tur galibiyet elde ettiğinde aktifleşir.'},
   {id:'p',name:'Veba Doktoru',hpName:'Vebalı Takas',desc:'Elindeki 1 Joker kartını yakarak desteden rastgele 2 yeni Joker kartı çek.'},
   {id:'n',name:'Kara Şövalye',passive:true,hpName:'Ölüm Fermanı',desc:'Rakibinin attığı her Ölüm Zarı sonucundan 2 çıkar.'},
@@ -1207,7 +1234,21 @@ const HEROES=[
   {id:'v',name:'Vampir',passive:true,hpName:'Kanla Mühürlenen Kader',desc:'İlk beraberlikte turu kazanmış sayılırsın. Bu güç oyun boyunca yalnızca 1 kez kullanılabilir.'},
   {id:'u',name:'Bilinmeyen',passive:true,bossOnly:true,hpName:'Hiçlikten Dönüş',desc:'Ölüm zarında hedef sayının altında atarsan, ölümden bir kereliğine geri dönersin.'}
 ];
-const HERO_MAP=Object.fromEntries(HEROES.map(h=>[h.id,h]));
+const HEROES_EN=[
+  {id:'c',name:'Cursed Merchant',hpName:'Rewind of Time',desc:'Shuffles all number cards on the table back into the deck, burns used Jokers, and deals a fresh number hand. Unlocks after winning 4 rounds.'},
+  {id:'p',name:'Plague Doctor',hpName:'Plague Trade',desc:'Burn 1 Joker card from your hand to draw 2 random new Joker cards from the deck.'},
+  {id:'n',name:'Dark Knight',passive:true,hpName:'Death Decree',desc:'Subtract 2 from every Death Die roll made by your opponent.'},
+  {id:'a',name:'Withered Queen',hpName:'Lost Fate',desc:'Secretly inspect the top 2 cards of the deck. Swap their order if you wish.'},
+  {id:'s',name:'Sorcerer',passive:true,hpName:'Shadow Thief',desc:'Start every duel with the Thief Joker as your 4th card.'},
+  {id:'e',name:'Frost Giant',passive:true,hpName:'Ancient Resilience',desc:'Each time you lose a round, you have a 20% chance to deflect the damage and turn the round into a tie.'},
+  {id:'m',name:'Lord of Death',passive:true,hpName:'Death\'s Favor',desc:'Gain a +2 bonus to every Death Die roll you make.'},
+  {id:'w',name:'Witch',hpName:'Raven\'s Prophecy',desc:'Secretly inspect your opponent\'s hidden number card.'},
+  {id:'l',name:'Werewolf',hpName:'Blood Full Moon',desc:'Destroy 1 random number card on the table from both players.'},
+  {id:'v',name:'Vampire',passive:true,hpName:'Blood-Sealed Fate',desc:'On your first tied round, you win the round instead. Triggers once per match.'},
+  {id:'u',name:'The Unknown',passive:true,bossOnly:true,hpName:'Return from the Void',desc:'If you roll below the target on the Death Die, return from death once per match.'}
+];
+let HEROES=[...HEROES_TR];
+let HERO_MAP=Object.fromEntries(HEROES.map(h=>[h.id,h]));
 const HP_IC={
   c:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10M7 21h10M8 3c0 4 4 6 4 9s-4 5-4 9M16 3c0 4-4 6-4 9s4 5 4 9"/><path d="M4.5 9.5a8 8 0 0112-4.8M4.5 6v3.5H8" stroke-width="1.6"/></svg>',
   p:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="11" rx="1.5"/><rect x="13" y="9" width="8" height="11" rx="1.5"/><path d="M14 4l3-1.5L15.5 6M10 20l-3 1.5L8.5 18"/><path d="M7 8v3m-1.5-1.5h3"/></svg>',
@@ -1227,7 +1268,9 @@ function start(){hiPreload();setMusic('game');try{document.body.classList.remove
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
 let prevT=false,lastLk='',flipId=null,lastTot=[0,0],lastBust=false,prevSeal='',sayT='',prevHpAnim=[false,false];
-const NAMES={c:'Lanetli Tüccar',p:'Veba Doktoru',n:'Kara Şövalye',a:'Solmuş Kraliçe',s:'Büyücü',e:'Buz Devi',m:'Ölümün Efendisi',w:'Cadı',l:'Kurt Adam',v:'Vampir',u:'BİLİNMEYEN'};
+const NAMES_TR={c:'Lanetli Tüccar',p:'Veba Doktoru',n:'Kara Şövalye',a:'Solmuş Kraliçe',s:'Büyücü',e:'Buz Devi',m:'Ölümün Efendisi',w:'Cadı',l:'Kurt Adam',v:'Vampir',u:'BİLİNMEYEN'};
+const NAMES_EN={c:'Cursed Merchant',p:'Plague Doctor',n:'Dark Knight',a:'Withered Queen',s:'Sorcerer',e:'Frost Giant',m:'Lord of Death',w:'Witch',l:'Werewolf',v:'Vampire',u:'THE UNKNOWN'};
+let NAMES={...NAMES_TR};
 const avKey=(S,p)=>{if(p===0)return (S.hero&&S.hero[0])||MY_HERO||'c';if(MODE=='bot')return (S.hero&&S.hero[1])||'c';return (S.hero&&S.hero[p])||(S.av&&S.av[p])||'c'};
 const HD_PORTRAITS={
   c:'corrupted_merchant.jpg?v=20261116_t21',
@@ -1242,7 +1285,7 @@ const HD_PORTRAITS={
   v:'vampire.jpg?v=20261116_t39',
   u:'unknown.jpg?v=20261116_t84'
 };
-const avSrc=k=>HD_PORTRAITS[k]||(k?AV[k]:IMG.bn),oppName=()=>NAMES[avKey(G,1)]||'Rakip';
+const avSrc=k=>HD_PORTRAITS[k]||(k?AV[k]:IMG.bn),oppName=()=>NAMES[avKey(G,1)]||tr('Rakip','Opponent');
 const prevAv=[undefined,undefined],morphT=[0,0];
 const peek=new Set(),seen=new Set(),seenE=new Set(),DN={easy:1,med:2,hard:3,imp:5},DES=new Set([13,14,17]);
 const IC={
@@ -1343,8 +1386,71 @@ SAYS.imp={
  surv0:['Le firn-ë ú. Burzum thar-a.','Dhaur ant-ë le thêl.','Thêl o le snaga.','Mellon, umbar ú durb-ë.','Burzum ú ghâsh-ë le. Thar-a.','Le thar-a. Ni thar-a.'],
  surv1:['Ni firn-ë ú.','Burzum ú gimb-a ni.','Ni Ilumaur.','Ash ni. Ash umbar.','Dagor ú firn-ë ni.','Mor ú firn-a.']
 };
+const SAYS_EN={
+easy:{hello:['Welcome friend, care to roll the dice?','No bargaining, only dice here.','My cards are clean, my conscience is not.','Come sit. The stall is open, my pouch is empty.','I have the goods, you have the luck. Let\'s see.','Everyone sells something in this market; I sell cards.'],
+ win:['Profit is profit, my friend.','This round is mine, no hard feelings.','My pouch is full, my mood is bright.','Fortune smiled on me, what can I do?','Another round tallied to the stall.','Free lesson for you. The round is mine.'],
+ lose:['Ah, that round was yours.','Take a round on me, I\'m feeling generous.','You\'re the winner, for now.','Alas, my pouch feels lighter.','Well played, the loss is mine this time.','I lost coin, but kept the customer.'],
+ tie:['A tie? Just like haggling.','We stand on equal ground.','Nobody won, how strange.','Half and half, fair trade.','No profit, no loss—sweated for nothing.'],
+ bust:['Oops, drew one too many!','Greed burned me...','One card too many, one soul short.','Lost count, my bad.','My scales were off!'],
+ joker:['A little trick, nobody saw a thing.','A merchant always has something up his sleeve.','Offering this to you at a discount.','A Joker? Of course I have one.','Found it under the counter, surprised me too.'],
+ jt:['Shifted the target a bit, price changed.','Numbers drop with bargaining too, friend.','New price list: the target moved!','Tweaked the scales, pardon me.'],
+ jd:['No card, no tab.','Tossed that card in the bin, no waste.','Goods were spoiled, had to destroy them.','Time to tidy up, the stall was messy.'],
+ js:['Bartering goods, rule of the trade.','Mind handing that over? Much obliged.','Stalls got mixed up, who knows what\'s whose.','I said swap, not robbery.'],
+ jb:['Easy now, shop\'s closed for a moment.','Some things are forbidden at this stall.','Closed the door, don\'t come in.'],
+ jn:['Your Joker\'s void, no receipt issued.','Your Joker was defective, returned it.','Negated, no refunds accepted.'],
+ react:['Look at that, you had one in your pocket too.','Hmm, didn\'t see that coming.','A Joker? Very pricey.','Ooh, peeking under the counter too?','No cheating in a bargain, but fine.'],
+ draw:['One more, we\'ll talk price later.','Come on now, card.','Bring me luck, little card.','One more slice, still hungry.'],
+ pass:['I\'m right here, your turn.','No rush, take your time.','That\'s plenty for me.','My hand\'s full, over to you.','I\'ll brew some tea while you think.'],
+ think:['Hmm, doing the math…','One second, let me grab the abacus.','Thinking, no rush.','Counting coins, counting cards…'],
+ pbust:['You show {o}, target is {t}. Careful now!','You went over the target, friend!','Greed costs dearly.','Target is {t}, you have {o}. Looks like you busted!','Greed burned you too, friend.'],
+ obust:['My open cards hit {b}, target is {t}. Drat!','Blast it, went over the target.','That card fell on the wrong stall.','Now I really need a Joker.'],
+ pexact:['Showing {t} on the dot! Mind your hidden card.','Sitting right on the target, that hidden card might ruin it.','Exactly {t}, but your hidden card hasn\'t spoken yet.'],
+ surv0:['Dodged the die, congrats.','Lucky you—how about next time?','You scraped through, well done.'],
+ surv1:['Slipped past the dice, thank goodness!','Death missed me this time.','By a hair\'s breadth, broke a sweat!']},
+med:{hello:['I know the price of your soul.','Play and pay.','Another customer, how lovely.','You signed the contract without reading it, didn\'t you?','Welcome. The house always wins the tab.','Leave your purse, and your soul. You\'ll need both.'],
+ win:['A piece of your soul is mine.','My pockets fill while you fade.','Every round puts you deeper in debt.','This round is mine, with interest.','Receipt issued, no signature needed.','My profit margin exceeds you.'],
+ lose:['You won, your debt remains.','You will pay the price for this.','A lucky round, nothing more.','Smile, it won\'t last long.','Take one round, I\'ll double the interest.','You got off cheap, the bill comes later.'],
+ tie:['A tie. How irritating.','A draw... how tedious.','Nobody won, only blood did.','No profit in a draw, I\'m displeased.','Empty round, wasted time.'],
+ bust:['My mistake, my soul burns!','Drew too much... curse it.','The price of my own greed.','Fell into my own trap, shameful.','Burned chasing excessive profit.'],
+ joker:['Not cheating, just business.','I write the rules.','Plenty more where that came from.','The cost is yours to bear.','Cheating? I call it a "contract clause".','You didn\'t read the fine print.'],
+ jt:['Changed the target. I write the rules.','New target, new price. No appeals.','The target belongs where it suits me.','Updated the contract without telling you.'],
+ jd:['One card less, one debt more.','Card torn. I\'ll bill you for the damages.','Destroyed. No evidence left.','That card is off the ledger now.'],
+ js:['Cards changed hands. Profit is mine.','I said trade, but the gain is always mine.','Out of your pocket, into mine.','Borrowed this. Won\'t give it back.'],
+ jb:['Now hush and watch.','Declared a ban at this table.','Hands tied, mouth shut. Wait.'],
+ jn:['Your Joker is void. Receipt stamped.','Threw your Joker in the trash, don\'t thank me.','Negated. And I keep the interest.'],
+ react:['Bold move—foolish, but bold.','A Joker? You amuse me.','I\'m impressed, almost.','Am I being billed for this Joker?','Rummaging through your pockets, I see.','Paying with Jokers instead of debt?'],
+ draw:['One more card, one more soul.','Come to me, little card.','Drawing a card of fate.','Every card is an investment.','Profit rises, cards rise.'],
+ pass:['Your turn, don\'t overthink it.','I\'m waiting, I have patience.','Your choice, my outcome.','Take your time, the interest is ticking.','I\'m done. You may burn.'],
+ think:['Calculating, with interest.','One moment, opening the ledger.','Pricing your soul…','Looking at your cards. Weak.','I\'ll sell this move dearly.'],
+ pbust:['Showing {o}, target {t}. Busted and in debt.','You passed the target, pitiful.','Drew too much, burned too much.','{o}? Target is {t}. You can\'t count.','How greedy! Target {t}, you have {o}.'],
+ obust:['Showing {b}, target {t}. A minor setback, nothing more.','Wrong card arrived, I\'ll send the invoice.','Passed the target, but I never fold.','A mistake. Tell no one.'],
+ pexact:['Showing {t} flat. Your hidden card will burn you.','Sitting right on the target. Still have a hidden card, don\'t you?','You hit {t}, how elegant. How brief it will be.'],
+ surv0:['You survived... this time.','The die smiled at you, not me.','Your debt is postponed, not forgiven.'],
+ surv1:['Death turned me away.','The die favors me, the soul favors me.','Even death wrote me a profit.']},
+hard:{hello:['The dice are cast. Fate is sealed.','Death has taken a seat at the table.','Give me your final breath.','I have waited a long time for you.','The game begins. There is no exit.','Welcome. The door locked behind you.'],
+ win:['Your soul is mine.','Death is patient.','The dice laugh in my favor.','You stepped closer to the abyss.','Another name written in the ledger.','Every loss is another shovel of earth on your grave.'],
+ lose:['You were lucky this time.','My turn will come again.','Smile, it will not last.','You cannot deceive Death.','I lent you a round. The interest is your life.','You think you won. Good.'],
+ tie:['Equilibrium... Death equalizes all.','A tie. My patience is inexhaustible.','No one won. Yet.','The scales are balanced. But my shroud is ready.','Death favors no one. This round.'],
+ bust:['Impossible... The calculation was flawed.','Even Death errs once.','This was outside my design.','Once... and only once.','Misfortune. I will not forget this.'],
+ joker:['Your courage is admirable.','My cards are watching you.','It is not over yet.','Your soul trembles.','This move was written in fate.','You merely think you are playing.'],
+ jt:['The target stands where I command.','I altered the measure. There is no escape.','The threshold of fate has shifted.','I moved the boundary. Your footing slips.'],
+ jd:['A card returned to dust.','This card\'s lifespan has ended.','Erased. Just like your hopes.','Turned to ash. You may be next.'],
+ js:['What was yours is now mine.','Your cards changed hands. So did your fate.','Taken. Do not thank me.','No trade—only collection.'],
+ jb:['Silence. Your right to act is sealed.','I bound your hands.','Now you will only watch.'],
+ jn:['Your Joker was stillborn.','I erased your move.','Powerless. Just like you.'],
+ react:['I anticipated this trump card.','I read your move.','One Joker will not save you.','Was that your last resort?','I accounted for this. I always do.','Your Jokers dwindle. My patience does not.'],
+ draw:['The card of fate comes to me.','I draw. You tremble.','Every card is a step closer.','Whispers rise from the deck.','I do not choose the card; the card chooses me.'],
+ pass:['Your turn. Do not tarry.','Make your move. I wait.','I am ready. Are you?','I am finished. Now burn.','Silence. Your turn.'],
+ think:['Your open total is {o}. Target {t}. Probabilities turn.','Your hidden card... I already suspect it.','Every remaining card in the deck is in my mind.','You hold {j} Jokers. I know.','I burn through every possibility.','I read not your move, but your fear.'],
+ pbust:['Showing {o}. Target {t}. Judgment is passed.','You busted. Death relishes this.','You were far too greedy.','You exceeded the target. Your end is here.','Either you cannot count, or you love dying.'],
+ obust:['My open total is {b}, target {t}. A calculated risk.','I passed the target. The plan still holds.','Even Death stumbles once.','One error. Only one.'],
+ pexact:['{t}. Perfect. Your hidden card will bring your end.','Sitting right on the target. How fragile.','Showing {t}. One more card and you collapse.'],
+ surv0:['You escaped the die. Death does not forget.','You will not escape the next one.','You fled this time. My shadow remains with you.'],
+ surv1:['Rolling dice against me is futile.','Death does not die.','Even death refused me.']}
+};
+SAYS_EN.imp=SAYS.imp;
 const lastSay={};
-function pickSay(cat){const L=(SAYS[DIFF]||SAYS.med)[cat]||SAYS[DIFF||'med'].joker||[];if(!L.length)return '';let i,n=0;do{i=Math.random()*L.length|0}while(L.length>1&&i==lastSay[DIFF+cat]&&n++<9);lastSay[DIFF+cat]=i;return L[i]}
+function pickSay(cat){const bank=isEn()?SAYS_EN:SAYS;const L=(bank[DIFF]||bank.med)[cat]||bank[DIFF||'med'].joker||[];if(!L.length)return '';let i,n=0;do{i=Math.random()*L.length|0}while(L.length>1&&i==lastSay[DIFF+cat]&&n++<9);lastSay[DIFF+cat]=i;return L[i]}
 const jCat=id=>[8,9,10,11,19].includes(id)?'jt':[13,14].includes(id)?'jd':[15,16,17,18].includes(id)?'js':[23,24].includes(id)?'jb':id==12?'jn':'joker';
 /* Konuşma yöneticisi: öncelik 2 = sonuç (her zaman söylenir), 1 = durum/joker (en az 3.5 sn ara), 0 = gevezelik (en az 8 sn ara).
    Eski söz, yenisi gelene kadar ekranda kalır; böylece yazı saniyede birkaç kez değişmez. */
@@ -1484,21 +1590,21 @@ function R(){
     const f=(nf?' fresh':'')+(fl?' flip':'')+(cn.includes(c.id)?' hl':'')+(pk?' mc':''),a=`data-c="${c.id}"${pk?' data-pk="1"':''}${pk&&S.rev?' style="--fd:.6s"':''}`;
     return !back&&c.o==null?`<img class="c n${f}" ${a} src="${IMG.n[c.n]}" alt="${c.n}">`:`<div class="c${back?' bk':''}${f}" ${a}>${back?'':`${c.o??c.n}${c.o!=null?'<i>↺</i>':''}`}</div>`};
   const pips=[0,1,2].map(i=>`<span class="pip ${res[i]==null?(i==S.rounds?'now':''):res[i]>0?'w':res[i]<0?'l':'d'}"></span>`).join('');
-  const sk=TH.map((t,i)=>`<span class="sk${i<bi?' past':i==bi?' cur':''}" title="D20 Ölüm Eşiği: ${t} veya üstü atmalısın">${IC.skull}<small>${t}</small></span>`).join('');
+  const sk=TH.map((t,i)=>`<span class="sk${i<bi?' past':i==bi?' cur':''}" title="${tr(`D20 Ölüm Eşiği: ${t} veya üstü atmalısın`,`D20 Death Threshold: Roll ${t} or higher`)}">${IC.skull}<small>${t}</small></span>`).join('');
   const isSpec=MODE=='spectator';
-  const specHdr=isSpec?`<div class="spec-badge"><i></i>İzleyici Modu (${specCount||1}/${MAX_SPECTATORS})</div>`:'';
-  setH('#hdr',`<div class="hs sks">${sk}</div><div class="hc"><span class="lab">Düello ${S.bo+1}</span><span class="pips">${pips}</span>${specHdr}</div><div class="hg"><button class="gear" data-g="1" aria-label="Ayarlar">${IC.gear}<span>MENÜ</span></button></div>`);
+  const specHdr=isSpec?`<div class="spec-badge"><i></i>${tr('İzleyici Modu','Spectator Mode')} (${specCount||1}/${MAX_SPECTATORS})</div>`:'';
+  setH('#hdr',`<div class="hs sks">${sk}</div><div class="hc"><span class="lab">${tr('Düello','Duel')} ${S.bo+1}</span><span class="pips">${pips}</span>${specHdr}</div><div class="hg"><button class="gear" data-g="1" aria-label="${tr('Ayarlar','Settings')}">${IC.gear}<span>${tr('MENÜ','MENU')}</span></button></div>`);
   const oppClosedKnown=!!(S.rev||(S.pl[1].closed.length&&S.pl[1].closed.every(c=>c.o!=null)));
   const my=!isSpec&&S.turn==0&&!lock&&!S.wait,mt=total(S,0),ot=total(S,1,oppClosedKnown),bust=!low&&mt>T,obust=oppClosedKnown&&!low&&ot>T,seal=T+(low?'L':'');
   const exact=!low&&mt===T,oexact=oppClosedKnown&&!low&&ot===T;
-  const jp=n=>`<span class="jpips" title="Bu tur kalan joker hakkı ${n}/2">${[0,1].map(i=>`<i${i<n?' class="on"':''}></i>`).join('')}</span>`;
+  const jp=n=>`<span class="jpips" title="${tr(`Bu tur kalan joker hakkı ${n}/2`,`Jokers left this round: ${n}/2`)}">${[0,1].map(i=>`<i${i<n?' class="on"':''}></i>`).join('')}</span>`;
   const avh=p=>{const k=avKey(S,p),now=performance.now();if(prevAv[p]!==undefined&&prevAv[p]!==k)morphT[p]=now;prevAv[p]=k;
     const el=(now-morphT[p])/1000,mo=morphT[p]&&el<1.1,fp=HERO_FOCUS[k]||'50% 25%';return `<img class="av${mo?' morph':''}" data-av="${p}" style="object-position:${fp};${mo?`animation-delay:-${el.toFixed(2)}s`:''}" src="${avSrc(k)}" alt="">`};
   const av0=avh(0),av1=avh(1);
-  const p0Char=NAMES[avKey(S,0)]||'Lanetli Tüccar';
-  const p1Char=NAMES[avKey(S,1)]||'Kara Şövalye';
-  const p0Name=isSpec?`${p0Char} (Oda Sahibi)`:p0Char;
-  const p1Name=isSpec?`${p1Char} (Misafir)`:(MODE=='guest'?`${p1Char} (Oda Sahibi)`:(MODE=='host'?`${p1Char} (Rakip)`:(MODE=='bot'||S.av?oppName():'Rakip')));
+  const p0Char=NAMES[avKey(S,0)]||tr('Lanetli Tüccar','Cursed Merchant');
+  const p1Char=NAMES[avKey(S,1)]||tr('Kara Şövalye','Dark Knight');
+  const p0Name=isSpec?`${p0Char} (${tr('Oda Sahibi','Host')})`:p0Char;
+  const p1Name=isSpec?`${p1Char} (${tr('Misafir','Guest')})`:(MODE=='guest'?`${p1Char} (${tr('Oda Sahibi','Host')})`:(MODE=='host'?`${p1Char} (${tr('Rakip','Opponent')})`:(MODE=='bot'||S.av?oppName():tr('Rakip','Opponent'))));
   const oppTimeOut=!!(S.timeOut&&S.timeOut[1]),meTimeOut=!!(S.timeOut&&S.timeOut[0]);
   const defClock=initClockSec();
   const c0=Math.ceil(S.clocks?S.clocks[0]:defClock),c1=Math.ceil(S.clocks?S.clocks[1]:defClock);
@@ -1507,7 +1613,7 @@ function R(){
   if(scSec1)scSec1.textContent=(oppTimeOut||c1<=0)?'✕':String(c1);
   if(sc0){sc0.classList.toggle('ticking',S.turn==0&&!S.wait&&!(S.graceLeft>0)&&!meTimeOut);sc0.classList.toggle('low',c0<=10&&c0>0);sc0.classList.toggle('out',meTimeOut||c0<=0);sc0.classList.toggle('turn-on',S.turn==0&&!S.wait&&!S.over);sc0.classList.toggle('turn-off',S.turn!=0&&!S.wait&&!S.over)}
   if(sc1){sc1.classList.toggle('ticking',S.turn==1&&!S.wait&&!(S.graceLeft>0)&&!oppTimeOut);sc1.classList.toggle('low',c1<=10&&c1>0);sc1.classList.toggle('out',oppTimeOut||c1<=0);sc1.classList.toggle('turn-on',S.turn==1&&!S.wait&&!S.over);sc1.classList.toggle('turn-off',S.turn!=1&&!S.wait&&!S.over)}
-  const oppHandHtml=`<div class="opp-jhand" title="Rakibin elindeki kapalı jokerler (${S.hand[1].length})">${S.hand[1].map((_,i)=>`<img class="oj" style="--r:${((i-(S.hand[1].length-1)/2)*4.5).toFixed(1)}deg" src="${IMG.bj}" alt="">`).join('')}</div>`;
+  const oppHandHtml=`<div class="opp-jhand" title="${tr(`Rakibin elindeki kapalı jokerler (${S.hand[1].length})`,`Opponent's hidden jokers (${S.hand[1].length})`)}">${S.hand[1].map((_,i)=>`<img class="oj" style="--r:${((i-(S.hand[1].length-1)/2)*4.5).toFixed(1)}deg" src="${IMG.bj}" alt="">`).join('')}</div>`;
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'')+(S.winSide!=null?(S.winSide>0?' round-lose':S.winSide===0?' round-tie':''):'');
   const myHId=avKey(S,0),oppHId=avKey(S,1);
   const hpUsed0=myHId==='u'?!!(S.uRevived&&S.uRevived[0]):myHId==='v'?!!(S.vampUsed&&S.vampUsed[0]):(myHId==='m'||myHId==='e'||myHId==='n'||myHId==='s'||myHId==='c')?false:!!(S.hpUsed&&S.hpUsed[0]);
@@ -1519,7 +1625,7 @@ function R(){
   const isMob=window.matchMedia&&window.matchMedia('(max-width: 760px), (hover: none) and (pointer: coarse)').matches;
   const hpBtn0=isSpec?'':`<button id="hp-btn" class="hp-btn${hpObj0.passive?' passive':''}${hpUsed0?' used':canHp?' ready':''}" data-hp="1" data-hp-id="${myHId}" data-hp-side="0"${(canHp||isMob)?'':' disabled'}>${HP_IC[myHId]||HP_IC.c}${cProg}</button>`;
   const hpBtn1=`<span class="hp-btn opp-hp${hpObj1.passive?' passive':''}${hpUsed1?' used':''}" data-hp-id="${oppHId}" data-hp-side="1">${HP_IC[oppHId]||HP_IC.c}</span>`;
-  setH('#opp',`${oppHandHtml}<div class="who">${av1}${hpBtn1}<div class="nm"><b>${p1Name}</b>${MODE=='bot'?'':'<span class="meta">Online</span>'}</div><div class="tot${obust?' bust':oexact?' exact':''}"><small>Toplam</small><div class="tl"><b>${lastTot[1]}</b>${oppClosedKnown?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards${(S.pl[1].open.length+S.pl[1].closed.length>=6)?' cards-2row':''}">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!(S.rev||c.o!=null||(S.oppPeek&&S.oppPeek.includes(c.id))),S.rev)).join('')}</div>`);
+  setH('#opp',`${oppHandHtml}<div class="who">${av1}${hpBtn1}<div class="nm"><b>${p1Name}</b>${MODE=='bot'?'':'<span class="meta">Online</span>'}</div><div class="tot${obust?' bust':oexact?' exact':''}"><small>${tr('Toplam','Total')}</small><div class="tl"><b>${lastTot[1]}</b>${oppClosedKnown?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards${(S.pl[1].open.length+S.pl[1].closed.length>=6)?' cards-2row':''}">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!(S.rev||c.o!=null||(S.oppPeek&&S.oppPeek.includes(c.id))),S.rev)).join('')}</div>`);
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<span class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${(k=='eff'||k=='steal_j')&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}"><img src="${IMG.j[e.id]}" alt=""></span>`};
   $('#deck b').textContent=S.deck.length;
   const drawLocked=S.eff.some(e=>e.id==23&&!e.neg&&e.o!=0);
@@ -1530,22 +1636,22 @@ function R(){
   const sl=$('#seal'),sc=(T!=21||low?' alt':'')+(low?' low':'')+(S.turn==0?' turn-me':' turn-op');
   if(!sl._o){sl._o=1;sl.addEventListener('animationend',()=>sl.classList.remove('stamp'))}
   if(sl._c!==sc){sl._c=sc;sl.className='seal'+sc+(sl.classList.contains('stamp')?' stamp':'')}
-  setH('#seal',`<b>${low?'En az':T}</b>`);
+  setH('#seal',`<b>${low?tr('En az','Lowest'):T}</b>`);
   if(prevSeal&&prevSeal!=seal){sl.classList.remove('stamp');void sl.offsetWidth;sl.classList.add('stamp')}
   $('#me').className='zone'+(my?' act':'')+(S.winSide!=null?(S.winSide<0?' round-lose':S.winSide===0?' round-tie':''):'');
-  setH('#me',`<div class="who">${av0}${hpBtn0}<div class="nm"><b>${p0Name}</b></div><div class="tot${bust?' bust':exact?' exact':''}"><small>Toplam</small><b>${lastTot[0]}</b></div></div><div class="cards${(S.pl[0].open.length+S.pl[0].closed.length>=6)?' cards-2row':''}">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||c.o!=null||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`);
+  setH('#me',`<div class="who">${av0}${hpBtn0}<div class="nm"><b>${p0Name}</b></div><div class="tot${bust?' bust':exact?' exact':''}"><small>${tr('Toplam','Total')}</small><b>${lastTot[0]}</b></div></div><div class="cards${(S.pl[0].open.length+S.pl[0].closed.length>=6)?' cards-2row':''}">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||c.o!=null||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`);
   const myAv=$('#me .who .av');if(myAv)myAv.onclick=e=>{e.stopPropagation();toggleEmoteMenu()};
   const pr=$('#prompt');
   pr.className=P?(P.hp?'ask':'ask has-joker'+(k==='sign'?' sign-mode':'')):'';
   if(!P){
     setH('#prompt','');
   }else if(P.hp==='u'){
-    setH('#prompt',`<div class="pr-box"><div class="pr-txt">Hiçlik Değişimi: ${KTXT[k]}</div><div class="pr-btns"><button class="btn sm alt" data-x="1">Vazgeç</button></div></div>`);
+    setH('#prompt',`<div class="pr-box"><div class="pr-txt">${tr('Hiçlik Değişimi','Void Shift')}: ${KTXT[k]}</div><div class="pr-btns"><button class="btn sm alt" data-x="1">${tr('Vazgeç','Cancel')}</button></div></div>`);
   }else if(P.hp==='a'){
-    setH('#prompt',`<div class="pr-box"><div class="pr-txt">Dönüşüm İksiri: Destenin en üstüyle değiştireceğin kendi sayı kartını seç</div><div class="pr-btns"><button class="btn sm alt" data-x="1">Vazgeç</button></div></div>`);
+    setH('#prompt',`<div class="pr-box"><div class="pr-txt">${tr('Dönüşüm İksiri: Destenin en üstüyle değiştireceğin kendi sayı kartını seç','Potion of Transmutation: Select your number card to swap with the top of the deck')}</div><div class="pr-btns"><button class="btn sm alt" data-x="1">${tr('Vazgeç','Cancel')}</button></div></div>`);
   }else{
-    const btns=k==='sign'?'<button class="btn sm" data-s="1">Ekle (+)</button><button class="btn sm" data-s="-1">Çıkar (−)</button>':'';
-    setH('#prompt',`<div class="pr-card-wrap"><img class="pr-jcard" src="${IMG.j[P.id]}" alt="${J[P.id]||''}"></div><div class="pr-box"><div class="pr-title">${J[P.id]}</div><div class="pr-txt">${KTXT[k]}</div><div class="pr-btns">${btns}<button class="btn sm alt" data-x="1">Vazgeç</button></div></div>`);
+    const btns=k==='sign'?`<button class="btn sm" data-s="1">${tr('Ekle (+)','Add (+)')}</button><button class="btn sm" data-s="-1">${tr('Çıkar (−)','Subtract (−)')}</button>`:'';
+    setH('#prompt',`<div class="pr-card-wrap"><img class="pr-jcard" src="${IMG.j[P.id]}" alt="${J[P.id]||''}"></div><div class="pr-box"><div class="pr-title">${J[P.id]}</div><div class="pr-txt">${KTXT[k]}</div><div class="pr-btns">${btns}<button class="btn sm alt" data-x="1">${tr('Vazgeç','Cancel')}</button></div></div>`);
     const jim=pr.querySelector('.pr-jcard');
     if(jim)hi(jim,P.id);
   }
@@ -1555,12 +1661,12 @@ function R(){
     $('#pass').style.display='none';
   }else{
     $('#pass').style.display='';
-    $('#pass').textContent=ends?'Turu bitir':'Pas';$('#pass').className='btn sm'+(ends?'':' alt');
+    $('#pass').textContent=ends?tr('Turu bitir','End Round'):tr('Pas','Pass');$('#pass').className='btn sm'+(ends?'':' alt');
   }
   const n=S.hand[0].length;
   $('#hand').classList.toggle('joker-locked',!!(S.noJ&&S.noJ[0]));
   if(isSpec){
-    setH('#hand',`<div class="spec-notice">Canlı Maç Yayını · İzleyici Modundasın</div>`);
+    setH('#hand',`<div class="spec-notice">${tr('Canlı Maç Yayını · İzleyici Modundasın','Live Match Broadcast · Spectator Mode')}</div>`);
   }else{
     setH('#hand',S.hand[0].map((id,i)=>`<span class="jslot"><img class="j${my&&!P&&playable(S,0,id)?'':' dim'}" draggable="false" style="--r:${((i-(n-1)/2)*5).toFixed(1)}deg" data-j="${id}" src="${IMG.j[id]}" alt=""></span>`).join(''));
     document.querySelectorAll('#hand .j[data-j]').forEach(im=>hi(im,+im.dataset.j));
@@ -1647,7 +1753,7 @@ function chooseHero(onPick,onCancel){
       <p class="hpc-desc ${dc}">${h.desc}</p>
     </div>
   </button>`}).join('');
-  $('#mb').innerHTML=`<h3>Kahramanını Seç</h3><div class="hero-grid">${cards}</div><div class="row"><button id="hp-cancel" class="btn alt sm">Geri</button></div>`;
+  $('#mb').innerHTML=`<h3>${tr('Kahramanını Seç','Choose Your Hero')}</h3><div class="hero-grid">${cards}</div><div class="row"><button id="hp-cancel" class="btn alt sm">${tr('Geri','Back')}</button></div>`;
   $('#m').hidden=false;
   $('#mb').querySelectorAll('[data-pick-hero]').forEach(btn=>btn.onclick=()=>{
     const hid=btn.dataset.pickHero;
@@ -1657,7 +1763,7 @@ function chooseHero(onPick,onCancel){
 }
 function showScryModal(c1,c2,onKeep,onSwap){
   const cardHtml=c=>`<div class="scry-card"><img src="${IMG.n[c.n]}" alt="${c.n}"><span>${c.n}</span></div>`;
-  box(`<h3>Yitik Yazgı — Deste Üstü</h3><p>${c2?'En üstteki 2 kartı görüyorsun (soldaki sıradaki çekilecek kart). İstersen yerlerini değiştir:':'Destede yalnızca 1 kart kaldı:'}</p><div class="scry-row">${cardHtml(c1)}${c2?cardHtml(c2):''}</div>${c2?'<div class="row"><button id="scry-keep" class="btn sm">Sırayı Koru</button><button id="scry-swap" class="btn sm alt">Yerlerini Değiştir</button></div>':''}`, !c2);
+  box(`<h3>${tr('Yitik Yazgı — Deste Üstü','Lost Fate — Top of Deck')}</h3><p>${c2?tr('En üstteki 2 kartı görüyorsun (soldaki sıradaki çekilecek kart). İstersen yerlerini değiştir:','You see the top 2 cards of the deck (the left one will be drawn next). Swap their order if you wish:'):tr('Destede yalnızca 1 kart kaldı:','Only 1 card remains in the deck:')}</p><div class="scry-row">${cardHtml(c1)}${c2?cardHtml(c2):''}</div>${c2?`<div class="row"><button id="scry-keep" class="btn sm">${tr('Sırayı Koru','Keep Order')}</button><button id="scry-swap" class="btn sm alt">${tr('Yerlerini Değiştir','Swap Order')}</button></div>`:''}`, !c2);
   if(c2){
     $('#scry-keep').onclick=()=>{$('#m').hidden=true;lock=false;onKeep()};
     $('#scry-swap').onclick=()=>{$('#m').hidden=true;lock=false;snd('flip');onSwap()};
@@ -1716,14 +1822,14 @@ function useHeroPower(){
   const hid=avKey(S,0);
   if(hid==='c'){
     const wins=(S.cWins&&S.cWins[0])||0;
-    if(wins<4)return box(`<h3>Zamanın İadesi</h3><p>4 tur galibiyet elde ettiğinde aktifleşir. (Şu an: ${wins}/4)</p>`);
+    if(wins<4)return box(`<h3>${tr('Zamanın İadesi','Rewind of Time')}</h3><p>${tr(`4 tur galibiyet elde ettiğinde aktifleşir. (Şu an: ${wins}/4)`,`Unlocks after winning 4 rounds. (Current: ${wins}/4)`)}</p>`);
     if(MODE==='guest'){S.cWins[0]=0;snd('flip');playHeroPowerAnim('c',0,HERO_MAP.c);R();return conn.send({k:'hp_rewind'})}
     execRewind(S,0);
   }else if(hid==='p'){
-    if(!S.hand[0].length)return box('<h3>Vebalı Takas</h3><p>Elinde yakılacak Joker kartı yok.</p>');
-    if(!S.jdeck.length)return box('<h3>Vebalı Takas</h3><p>Joker destesinde çekilecek kart kalmadı.</p>');
+    if(!S.hand[0].length)return box(`<h3>${tr('Vebalı Takas','Plague Trade')}</h3><p>${tr('Elinde yakılacak Joker kartı yok.','You have no Joker cards in hand to burn.')}</p>`);
+    if(!S.jdeck.length)return box(`<h3>${tr('Vebalı Takas','Plague Trade')}</h3><p>${tr('Joker destesinde çekilecek kart kalmadı.','No Joker cards left in the deck to draw.')}</p>`);
     const jBtns=S.hand[0].map((jid,i)=>`<button class="btn sm" data-pburn="${i}">${J[jid]}</button>`).join('');
-    box(`<h3>Vebalı Takas</h3><p>Yakmak istediğin Joker kartını seç (desteden rastgele 2 yeni Joker çekeceksin):</p><div class="row" style="flex-wrap:wrap;gap:8px">${jBtns}</div>`, true);
+    box(`<h3>${tr('Vebalı Takas','Plague Trade')}</h3><p>${tr('Yakmak istediğin Joker kartını seç (desteden rastgele 2 yeni Joker çekeceksin):','Select a Joker card to burn (you will draw 2 random new Jokers from the deck):')}</p><div class="row" style="flex-wrap:wrap;gap:8px">${jBtns}</div>`, true);
     document.querySelectorAll('[data-pburn]').forEach(btn=>{
       btn.onclick=()=>{
         const idx=+btn.dataset.pburn;
@@ -1734,7 +1840,7 @@ function useHeroPower(){
       };
     });
   }else if(hid==='a'){
-    if(!S.deck.length)return box('<h3>Yitik Yazgı</h3><p>Destede kart kalmadı.</p>');
+    if(!S.deck.length)return box(`<h3>${tr('Yitik Yazgı','Lost Fate')}</h3><p>${tr('Destede kart kalmadı.','No cards left in the deck.')}</p>`);
     if(MODE==='guest'){S.hpUsed[0]=true;R();return conn.send({k:'hp_scry'})}
     S.hpUsed[0]=true;S.graceLeft=0;
     const n=S.deck.length,c1=S.deck[n-1],c2=n>1?S.deck[n-2]:null;
@@ -1749,14 +1855,14 @@ function useHeroPower(){
     S.hpUsed[0]=true;
     snd('flip');R();
   }else if(hid==='l'){
-    if(!(S.pl[0].open.length||S.pl[0].closed.length)||!(S.pl[1].open.length||S.pl[1].closed.length))return box('<h3>Kanlı Dolunay</h3><p>İmha edilecek yeterli kart yok.</p>');
+    if(!(S.pl[0].open.length||S.pl[0].closed.length)||!(S.pl[1].open.length||S.pl[1].closed.length))return box(`<h3>${tr('Kanlı Dolunay','Blood Full Moon')}</h3><p>${tr('İmha edilecek yeterli kart yok.','Not enough cards on the table to destroy.')}</p>`);
     if(MODE==='guest'){S.hpUsed[0]=true;snd('play');R();return conn.send({k:'hp_wolf'})}
     execWolf(S,0);snd('play');R();
   }else{
     return;
   }
 }
-function box(html,close=true){lock=true;$('#mb').innerHTML=html+(close?'<div class="row"><button id="pc" class="btn">Kapat</button></div>':'');$('#m').hidden=false;if(close)$('#pc').onclick=()=>{$('#m').hidden=true;lock=false;if(G)R()}}
+function box(html,close=true){lock=true;$('#mb').innerHTML=html+(close?`<div class="row"><button id="pc" class="btn">${tr('Kapat','Close')}</button></div>`:'');$('#m').hidden=false;if(close)$('#pc').onclick=()=>{$('#m').hidden=true;lock=false;if(G)R()}}
 /* ---------- BÜYÜK GÖRÜNÜM: karakter, sayı kartı, kapalı kart ---------- */
 const HQ={};
 function hq(key,cs,cb){let i=HQ[key];if(!i){i=HQ[key]=new Image();i._i=0;i.onerror=()=>{if(++i._i<cs.length)i.src=cs[i._i];else i._f=1};i.src=cs[0]}
@@ -1764,7 +1870,7 @@ function hq(key,cs,cb){let i=HQ[key];if(!i){i=HQ[key]=new Image();i._i=0;i.onerr
 function zoom(o){ // {src, hd:cb=>…, cls, cap, sub, btn, fn}
   const old=document.getElementById('zm');if(old)old.remove();
   const el=document.createElement('div');el.id='zm';
-  el.innerHTML=`<img class="zi ${o.cls||''}" src="${o.src}" alt=""><b>${o.cap}</b>${o.sub?`<small>${o.sub}</small>`:''}<div class="row">${o.btn?`<button class="btn alt" data-zb="1">${o.btn}</button>`:''}<button class="btn" data-zc="1">Kapat</button></div>`;
+  el.innerHTML=`<img class="zi ${o.cls||''}" src="${o.src}" alt=""><b>${o.cap}</b>${o.sub?`<small>${o.sub}</small>`:''}<div class="row">${o.btn?`<button class="btn alt" data-zb="1">${o.btn}</button>`:''}<button class="btn" data-zc="1">${tr('Kapat','Close')}</button></div>`;
   document.body.appendChild(el);snd('info');
   const im=el.querySelector('img');if(o.hd)o.hd(u=>{if(el.isConnected)im.src=u});
   const kd=e=>{if(e.key=='Escape')close()},close=()=>{el.remove();document.removeEventListener('keydown',kd)};
@@ -1780,7 +1886,7 @@ const backHD=cb=>{
   if(typeof HDBK!='undefined'&&HDBK){cb(HDBK);return;}
   hq('bk_v2',['img/back.png','img/back.jpg','img/n/back.png','img/n/back.jpg','img/back.webp'],cb);
 };
-const HERO_LORE={
+const HERO_LORE_TR={
   c:'Karanlık pazarlarda kemik ve altın tartıp terazisine hile karıştıran lanetli bezirgân.',
   p:'Gagalı maskesinin ardında ölümün izini süren, rakibin sırlarını okuyan gizemli hekim.',
   k:'Kafatası tahtından verdiği fermanla düellonun kader sınırını bile eğip büken ölümsüz hükümdar.',
@@ -1794,10 +1900,25 @@ const HERO_LORE={
   v:'Karanlık kadehini rakiplerinin yaşam gücüyle dolduran ölümsüz kan lordu.',
   u:'Zamanın ve kaderin ötesinden bakan, ölümden bile geri dönebilen çok kollu kozmik varlık.'
 };
-function zoomAv(p){const S=G,k=avKey(S,p),nm=NAMES[k]||(p?'Rakip':'Sen');
+const HERO_LORE_EN={
+  c:'A cursed trader who weighs bone and gold in dark markets, rigging the scales of fate.',
+  p:'A mysterious physician behind a beaked mask who tracks death and reads the enemy\'s secrets.',
+  k:'An immortal sovereign whose decree from the skull throne bends the very threshold of the duel.',
+  n:'A relentless armored warrior whose runic shield and heavy blade crush the enemy\'s strongest blow.',
+  a:'A queen with a withered rose scepter and ruby crown who secretly reads the fate atop the deck.',
+  s:'A sage surrounded by ancient scrolls and candlelight who foresees the cards yet to come.',
+  e:'An ancient colossus in glacial armor whose spiked mace freezes and deflects even the heaviest blows.',
+  m:'A dark lord who bargained with Death itself, blessed with unholy favor on every fate roll.',
+  w:'A dark sorceress with a raven companion and bone talismans who peers into hidden cards.',
+  l:'A savage beast driven by the full moon\'s fury, tearing apart cards on both sides of the table.',
+  v:'An immortal blood lord who fills his dark chalice with the life force of his rivals.',
+  u:'A many-armed cosmic entity gazing from beyond time and fate, capable of returning even from death.'
+};
+let HERO_LORE={...HERO_LORE_TR};
+function zoomAv(p){const S=G,k=avKey(S,p),nm=NAMES[k]||(p?tr('Rakip','Opponent'):tr('Sen','You'));
   const initialSrc=HD_PORTRAITS[k]||((typeof HDAV!='undefined'&&HDAV[k])?HDAV[k]:avSrc(k));
   const lore=HERO_LORE[k]||'';
-  zoom({src:initialSrc,cls:'sq',cap:`${nm} (${p==0?'Sen':'Rakip'})`,sub:lore,hd:cb=>{
+  zoom({src:initialSrc,cls:'sq',cap:`${nm} (${p==0?tr('Sen','You'):tr('Rakip','Opponent')})`,sub:lore,hd:cb=>{
     if(HD_PORTRAITS[k]){cb(HD_PORTRAITS[k]);return;}
     if(typeof HDAV!='undefined'&&HDAV[k]){cb(HDAV[k]);return;}
     const cs=[`img/av/${k}.jpg`,`img/av/${k}.png`,`img/av/${k}.webp`,`img/${k}.png`];
@@ -1809,23 +1930,73 @@ function zoomCard(id){const S=G;let f=null;
   if(!f)return;const {c,p,closed}=f,own=p==0,up=!closed||S.rev||(own&&peek.has(id)); // kart yüzü açık mı?
   if(!up){ // kapalı kart: arka yüzü
     const initialSrc=(typeof HDBK!='undefined'&&HDBK)?HDBK:IMG.bn;
-    return zoom({src:initialSrc,cls:'card',cap:own?'Senin kapalı kartın':'Rakibin kapalı kartı',hd:backHD,
-      btn:own&&!S.rev?'Kartıma bak':'',fn:()=>{snd('flip');peek.add(id);flipId=id;R();setTimeout(()=>zoomCard(id),80)}})}
+    return zoom({src:initialSrc,cls:'card',cap:own?tr('Senin kapalı kartın','Your hidden card'):tr('Rakibin kapalı kartı','Opponent\'s hidden card'),hd:backHD,
+      btn:own&&!S.rev?tr('Kartıma bak','Peek at card'):'',fn:()=>{snd('flip');peek.add(id);flipId=id;R();setTimeout(()=>zoomCard(id),80)}})}
   const val=c.o!=null?c.o:c.n;
   const initialSrc=(typeof HDN!='undefined'&&HDN[c.n])?HDN[c.n]:IMG.n[c.n];
   zoom({src:initialSrc,cls:'card',cap:`${val}`,hd:numHD(c.n),
-    sub:(closed?(own?'Senin kapalı kartın':'Rakibin kapalı kartı'):(own?'Senin açık kartın':'Rakibin açık kartı'))+(c.o!=null?` (joker etkisiyle ${c.o} sayılıyor, kartın aslı ${c.n})`:''),
-    btn:closed&&own&&!S.rev?'Kartımı gizle':'',fn:()=>{snd('flip');peek.delete(id);R()}})}
+    sub:(closed?(own?tr('Senin kapalı kartın','Your hidden card'):tr('Rakibin kapalı kartı','Opponent\'s hidden card')):(own?tr('Senin açık kartın','Your open card'):tr('Rakibin açık kartın','Opponent\'s open card')))+(c.o!=null?tr(` (joker etkisiyle ${c.o} sayılıyor, kartın aslı ${c.n})`,` (counts as ${c.o} due to Joker effect, original value ${c.n})`):''),
+    btn:closed&&own&&!S.rev?tr('Kartımı gizle','Hide card'):'',fn:()=>{snd('flip');peek.delete(id);R()}})}
 function preview(id,use,note,back){ // jokeri büyük göster: Kullan / Kapat
   lock=true;snd('info');
-  $('#mb').innerHTML=`<img class="big" src="${IMG.j[id]}" alt="${J[id]}">${note?`<div class="pn">${note}</div>`:''}<div class="row">${use?'<button id="pu" class="btn alt">Kullan</button>':''}<button id="pc" class="btn">Kapat</button></div>`;
+  $('#mb').innerHTML=`<img class="big" src="${IMG.j[id]}" alt="${J[id]}">${note?`<div class="pn">${note}</div>`:''}<div class="row">${use?`<button id="pu" class="btn alt">${tr('Kullan','Use')}</button>`:''}<button id="pc" class="btn">${tr('Kapat','Close')}</button></div>`;
   $('#m').hidden=false;hi($('#mb .big'),id);
   $('#pc').onclick=()=>{if(back)return back();$('#m').hidden=true;lock=false;if(G)R()};
   if(use)$('#pu').onclick=()=>{$('#m').hidden=true;lock=false;startJoker(id)};
 }
-function codex(){box(`<h3>Joker Kodeksi</h3><div class="cdx">${range(24).map(i=>`<img src="${IMG.j[i]}" data-k="${i}" alt="${J[i]}">`).join('')}</div>`);
-  document.querySelectorAll('#mb .cdx img').forEach(im=>im.onclick=()=>preview(+im.dataset.k,false,BLOCK.has(+im.dataset.k)?'Etkisiz kılınabilir':'Etkisiz kılınamaz',codex))}
-function guide(){box(`<h3>Nasıl Oynanır</h3>
+function codex(){box(`<h3>${tr('Joker Kodeksi','Joker Codex')}</h3><div class="cdx">${range(24).map(i=>`<img src="${IMG.j[i]}" data-k="${i}" alt="${J[i]}">`).join('')}</div>`);
+  document.querySelectorAll('#mb .cdx img').forEach(im=>{hi(im,+im.dataset.k);im.onclick=()=>preview(+im.dataset.k,false,BLOCK.has(+im.dataset.k)?tr('Etkisiz kılınabilir','Can be negated'):tr('Etkisiz kılınamaz','Cannot be negated'),codex)})}
+function guide(){
+  if(isEn()){
+    return box(`<h3>How to Play</h3>
+<div class="gd-wrap">
+  <div class="gd-sec">
+    <h4 class="gd-h">1. Core Goal</h4>
+    <p class="gd">At the end of each round, bring the sum of your open and hidden number cards closer to the <b>target number</b> (default <b>21</b>) than your opponent without going over. Exceeding the target busts you; if both players bust, the round ends in a tie.</p>
+  </div>
+  <div class="gd-sec">
+    <h4 class="gd-h">2. Starting Hand &amp; Cards</h4>
+    <p class="gd">Each round deals <b>1 open</b> and <b>1 hidden</b> number card from <b>1–11</b>. The player with the smaller open card acts first. Tap your own hidden card anytime to peek at its value; your opponent's hidden card stays secret until the round ends.</p>
+    <p class="gd">Each player starts a duel with <b>4 Jokers</b> (the Sorcerer starts every duel with the <b>Thief</b> Joker as their 4th card). After a tied round, both players draw 1 new Joker.</p>
+  </div>
+  <div class="gd-sec">
+    <h4 class="gd-h">3. On Your Turn</h4>
+    <ul class="gd-ul">
+      <li><b>Chess Clock (44s):</b> Your clock ticks only on your turn (with a 5s grace period at the start of a round). Running out of time passes your turn.</li>
+      <li><b>Draw a Card:</b> Tap or drag from the deck to draw as many open number cards as you want.</li>
+      <li><b>Play a Joker:</b> You may play up to <b>2 Jokers</b> per round (the Thief Joker ignores this limit). Drag a Joker onto the table or tap it and press <b>Use</b>.</li>
+      <li><b>Hero Power:</b> If your hero has an active power, tap the emblem next to your portrait on your turn. Passive powers trigger automatically.</li>
+      <li><b>Pass / End Round:</b> Passing after your opponent has passed (without drawing, playing a Joker, or using a power) becomes <b>End Round</b> and reveals all hidden cards.</li>
+    </ul>
+  </div>
+  <div class="gd-sec">
+    <h4 class="gd-h">4. Duels &amp; The Death Die (D20)</h4>
+    <p class="gd">Each duel is a best of <b>3 rounds</b> (win = <b>1</b> pt, tie = <b>0.5</b> pt). If points are tied after 3 rounds, the player with fewer remaining Jokers loses; if still tied, dice decide.</p>
+    <p class="gd">The loser of a duel rolls the crimson <b>D20 Death Die</b>. Rolling below the threshold means death and losing the match. The threshold rises after each survived duel: <b>4 → 8 → 14 → 18</b>.</p>
+  </div>
+  <div class="gd-sec">
+    <h4 class="gd-h">5. Table &amp; Center Seal</h4>
+    <p class="gd">The center seal displays the current <b>target</b>. The red slot on the left holds your opponent's played Jokers; the green slot on the right holds yours. Hover or tap them to inspect their effects.</p>
+  </div>
+  <div class="gd-sec">
+    <h4 class="gd-h">6. Block Jokers <span class="gd-tag">Can Be Negated</span></h4>
+    <p class="gd">Remain active on the table until the end of the round. Only this group can be cancelled with <b>Negate Joker</b>:</p>
+    <ul class="gd-ul">
+      <li><b>Odds ×2 / Evens ÷2:</b> Doubles all odd cards or halves all even cards on the table.</li>
+      <li><b>+5 / −5:</b> Adds or subtracts 5 from your own total only.</li>
+      <li><b>Target 27 / 24 / 17 / 15 &amp; Lowest wins:</b> Share the target slot; the most recently played replaces the previous one.</li>
+      <li><b>Hidden cards = 0 / Hidden cards ×2:</b> Changes how hidden cards contribute to totals.</li>
+      <li><b>Deck count ±:</b> Adds or subtracts the number of remaining cards in the deck from your total.</li>
+      <li><b>Block opponent draw:</b> Prevents your opponent from drawing number cards this round.</li>
+    </ul>
+  </div>
+  <div class="gd-sec">
+    <h4 class="gd-h">7. Instant Jokers <span class="gd-tag alt">Cannot Be Negated</span></h4>
+    <p class="gd">Resolve immediately and cannot be negated: <b>Opponent draws a card</b>, <b>Card → 0 / 12</b>, <b>Destroy own/opponent card</b>, <b>Swap open/hidden cards</b>, <b>Steal card</b>, <b>Gift card</b>, <b>Block opponent jokers</b>, <b>Negate Joker</b>, and the Sorcerer's <b>Thief</b>. Inspect all cards in the <b>Joker Codex</b>.</p>
+  </div>
+</div>`);
+  }
+  box(`<h3>Nasıl Oynanır</h3>
 <div class="gd-wrap">
   <div class="gd-sec">
     <h4 class="gd-h">1. Temel Amaç</h4>
@@ -1872,14 +2043,59 @@ function guide(){box(`<h3>Nasıl Oynanır</h3>
     <p class="gd">Oynandığı anda etki eder, masada kalmaz ve iptal edilemez: <b>Rakip kart çeker</b>, <b>Kart → 0 / 12</b>, <b>Kendi/Rakip kartını imha</b>, <b>Açık/Kapalı kart takası</b>, <b>Kart çal</b>, <b>Kart hediye</b>, <b>Rakip joker kullanamaz</b>, <b>Joker etkisiz</b> ve Büyücü'ye özel <b>Hırsız</b>. Tüm detayları <b>Joker Kodeksi</b>'nde görebilirsin.</p>
   </div>
 </div>`)}
+function applyLang(lang){
+  LANG=lang==='en'?'en':'tr';
+  document.documentElement.lang=LANG;
+  J=isEn()?[...J_EN]:[...J_TR];
+  KTXT=isEn()?{...KTXT_EN}:{...KTXT_TR};
+  HEROES=isEn()?[...HEROES_EN]:[...HEROES_TR];
+  HERO_MAP=Object.fromEntries(HEROES.map(h=>[h.id,h]));
+  NAMES=isEn()?{...NAMES_EN}:{...NAMES_TR};
+  HERO_LORE=isEn()?{...HERO_LORE_EN}:{...HERO_LORE_TR};
+  if(typeof IMG!=='undefined'&&IMG.j){
+    const srcMap=isEn()?(IMG.j_en||IMG.j_tr):(IMG.j_tr||IMG.j);
+    if(srcMap)Object.assign(IMG.j,srcMap);
+    IMG.j[25]=isEn()?THIEF_SVG_EN:THIEF_SVG_TR;
+  }
+  hiPre=false;
+  hiPreload();
+  const spans=document.querySelectorAll('#mb2 .hs-plaque > span');
+  if(spans[0])spans[0].textContent=tr('Yapay Zekaya Karşı','VS AI');
+  if(spans[1])spans[1].textContent=tr('Çevrim İçi Düello','Online Duel');
+  const dEasy=$('#mb2 .d[data-d="easy"]'),dMed=$('#mb2 .d[data-d="med"]'),dHard=$('#mb2 .d[data-d="hard"]'),dImp=$('#mb2 .d[data-d="imp"]');
+  if(dEasy)dEasy.textContent=tr('Kolay','Easy');
+  if(dMed)dMed.textContent=tr('Orta','Medium');
+  if(dHard)dHard.textContent=tr('Zor','Hard');
+  if(dImp)dImp.textContent=tr('İmkansız','Impossible');
+  if($('#b2'))$('#b2').textContent=tr('Oda Oluştur','Create Room');
+  if($('#code'))$('#code').placeholder=tr('ODA KODU','ROOM CODE');
+  if($('#b3'))$('#b3').textContent=tr('Odaya Katıl','Join Room');
+  if($('#b6'))$('#b6').textContent=tr('Ayarlar','Settings');
+  if($('#b4'))$('#b4').textContent=tr('Joker Kodeksi','Joker Codex');
+  if($('#b5'))$('#b5').textContent=tr('Nasıl Oynanır','How to Play');
+  if($('#b7'))$('#b7').textContent=tr('İngilizceye Geç','Türkçeye Geç');
+  if($('#pass')&&!G)$('#pass').textContent=tr('Pas','Pass');
+  if($('#sc-1'))$('#sc-1').title=tr('Rakibin Kalan Süresi','Opponent\'s Remaining Time');
+  if($('#sc-0'))$('#sc-0').title=tr('Senin Kalan Süren','Your Remaining Time');
+  if(G){
+    if(MODE==='bot'&&sayT){sayT=''}
+    R();
+  }
+}
+function toggleLang(){
+  snd('click');
+  applyLang(isEn()?'tr':'en');
+}
 function settings(){
   const inGame=$('#menu').hidden&&!!G;
-  box(`<h3>Ayarlar</h3><label>Müzik<input type="range" id="sm" min="0" max="1" step=".05" value="${VM}"></label><label>Efektler<input type="range" id="ss" min="0" max="1" step=".05" value="${VS}"></label><label class="chk"><input type="checkbox" id="sr" ${RM?'checked':''}> Hareketi azalt</label><label class="chk"><input type="checkbox" id="sv" ${VB?'checked':''}> Titreşim</label>${inGame?`<div class="menu-stack"><button class="btn alt" id="sk">Joker Kodeksi</button><button class="btn alt" id="sg">Nasıl oynanır</button>${MODE=='bot'?'<button class="btn alt" id="sa">Tekrar oyna</button>':''}<button class="btn alt" id="sx">Ana menüye dön</button><button class="btn" id="pc">Kapat</button></div>`:''}`, !inGame);
+  const langBtnTxt=tr('İngilizceye Geç (English)','Türkçeye Geç (Turkish)');
+  box(`<h3>${tr('Ayarlar','Settings')}</h3><label>${tr('Müzik','Music')}<input type="range" id="sm" min="0" max="1" step=".05" value="${VM}"></label><label>${tr('Efektler','Sound Effects')}<input type="range" id="ss" min="0" max="1" step=".05" value="${VS}"></label><label class="chk"><input type="checkbox" id="sr" ${RM?'checked':''}> ${tr('Hareketi azalt','Reduce Motion')}</label><label class="chk"><input type="checkbox" id="sv" ${VB?'checked':''}> ${tr('Titreşim','Vibration')}</label><div class="row" style="margin:10px 0 4px"><button class="btn alt sm" id="slang" style="width:100%">${langBtnTxt}</button></div>${inGame?`<div class="menu-stack"><button class="btn alt" id="sk">${tr('Joker Kodeksi','Joker Codex')}</button><button class="btn alt" id="sg">${tr('Nasıl oynanır','How to Play')}</button>${MODE=='bot'?`<button class="btn alt" id="sa">${tr('Tekrar oyna','Play Again')}</button>`:''}<button class="btn alt" id="sx">${tr('Ana menüye dön','Return to Main Menu')}</button><button class="btn" id="pc">${tr('Kapat','Close')}</button></div>`:''}`, !inGame);
   if(inGame&&$('#pc'))$('#pc').onclick=()=>{$('#m').hidden=true;lock=false;if(G)R()};
   $('#sm').oninput=e=>{VM=+e.target.value;LS('vm',VM);ac();MG.gain.value=VM*.45;if(FILE&&mel)mel.volume=Math.min(1,VM*.45)};
   $('#ss').oninput=e=>{VS=+e.target.value;LS('vs',VS);ac();SG.gain.value=VS};$('#ss').onchange=()=>snd('draw');
   $('#sr').onchange=e=>{RM=e.target.checked;LS('rm',RM?1:0);document.body.classList.toggle('rm',RM)};
   $('#sv').onchange=e=>{VB=e.target.checked;LS('vb',VB?1:0)};
+  if($('#slang'))$('#slang').onclick=()=>{toggleLang();settings()};
   if($('#sk'))$('#sk').onclick=codex;if($('#sg'))$('#sg').onclick=guide;
   if($('#sa'))$('#sa').onclick=()=>{ // kahraman seçtirip aynı botla baştan başla
     botGen++;thinkOn=false;const c=$('#cast');if(c)c.remove();$('#m').hidden=true;lock=false;P=null;
@@ -1892,7 +2108,7 @@ function peerLeft(msg){ // rakip çıktı: ana menüye ASLA doğrudan atma, yaln
   try{conn=null}catch(e){}
   if(MODE=='spectator'){
     // İzleyiciyken oda kapandıysa veya bağlantı koptuysa:
-    M(`Oda bağlantısı kesildi.<br><b>Yayın sona erdi.</b>`,null,null,true);
+    M(`${tr('Oda bağlantısı kesildi.','Room connection lost.')}<br><b>${tr('Yayın sona erdi.','Broadcast ended.')}</b>`,null,null,true);
     return;
   }
   if(!G){st(msg);return}              // henüz oyun yok (lobi): sadece bilgi yaz
@@ -1901,11 +2117,11 @@ function peerLeft(msg){ // rakip çıktı: ana menüye ASLA doğrudan atma, yaln
     const mb=$('#mb');
     if(!$('#m').hidden&&mb){const o=$('#mo');if(o){const br=o.previousElementSibling;o.remove();if(br&&br.tagName=='BR')br.remove()}
       if(!mb.querySelector('.pl'))mb.insertAdjacentHTML('afterbegin',`<div class="pn pl">${msg}</div>`);
-      if(!$('#mx')){mb.insertAdjacentHTML('beforeend','<br><br><button id="mx" class="btn alt">Ana menüye dön</button>');$('#mx').onclick=exitGame}
+      if(!$('#mx')){mb.insertAdjacentHTML('beforeend',`<br><br><button id="mx" class="btn alt">${tr('Ana menüye dön','Return to Main Menu')}</button>`);$('#mx').onclick=exitGame}
       lock=true;return}
   }
   G.over=true;botGen++;thinkOn=false;waitM=false;
-  M(`${msg}<br><b>Oyunu sen kazandın.</b>`,null,null,true);snd('win');
+  M(`${msg}<br><b>${tr('Oyunu sen kazandın.','You won the game.')}</b>`,null,null,true);snd('win');
 }
 function exitGame(){ // limbigames perdesi, sonra ilk ekrana dön
   if(entering)return;entering=true;leaving=true;botGen++;thinkOn=false;
@@ -1934,10 +2150,10 @@ document.addEventListener('click',e=>{
       const hid=t.dataset.hpId,side=+t.dataset.hpSide,h=HERO_MAP[hid];
       if(!h)return;
       const isUsed=t.classList.contains('used'),isReady=t.classList.contains('ready');
-      const tagTxt=h.passive?(isUsed?'Pasif · Tükendi':'Pasif'):(isUsed?'Aktif, Kullanıldı':'Aktif, Her Düelloda 1 Kez');
+      const tagTxt=h.passive?(isUsed?tr('Pasif · Tükendi','Passive · Spent'):tr('Pasif','Passive')):(isUsed?tr('Aktif, Kullanıldı','Active, Used'):tr('Aktif, Her Düelloda 1 Kez','Active, Once per Duel'));
       const canUse=side===0&&!h.passive&&isReady&&S.turn===0&&!S.wait&&MODE!=='spectator'&&!P;
-      const thiefCard=hid==='s'&&IMG.j[25]?`<img class="hp-mc-jcard" src="${IMG.j[25]}" alt="Hırsız">`:'';
-      box(`<div class="hp-mobile-card ${side===1?'opp':'mine'}${h.passive?' passive':''}${isUsed?' used':''}"><div class="hp-mc-ic">${HP_IC[hid]||HP_IC.c}</div><div class="hp-tip-title">${h.hpName}</div><div class="hp-tip-tag">${tagTxt}</div><p class="hp-tip-desc">${h.desc}</p>${thiefCard}${canUse?'<div class="row"><button id="hp-mob-use" class="btn alt">Kullan</button><button id="pc" class="btn">Kapat</button></div>':''}</div>`, !canUse);
+      const thiefCard=hid==='s'&&IMG.j[25]?`<img class="hp-mc-jcard" src="${IMG.j[25]}" alt="${tr('Hırsız','Thief')}">`:'';
+      box(`<div class="hp-mobile-card ${side===1?'opp':'mine'}${h.passive?' passive':''}${isUsed?' used':''}"><div class="hp-mc-ic">${HP_IC[hid]||HP_IC.c}</div><div class="hp-tip-title">${h.hpName}</div><div class="hp-tip-tag">${tagTxt}</div><p class="hp-tip-desc">${h.desc}</p>${thiefCard}${canUse?`<div class="row"><button id="hp-mob-use" class="btn alt">${tr('Kullan','Use')}</button><button id="pc" class="btn">${tr('Kapat','Close')}</button></div>`:''}</div>`, !canUse);
       if(canUse){
         $('#hp-mob-use').onclick=()=>{$('#m').hidden=true;lock=false;useHeroPower()};
         $('#pc').onclick=()=>{$('#m').hidden=true;lock=false;R()};
@@ -1964,8 +2180,8 @@ document.addEventListener('click',e=>{
   if(t.dataset.e){
     const x=(S.eff&&S.eff.find(y=>y.uid==u))||(S.pj&&S.pj.find(y=>y.uid==u));
     if(x){
-      const statusTxt=x.neg?'Etkisiz kılındı':(BLOCK.has(x.id)?'Aktif Etki':'Kullanıldı');
-      return preview(x.id,false,`${x.o==0?'Senin Jokerin':'Rakibin Jokeri'} · ${statusTxt}`);
+      const statusTxt=x.neg?tr('Etkisiz kılındı','Negated'):(BLOCK.has(x.id)?tr('Aktif Etki','Active Effect'):tr('Kullanıldı','Used'));
+      return preview(x.id,false,`${x.o==0?tr('Senin Jokerin','Your Joker'):tr('Rakibin Jokeri','Opponent\'s Joker')} · ${statusTxt}`);
     }
   }
   if(t.dataset.j){
@@ -1973,7 +2189,7 @@ document.addEventListener('click',e=>{
     const id=+t.dataset.j;
     if(window.matchMedia&&window.matchMedia('(max-width: 760px)').matches){
       const canUse=S.turn==0&&!S.wait&&MODE!=='spectator'&&playable(S,0,id);
-      return preview(id,canUse,BLOCK.has(id)?'Etkisiz kılınabilir':'Etkisiz kılınamaz');
+      return preview(id,canUse,BLOCK.has(id)?tr('Etkisiz kılınabilir','Can be negated'):tr('Etkisiz kılınamaz','Cannot be negated'));
     }
     if(S.turn==0&&!S.wait&&MODE!=='spectator'&&playable(S,0,id)){
       document.querySelectorAll('#hand .j.pinned,#hand .j.hovered').forEach(el=>el.classList.remove('pinned','hovered'));
@@ -1991,7 +2207,7 @@ $('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE=='guest')conn.send({k:'
 /* ---------- ONLINE (PeerJS) ---------- */
 let MODE='bot',peer,conn,spectators=[],specCount=0,waitM=false,rematchReady=[false,false],rematchHeroes=[null,null],deathContReady=[false,false],deathContGo=null;
 function showDeathContWait(){
-  box(`<h3>Hazırsın</h3><p>Rakibin devam etmesi bekleniyor…</p>`,false);
+  box(`<h3>${tr('Hazırsın','Ready')}</h3><p>${tr('Rakibin devam etmesi bekleniyor…','Waiting for opponent to continue…')}</p>`,false);
 }
 function checkDeathCont(){
   if(deathContReady[0]&&deathContReady[1]){
@@ -2004,7 +2220,7 @@ function checkDeathCont(){
   }
 }
 function showRematchWait(msg){
-  box(`<h3>Hazırsın</h3><p>${msg}</p><div class="row"><button id="rm-exit" class="btn alt">Ana menüye dön</button></div>`,false);
+  box(`<h3>${tr('Hazırsın','Ready')}</h3><p>${msg}</p><div class="row"><button id="rm-exit" class="btn alt">${tr('Ana menüye dön','Return to Main Menu')}</button></div>`,false);
   const ex=$('#rm-exit');if(ex)ex.onclick=exitGame;
 }
 function checkStartOnlineRematch(){
@@ -2014,7 +2230,7 @@ function checkStartOnlineRematch(){
     rematchReady=[false,false];rematchHeroes=[null,null];
     $('#m').hidden=true;lock=false;start();
   }else if(rematchReady[0]){
-    showRematchWait('Rakibin "Yeniden oyna" demesi ve kahraman seçmesi bekleniyor…');
+    showRematchWait(tr('Rakibin "Yeniden oyna" demesi ve kahraman seçmesi bekleniyor…','Waiting for opponent to click "Play Again" and choose a hero…'));
   }
 }
 const MAX_SPECTATORS = 5;
@@ -2052,8 +2268,8 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     fromConn.send({
       k: 'slots_info',
       slots: {
-        p0: { name: '1. Oyuncu', hero: MY_HERO||'t', role: 'Oda Sahibi', busy: true },
-        p1: { name: '2. Oyuncu', hero: guestBusy?(OPP_HERO||'c'):'c', role: 'Misafir Oyuncu', busy: guestBusy }
+        p0: { name: tr('1. Oyuncu','Player 1'), hero: MY_HERO||'t', role: tr('Oda Sahibi','Room Host'), busy: true },
+        p1: { name: tr('2. Oyuncu','Player 2'), hero: guestBusy?(OPP_HERO||'c'):'c', role: tr('Misafir Oyuncu','Guest Player'), busy: guestBusy }
       },
       specCount: spectators.length
     });
@@ -2066,12 +2282,12 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
         fromConn._role = 'player';
         OPP_HERO = (m.hero && HERO_MAP[m.hero]) ? m.hero : 'c';
         fromConn.send({k:'role', role:'player'});
-        const ls=$('#lobbyStatus');if(ls)ls.textContent='Rakip bağlandı! Oyun başlıyor…';
+        const ls=$('#lobbyStatus');if(ls)ls.textContent=tr('Rakip bağlandı! Oyun başlıyor…','Opponent connected! Starting game…');
         setTimeout(()=>{
           $('#m').hidden=true;lock=false;
           enter(start);
         },600);
-        fromConn.on('close',()=>peerLeft('Rakip oyundan ayrıldı.'));
+        fromConn.on('close',()=>peerLeft(tr('Rakip oyundan ayrıldı.','Opponent left the game.')));
       }else{
         // Oyuncu slotu dolmuş, mecburen izleyiciye al veya bilgi ver
         fromConn.send({k:'slot_full'});
@@ -2202,26 +2418,26 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
     return;
   }
   if(m.k=='slot_full'){
-    st('Oyuncu slotu doldu! İzleyici olarak katılabilirsin.');
+    st(tr('Oyuncu slotu doldu! İzleyici olarak katılabilirsin.','Player slot is full! You can join as a spectator.'));
     const btnP = $('#btnJoinPlayer');
-    if(btnP){ btnP.disabled = true; btnP.textContent = 'Dolu'; }
+    if(btnP){ btnP.disabled = true; btnP.textContent = tr('Dolu','Full'); }
     return;
   }
   if(m.k=='spec_full'){
-    st(`İzleyici slotu dolu! En fazla ${m.max||5} izleyici katılabilir.`);
+    st(tr(`İzleyici slotu dolu! En fazla ${m.max||5} izleyici katılabilir.`,`Spectator slots are full! Up to ${m.max||5} spectators can join.`));
     const btnS = $('#btnJoinSpec');
-    if(btnS){ btnS.disabled = true; btnS.textContent = `İzleyici Dolu (${m.max||5}/${m.max||5})`; }
+    if(btnS){ btnS.disabled = true; btnS.textContent = `${tr('İzleyici Dolu','Spectators Full')} (${m.max||5}/${m.max||5})`; }
     return;
   }
   if(m.k=='role'){
     $('#m').hidden = true; lock = false;
     if(m.role=='spectator'){
       MODE='spectator';
-      st('Odaya izleyici olarak katıldın.');
+      st(tr('Odaya izleyici olarak katıldın.','Joined room as spectator.'));
       veil();setMusic('game');
     }else if(m.role=='player'){
       MODE='guest';
-      st('Odaya oyuncu olarak katıldın.');
+      st(tr('Odaya oyuncu olarak katıldın.','Joined room as player.'));
       veil();setMusic('game');
     }
     return;
@@ -2239,7 +2455,7 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
     if(G.winSide!=null&&prevWin==null){
       snd(G.winSide>0?'win':G.winSide<0?'lose':'ok');
       const winW=G.winSide;
-      setTimeout(()=>{if(G&&G.winSide===winW){if(G.vampWinSide>=0){const btn=document.querySelector(G.vampWinSide===0?'#me .hp-btn':'#opp .hp-btn');if(btn){const hr=btn.getBoundingClientRect(),fx=document.createElement('div');fx.className='hp-cast-fx'+(G.vampWinSide===1?' opp':'');fx.style.left=(hr.left+hr.width/2)+'px';fx.style.top=(hr.top+hr.height/2)+'px';fx.innerHTML='<i class="hp-cast-ring"></i><span class="hp-cast-pop">Kanla Mühürlenen Kader!</span>';document.body.appendChild(fx);setTimeout(()=>fx.remove(),1350);}heroClash();}else if(winW!==0)heroAttack(winW>0?0:1);else heroClash();}},1000);
+      setTimeout(()=>{if(G&&G.winSide===winW){if(G.vampWinSide>=0){const btn=document.querySelector(G.vampWinSide===0?'#me .hp-btn':'#opp .hp-btn');if(btn){const hr=btn.getBoundingClientRect(),fx=document.createElement('div');fx.className='hp-cast-fx'+(G.vampWinSide===1?' opp':'');fx.style.left=(hr.left+hr.width/2)+'px';fx.style.top=(hr.top+hr.height/2)+'px';fx.innerHTML=`<i class="hp-cast-ring"></i><span class="hp-cast-pop">${tr('Kanla Mühürlenen Kader!','Blood-Sealed Fate!')}</span>`;document.body.appendChild(fx);setTimeout(()=>fx.remove(),1350);}heroClash();}else if(winW!==0)heroAttack(winW>0?0:1);else heroClash();}},1000);
       setTimeout(()=>{if(G&&G.winSide===winW)dustTableCards();},3400);
     }
     if(waitM){$('#m').hidden=true;lock=false;waitM=false}
@@ -2250,10 +2466,10 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
   else if(m.k=='m'){
     waitM=true;
     if(m.end&&MODE==='guest'){
-      M(m.html,'Yeniden oyna',()=>chooseHero(hid=>{
+      M(m.html,tr('Yeniden oyna','Play Again'),()=>chooseHero(hid=>{
         MY_HERO=hid;waitM=true;
         if(conn&&conn.open)conn.send({k:'rematch_ready',hero:hid});
-        showRematchWait('Rakibin "Yeniden oyna" demesi ve kahraman seçmesi bekleniyor…');
+        showRematchWait(tr('Rakibin "Yeniden oyna" demesi ve kahraman seçmesi bekleniyor…','Waiting for opponent to click "Play Again" and choose a hero…'));
       },exitGame),true);
     }else if(!m.end&&m.btn&&MODE==='guest'){
       M(m.html,m.btn,()=>{
@@ -2272,26 +2488,26 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
   }
 }
 const st=t=>$('#st').textContent=t;
-const NETERR=e=>({'network':1,'server-error':1,'socket-error':1,'socket-closed':1})[e.type]?'Sunucuya ulaşılamadı. İnternet bağlantını kontrol et.':e.type=='peer-unavailable'?'Oda bulunamadı':'Hata: '+e.type;
-const noNet=()=>{if(typeof Peer=='undefined'||navigator.onLine===false){MODE='bot';st('Online mod için internet bağlantısı gerekli. Bilgisayara karşı oynayabilirsin.');return true}return false};
+const NETERR=e=>({'network':1,'server-error':1,'socket-error':1,'socket-closed':1})[e.type]?tr('Sunucuya ulaşılamadı. İnternet bağlantını kontrol et.','Could not reach the server. Check your internet connection.'):e.type=='peer-unavailable'?tr('Oda bulunamadı','Room not found'):tr('Hata: ','Error: ')+e.type;
+const noNet=()=>{if(typeof Peer=='undefined'||navigator.onLine===false){MODE='bot';st(tr('Online mod için internet bağlantısı gerekli. Bilgisayara karşı oynayabilirsin.','An internet connection is required for Online mode. You can play against the AI.'));return true}return false};
 function hostRoom(){
   if(noNet())return;
   MODE='host';leaving=false;sayT='';spectators=[];specCount=0;const code=Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random()*32|0]).join('');
-  st('Oda oluşturuluyor…');
+  st(tr('Oda oluşturuluyor…','Creating room…'));
   peer=new Peer('necrodice-'+code);
   
   const showLobby=()=>{
     box(`
       <div class="lobby-box">
-        <h3 style="margin-bottom:8px">Çevrim İçi Lobi</h3>
-        <p style="color:var(--bone);font-size:20px;margin-bottom:14px">Bu kodu arkadaşına ilet:</p>
-        <div class="lobby-code-badge" id="lobbyCodeBox" title="Kodu Kopyala">
-          <span class="lobby-lbl">ODA KODU</span>
+        <h3 style="margin-bottom:8px">${tr('Çevrim İçi Lobi','Online Lobby')}</h3>
+        <p style="color:var(--bone);font-size:20px;margin-bottom:14px">${tr('Bu kodu arkadaşına ilet:','Share this code with your friend:')}</p>
+        <div class="lobby-code-badge" id="lobbyCodeBox" title="${tr('Kodu Kopyala','Copy Code')}">
+          <span class="lobby-lbl">${tr('ODA KODU','ROOM CODE')}</span>
           <b class="lobby-code">${code}</b>
-          <span class="lobby-copy-hint">kopyalamak için tıkla</span>
+          <span class="lobby-copy-hint">${tr('kopyalamak için tıkla','click to copy')}</span>
         </div>
         <div class="lobby-spinner"><i></i><i></i><i></i></div>
-        <p id="lobbyStatus" style="font-size:18px;color:#a0b8a4;margin-top:12px">Bağlantı açık · Rakip bekleniyor</p>
+        <p id="lobbyStatus" style="font-size:18px;color:#a0b8a4;margin-top:12px">${tr('Bağlantı açık · Rakip bekleniyor','Connection open · Waiting for opponent')}</p>
       </div>
     `, true);
 
@@ -2301,14 +2517,14 @@ function hostRoom(){
         try{
           navigator.clipboard.writeText(code);
           const h=cb.querySelector('.lobby-copy-hint');
-          if(h){h.textContent='Kopyalandı!';setTimeout(()=>h.textContent='kopyalamak için tıkla',2000)}
+          if(h){h.textContent=tr('Kopyalandı!','Copied!');setTimeout(()=>h.textContent=tr('kopyalamak için tıkla','click to copy'),2000)}
         }catch(e){}
       };
     }
 
     const pc=$('#pc');
     if(pc){
-      pc.textContent='Lobiyi Kapat';
+      pc.textContent=tr('Lobiyi Kapat','Close Lobby');
       pc.onclick=()=>{
         try{if(peer)peer.destroy()}catch(e){}
         peer=null;conn=null;spectators=[];MODE='bot';
@@ -2318,7 +2534,7 @@ function hostRoom(){
   };
 
   peer.on('open',()=>{
-    st('Oda kodu: '+code+' — rakip bekleniyor…');
+    st(tr('Oda kodu: ','Room code: ')+code+tr(' — rakip bekleniyor…',' — waiting for opponent…'));
     showLobby();
   });
 
@@ -2341,43 +2557,47 @@ function showJoinModal(slots, specCount){
   const p1Free = !p1.busy;
   const specFree = (specCount || 0) < MAX_SPECTATORS;
   const currentCode = $('#code') ? $('#code').value.trim().toUpperCase() : '';
+  const p0DispName = isEn() ? 'Player 1' : '1. Oyuncu';
+  const p0DispRole = isEn() ? 'Room Host' : 'Oda Sahibi';
+  const p1DispName = isEn() ? 'Player 2' : '2. Oyuncu';
+  const p1DispRole = isEn() ? 'Guest Player' : 'Misafir Oyuncu';
   
   box(`
     <div class="join-modal">
-      <h3 style="margin-bottom:6px">Odaya Katıl</h3>
+      <h3 style="margin-bottom:6px">${tr('Odaya Katıl','Join Room')}</h3>
       <span class="join-code-tag">${currentCode}</span>
-      <p style="font-size:18px;color:var(--bone);margin-bottom:8px">Mevcut oyuncu slotları:</p>
+      <p style="font-size:18px;color:var(--bone);margin-bottom:8px">${tr('Mevcut oyuncu slotları:','Available player slots:')}</p>
       
       <div class="slot-list">
         <div class="slot-card">
           <div class="slot-info">
-            <img class="slot-av" src="${avSrc(p0.hero||'c')}" alt="${p0.name}">
+            <img class="slot-av" src="${avSrc(p0.hero||'c')}" alt="${p0DispName}">
             <div class="slot-names">
-              <b>${p0.name}</b>
-              <small>${p0.role}</small>
+              <b>${p0DispName}</b>
+              <small>${p0DispRole}</small>
             </div>
           </div>
-          <span class="slot-status busy">DOLU</span>
+          <span class="slot-status busy">${tr('DOLU','FULL')}</span>
         </div>
         
         <div class="slot-card">
           <div class="slot-info">
-            <img class="slot-av" src="${avSrc(p1.hero||'c')}" alt="${p1.name}">
+            <img class="slot-av" src="${avSrc(p1.hero||'c')}" alt="${p1DispName}">
             <div class="slot-names">
-              <b>${p1.name}</b>
-              <small>${p1.role}</small>
+              <b>${p1DispName}</b>
+              <small>${p1DispRole}</small>
             </div>
           </div>
-          <span class="slot-status ${p1Free?'free':'busy'}">${p1Free?'BOŞ':'DOLU'}</span>
+          <span class="slot-status ${p1Free?'free':'busy'}">${p1Free?tr('BOŞ','OPEN'):tr('DOLU','FULL')}</span>
         </div>
       </div>
       
       <div class="slot-actions">
         <button id="btnJoinPlayer" class="btn ${p1Free?'':'dim'}" ${p1Free?'':'disabled'}>
-          ${p1Free?'Oyuncu Olarak Katıl':'Oyuncu Slotu Dolu'}
+          ${p1Free?tr('Oyuncu Olarak Katıl','Join as Player'):tr('Oyuncu Slotu Dolu','Player Slot Full')}
         </button>
         <button id="btnJoinSpec" class="btn alt ${specFree?'':'dim'}" ${specFree?'':'disabled'}>
-          ${specFree ? `İzleyici Olarak Katıl (${specCount||0}/${MAX_SPECTATORS})` : `İzleyici Dolu (${MAX_SPECTATORS}/${MAX_SPECTATORS})`}
+          ${specFree ? `${tr('İzleyici Olarak Katıl','Join as Spectator')} (${specCount||0}/${MAX_SPECTATORS})` : `${tr('İzleyici Dolu','Spectators Full')} (${MAX_SPECTATORS}/${MAX_SPECTATORS})`}
         </button>
       </div>
     </div>
@@ -2389,7 +2609,7 @@ function showJoinModal(slots, specCount){
       chooseHero(h => {
         MY_HERO = h;
         if(conn && conn.open){
-          st('Odaya katılınıyor…');
+          st(tr('Odaya katılınıyor…','Joining room…'));
           conn.send({k:'join_as', role:'player', hero:h});
         }
       }, () => {
@@ -2402,14 +2622,14 @@ function showJoinModal(slots, specCount){
   if(bs && specFree){
     bs.onclick = () => {
       bs.disabled = true;
-      bs.textContent = 'İzleyici olarak giriliyor…';
+      bs.textContent = tr('İzleyici olarak giriliyor…','Joining as spectator…');
       if(conn && conn.open) conn.send({k:'join_as', role:'spectator'});
     };
   }
 
   const pc = $('#pc');
   if(pc){
-    pc.textContent = 'Vazgeç';
+    pc.textContent = tr('Vazgeç','Cancel');
     pc.onclick = () => {
       try{if(conn)conn.close()}catch(e){}
       try{if(peer)peer.destroy()}catch(e){}
@@ -2421,22 +2641,22 @@ function showJoinModal(slots, specCount){
 
 function joinRoom(){
   if(noNet())return;
-  const code=$('#code').value.trim().toUpperCase();if(!code)return st('Oda kodunu yaz');
-  leaving=false;sayT='';st('Odaya bağlanılıyor…');peer=new Peer();
+  const code=$('#code').value.trim().toUpperCase();if(!code)return st(tr('Oda kodunu yaz','Enter room code'));
+  leaving=false;sayT='';st(tr('Odaya bağlanılıyor…','Connecting to room…'));peer=new Peer();
   peer.on('open',()=>{
     conn=peer.connect('necrodice-'+code,{reliable:true});
     conn.on('data',onHost);
     conn.on('open',()=>{
-      st('Oda bulundu. Slot durumu alınıyor…');
+      st(tr('Oda bulundu. Slot durumu alınıyor…','Room found. Fetching slots…'));
       conn.send({k:'query_slots'});
     });
-    conn.on('close',()=>peerLeft('Oda sahibi oyundan ayrıldı.'));
+    conn.on('close',()=>peerLeft(tr('Oda sahibi oyundan ayrıldı.','Room host left the game.')));
   });
   peer.on('error',e=>st(NETERR(e)));
 }
 const on=(id,f)=>{const e=document.querySelector(id);if(e)e.onclick=f}; // bir öğe yoksa diğer düğmeler yine de çalışır
 document.querySelectorAll('.d').forEach(b=>b.onclick=()=>{DIFF=b.dataset.d;MODE='bot';chooseHero(h=>{MY_HERO=h;enter(start)})});
-on('#b4',codex);on('#b5',guide);on('#b6',settings);
+on('#b4',codex);on('#b5',guide);on('#b6',settings);on('#b7',toggleLang);
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;
   const menu=$('#menu');
@@ -2687,7 +2907,7 @@ function createSmoothDragLoop(onFrame){
       if(sl){
         const sm=document.createElement('small');
         sm.className='ora-seal';
-        sm.textContent='→ '+(newLow?'En az':newTg);
+        sm.textContent='→ '+(newLow?tr('En az','Lowest'):newTg);
         sl.appendChild(sm);
       }
     }
@@ -2756,7 +2976,7 @@ function createSmoothDragLoop(onFrame){
       pop.style.cssText='position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;pointer-events:none!important;';
       document.body.appendChild(pop);
     }
-    const statusTxt=`${x.o==0?'Senin Jokerin':'Rakibin Jokeri'}${x.neg?' · Etkisiz Kılındı':(BLOCK.has(x.id)?' · Aktif Blok Etkisi':' · Anlık Etki (Kullanıldı)')}${x.id==22?(x.s>0?' (Ekler)':' (Çıkarır)'):''}`;
+    const statusTxt=`${x.o==0?tr('Senin Jokerin','Your Joker'):tr('Rakibin Jokeri','Opponent\'s Joker')}${x.neg?tr(' · Etkisiz Kılındı',' · Negated'):(BLOCK.has(x.id)?tr(' · Aktif Blok Etkisi',' · Active Block Effect'):tr(' · Anlık Etki (Kullanıldı)',' · Instant Effect (Used)'))}${x.id==22?(x.s>0?tr(' (Ekler)',' (Adds)'):tr(' (Çıkarır)',' (Subtracts)')):''}`;
     pop.innerHTML=`<div class="jip-card" style="pointer-events:none!important"><img src="${IMG.j[x.id]}" alt="${J[x.id]||''}" style="pointer-events:none!important"><div class="jip-tag ${x.o==0?'mine':'opp'}" style="pointer-events:none!important">${statusTxt}</div></div>`;
     const im=pop.querySelector('img');
     if(im)hi(im,x.id);
@@ -2800,7 +3020,7 @@ function createSmoothDragLoop(onFrame){
     const h=HERO_MAP[hid];
     if(!h)return;
     const isUsed=btn.classList.contains('used');
-    const tagTxt=h.passive?(isUsed?'Pasif · Tükendi':'Pasif'):(isUsed?'Aktif, Kullanıldı':'Aktif, Her Düelloda 1 Kez');
+    const tagTxt=h.passive?(isUsed?tr('Pasif · Tükendi','Passive · Spent'):tr('Pasif','Passive')):(isUsed?tr('Aktif, Kullanıldı','Active, Used'):tr('Aktif, Her Düelloda 1 Kez','Active, Once per Duel'));
     let tip=document.getElementById('hp-tip');
     if(!tip){
       tip=document.createElement('div');
@@ -2808,7 +3028,7 @@ function createSmoothDragLoop(onFrame){
       tip.className='hp-tip';
       document.body.appendChild(tip);
     }
-    const thiefCard=hid==='s'&&IMG.j[25]?`<img class="hp-tip-jcard" src="${IMG.j[25]}" alt="Hırsız">`:'';
+    const thiefCard=hid==='s'&&IMG.j[25]?`<img class="hp-tip-jcard" src="${IMG.j[25]}" alt="${tr('Hırsız','Thief')}">`:'';
     tip.className=`hp-tip ${side===1?'opp':'mine'}${h.passive?' passive':''}${isUsed?' used':''}`;
     tip.innerHTML=`<div class="hp-tip-head"><div class="hp-tip-title">${h.hpName}</div><div class="hp-tip-tag">${tagTxt}</div></div><div class="hp-tip-desc">${h.desc}</div>${thiefCard}`;
     const r=btn.getBoundingClientRect();
