@@ -466,6 +466,7 @@ function opts(S,p,k){
   if(k=='any')return S.pl.flatMap(x=>[...x.open,...x.closed.filter(c=>!c.hpImmune)]).map(c=>c.id);
   if(k=='eff')return S.eff.filter(e=>!e.neg&&BLOCK.has(e.id)).map(e=>e.uid);
   if(k=='steal_j')return (S.pj||[]).map(e=>e.uid);
+  if(k=='hand_j')return S.hand[p].map((_,i)=>i);
   if(k=='sign')return [1,-1];
 }
 const playable=(S,p,id)=>(id==25||S.jUsed[p]<2)&&!S.noJ[p]&&S.hand[p].includes(id)&&(NEED[id]||[]).every(k=>opts(S,p,k).length)&&(id!=5||S.deck.length>0);
@@ -1643,13 +1644,15 @@ function R(){
   setH('#me',`<div class="who">${av0}${hpBtn0}<div class="nm"><b>${p0Name}</b></div><div class="tot${bust?' bust':exact?' exact':''}"><small>${tr('Toplam','Total')}</small><b>${lastTot[0]}</b></div></div><div class="cards${(S.pl[0].open.length+S.pl[0].closed.length>=6)?' cards-2row':''}">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||c.o!=null||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`);
   const myAv=$('#me .who .av');if(myAv)myAv.onclick=e=>{e.stopPropagation();toggleEmoteMenu()};
   const pr=$('#prompt');
-  pr.className=P?(P.hp?'ask':'ask has-joker'+(k==='sign'?' sign-mode':'')):'';
+  pr.className=P?(P.hp?'ask'+(k==='hand_j'?' hand-mode':''):'ask has-joker'+(k==='sign'?' sign-mode':'')):'';
   if(!P){
     setH('#prompt','');
   }else if(P.hp==='u'){
     setH('#prompt',`<div class="pr-box"><div class="pr-txt">${tr('Hiçlik Değişimi','Void Shift')}: ${KTXT[k]}</div><div class="pr-btns"><button class="btn sm alt" data-x="1">${tr('Vazgeç','Cancel')}</button></div></div>`);
   }else if(P.hp==='a'){
     setH('#prompt',`<div class="pr-box"><div class="pr-txt">${tr('Dönüşüm İksiri: Destenin en üstüyle değiştireceğin kendi sayı kartını seç','Potion of Transmutation: Select your number card to swap with the top of the deck')}</div><div class="pr-btns"><button class="btn sm alt" data-x="1">${tr('Vazgeç','Cancel')}</button></div></div>`);
+  }else if(P.hp==='p'){
+    setH('#prompt',`<div class="pr-box"><div class="pr-txt"><b>${tr('Vebalı Takas','Plague Trade')}:</b> ${tr('Elinden yakacağın joker kartını seç','Select a joker card from your hand to burn')}</div><div class="pr-btns"><button class="btn sm alt" data-x="1">${tr('Vazgeç','Cancel')}</button></div></div>`);
   }else{
     const btns=k==='sign'?`<button class="btn sm" data-s="1">${tr('Ekle (+)','Add (+)')}</button><button class="btn sm" data-s="-1">${tr('Çıkar (−)','Subtract (−)')}</button>`:'';
     setH('#prompt',`<div class="pr-card-wrap"><img class="pr-jcard" src="${IMG.j[P.id]}" alt="${J[P.id]||''}"></div><div class="pr-box"><div class="pr-title">${J[P.id]}</div><div class="pr-txt">${KTXT[k]}</div><div class="pr-btns">${btns}<button class="btn sm alt" data-x="1">${tr('Vazgeç','Cancel')}</button></div></div>`);
@@ -1669,7 +1672,7 @@ function R(){
   if(isSpec){
     setH('#hand',`<div class="spec-notice">${tr('Canlı Maç Yayını · İzleyici Modundasın','Live Match Broadcast · Spectator Mode')}</div>`);
   }else{
-    setH('#hand',S.hand[0].map((id,i)=>`<span class="jslot"><img class="j${my&&!P&&playable(S,0,id)?'':' dim'}" draggable="false" style="--r:${((i-(n-1)/2)*5).toFixed(1)}deg" data-j="${id}" src="${IMG.j[id]}" alt=""></span>`).join(''));
+    setH('#hand',S.hand[0].map((id,i)=>`<span class="jslot"><img class="j${k==='hand_j'?' hl':(my&&!P&&playable(S,0,id)?'':' dim')}" draggable="false" style="--r:${((i-(n-1)/2)*5).toFixed(1)}deg" data-j="${id}" data-jidx="${i}" src="${IMG.j[id]}" alt=""></span>`).join(''));
     document.querySelectorAll('#hand .j[data-j]').forEach(im=>hi(im,+im.dataset.j));
   }
   count(document.querySelector('#me .tot b'),lastTot[0],mt);count(document.querySelector('#opp .tot b'),lastTot[1],ot);lastTot=[mt,ot];
@@ -1741,7 +1744,7 @@ function execAlchSwap(cid){
     }
   }
 }
-function pick(v){if(P&&P.hp==='u'){const id=v;P=null;return execSwapDeckHeroPower(0,id)}if(P&&P.hp==='a'){const id=v;P=null;return execAlchSwap(id)}P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
+function pick(v){if(P&&P.hp==='u'){const id=v;P=null;return execSwapDeckHeroPower(0,id)}if(P&&P.hp==='a'){const id=v;P=null;return execAlchSwap(id)}if(P&&P.hp==='p'){const idx=v;P=null;if(!G||idx<0||idx>=G.hand[0].length)return R();snd('play');if(MODE==='guest'){G.hpUsed[0]=true;R();return conn.send({k:'hp_plague',idx})}execPlague(G,0,idx);return R()}P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
 function startJoker(id){const ks=NEED[id]||[];if(ks.length){P={id,ks,pk:[]};R()}else doPlay(id,[])}
 const HERO_FOCUS={c:'44% 28%',p:'56% 24%',n:'64% 25%',a:'50% 24%',s:'48% 25%',e:'52% 28%',m:'50% 30%',w:'45% 23%',l:'68% 28%',v:'50% 25%'};
 function chooseHero(onPick,onCancel){
@@ -1829,17 +1832,8 @@ function useHeroPower(){
   }else if(hid==='p'){
     if(!S.hand[0].length)return box(`<h3>${tr('Vebalı Takas','Plague Trade')}</h3><p>${tr('Elinde yakılacak Joker kartı yok.','You have no Joker cards in hand to burn.')}</p>`);
     if(!S.jdeck.length)return box(`<h3>${tr('Vebalı Takas','Plague Trade')}</h3><p>${tr('Joker destesinde çekilecek kart kalmadı.','No Joker cards left in the deck to draw.')}</p>`);
-    const jBtns=S.hand[0].map((jid,i)=>`<button class="btn sm" data-pburn="${i}">${J[jid]}</button>`).join('');
-    box(`<h3>${tr('Vebalı Takas','Plague Trade')}</h3><p>${tr('Yakmak istediğin Joker kartını seç (desteden rastgele 2 yeni Joker çekeceksin):','Select a Joker card to burn (you will draw 2 random new Jokers from the deck):')}</p><div class="row" style="flex-wrap:wrap;gap:8px">${jBtns}</div>`, true);
-    document.querySelectorAll('[data-pburn]').forEach(btn=>{
-      btn.onclick=()=>{
-        const idx=+btn.dataset.pburn;
-        if(idx<0||idx>=S.hand[0].length)return;
-        $('#m').hidden=true;lock=false;snd('play');
-        if(MODE==='guest'){S.hpUsed[0]=true;R();return conn.send({k:'hp_plague',idx});}
-        execPlague(S,0,idx);R();
-      };
-    });
+    P={hp:'p',ks:['hand_j'],pk:[]};
+    snd('info');R();
   }else if(hid==='a'){
     if(!S.deck.length)return box(`<h3>${tr('Yitik Yazgı','Lost Fate')}</h3><p>${tr('Destede kart kalmadı.','No cards left in the deck.')}</p>`);
     if(MODE==='guest'){S.hpUsed[0]=true;R();return conn.send({k:'hp_scry'})}
@@ -2169,6 +2163,7 @@ document.addEventListener('click',e=>{
   if(t.dataset.x){P=null;return R()}
   if(t.dataset.s)return pick(+t.dataset.s);
   if(P){ // hedef seçimi
+    if(k=='hand_j'&&t.dataset.jidx!=null)return pick(+t.dataset.jidx);
     if(t.dataset.c&&k!='eff'&&k!='steal_j'&&opts(S,0,k).includes(c))pick(c);
     else if(t.dataset.e&&(k=='eff'||k=='steal_j')&&opts(S,0,k).includes(u))pick(u);
     return;
