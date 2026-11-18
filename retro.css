@@ -2684,12 +2684,12 @@ body.dragging-joker #fx::after {
     padding-bottom: 0 !important;
   }
   #opp.zone .who {
-    margin-top: clamp(10px, 1.42dvh, 13px) !important;
-    margin-bottom: clamp(16px, 2.55dvh, 22px) !important;
+    margin-top: clamp(4px, 0.7dvh, 6px) !important;
+    margin-bottom: clamp(24px, 3.75dvh, 32px) !important;
   }
   .opp-jhand {
     position: relative;
-    top: 0 !important;
+    top: -4px !important;
     margin: auto 0 !important;
     gap: 5px !important;
     min-height: clamp(42px, 6.4dvh, 54px) !important;
@@ -2875,9 +2875,9 @@ body.dragging-joker #fx::after {
   }
   #me.zone {
     justify-content: flex-end !important;
-    gap: clamp(16px, 2.55dvh, 22px) !important;
+    gap: clamp(24px, 3.75dvh, 32px) !important;
     padding-top: 0 !important;
-    padding-bottom: clamp(78px, 12.8dvh, 112px) !important;
+    padding-bottom: clamp(68px, 11.4dvh, 100px) !important;
   }
   #me.zone .who {
     margin-top: 0 !important;
