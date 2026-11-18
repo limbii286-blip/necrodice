@@ -2879,9 +2879,9 @@ body.dragging-joker #fx::after {
   }
   #me.zone {
     justify-content: flex-end !important;
-    gap: clamp(24px, 3.75dvh, 32px) !important;
+    gap: calc(clamp(24px, 3.75dvh, 32px) + 6px) !important;
     padding-top: 0 !important;
-    padding-bottom: clamp(68px, 11.4dvh, 100px) !important;
+    padding-bottom: 0 !important;
   }
   #me.zone .who {
     margin-top: 0 !important;
