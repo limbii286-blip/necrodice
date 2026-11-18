@@ -2180,11 +2180,10 @@ document.addEventListener('click',e=>{
     return R();
   }
   if(t.dataset.e){
-    const x=(S.eff&&S.eff.find(y=>y.uid==u))||(S.pj&&S.pj.find(y=>y.uid==u));
-    if(x){
-      const statusTxt=x.neg?tr('Etkisiz kılındı','Negated'):(BLOCK.has(x.id)?tr('Aktif Etki','Active Effect'):tr('Kullanıldı','Used'));
-      return preview(x.id,false,`${x.o==0?tr('Senin Jokerin','Your Joker'):tr('Rakibin Jokeri','Opponent\'s Joker')} · ${statusTxt}`);
+    if(window.matchMedia&&window.matchMedia('(max-width: 760px), (hover: none) and (pointer: coarse)').matches){
+      if(window.showUsedJokerInspect)window.showUsedJokerInspect(u,true);
     }
+    return;
   }
   if(t.dataset.j){
     if(window._suppressJokerClick)return;
@@ -2962,7 +2961,7 @@ function createSmoothDragLoop(onFrame){
   document.addEventListener('pointerleave',clearHover);
 })();
 
-/* ---------- ORTADAKİ YUVARLAK KULLANILMIŞ JOKER İKONLARI: ÜZERİNE GELİNCE BÜYÜK KART GÖSTERİMİ ---------- */
+/* ---------- ORTADAKİ YUVARLAK KULLANILMIŞ JOKER İKONLARI: ÜZERİNE GELİNCE (MOBİLDE DOKUNUNCA) BÜYÜK KART GÖSTERİMİ ---------- */
 (function initUsedJokerHoverInspect(){
   let activeUid=null;
 
@@ -2972,7 +2971,7 @@ function createSmoothDragLoop(onFrame){
     if(old)old.remove();
   }
 
-  function showInspect(u){
+  function showInspect(u,isMob){
     const S=G;
     if(!S||S.over||lock)return;
     const x=(S.eff&&S.eff.find(y=>y.uid==u))||(S.pj&&S.pj.find(y=>y.uid==u));
@@ -2981,8 +2980,16 @@ function createSmoothDragLoop(onFrame){
     if(!pop){
       pop=document.createElement('div');
       pop.id='joker-inspect-pop';
-      pop.style.cssText='position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;pointer-events:none!important;';
       document.body.appendChild(pop);
+    }
+    pop.className=isMob?'mob-pop':'';
+    pop.style.cssText=`position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;pointer-events:${isMob?'auto':'none'}!important;`;
+    if(isMob){
+      pop.onpointerdown=ev=>{ev.stopPropagation();ev.preventDefault();hideInspect();};
+      pop.onclick=ev=>{ev.stopPropagation();hideInspect();};
+    }else{
+      pop.onpointerdown=null;
+      pop.onclick=null;
     }
     const statusTxt=`${x.o==0?tr('Senin Jokerin','Your Joker'):tr('Rakibin Jokeri','Opponent\'s Joker')}${x.neg?tr(' · Etkisiz Kılındı',' · Negated'):(BLOCK.has(x.id)?tr(' · Aktif Blok Etkisi',' · Active Block Effect'):tr(' · Anlık Etki (Kullanıldı)',' · Instant Effect (Used)'))}${x.id==22?(x.s>0?tr(' (Ekler)',' (Adds)'):tr(' (Çıkarır)',' (Subtracts)')):''}`;
     pop.innerHTML=`<div class="jip-card" style="pointer-events:none!important"><img src="${IMG.j[x.id]}" alt="${J[x.id]||''}" style="pointer-events:none!important"><div class="jip-tag ${x.o==0?'mine':'opp'}" style="pointer-events:none!important">${statusTxt}</div></div>`;
@@ -2990,7 +2997,16 @@ function createSmoothDragLoop(onFrame){
     if(im)hi(im,x.id);
   }
 
+  window.showUsedJokerInspect=(u,isMob)=>{
+    activeUid=u;
+    snd('info');
+    showInspect(u,!!isMob);
+  };
+  window.hideUsedJokerInspect=hideInspect;
+
   document.addEventListener('pointermove',e=>{
+    if(e.pointerType==='touch')return;
+    if(window.matchMedia&&window.matchMedia('(max-width: 760px), (hover: none) and (pointer: coarse)').matches)return;
     const chip=e.target&&e.target.closest&&e.target.closest('#fx .e[data-e]');
     if(!chip){
       if(activeUid!==null)hideInspect();
@@ -2999,11 +3015,13 @@ function createSmoothDragLoop(onFrame){
     const u=+chip.dataset.e;
     if(u!==activeUid){
       activeUid=u;
-      showInspect(u);
+      showInspect(u,false);
     }
   });
 
-  document.addEventListener('pointerdown',()=>{
+  document.addEventListener('pointerdown',e=>{
+    const chip=e.target&&e.target.closest&&e.target.closest('#fx .e[data-e]');
+    if(chip&&!P&&e.pointerType!=='touch')return;
     if(activeUid!==null)hideInspect();
   });
 })();
