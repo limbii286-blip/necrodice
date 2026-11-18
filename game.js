@@ -1624,11 +1624,13 @@ function R(){
   const hpUsed1=oppHId==='u'?!!(MODE==='bot'?S.rigDone:(S.uRevived&&S.uRevived[1])):oppHId==='v'?!!(S.vampUsed&&S.vampUsed[1]):(oppHId==='m'||oppHId==='e'||oppHId==='n'||oppHId==='s'||oppHId==='w'||oppHId==='a'||oppHId==='c')?false:!!(S.hpUsed&&S.hpUsed[1]);
   const hpObj0=HERO_MAP[myHId]||HEROES[0],hpObj1=HERO_MAP[oppHId]||HEROES[0];
   const cWins0=(S.cWins&&S.cWins[0])||0,cReady=myHId!=='c'||cWins0>=4;
+  const cWins1=(S.cWins&&S.cWins[1])||0,cReady1=oppHId!=='c'||cWins1>=4;
   const canHp=!isSpec&&!hpObj0.passive&&my&&!P&&!hpUsed0&&cReady;
-  const cProg=(myHId==='c'&&!hpUsed0&&!cReady)?`<i class="hp-prog">${cWins0}/4</i>`:'';
+  const cProg=(myHId==='c'&&!hpUsed0)?`<i class="hp-prog">${Math.min(4,cWins0)}/4</i>`:'';
+  const cProg1=(oppHId==='c'&&!hpUsed1)?`<i class="hp-prog">${Math.min(4,cWins1)}/4</i>`:'';
   const isMob=window.matchMedia&&window.matchMedia('(max-width: 760px), (hover: none) and (pointer: coarse)').matches;
   const hpBtn0=isSpec?'':`<button id="hp-btn" class="hp-btn${hpObj0.passive?' passive':''}${hpUsed0?' used':canHp?' ready':''}" data-hp="1" data-hp-id="${myHId}" data-hp-side="0"${(canHp||isMob)?'':' disabled'}>${HP_IC[myHId]||HP_IC.c}${cProg}</button>`;
-  const hpBtn1=`<span class="hp-btn opp-hp${hpObj1.passive?' passive':''}${hpUsed1?' used':''}" data-hp-id="${oppHId}" data-hp-side="1">${HP_IC[oppHId]||HP_IC.c}</span>`;
+  const hpBtn1=`<span class="hp-btn opp-hp${hpObj1.passive?' passive':''}${hpUsed1?' used':!cReady1?' locked':''}" data-hp-id="${oppHId}" data-hp-side="1">${HP_IC[oppHId]||HP_IC.c}${cProg1}</span>`;
   setH('#opp',`${oppHandHtml}<div class="who">${av1}${hpBtn1}<div class="nm"><b>${p1Name}</b>${MODE=='bot'?'':'<span class="meta">Online</span>'}</div><div class="tot${obust?' bust':oexact?' exact':''}"><small>${tr('Toplam','Total')}</small><div class="tl"><b>${lastTot[1]}</b>${oppClosedKnown?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards${(S.pl[1].open.length+S.pl[1].closed.length>=6)?' cards-2row':''}">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!(S.rev||c.o!=null||(S.oppPeek&&S.oppPeek.includes(c.id))),S.rev)).join('')}</div>`);
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x;return `<span class="e${BLOCK.has(e.id)?'':' used'}${e.neg?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${(k=='eff'||k=='steal_j')&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}"><img src="${IMG.j[e.id]}" alt=""></span>`};
   $('#deck b').textContent=S.deck.length;
@@ -2148,7 +2150,8 @@ document.addEventListener('click',e=>{
       const hid=t.dataset.hpId,side=+t.dataset.hpSide,h=HERO_MAP[hid];
       if(!h)return;
       const isUsed=t.classList.contains('used'),isReady=t.classList.contains('ready');
-      const tagTxt=h.passive?(isUsed?tr('Pasif · Tükendi','Passive · Spent'):tr('Pasif','Passive')):(isUsed?tr('Aktif, Kullanıldı','Active, Used'):tr('Aktif, Her Düelloda 1 Kez','Active, Once per Duel'));
+      const cw=hid==='c'?Math.min(4,(S.cWins&&S.cWins[side])||0):0;
+      const tagTxt=hid==='c'?tr(`Aktif · Galibiyet: ${cw}/4`,`Active · Wins: ${cw}/4`):(h.passive?(isUsed?tr('Pasif · Tükendi','Passive · Spent'):tr('Pasif','Passive')):(isUsed?tr('Aktif, Kullanıldı','Active, Used'):tr('Aktif, Her Düelloda 1 Kez','Active, Once per Duel')));
       const canUse=side===0&&!h.passive&&isReady&&S.turn===0&&!S.wait&&MODE!=='spectator'&&!P;
       const thiefCard=hid==='s'&&IMG.j[25]?`<img class="hp-mc-jcard" src="${IMG.j[25]}" alt="${tr('Hırsız','Thief')}">`:'';
       box(`<div class="hp-mobile-card ${side===1?'opp':'mine'}${h.passive?' passive':''}${isUsed?' used':''}"><div class="hp-mc-ic">${HP_IC[hid]||HP_IC.c}</div><div class="hp-tip-title">${h.hpName}</div><div class="hp-tip-tag">${tagTxt}</div><p class="hp-tip-desc">${h.desc}</p>${thiefCard}${canUse?`<div class="row"><button id="hp-mob-use" class="btn alt">${tr('Kullan','Use')}</button><button id="pc" class="btn">${tr('Kapat','Close')}</button></div>`:''}</div>`, !canUse);
@@ -3025,7 +3028,8 @@ function createSmoothDragLoop(onFrame){
     const h=HERO_MAP[hid];
     if(!h)return;
     const isUsed=btn.classList.contains('used');
-    const tagTxt=h.passive?(isUsed?tr('Pasif · Tükendi','Passive · Spent'):tr('Pasif','Passive')):(isUsed?tr('Aktif, Kullanıldı','Active, Used'):tr('Aktif, Her Düelloda 1 Kez','Active, Once per Duel'));
+    const cw=(hid==='c'&&G&&G.cWins)?Math.min(4,G.cWins[side]||0):0;
+    const tagTxt=hid==='c'?tr(`Aktif · Galibiyet: ${cw}/4`,`Active · Wins: ${cw}/4`):(h.passive?(isUsed?tr('Pasif · Tükendi','Passive · Spent'):tr('Pasif','Passive')):(isUsed?tr('Aktif, Kullanıldı','Active, Used'):tr('Aktif, Her Düelloda 1 Kez','Active, Once per Duel')));
     let tip=document.getElementById('hp-tip');
     if(!tip){
       tip=document.createElement('div');
