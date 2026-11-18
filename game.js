@@ -197,6 +197,7 @@ function sfx(k,v=1){
 /* Joker büyük görünümü: önce gömülü küçük görsel, yüksek çözünürlüklü img/j/ID.webp yüklenince değişir */
 const HC={};
 function hiLoad(id,cb){
+  if(id===25){if(cb&&IMG.j&&IMG.j[25])cb(IMG.j[25]);return}
   const cacheKey=LANG+'_'+id;
   let i=HC[cacheKey];
   if(LANG!=='en'&&i&&i._x&&typeof HDJ!='undefined'&&HDJ[id]){i._x=0;i._e=1;i.src=HDJ[id]}
@@ -216,7 +217,7 @@ function hiLoad(id,cb){
   if(cb){if(i.complete&&i.naturalWidth)cb(i.src);else i.addEventListener('load',()=>cb(i.src),{once:true})}}
 let hiPre=false;
 function hiPreload(){if(hiPre)return;hiPre=true;range(24).forEach((id,n)=>setTimeout(()=>hiLoad(id),200+n*80))} // tüm HD jokerler arka planda önceden yüklenir, tıklayınca anında hazır olur
-function hi(el,id){if(!el)return;const fb=IMG.j[id];el.onerror=()=>{el.onerror=null;if(fb)el.src=fb}; // HD açılmazsa gömülü görsele dön
+function hi(el,id){if(!el)return;if(id===25){if(IMG.j&&IMG.j[25])el.src=IMG.j[25];return}const fb=IMG.j[id];el.onerror=()=>{el.onerror=null;if(fb)el.src=fb}; // HD açılmazsa gömülü görsele dön
   hiLoad(id,u=>{if(el.isConnected)el.src=u})}
 function tone(f,d,ty='sine',v=.12,w=0,sl=0){const a=ac(),t=a.currentTime+w,o=a.createOscillator(),g=a.createGain();o.type=ty;o.frequency.setValueAtTime(f,t);if(sl)o.frequency.linearRampToValueAtTime(Math.max(30,f+sl),t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(SG);o.start(t);o.stop(t+d)}
 function noise(d,v=.2,hp=2500,w=0){const a=ac(),t=a.currentTime+w,n=a.sampleRate*d|0,b=a.createBuffer(1,n,a.sampleRate),x=b.getChannelData(0);for(let i=0;i<n;i++)x[i]=Math.random()*2-1;const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=b;f.type='highpass';f.frequency.value=hp;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);s.connect(f);f.connect(g);g.connect(SG);s.start(t)}
@@ -646,7 +647,7 @@ function decideH(S,p,prm){
   let k=0;const t0=(typeof performance!='undefined'?performance:Date).now(),K=prm.K||40,bud=prm.ms||0;
   for(;k<K;k++){
     if(bud&&k>=8&&(typeof performance!='undefined'?performance:Date).now()-t0>bud)break;
-    const W=world(S,p);
+    const W=world(S,p,prm);
     top.forEach((c,i)=>{const T=clone(W);const j0=[jCnt(T,0),jCnt(T,1)];const r=rollout(T,p,c.a,RP);sum[i]+=r-cost*((jCnt(T,p)-j0[p])-.5*(jCnt(T,1-p)-j0[1-p]))});
   }
   const sc=sum.map((s,i)=>s/Math.max(1,k)+(prm.w||0)*top[i].v);
@@ -2077,6 +2078,7 @@ function applyLang(lang){
   if($('#pass')&&!G)$('#pass').textContent=tr('Pas','Pass');
   if($('#sc-1'))$('#sc-1').title=tr('Rakibin Kalan Süresi','Opponent\'s Remaining Time');
   if($('#sc-0'))$('#sc-0').title=tr('Senin Kalan Süren','Your Remaining Time');
+  if($('.side-clocks'))$('.side-clocks').setAttribute('aria-label',tr('Satranç Saati','Chess Clock'));
   if(G){
     if(MODE==='bot'&&sayT){sayT=''}
     R();
@@ -3414,8 +3416,8 @@ function createSmoothDragLoop(onFrame){
     const isMenuModal=!!(modalEl&&!modalEl.hidden&&mbEl&&!mbEl.querySelector('.d20-box,.scry-row,#hp-p2,.hero-grid'));
     const active=!!(G && !G.over && !G.wait && (!lock || (MODE!=='bot' && isMenuModal)) && (!menu || menu.hidden));
     if(!active){
-      if(sc0){sc0.classList.remove('ticking','low');sc0.classList.toggle('turn-on',G.turn===0);sc0.classList.toggle('turn-off',G.turn!==0)}
-      if(sc1){sc1.classList.remove('ticking','low');sc1.classList.toggle('turn-on',G.turn===1);sc1.classList.toggle('turn-off',G.turn!==1)}
+      if(sc0){sc0.classList.remove('ticking','low');sc0.classList.toggle('turn-on',!!(G&&G.turn===0));sc0.classList.toggle('turn-off',!!(G&&G.turn!==0))}
+      if(sc1){sc1.classList.remove('ticking','low');sc1.classList.toggle('turn-on',!!(G&&G.turn===1));sc1.classList.toggle('turn-off',!!(G&&G.turn!==1))}
       lastTickSec=-1;
       return;
     }
