@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Cormorant+Garamond:wght@600;700&family=Grenze+Gotisch:wght@600;700;800;900&family=Metamorphous&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=20261115_hs19">
-<link rel="stylesheet" href="retro.css?v=20261118_logo5">
+<link rel="stylesheet" href="retro.css?v=20261118_logo6">
 </head>
 <body>
 <div id="splash"><img id="slogo" alt=""><b>limbigames</b></div>
@@ -46,40 +46,100 @@
   <div id="mb2">
     <div class="hs-header">
       <h1 class="hs-title" aria-label="NECRODICE">
-        <svg viewBox="0 0 540 94" class="hs-wordmark-svg" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 560 98" class="hs-wordmark-svg" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <path id="hsArc" d="M 32 72 Q 270 46 508 72"/>
-            <path id="hsArcD1" d="M 32 75.5 Q 270 49.5 508 75.5"/>
-            <path id="hsArcD2" d="M 32 79 Q 270 53 508 79"/>
+            <!-- Left & Right sculpted arch paths framing the central D20 "O" -->
+            <path id="hsArcL" d="M 26 75 Q 138 58 244 58"/>
+            <path id="hsArcLD1" d="M 26 78.5 Q 138 61.5 244 61.5"/>
+            <path id="hsArcLD2" d="M 26 82 Q 138 65 244 65"/>
+            <path id="hsArcR" d="M 316 58 Q 422 58 534 75"/>
+            <path id="hsArcRD1" d="M 316 61.5 Q 422 61.5 534 78.5"/>
+            <path id="hsArcRD2" d="M 316 65 Q 422 65 534 82"/>
+
+            <!-- Hearthstone-inspired chiseled warm gold & bronze -->
             <linearGradient id="hsTavernGold" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#fffce6"/>
-              <stop offset="22%" stop-color="#fde38e"/>
-              <stop offset="52%" stop-color="#de9b32"/>
-              <stop offset="82%" stop-color="#9e5912"/>
-              <stop offset="100%" stop-color="#5e2d06"/>
+              <stop offset="0%" stop-color="#fff8d1"/>
+              <stop offset="24%" stop-color="#f7cf63"/>
+              <stop offset="56%" stop-color="#d48924"/>
+              <stop offset="86%" stop-color="#8c4c0e"/>
+              <stop offset="100%" stop-color="#572905"/>
             </linearGradient>
             <linearGradient id="hsBevelRim" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#fff4c2"/>
-              <stop offset="45%" stop-color="#c48224"/>
-              <stop offset="100%" stop-color="#3a1a05"/>
+              <stop offset="0%" stop-color="#fff0b3"/>
+              <stop offset="50%" stop-color="#ba7820"/>
+              <stop offset="100%" stop-color="#381804"/>
+            </linearGradient>
+
+            <!-- Central glowing Crimson-Ember D20 ("O") -->
+            <radialGradient id="hsDieAura" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#ff6b78" stop-opacity="0.72"/>
+              <stop offset="45%" stop-color="#cf2e3c" stop-opacity="0.38"/>
+              <stop offset="100%" stop-color="#cf2e3c" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="hsDieTop" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#ffb3ba"/>
+              <stop offset="100%" stop-color="#df2c3b"/>
+            </linearGradient>
+            <linearGradient id="hsDieMid" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#f24957"/>
+              <stop offset="100%" stop-color="#9e111d"/>
+            </linearGradient>
+            <linearGradient id="hsDieDark" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#8f121d"/>
+              <stop offset="100%" stop-color="#45040a"/>
             </linearGradient>
             <linearGradient id="hsFireSweep" x1="-0.3" y1="0" x2="0.1" y2="0.2">
               <stop offset="0%" stop-color="#fff8d6" stop-opacity="0"/>
-              <stop offset="50%" stop-color="#fff8d6" stop-opacity="0.42"/>
+              <stop offset="50%" stop-color="#fff8d6" stop-opacity="0.4"/>
               <stop offset="100%" stop-color="#fff8d6" stop-opacity="0"/>
               <animate attributeName="x1" values="-0.4;1.4;1.4" keyTimes="0;0.35;1" dur="6.5s" repeatCount="indefinite"/>
               <animate attributeName="x2" values="0;1.8;1.8" keyTimes="0;0.35;1" dur="6.5s" repeatCount="indefinite"/>
             </linearGradient>
           </defs>
-          <!-- 3D extruded dark-bronze & obsidian depth -->
-          <text class="hs-wm-depth2"><textPath href="#hsArcD2" startOffset="50%" text-anchor="middle"><tspan class="hs-wm-cap">N</tspan>ECRODIC<tspan class="hs-wm-cap">E</tspan></textPath></text>
-          <text class="hs-wm-depth1"><textPath href="#hsArcD1" startOffset="50%" text-anchor="middle"><tspan class="hs-wm-cap">N</tspan>ECRODIC<tspan class="hs-wm-cap">E</tspan></textPath></text>
-          <!-- Burnished gold outer bevel -->
-          <text class="hs-wm-trim"><textPath href="#hsArc" startOffset="50%" text-anchor="middle"><tspan class="hs-wm-cap">N</tspan>ECRODIC<tspan class="hs-wm-cap">E</tspan></textPath></text>
-          <!-- Hearthstone-style sculpted molten tavern gold face -->
-          <text class="hs-wm-face"><textPath href="#hsArc" startOffset="50%" text-anchor="middle"><tspan class="hs-wm-cap">N</tspan>ECRODIC<tspan class="hs-wm-cap">E</tspan></textPath></text>
-          <!-- Subtle firelight sweep -->
-          <text class="hs-wm-sheen"><textPath href="#hsArc" startOffset="50%" text-anchor="middle"><tspan class="hs-wm-cap">N</tspan>ECRODIC<tspan class="hs-wm-cap">E</tspan></textPath></text>
+
+          <!-- Warm crimson-gold glow behind central D20 -->
+          <circle cx="280" cy="48" r="46" fill="url(#hsDieAura)"/>
+
+          <!-- Left word half: NECR -->
+          <text class="hs-wm-depth2"><textPath href="#hsArcLD2" startOffset="100%" text-anchor="end"><tspan class="hs-wm-cap">N</tspan>ECR</textPath></text>
+          <text class="hs-wm-depth1"><textPath href="#hsArcLD1" startOffset="100%" text-anchor="end"><tspan class="hs-wm-cap">N</tspan>ECR</textPath></text>
+          <text class="hs-wm-trim"><textPath href="#hsArcL" startOffset="100%" text-anchor="end"><tspan class="hs-wm-cap">N</tspan>ECR</textPath></text>
+          <text class="hs-wm-face"><textPath href="#hsArcL" startOffset="100%" text-anchor="end"><tspan class="hs-wm-cap">N</tspan>ECR</textPath></text>
+          <text class="hs-wm-sheen"><textPath href="#hsArcL" startOffset="100%" text-anchor="end"><tspan class="hs-wm-cap">N</tspan>ECR</textPath></text>
+
+          <!-- Right word half: DICE -->
+          <text class="hs-wm-depth2"><textPath href="#hsArcRD2" startOffset="0%" text-anchor="start">DIC<tspan class="hs-wm-cap">E</tspan></textPath></text>
+          <text class="hs-wm-depth1"><textPath href="#hsArcRD1" startOffset="0%" text-anchor="start">DIC<tspan class="hs-wm-cap">E</tspan></textPath></text>
+          <text class="hs-wm-trim"><textPath href="#hsArcR" startOffset="0%" text-anchor="start">DIC<tspan class="hs-wm-cap">E</tspan></textPath></text>
+          <text class="hs-wm-face"><textPath href="#hsArcR" startOffset="0%" text-anchor="start">DIC<tspan class="hs-wm-cap">E</tspan></textPath></text>
+          <text class="hs-wm-sheen"><textPath href="#hsArcR" startOffset="0%" text-anchor="start">DIC<tspan class="hs-wm-cap">E</tspan></textPath></text>
+
+          <!-- Central D20 Necro-Die replacing "O" -->
+          <g class="hs-d20-o" transform="translate(280,46)">
+            <!-- 3D obsidian shadow -->
+            <polygon points="0,-29 25,-14 25,15 0,30 -25,15 -25,-14" transform="translate(0,4)" fill="#0a0403"/>
+            <!-- Outer forged gold ring / bezel -->
+            <polygon points="0,-29 25,-14 25,15 0,30 -25,15 -25,-14" fill="#1a0808" stroke="url(#hsBevelRim)" stroke-width="3.2" stroke-linejoin="round"/>
+            <!-- D20 facets -->
+            <polygon points="0,-25 21,-12 0,-1" fill="url(#hsDieTop)"/>
+            <polygon points="0,-25 -21,-12 0,-1" fill="url(#hsDieMid)"/>
+            <polygon points="21,-12 21,12 13,5 0,-1" fill="url(#hsDieMid)"/>
+            <polygon points="-21,-12 -21,12 -13,5 0,-1" fill="url(#hsDieDark)"/>
+            <polygon points="0,-1 13,5 0,25 -13,5" fill="url(#hsDieMid)"/>
+            <polygon points="13,5 21,12 0,25" fill="url(#hsDieDark)"/>
+            <polygon points="-13,5 -21,12 0,25" fill="url(#hsDieDark)"/>
+            <!-- Center triangle highlight -->
+            <polygon points="0,-16 13,5 -13,5" fill="url(#hsDieTop)" stroke="#ffe8b0" stroke-width="1.1" stroke-linejoin="round" opacity="0.95"/>
+            <!-- Inner facet lines -->
+            <polyline points="-21,-12 0,-16 21,-12" fill="none" stroke="#ffd89c" stroke-width="1" opacity="0.85"/>
+            <line x1="0" y1="-25" x2="0" y2="-16" stroke="#fff3cf" stroke-width="1.1" opacity="0.9"/>
+            <line x1="13" y1="5" x2="21" y2="12" stroke="#ffb3ba" stroke-width="0.9" opacity="0.65"/>
+            <line x1="-13" y1="5" x2="-21" y2="12" stroke="#ffb3ba" stroke-width="0.9" opacity="0.65"/>
+            <line x1="0" y1="25" x2="0" y2="14" stroke="#ffb3ba" stroke-width="0.9" opacity="0.65"/>
+            <!-- Glowing core pip -->
+            <circle cx="0" cy="-2.5" r="3.4" fill="#fff7d6"/>
+            <circle cx="0" cy="-2.5" r="1.5" fill="#cf2e3c"/>
+          </g>
         </svg>
       </h1>
     </div>

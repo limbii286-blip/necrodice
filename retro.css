@@ -264,17 +264,21 @@ body:has(#menu:not([hidden])) #fl {
 }
 
 .hs-wordmark-svg text {
-  font-family: 'Metamorphous', 'Cinzel', Georgia, serif;
-  font-weight: 400;
+  font-family: 'Cinzel', Georgia, serif;
+  font-weight: 900;
   font-size: 46px;
-  letter-spacing: 3px;
+  letter-spacing: 3.5px;
   paint-order: stroke fill;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
 
 .hs-wordmark-svg .hs-wm-cap {
-  font-size: 56px;
+  font-size: 57px;
+}
+
+.hs-d20-o {
+  filter: drop-shadow(0 0 10px rgba(207, 46, 60, 0.72));
 }
 
 .hs-wordmark-svg .hs-wm-depth2 {
