@@ -1799,7 +1799,7 @@ function execRewind(S,p){
   cards.forEach(c=>{delete c.o;delete c.hpImmune;S.deck.push(c)});
   shuf(S.deck);
   S.pl=[0,1].map(()=>({open:[S.deck.pop()],closed:[S.deck.pop()]}));
-  S.eff=[];S.pj=[];S.noJ=[false,false];S.dead=[];
+  S.eff=[];S.pj=[];S.jUsed=[0,0];S.jTurn=[0,0];S.noJ=[false,false];S.dead=[];
   S.hpMod=[0,0];S.plagueMod=[0,0];S.hpTgMod=0;S.oppPeek=[];S.oppPeek1=[];
   S.cWins=S.cWins||[0,0];S.cWins[p]=0;
   S.hpUsed=S.hpUsed||[false,false];S.hpUsed[p]=false;S.acted=true;S.graceLeft=0;
