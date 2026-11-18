@@ -2727,6 +2727,11 @@ function createSmoothDragLoop(onFrame){
   document.addEventListener('selectstart',e=>{
     if(!e.target.closest||!e.target.closest('input, textarea'))e.preventDefault();
   });
+  document.addEventListener('touchmove',e=>{
+    if(e.target&&e.target.closest&&e.target.closest('#mb, .gd-wrap, .cdx, .hero-grid'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+  window.addEventListener('scroll',()=>{if(window.scrollX||window.scrollY)window.scrollTo(0,0)},{passive:true});
 
   document.addEventListener('pointerdown',e=>{
     if(e.button!=null&&e.button!==0)return;
