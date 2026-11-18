@@ -1178,7 +1178,7 @@ function endRound(){
     const mk=(v,roll,surv,rawOv)=>{const rr=rawOv!=null?rawOv:rawRoll;
       const duelWinnerTxt=isEn()?(L==v?'Opponent won the duel':'You won the duel'):`Düelloyu ${L==v?'rakip kazandı':'sen kazandın'}`;
       const howTxt=how=='joker'?tr(' (joker sayısına göre)',' (by remaining jokers)'):how=='zar'?tr(` (beraberlik zarı: ${hx[v]}–${hx[1-v]})`,` (tiebreaker dice: ${hx[v]}–${hx[1-v]})`):'';
-      const rollerTxt=isEn()?(L==v?'You roll the Death Die':'Opponent rolls the Death Die'):`Ölüm zarını ${L==v?'sen atıyorsun':'rakip atıyor'}`;
+      const rollerTxt=isEn()?(L==v?'You roll the Death Dice':'Opponent rolls the Death Dice'):`Ölüm zarını ${L==v?'sen atıyorsun':'rakip atıyor'}`;
       const blessingName=tr('Ölümün Takdiri','Death\'s Favor'),decreeName=tr('Ölüm Fermanı','Death Decree');
       return `${duelWinnerTxt}${howTxt}.<br>${rollerTxt}<div class="d20-box" data-roll="${roll}" data-raw="${rr}" data-mod="${rawOv!=null?0:(hpB+execPen)}" data-dc="${th}" data-m="${L==v?1:0}" data-s="${surv?'ok':L==v?'death':'win'}">
       <div class="bg3-roll-card">
@@ -1193,7 +1193,7 @@ function endRound(){
           <canvas id="d20cv" class="d20-canvas" width="280" height="280"></canvas>
         </div>
         ${(hpB||execPen)?`<div class="d20-hp-mod">${hpB?`<span class="d20-mod-pill pos"><b>${blessingName}</b><i>+${hpB}</i></span>`:''}${execPen?`<span class="d20-mod-pill neg"><b>${decreeName}</b><i>−2</i></span>`:''}</div>`:''}
-        ${L==v?`<button id="rl" class="btn d20-btn">${tr('ÖLÜM ZARINI AT','ROLL DEATH DIE')}</button>`:''}
+        ${L==v?`<button id="rl" class="btn d20-btn">${tr('ÖLÜM ZARINI AT','ROLL DEATH DICE')}</button>`:''}
       </div>
     </div><div class="after"><b>${tr('Zar Sonucu','Roll Result')}: ${roll}${(hpB||execPen)&&rawOv==null?` (${rr}${hpB?`+${hpB} ${blessingName}`:''}${execPen?`−2 ${decreeName}`:''})`:''}</b><br>`+(surv?(L==v?tr('Kurtuldun! Hayatta kaldın.','You survived!'):tr('Rakip hayatta kaldı.','Opponent survived.')):(`<b>${L==v?tr('Öldün. Oyunu rakip kazandı.','You died. Opponent won the game.'):tr('Rakip öldü. Oyunu sen kazandın!','Opponent died. You won the game!')}</b>`))+'</div>'};
     const full=v=>mk(v,roll,surv),rig=MODE=='bot'&&avKey(S,1)==='u'&&L==1&&!surv&&!S.rigDone; // Bilinmeyen (İmkansız bot): oyun başına bir kez ölümden döner
@@ -1242,15 +1242,15 @@ const HEROES_TR=[
 const HEROES_EN=[
   {id:'c',name:'Cursed Merchant',hpName:'Rewind of Time',desc:'Shuffles all number cards on the table back into the deck, burns used Jokers, and deals a fresh number hand. Unlocks after winning 4 rounds.'},
   {id:'p',name:'Plague Doctor',hpName:'Plague Trade',desc:'Burn 1 Joker card from your hand to draw 2 random new Joker cards from the deck.'},
-  {id:'n',name:'Dark Knight',passive:true,hpName:'Death Decree',desc:'Subtract 2 from every Death Die roll made by your opponent.'},
+  {id:'n',name:'Dark Knight',passive:true,hpName:'Death Decree',desc:'Subtract 2 from every Death Dice roll made by your opponent.'},
   {id:'a',name:'Withered Queen',hpName:'Lost Fate',desc:'Secretly inspect the top 2 cards of the deck. Swap their order if you wish.'},
   {id:'s',name:'Sorcerer',passive:true,hpName:'Shadow Thief',desc:'Start every duel with the Thief Joker as your 4th card.'},
   {id:'e',name:'Frost Giant',passive:true,hpName:'Ancient Resilience',desc:'Each time you lose a round, you have a 20% chance to deflect the damage and turn the round into a tie.'},
-  {id:'m',name:'Lord of Death',passive:true,hpName:'Death\'s Favor',desc:'Gain a +2 bonus to every Death Die roll you make.'},
+  {id:'m',name:'Lord of Death',passive:true,hpName:'Death\'s Favor',desc:'Gain a +2 bonus to every Death Dice roll you make.'},
   {id:'w',name:'Witch',hpName:'Raven\'s Prophecy',desc:'Secretly inspect your opponent\'s hidden number card.'},
   {id:'l',name:'Werewolf',hpName:'Blood Full Moon',desc:'Destroy 1 random number card on the table from both players.'},
   {id:'v',name:'Vampire',passive:true,hpName:'Blood-Sealed Fate',desc:'On your first tied round, you win the round instead. Triggers once per match.'},
-  {id:'u',name:'The Unknown',passive:true,bossOnly:true,hpName:'Return from the Void',desc:'If you roll below the target on the Death Die, return from death once per match.'}
+  {id:'u',name:'The Unknown',passive:true,bossOnly:true,hpName:'Return from the Void',desc:'If you roll below the target on the Death Dice, return from death once per match.'}
 ];
 let HEROES=[...HEROES_TR];
 let HERO_MAP=Object.fromEntries(HEROES.map(h=>[h.id,h]));
@@ -1970,9 +1970,9 @@ function guide(){
     </ul>
   </div>
   <div class="gd-sec">
-    <h4 class="gd-h">4. Duels &amp; The Death Die (D20)</h4>
+    <h4 class="gd-h">4. Duels &amp; The Death Dice (D20)</h4>
     <p class="gd">Each duel is a best of <b>3 rounds</b> (win = <b>1</b> pt, tie = <b>0.5</b> pt). If points are tied after 3 rounds, the player with fewer remaining Jokers loses; if still tied, dice decide.</p>
-    <p class="gd">The loser of a duel rolls the crimson <b>D20 Death Die</b>. Rolling below the threshold means death and losing the match. The threshold rises after each survived duel: <b>4 → 8 → 14 → 18</b>.</p>
+    <p class="gd">The loser of a duel rolls the crimson <b>D20 Death Dice</b>. Rolling below the threshold means death and losing the match. The threshold rises after each survived duel: <b>4 → 8 → 14 → 18</b>.</p>
   </div>
   <div class="gd-sec">
     <h4 class="gd-h">5. Table &amp; Center Seal</h4>
