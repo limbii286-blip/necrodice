@@ -3293,7 +3293,7 @@ body.dragging-joker #fx::after {
    ========================================================================== */
 .who .hp-btn {
   position: absolute;
-  left: calc(50% + clamp(46px, 6.4dvh, 62px));
+  left: calc(50% + clamp(76px, 11.4dvh, 108px) / 2 + 12px);
   top: 50%;
   transform: translateY(-50%);
   z-index: 4;
@@ -4064,7 +4064,7 @@ body.dragging-joker #fx::after {
   .who .hp-btn.opp-hp,
   .who .hp-btn.passive,
   .who .hp-btn.used {
-    left: calc(50% + 46px) !important;
+    left: calc(50% + clamp(68px, 9.72dvh, 82px) / 2 + 9px) !important;
     width: 32px !important;
     height: 32px !important;
     pointer-events: auto !important;
