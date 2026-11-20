@@ -758,7 +758,7 @@ function bot(){
       if(bh==='w'&&prm.hero&&S.pl[0].closed.length){
         S.hpUsed[1]=true;S.botPeekVal=S.pl[0].closed[0].n;
         S.log.push({p:1,t:'Kuzgunun Kehaneti kullandı (kapalı kartını inceledi)'});
-        playHeroPowerAnim('w',1,HERO_MAP.w);snd('flip');R();return think(AFTER[DIFF]);
+        R();return think(AFTER[DIFF]);
       }
       if(bh==='a'&&prm.hero&&S.deck.length>=2){
         const dn=S.deck.length,c1=S.deck[dn-1],c2=S.deck[dn-2];
