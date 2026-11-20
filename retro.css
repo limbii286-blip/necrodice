@@ -886,34 +886,108 @@ body:has(#menu:not([hidden])) #fl {
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
-  margin: 4px 0 8px;
-  transition: transform 0.46s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.46s ease;
-}
-.d20-hp-mod.fly {
-  transform: translateY(-115px) scale(1.22);
-  opacity: 0;
+  margin: 6px 0 6px;
 }
 .d20-mod-pill {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border-radius: 999px;
-  font: 800 13px/1.1 var(--mf);
-  border: 1.5px solid #d4a64a;
-  background: rgba(20, 14, 10, 0.94);
+  gap: 7px;
+  padding: 6px 12px 6px 8px;
+  border-radius: 8px;
+  font: 700 12.5px/1.1 var(--mf);
+  border: 1.5px solid #c99c42;
+  background: linear-gradient(180deg, rgba(42, 28, 16, 0.96), rgba(18, 12, 8, 0.98));
   color: #fde68a;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.85), 0 0 14px rgba(234, 179, 84, 0.45);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.88), inset 0 1px 0 rgba(255, 232, 165, 0.25);
+  transition: transform 0.28s cubic-bezier(0.2, 1.3, 0.3, 1), box-shadow 0.28s ease, opacity 0.32s ease, filter 0.32s ease;
+}
+.d20-mod-pill .mod-ic {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fde68a;
+}
+.d20-mod-pill .mod-ic svg {
+  width: 100%;
+  height: 100%;
 }
 .d20-mod-pill.neg {
-  border-color: #dc2626;
+  border-color: #c8323c;
+  background: linear-gradient(180deg, rgba(48, 14, 18, 0.96), rgba(20, 7, 9, 0.98));
   color: #fecaca;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.85), 0 0 14px rgba(220, 38, 38, 0.45);
+}
+.d20-mod-pill.neg .mod-ic {
+  color: #f87171;
 }
 .d20-mod-pill i {
   font-style: normal;
   font-size: 15px;
   font-weight: 900;
+  padding-left: 2px;
+}
+.d20-mod-pill.igniting {
+  transform: scale(1.14) translateY(-3px);
+  border-color: #fff6c2;
+  box-shadow: 0 0 24px rgba(250, 204, 21, 0.9), 0 8px 20px rgba(0, 0, 0, 0.92);
+}
+.d20-mod-pill.neg.igniting {
+  border-color: #fca5a5;
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.9), 0 8px 20px rgba(0, 0, 0, 0.92);
+}
+.d20-mod-pill.applied {
+  opacity: 0.48;
+  filter: saturate(0.55);
+  transform: scale(0.94);
+}
+.bg3-mod-fly {
+  position: fixed;
+  z-index: 120;
+  pointer-events: none;
+  font: 900 26px/1 var(--mf);
+  transform: translate(-50%, -50%) scale(0.75);
+  animation: bg3ModFly 0.42s cubic-bezier(0.22, 0.9, 0.32, 1) forwards;
+}
+.bg3-mod-fly.pos {
+  color: #fef08a;
+  text-shadow: 0 0 18px rgba(250, 204, 21, 0.95), 0 0 34px rgba(234, 179, 84, 0.8), 0 2px 6px #000;
+}
+.bg3-mod-fly.neg {
+  color: #fecaca;
+  text-shadow: 0 0 18px rgba(239, 68, 68, 0.98), 0 0 34px rgba(185, 28, 28, 0.85), 0 2px 6px #000;
+}
+@keyframes bg3ModFly {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+  22%  { opacity: 1; transform: translate(calc(-50% + var(--dx) * 0.18), calc(-50% + var(--dy) * 0.18 - 10px)) scale(1.28); }
+  85%  { opacity: 1; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.1); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.65); }
+}
+.bg3-impact-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0.45);
+  pointer-events: none;
+  z-index: 6;
+  animation: bg3RingBurst 0.52s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.bg3-impact-ring.pos {
+  border: 3px solid #fef08a;
+  box-shadow: 0 0 24px rgba(250, 204, 21, 0.9), inset 0 0 18px rgba(250, 204, 21, 0.65);
+}
+.bg3-impact-ring.neg {
+  border: 3px solid #f87171;
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.9), inset 0 0 18px rgba(220, 38, 38, 0.65);
+}
+@keyframes bg3RingBurst {
+  0%   { opacity: 0.98; transform: translate(-50%, -50%) scale(0.45); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(2.85); }
 }
 
 /* Lobi & Odaya Katıl Modalları */

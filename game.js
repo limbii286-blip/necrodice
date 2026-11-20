@@ -434,34 +434,81 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
           }
         };
 
-        if(modVal !== 0 && rawTarget !== finalTarget){
-          render(rawTarget, false, false, 1.06, 1.15);
-          setTimeout(()=>{ if(d.isConnected) render(rawTarget, false, false, 1.0, 1.0); }, 180);
-          const hpModEl = d.querySelector('.d20-hp-mod');
-          setTimeout(()=>{
+        const pills = [...d.querySelectorAll('.d20-mod-pill[data-val]')];
+        if(pills.length > 0){
+          render(rawTarget, false, false, 1.08, 1.18);
+          setTimeout(()=>{ if(d.isConnected) render(rawTarget, false, false, 1.0, 1.0); }, 190);
+          let curNum = rawTarget;
+          const stageEl = d.querySelector('.d20-stage');
+          const applyNext = idx => {
             if(!d.isConnected) return;
-            if(hpModEl) hpModEl.classList.add('fly');
-            snd('play');
-            const mStart = performance.now(), mDur = 480;
-            const sRx = rx, sRy = ry, sRz = rz;
-            const fRx = finalAng.rx, fRy = finalAng.ry, fRz = finalAng.rz;
-            const modFrame = tNow => {
+            if(idx >= pills.length){
+              rx = finalAng.rx; ry = finalAng.ry; rz = finalAng.rz;
+              finishFinal(finalTarget, true);
+              return;
+            }
+            const pill = pills[idx];
+            const delta = +pill.dataset.val;
+            const isPos = delta > 0;
+            const nextNum = Math.max(1, Math.min(20, curNum + delta));
+            const nextAng = (typeof getD20FaceAngles === 'function') ? getD20FaceAngles(nextNum) : finalAng;
+            pill.classList.add('igniting');
+            try{
+              if(isPos) tone(520, .18, 'triangle', .13, 0, 160);
+              else tone(240, .2, 'sawtooth', .11, 0, -70);
+            }catch(e){}
+            if(stageEl){
+              const pr = pill.getBoundingClientRect(), sr = stageEl.getBoundingClientRect();
+              const sx = pr.left + pr.width / 2, sy = pr.top + pr.height / 2;
+              const tx = sr.left + sr.width / 2, ty = sr.top + sr.height / 2;
+              const fly = document.createElement('div');
+              fly.className = 'bg3-mod-fly ' + (isPos ? 'pos' : 'neg');
+              fly.textContent = isPos ? `+${delta}` : `−${Math.abs(delta)}`;
+              fly.style.left = sx + 'px';
+              fly.style.top = sy + 'px';
+              fly.style.setProperty('--dx', (tx - sx) + 'px');
+              fly.style.setProperty('--dy', (ty - sy) + 'px');
+              document.body.appendChild(fly);
+              setTimeout(() => fly.remove(), 520);
+            }
+            setTimeout(() => {
               if(!d.isConnected) return;
-              const p = Math.min(1, (tNow - mStart) / mDur);
-              const e = 1 - Math.pow(1 - p, 3);
-              rx = sRx + (fRx - sRx) * e;
-              ry = sRy + (fRy - sRy) * e;
-              rz = sRz + (fRz - sRz) * e;
-              const sc = 1 + Math.sin(p * Math.PI) * 0.14;
-              render(p < 0.55 ? rawTarget : finalTarget, false, false, sc, 1 + Math.sin(p * Math.PI) * 0.25);
-              if(p < 1) requestAnimationFrame(modFrame);
-              else {
-                rx = fRx; ry = fRy; rz = fRz;
-                finishFinal(finalTarget, true);
+              pill.classList.remove('igniting');
+              pill.classList.add('applied');
+              if(stageEl){
+                const ring = document.createElement('div');
+                ring.className = 'bg3-impact-ring ' + (isPos ? 'pos' : 'neg');
+                stageEl.appendChild(ring);
+                setTimeout(() => ring.remove(), 560);
               }
-            };
-            requestAnimationFrame(modFrame);
-          }, 480);
+              try{
+                if(isPos){tone(659, .26, 'triangle', .16);tone(880, .32, 'sine', .14, .05)}
+                else{tone(185, .28, 'sawtooth', .14, 0, -55);noise(.12, .15, 700)}
+              }catch(e){}
+              const mStart = performance.now(), mDur = 360;
+              const sRx = rx, sRy = ry, sRz = rz;
+              const modFrame = tNow => {
+                if(!d.isConnected) return;
+                const p = Math.min(1, (tNow - mStart) / mDur);
+                const e = 1 - Math.pow(1 - p, 3);
+                rx = sRx + (nextAng.rx - sRx) * e;
+                ry = sRy + (nextAng.ry - sRy) * e;
+                rz = sRz + (nextAng.rz - sRz) * e;
+                const sc = 1 + Math.sin(p * Math.PI) * 0.18;
+                const tp = 1 + Math.sin(p * Math.PI) * 0.36;
+                render(p < 0.3 ? curNum : nextNum, false, false, sc, tp);
+                if(p < 1) requestAnimationFrame(modFrame);
+                else {
+                  curNum = nextNum;
+                  rx = nextAng.rx; ry = nextAng.ry; rz = nextAng.rz;
+                  render(curNum, false, false, 1.0, 1.0);
+                  setTimeout(() => applyNext(idx + 1), 420);
+                }
+              };
+              requestAnimationFrame(modFrame);
+            }, 340);
+          };
+          setTimeout(() => applyNext(0), 540);
         } else {
           finishFinal(finalTarget, true);
         }
@@ -1280,7 +1327,7 @@ function endRound(){
           <div class="d20-glow"></div>
           <canvas id="d20cv" class="d20-canvas" width="280" height="280"></canvas>
         </div>
-        ${(hpB||execPen)?`<div class="d20-hp-mod">${hpB?`<span class="d20-mod-pill pos"><b>${blessingName}</b><i>+${hpB}</i></span>`:''}${execPen?`<span class="d20-mod-pill neg"><b>${decreeName}</b><i>−2</i></span>`:''}</div>`:''}
+        ${(rawOv==null&&(hpB||execPen))?`<div class="d20-hp-mod">${hpB?`<span class="d20-mod-pill pos" data-val="${hpB}"><span class="mod-ic">${HP_IC.m}</span><b>${blessingName}</b><i>+${hpB}</i></span>`:''}${execPen?`<span class="d20-mod-pill neg" data-val="-2"><span class="mod-ic">${HP_IC.n}</span><b>${decreeName}</b><i>−2</i></span>`:''}</div>`:''}
         ${L==v?`<button id="rl" class="btn d20-btn">${tr('ÖLÜM ZARINI AT','ROLL DEATH DICE')}</button>`:''}
       </div>
     </div><div class="after"><b>${tr('Zar Sonucu','Roll Result')}: ${roll}${(hpB||execPen)&&rawOv==null?` (${rr}${hpB?`+${hpB} ${blessingName}`:''}${execPen?`−2 ${decreeName}`:''})`:''}</b><br>`+(surv?(L==v?tr('Kurtuldun!<br>Hayatta kaldın.','You survived!'):tr('Rakip hayatta kaldı.','Opponent survived.')):(`<b>${L==v?tr('Öldün.<br>Oyunu rakip kazandı.','You died.<br>Opponent won the game.'):tr('Rakip öldü.<br>Oyunu sen kazandın!','Opponent died.<br>You won the game!')}</b>`))+'</div>'};
