@@ -6484,8 +6484,16 @@ html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, 
   line-height: 1 !important;
 }
 #deck b {
-  font-size: clamp(24px, 3.6dvh, 32px) !important;
+  width: 36px !important;
+  height: 36px !important;
+  font-size: 20px !important;
+  font-weight: 800 !important;
   line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 0 1px 0 !important;
+  text-align: center !important;
 }
 #prompt {
   font-size: 17px !important;
@@ -6617,7 +6625,10 @@ html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, 
     font-size: clamp(20px, 2.9dvh, 25px) !important;
   }
   #deck b {
-    font-size: 19px !important;
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 16px !important;
+    padding: 0 0 1px 0 !important;
   }
   .who .nm b {
     font-size: clamp(15px, 4vw, 17.5px) !important;
