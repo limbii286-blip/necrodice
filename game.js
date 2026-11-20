@@ -1921,9 +1921,9 @@ function fly(){ // yeni kartlar desteden teker teker, yumuşak yay çizerek uça
   void d.offsetWidth;
   const rects=ordered.map(el=>el.getBoundingClientRect());
   const isBatch=ordered.length>=2;
-  const stepMs=isBatch?290:0;
-  // Geçiş perdesi (.veil) açıkken kart sesleri/uçuşu beklemede kalsın; önce oyun ekranı gelsin, sonra kartlar dağılsın
-  const baseMs=entering?1020:(isBatch?110:0);
+  const stepMs=isBatch?280:0;
+  // Geçiş perdesi (.veil) tamamen açıldıktan sonra ilk kart hem görsel hem sesli olarak aynı milisaniyede çıkar
+  const baseMs=entering?1180:(isBatch?110:0);
   const pulseDeck=()=>{
     if(!d.isConnected)return;
     d.classList.remove('pull');
@@ -1939,18 +1939,17 @@ function fly(){ // yeni kartlar desteden teker teker, yumuşak yay çizerek uça
     el.style.setProperty('--dx',dx.toFixed(1)+'px');
     el.style.setProperty('--dy',dy.toFixed(1)+'px');
     el.style.setProperty('--rot',(isMe?-11:11)+'deg');
-    el.style.animationDelay=(delayMs/1000).toFixed(2)+'s';
-    el.style.opacity='';
-    el.style.animation='';
-    if(delayMs===0){
+    const launch=()=>{
+      if(!el.isConnected)return;
+      el.style.animation='';
+      el.style.opacity='';
       pulseDeck();
       snd('draw');
+    };
+    if(delayMs<=0){
+      launch();
     }else{
-      setTimeout(()=>{
-        if(!el.isConnected)return;
-        pulseDeck();
-        snd('draw');
-      },delayMs);
+      setTimeout(launch,delayMs);
     }
   });
   setTimeout(()=>{if(d.isConnected)d.classList.remove('pull')},baseMs+(ordered.length-1)*stepMs+520);
@@ -2083,7 +2082,7 @@ function R(){
     }
     prevHpAnim[side]=uNow;
   });
-  const mt0=S.turn==0&&!S.wait;if(mt0&&!prevT)snd('turn');prevT=mt0;
+  const mt0=S.turn==0&&!S.wait;if(mt0&&!prevT){if(entering)setTimeout(()=>{if(G&&!G.over)snd('turn')},2150);else snd('turn')}prevT=mt0;
   const last=S.log[S.log.length-1],lk=S.log.length+JSON.stringify(last);if(lk!=lastLk){lastLk=lk;if(last&&last.t=='pas dedi')snd('pass')}
   fly();flipId=null;
   if(MODE==='tutorial')tutApplyHighlights();
