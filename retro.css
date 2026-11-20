@@ -4142,3 +4142,99 @@ body.dragging-range * {
   80% { opacity: 1; transform: translate(-50%, 10px) scale(1); }
   100% { opacity: 0; transform: translate(-50%, 24px) scale(0.9); }
 }
+
+/* Beraberlik Zarı (2 Zar x 2 Taraf, Tıklamalı) */
+.tie-sub {
+  margin: 2px 0 10px;
+  font-size: 14px;
+  color: #e6d5b8;
+  opacity: 0.9;
+}
+.tie-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 2px;
+}
+.tie-sides {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  cursor: pointer;
+}
+.tie-side {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 8px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(212, 168, 85, 0.35);
+  background: rgba(16, 11, 10, 0.72);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+.tie-side.win {
+  border-color: #fde68a;
+  box-shadow: 0 0 18px rgba(234, 179, 84, 0.45);
+}
+.tie-side.lose {
+  border-color: rgba(207, 46, 60, 0.55);
+  opacity: 0.78;
+}
+.tie-lbl {
+  font: 700 12px/1.2 var(--mf);
+  color: #f3dfb8;
+  letter-spacing: 0.4px;
+}
+.tie-dice {
+  gap: 8px !important;
+  margin: 2px 0 !important;
+  min-height: 48px !important;
+}
+.tie-dice .die {
+  width: 46px !important;
+  height: 46px !important;
+  padding: 6px !important;
+  border-radius: 9px !important;
+}
+.tie-sum {
+  font: 800 18px/1 var(--mf);
+  color: #fde68a;
+  min-height: 18px;
+}
+.tie-vs {
+  font: 800 13px/1 var(--mf);
+  color: #b8985c;
+  flex-shrink: 0;
+}
+.tie-after {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: opacity 0.35s ease;
+  font-size: 14.5px;
+  line-height: 1.35;
+  color: #f5e6c8;
+}
+.tie-box.fin .tie-after {
+  opacity: 1;
+  max-height: 80px;
+}
+@media (max-width: 760px) {
+  .tie-sides {
+    gap: 8px;
+  }
+  .tie-side {
+    padding: 8px 6px;
+  }
+  .tie-dice .die {
+    width: 38px !important;
+    height: 38px !important;
+    padding: 5px !important;
+  }
+}

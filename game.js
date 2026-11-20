@@ -255,7 +255,46 @@ const flash=()=>{try{if(RM)return;const f=document.querySelector('#fl');f.classL
 const PIP={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
 const die=n=>`<i class="die">${[...Array(9)].map((_,i)=>`<b${PIP[n].includes(i)?' class="p"':''}></b>`).join('')}</i>`;
 const d20=()=>1+Math.random()*20|0;
-function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı animasyonu
+function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & beraberlik zarı animasyonu
+  const tb=document.querySelector('#mb .tie-box');
+  if(tb){
+    const d0a=+tb.dataset.d0a,d0b=+tb.dataset.d0b,d1a=+tb.dataset.d1a,d1b=+tb.dataset.d1b,win=+tb.dataset.win;
+    const btn=tb.querySelector('#tie-rl'),sides=tb.querySelector('.tie-sides'),mo=document.querySelector('#mo');
+    if(mo)mo.style.visibility='hidden';
+    let rolled=false;
+    const goRoll=()=>{
+      if(rolled)return;
+      rolled=true;
+      if(btn)btn.remove();
+      const d0El=tb.querySelector('#tie-d0'),d1El=tb.querySelector('#tie-d1');
+      if(d0El)d0El.classList.add('roll');
+      if(d1El)d1El.classList.add('roll');
+      snd('dice');
+      const iv=setInterval(()=>{
+        if(!tb.isConnected){clearInterval(iv);return}
+        if(d0El)d0El.innerHTML=die(d6())+die(d6());
+        if(d1El)d1El.innerHTML=die(d6())+die(d6());
+      },90);
+      setTimeout(()=>{
+        clearInterval(iv);
+        if(!tb.isConnected)return;
+        if(d0El){d0El.classList.remove('roll');d0El.classList.add('fin');d0El.innerHTML=die(d0a)+die(d0b)}
+        if(d1El){d1El.classList.remove('roll');d1El.classList.add('fin');d1El.innerHTML=die(d1a)+die(d1b)}
+        const s0=tb.querySelector('#tie-s0'),s1=tb.querySelector('#tie-s1');
+        if(s0)s0.textContent=String(d0a+d0b);
+        if(s1)s1.textContent=String(d1a+d1b);
+        const c0=tb.querySelector('.tie-side.me'),c1=tb.querySelector('.tie-side.opp');
+        if(c0)c0.classList.add(win===0?'win':'lose');
+        if(c1)c1.classList.add(win===1?'win':'lose');
+        tb.classList.add('fin');
+        snd(win===0?'ok':'lose');
+        if(mo)mo.style.visibility='';
+      },780);
+    };
+    if(btn)btn.onclick=e=>{e.stopPropagation();goRoll()};
+    if(sides)sides.onclick=()=>goRoll();
+    return;
+  }
   const d=document.querySelector('#mb .d20-box');if(!d)return;
   const finalTarget=+d.dataset.roll,rawTarget=+(d.dataset.raw||finalTarget),modVal=+(d.dataset.mod||0),dc=+d.dataset.dc,isMe=d.dataset.m=='1',res=d.dataset.s;
   const target=rawTarget;
@@ -1168,11 +1207,11 @@ function endRound(){
       deal(S);R();next();
       return;
     }
-    let L=S.pts[0]<S.pts[1]?0:S.pts[1]<S.pts[0]?1:-1,hx=null,how='';
+    let L=S.pts[0]<S.pts[1]?0:S.pts[1]<S.pts[0]?1:-1,hx=null,hd=null,how='';
     if(L<0){
       const j=S.hand.map(h=>h.length);
       if(j[0]!=j[1]){L=j[0]<j[1]?0:1;how='joker'}
-      else{let x,y;do{x=d6()+d6();y=d6()+d6()}while(x==y);L=x<y?0:1;hx=[x,y];how='zar'}
+      else{let a1,a2,b1,b2,x,y;do{a1=d6();a2=d6();b1=d6();b2=d6();x=a1+a2;y=b1+b2}while(x==y);L=x<y?0:1;hx=[x,y];hd=[[a1,a2],[b1,b2]];how='zar'}
     }
     const th=TH[Math.min(S.bo,3)],rawRoll=d20(),hpB=avKey(S,L)==='m'?2:0,execPen=avKey(S,1-L)==='n'?-2:0,roll=Math.max(1,Math.min(20,rawRoll+hpB+execPen)),surv=roll>=th;
     const mk=(v,roll,surv,rawOv)=>{const rr=rawOv!=null?rawOv:rawRoll;
@@ -1196,14 +1235,28 @@ function endRound(){
         ${L==v?`<button id="rl" class="btn d20-btn">${tr('ÖLÜM ZARINI AT','ROLL DEATH DICE')}</button>`:''}
       </div>
     </div><div class="after"><b>${tr('Zar Sonucu','Roll Result')}: ${roll}${(hpB||execPen)&&rawOv==null?` (${rr}${hpB?`+${hpB} ${blessingName}`:''}${execPen?`−2 ${decreeName}`:''})`:''}</b><br>`+(surv?(L==v?tr('Kurtuldun! Hayatta kaldın.','You survived!'):tr('Rakip hayatta kaldı.','Opponent survived.')):(`<b>${L==v?tr('Öldün. Oyunu rakip kazandı.','You died. Opponent won the game.'):tr('Rakip öldü. Oyunu sen kazandın!','Opponent died. You won the game!')}</b>`))+'</div>'};
-    const full=v=>mk(v,roll,surv),rig=MODE=='bot'&&avKey(S,1)==='u'&&L==1&&!surv&&!S.rigDone; // Bilinmeyen (İmkansız bot): oyun başına bir kez ölümden döner
-    const uRev=(MODE==='host'?(L===0||L===1):L===0)&&avKey(S,L)==='u'&&!surv&&!(S.uRevived&&S.uRevived[L]);
-    if(surv||rig||uRev){const n=S.bo+2;
-      const lb=tr(`Düello ${n} ile devam et`,`Continue to Duel ${n}`),go=()=>{try{document.body.classList.remove('dead')}catch(e){}S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()};
-      if(rig){S.rigDone=true;S.hpUsed[1]=true;impSave(mk(0,1,false,1),()=>M(mk(0,20,true,20),lb,go))}
-      else if(uRev){S.uRevived=S.uRevived||[false,false];S.uRevived[L]=true;S.hpUsed[L]=true;impSave(mk(0,roll,false),()=>MM(v=>mk(v,20,true,20),lb,go),tr('Hiçlik seni geri çevirdi… Bir kez daha ölümden döndün!','The Void refused you… You have returned from death once more!'))}
-      else MM(full,lb,go)}
-    else{S.over=true;lrnGame(L==0);rematchReady=[false,false];rematchHeroes=[null,null];MM(full,tr('Yeniden oyna','Play Again'),()=>chooseHero(hid=>{if(MODE==='host'){MY_HERO=hid;rematchReady[0]=true;rematchHeroes[0]=hid;checkStartOnlineRematch()}else{MY_HERO=hid;start()}},()=>{$('#menu').hidden=false;setMusic('menu')}),null,true)}
+    const openDeathModal=()=>{
+      const full=v=>mk(v,roll,surv),rig=MODE=='bot'&&avKey(S,1)==='u'&&L==1&&!surv&&!S.rigDone; // Bilinmeyen (İmkansız bot): oyun başına bir kez ölümden döner
+      const uRev=(MODE==='host'?(L===0||L===1):L===0)&&avKey(S,L)==='u'&&!surv&&!(S.uRevived&&S.uRevived[L]);
+      if(surv||rig||uRev){const n=S.bo+2;
+        const lb=tr(`Düello ${n} ile devam et`,`Continue to Duel ${n}`),go=()=>{try{document.body.classList.remove('dead')}catch(e){}S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()};
+        if(rig){S.rigDone=true;S.hpUsed[1]=true;impSave(mk(0,1,false,1),()=>M(mk(0,20,true,20),lb,go))}
+        else if(uRev){S.uRevived=S.uRevived||[false,false];S.uRevived[L]=true;S.hpUsed[L]=true;impSave(mk(0,roll,false),()=>MM(v=>mk(v,20,true,20),lb,go),tr('Hiçlik seni geri çevirdi… Bir kez daha ölümden döndün!','The Void refused you… You have returned from death once more!'))}
+        else MM(full,lb,go)}
+      else{S.over=true;lrnGame(L==0);rematchReady=[false,false];rematchHeroes=[null,null];MM(full,tr('Yeniden oyna','Play Again'),()=>chooseHero(hid=>{if(MODE==='host'){MY_HERO=hid;rematchReady[0]=true;rematchHeroes[0]=hid;checkStartOnlineRematch()}else{MY_HERO=hid;start()}},()=>{$('#menu').hidden=false;setMusic('menu')}),null,true)}
+    };
+    if(how=='zar'){
+      const tieFn=v=>{
+        const vi=v===2?0:v,w=L===vi?1:0;
+        const myLbl=v===2?tr('1. Oyuncu','Player 1'):tr('Senin Zarların','Your Dice');
+        const opLbl=v===2?tr('2. Oyuncu','Player 2'):tr('Rakibin Zarları','Opponent\'s Dice');
+        const resTxt=v===2?(w===0?tr('1. Oyuncu düelloyu kazandı!','Player 1 won the duel!'):tr('2. Oyuncu düelloyu kazandı!','Player 2 won the duel!')):(w===0?tr('Düelloyu sen kazandın! Rakip Ölüm Zarı atacak.','You won the duel! Opponent will roll the Death Dice.'):tr('Düelloyu rakip kazandı! Ölüm Zarını sen atacaksın.','Opponent won the duel! You will roll the Death Dice.'));
+        return `<h3>${tr('Düello Berabere!','Duel Tied!')}</h3><p class="tie-sub">${tr('Puanlar ve kalan jokerler eşit. Yüksek atan düelloyu kazanır!','Points and remaining jokers are tied. Higher roll wins!')}</p><div class="tie-box" data-d0a="${hd[vi][0]}" data-d0b="${hd[vi][1]}" data-d1a="${hd[1-vi][0]}" data-d1b="${hd[1-vi][1]}" data-win="${w}"><div class="tie-sides"><div class="tie-side me"><span class="tie-lbl">${myLbl}</span><div id="tie-d0" class="dice tie-dice">${die(1)}${die(6)}</div><b id="tie-s0" class="tie-sum">?</b></div><div class="tie-vs">VS</div><div class="tie-side opp"><span class="tie-lbl">${opLbl}</span><div id="tie-d1" class="dice tie-dice">${die(6)}${die(1)}</div><b id="tie-s1" class="tie-sum">?</b></div></div><button id="tie-rl" class="btn d20-btn">${tr('ZAR AT','ROLL DICE')}</button><div class="tie-after"><b>${hx[vi]} – ${hx[1-vi]}</b><br>${resTxt}</div></div>`;
+      };
+      MM(tieFn,tr('Ölüm Zarına Geç','Proceed to Death Dice'),openDeathModal);
+    }else{
+      openDeathModal();
+    }
   }
 }
 function cutscene(txt,done){ // BİLİNMEYEN: ikonu ve konuşma balonu
@@ -3439,7 +3492,7 @@ function createSmoothDragLoop(onFrame){
     const scSec1=$('#sc-sec-1');
     const menu=$('#menu');
     const modalEl=$('#m'),mbEl=$('#mb');
-    const isMenuModal=!!(modalEl&&!modalEl.hidden&&mbEl&&!mbEl.querySelector('.d20-box,.scry-row,#hp-p2,.hero-grid'));
+    const isMenuModal=!!(modalEl&&!modalEl.hidden&&mbEl&&!mbEl.querySelector('.d20-box,.tie-box,.scry-row,#hp-p2,.hero-grid'));
     const active=!!(G && !G.over && !G.wait && (!lock || (MODE!=='bot' && isMenuModal)) && (!menu || menu.hidden));
     if(!active){
       if(sc0){sc0.classList.remove('ticking','low');sc0.classList.toggle('turn-on',!!(G&&G.turn===0));sc0.classList.toggle('turn-off',!!(G&&G.turn!==0))}
