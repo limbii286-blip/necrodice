@@ -262,9 +262,16 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
     const btn=tb.querySelector('#tie-rl'),sides=tb.querySelector('.tie-sides'),mo=document.querySelector('#mo');
     if(mo)mo.style.visibility='hidden';
     let rolled=false;
-    const goRoll=()=>{
+    const goRoll=(fromNet=false)=>{
       if(rolled)return;
       rolled=true;
+      if(!fromNet){
+        if(MODE==='guest'&&conn&&conn.open)conn.send({k:'tie_roll'});
+        else if(MODE==='host'){
+          if(conn&&conn.open)conn.send({k:'tie_roll'});
+          spectators.forEach(s=>{try{if(s.open)s.send({k:'tie_roll'})}catch(e){}});
+        }
+      }
       if(btn)btn.remove();
       const d0El=tb.querySelector('#tie-d0'),d1El=tb.querySelector('#tie-d1');
       if(d0El)d0El.classList.add('roll');
@@ -291,8 +298,14 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
         if(mo)mo.style.visibility='';
       },780);
     };
-    if(btn)btn.onclick=e=>{e.stopPropagation();goRoll()};
-    if(sides)sides.onclick=()=>goRoll();
+    window._triggerTieRoll=()=>goRoll(true);
+    if(MODE==='spectator'){
+      if(btn)btn.remove();
+      if(sides)sides.style.cursor='default';
+    }else{
+      if(btn)btn.onclick=e=>{e.stopPropagation();goRoll(false)};
+      if(sides)sides.onclick=()=>goRoll(false);
+    }
     return;
   }
   const d=document.querySelector('#mb .d20-box');if(!d)return;
@@ -2382,6 +2395,12 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     checkDeathCont();
     return;
   }
+  if(m.k=='tie_roll'){
+    if(fromConn!==conn)return;
+    if(window._triggerTieRoll)window._triggerTieRoll();
+    spectators.forEach(s=>{try{if(s.open)s.send({k:'tie_roll'})}catch(e){}});
+    return;
+  }
 
   const S=G;if(!S||S.over||S.wait||S.turn!=1)return;
   if(fromConn !== conn) return; // Hamleleri sadece aktif rakip (conn) yapabilir!
@@ -2536,6 +2555,9 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
       M(m.html,null,null,m.end);
     }
     snd(m.sd);
+  }
+  else if(m.k=='tie_roll'){
+    if(window._triggerTieRoll)window._triggerTieRoll();
   }
   else if(m.k=='j')cast(m.p,m.id,R);
   else if(m.k=='hp_scry_res'){
