@@ -558,8 +558,8 @@ function play(S,p,id,pk){
 const PR={
   easy:{rand:.25,noise:.35,jc:.45,jp:.4,dm:.05,depth:0},
   med:{rand:.01,noise:.06,jc:.2,jp:1,dm:.03,depth:0},
-  hard:{rand:0,noise:0,jc:.2,jl:.08,jp:1,dm:.02,depth:2,beta:0,gap:6,mc:1,K:500,ms:2200,top:4,rjp:.5,hero:1},
-  imp:{rand:0,noise:0,jc:.08,jl:.03,jp:1,dm:.015,depth:2,beta:.75,gap:7,mc:1,K:35000,ms:7500,top:10,rjp:.85,bo3:1,pf:1,learn:1,hero:1,deepRoll:1} // imkansız: derin tarama, tam kombo ve kahraman ustalığı
+  hard:{rand:0,noise:0,jc:.15,jl:.06,jp:1,dm:.015,depth:2,beta:.55,gap:6,mc:1,K:1600,ms:3200,top:7,rjp:.85,bo3:1,pf:1,hero:1},
+  imp:{rand:0,noise:0,jc:.08,jl:.03,jp:1,dm:.01,depth:2,beta:.82,gap:7,mc:1,K:35000,ms:7500,top:12,rjp:.95,bo3:1,pf:1,learn:1,hero:1,deepRoll:1} // imkansız: derin tarama, tam kombo ve kahraman ustalığı
 };
 let DIFF='med';
 const unk=(S,p)=>{const seen=new Set([...S.pl[p].open,...S.pl[p].closed,...S.pl[1-p].open,...(S.dead||[])].map(c=>c.n));if(p===1&&S.botPeekVal!=null)seen.add(S.botPeekVal);return range(11).filter(n=>!seen.has(n))};
@@ -598,8 +598,9 @@ const combos=l=>l.reduce((r,o)=>r.flatMap(x=>o.map(y=>[...x,y])),[[]]);
 function decide(S,p,prm){ // en iyi hamleyi seç; null = pas
   CUR=prm;const d=prm.depth||0,nz=()=>prm.noise?(Math.random()+Math.random()-1)*prm.noise:0;
   if(Math.random()<prm.rand)return canDraw(S,p)&&Math.random()<.5?{t:'d'}:null;
+  const low=lowW(S),Tg=tg(S),myT=total(S,p,true);
   const pool=unk(S,p);let best=null,bs=evalS(clone(S),p)+prm.dm;
-  if(canDraw(S,p)&&pool.length){
+  if(!low&&myT<Tg&&canDraw(S,p)&&pool.length){
     let v=0;pool.forEach(x=>{const T=clone(S);T.deck.pop();T.pl[p].open.push({id:++T.u,n:x});v+=look(T,p,d)});
     v=v/pool.length+nz();if(v>bs){bs=v;best={t:'d'}}
   }
@@ -607,6 +608,7 @@ function decide(S,p,prm){ // en iyi hamleyi seç; null = pas
     if(id==16||!playable(S,p,id)||Math.random()>prm.jp)return;
     combos((NEED[id]||[]).map(k=>opts(S,p,k))).forEach(pk=>{
       if(id==15&&pk[0]==pk[1])return;
+      if(id==12){const ef=S.eff.find(e=>e.uid==pk[0]);if(ef&&ef.o===p)return}
       const T=clone(S);T.deck=shuf(pool.map(n=>({id:++T.u,n}))).slice(0,S.deck.length);play(T,p,id,pk);
       const v=look(T,p,d)-(S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc)+nz();if(v>bs){bs=v;best={t:'j',id,pk}}
     });
@@ -619,17 +621,20 @@ function decide(S,p,prm){ // en iyi hamleyi seç; null = pas
    Rakibin cevabını da hesaba kattığı için "pas deyip sonra yakalanma" hatalarını yapmaz. */
 const ROLL={rand:0,noise:0,jc:.25,jl:.15,jp:1,dm:.02,depth:0,beta:0,gap:6,hero:1};
 function listC(S,p,prm){
-  CUR=prm;const d=prm.depth||0,out=[],pool=unk(S,p);
+  CUR=prm;const d=prm.depth||0,out=[],pool=unk(S,p),low=lowW(S),Tg=tg(S),myT=total(S,p,true);
   out.push({a:null,v:evalS(clone(S),p)+prm.dm});
-  if(canDraw(S,p)&&pool.length){let v=0;pool.forEach(x=>{const T=clone(S);T.log=[];T.deck.pop();T.pl[p].open.push({id:++T.u,n:x});v+=look(T,p,d)});out.push({a:{t:'d'},v:v/pool.length})}
+  if(!low&&myT<Tg&&canDraw(S,p)&&pool.length){let v=0;pool.forEach(x=>{const T=clone(S);T.log=[];T.deck.pop();T.pl[p].open.push({id:++T.u,n:x});v+=look(T,p,d)});out.push({a:{t:'d'},v:v/pool.length})}
   const matchPoint=S.rounds>=2||(S.pts&&(S.pts[0]>=1.5||S.pts[1]>=1.5));
   const cost=matchPoint&&prm.deepRoll?0.015:(S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc);
   const HI_THIEF=new Set([6,7,14,16,17,18,23,24]);
+  const oppOpen=total(S,1-p,false);
   if(!S.noJ[p])new Set(S.hand[p]).forEach(id=>{
     if(!playable(S,p,id))return;
     if(id==16){const T=clone(S);T.log=[];T.deck=shuf(pool.map(n=>({id:++T.u,n}))).slice(0,S.deck.length);play(T,p,id,[]);out.push({a:{t:'j',id,pk:[]},v:look(T,p,d)-cost});return}
     combos((NEED[id]||[]).map(k=>opts(S,p,k))).forEach(pk=>{
       if(id==15&&pk[0]==pk[1])return;
+      if(id==12){const ef=S.eff.find(e=>e.uid==pk[0]);if(ef&&ef.o===p)return}
+      if((id==5||id==14)&&!low&&oppOpen>Tg&&!act(S,20))return; // rakip zaten açıktan patlamışsa kart verip/imha edip kurtarma
       const T=clone(S);T.log=[];T.deck=shuf(pool.map(n=>({id:++T.u,n}))).slice(0,S.deck.length);
       let bonus=0;
       if(id===25&&prm.hero){const st=(S.pj||[]).find(e=>e.uid===pk[0]);if(st&&HI_THIEF.has(st.id))bonus=0.12}
@@ -710,20 +715,24 @@ function decideH(S,p,prm){
   let bi=0;sc.forEach((s,i)=>{if(s>sc[bi]+1e-9)bi=i});
   return top[bi].a;
 }
-function decideHA(S,p,prm,done){ // zaman dilimli Monte-Carlo: ekranı dondurmadan çok daha fazla örnek
+function decideHA(S,p,prm,done,budCap){ // zaman dilimli Monte-Carlo: ekranı dondurmadan çok daha fazla örnek
   const now=()=>(typeof performance!='undefined'?performance:Date).now();
+  const low=lowW(S),Tg=tg(S),myT=total(S,p,true);
+  // Rakip pas geçtiyse ve rakip açıktan hedefi aşıp patladıysa (ve biz patlamadıysak) hiç kaynak harcamadan pas geç
+  if(S.pa&&S.pa[1-p]>0&&!low&&myT<=Tg&&total(S,1-p,false)>Tg&&!act(S,20))return done(null);
   let all=listC(S,p,prm).sort((x,y)=>y.v-x.v);
-  if(!lowW(S)&&total(S,p,true)>=tg(S))all=all.filter(c=>!(c.a&&c.a.t=='d')); // hedefte/üstündeyken kart çekmek yalnızca batırır
+  if(low||myT>=Tg)all=all.filter(c=>!(c.a&&c.a.t=='d')); // hedefte/üstündeyken veya "En az kazanır" etkisinde kart çekmek yalnızca batırır
   const pass=all.find(c=>!c.a),draw=all.find(c=>c.a&&c.a.t=='d');
   const top=all.slice(0,prm.top||4);[pass,draw].forEach(c=>{if(c&&!top.includes(c))top.push(c)});
   const TACTICAL=new Set([12,16,23,24,25]);
   TACTICAL.forEach(tid=>{const bestT=all.find(c=>c.a&&c.a.id===tid&&!top.includes(c));if(bestT)top.push(bestT)});
   if(top.length==1)return done(top[0].a);
   const matchPoint=S.rounds>=2||(S.pts&&(S.pts[0]>=1.5||S.pts[1]>=1.5));
-  const cost=matchPoint&&prm.deepRoll?0.015:(S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc);
+  const rawCost=matchPoint&&prm.deepRoll?0.015:(S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc);
+  const cost=prm.bo3?(matchPoint?rawCost*0.2:rawCost*0.45):rawCost;
   const sum=top.map(()=>0),RP={...ROLL,...(prm.rjp!=null?{jp:prm.rjp}:{}),...(prm.deepRoll?{depth:1,jc:0.08,jl:0.04,jp:1}:{}),bo3:prm.bo3,hm:prm.learn&&LRN.ht>=15};
-  const clkMs=S.clocks&&S.clocks[p]!=null?Math.max(1200,Math.round(S.clocks[p]*220)):99999;
-  const K=prm.K||40,bud=Math.min(prm.ms||0,clkMs),t0=now();let k=0;
+  const clkMs=S.clocks&&S.clocks[p]!=null?Math.max(1000,Math.round(S.clocks[p]*220)):99999;
+  const K=prm.K||40,bud=Math.min(prm.ms||0,clkMs,budCap||99999),t0=now();let k=0;
   if(prm.pf&&pass){top.splice(top.indexOf(pass),1);top.unshift(pass)} // eşitlikte paslamak öncelikli
   const fin=()=>{const sc=sum.map((v,i)=>v/Math.max(1,k)+(prm.w||0)*top[i].v);let bi=0;sc.forEach((v,i)=>{if(v>sc[bi]+1e-9)bi=i});done(top[bi].a)};
   const tick=()=>{const t1=now();
@@ -738,11 +747,12 @@ let botGen=0,thinkOn=false;
 function bot(){
   const S=G,prm=DIFF=='imp'?impPrm():PR[DIFF],gen=++botGen;let n=0;
   let plan=null,held=0,pid=0;
-  const think=r=>{thinkOn=true;R();talk('think',1,.55);R();const d=rnd(r)*(S.clocks&&S.clocks[1]<24?.42:.75);plan=null;const my=++pid;
-    // karar, düşünme süresinin başında hesaplanır; hamle anında ekran donmaz
+  const think=r=>{thinkOn=true;R();talk('think',1,.55);R();const d=rnd(r)*(S.clocks&&S.clocks[1]<20?.42:.75);plan=null;const my=++pid;
+    // karar, düşünme süresinin hemen başında hesaplanır; hamle anında tam bütçeyle hazır olur
+    const budCap=Math.max(900,Math.round(d-220));
     setTimeout(()=>{if(gen!=botGen||S!=G||S.turn!=1||S.over)return;if(n++>=8){plan={a:null};return}
       const ok=a=>{if(my==pid&&gen==botGen&&S==G&&S.turn==1&&!S.over)plan={a}};
-      if(prm.mc)decideHA(S,1,prm,ok);else ok(decide(S,1,prm))},Math.min(400,d*.15));
+      if(prm.mc)decideHA(S,1,prm,ok,budCap);else ok(decide(S,1,prm))},20);
     setTimeout(step,d)};
   const step=()=>{
     if(gen!=botGen||S!=G)return;
@@ -752,7 +762,7 @@ function bot(){
     thinkOn=false;
     if(S.hpUsed&&!S.hpUsed[1]){
       const bh=avKey(S,1),bt=total(S,1),bT=tg(S),low=lowW(S);
-      if(bh==='c'&&S.cWins&&S.cWins[1]>=4&&!low&&(bt>bT||(prm.hero&&evalS(clone(S),1)<-0.35))){
+      if(bh==='c'&&S.cWins&&S.cWins[1]>=4&&!low&&((bt>bT&&evalS(clone(S),1)<0.2)||(prm.hero&&evalS(clone(S),1)<-0.35))){
         execRewind(S,1);return think(AFTER[DIFF]);
       }
       if(bh==='w'&&prm.hero&&S.pl[0].closed.length){
@@ -763,7 +773,7 @@ function bot(){
       if(bh==='a'&&prm.hero&&S.deck.length>=2){
         const dn=S.deck.length,c1=S.deck[dn-1],c2=S.deck[dn-2];
         const good1=!low?bt+c1.n<=bT:c1.n<=c2.n,good2=!low?bt+c2.n<=bT:c2.n<=c1.n;
-        const swap=(!low&&bt<=bT-2)?(good2&&(!good1||c2.n>c1.n)):(c1.n<c2.n);
+        const swap=(!low&&bt<=bT-2)?(good2&&(!good1||c2.n>c1.n)):(!low&&bt>=bT-1)?(c1.n<c2.n):(c1.n<c2.n);
         if(swap){S.deck[dn-1]=c2;S.deck[dn-2]=c1}
         S.botScry=[S.deck[dn-1].n,S.deck[dn-2].n];
         S.hpUsed[1]=true;S.log.push({p:1,t:'Yitik Yazgı kullandı (destenin üstünü düzenledi)'});
