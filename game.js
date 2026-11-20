@@ -1264,11 +1264,11 @@ function endRound(){
     }
     const th=TH[Math.min(S.bo,3)],rawRoll=d20(),hpB=avKey(S,L)==='m'?2:0,execPen=avKey(S,1-L)==='n'?-2:0,roll=Math.max(1,Math.min(20,rawRoll+hpB+execPen)),surv=roll>=th;
     const mk=(v,roll,surv,rawOv)=>{const rr=rawOv!=null?rawOv:rawRoll;
-      const duelWinnerTxt=isEn()?(L==v?'Opponent won the duel':'You won the duel'):`Düelloyu ${L==v?'rakip kazandı':'sen kazandın'}`;
-      const howTxt=how=='joker'?tr(' (joker sayısına göre)',' (by remaining jokers)'):how=='zar'?tr(` (beraberlik zarı: ${hx[v]}–${hx[1-v]})`,` (tiebreaker dice: ${hx[v]}–${hx[1-v]})`):'';
-      const rollerTxt=isEn()?(L==v?'You roll the Death Dice':'Opponent rolls the Death Dice'):`Ölüm zarını ${L==v?'sen atıyorsun':'rakip atıyor'}`;
+      const duelWinnerTxt=isEn()?(L==v?'Opponent won the duel.':'You won the duel.'):`Düelloyu ${L==v?'rakip kazandı.':'sen kazandın.'}`;
+      const howTxt=how=='joker'?`<br><span class="d20-how">${tr('Joker sayısına göre.','By remaining jokers.')}</span>`:how=='zar'?`<br><span class="d20-how">${tr(`Beraberlik zarı: ${hx[v]}–${hx[1-v]}`,`Tiebreaker dice: ${hx[v]}–${hx[1-v]}`)}</span>`:'';
+      const rollerTxt=isEn()?(L==v?'You roll the Death Dice.':'Opponent rolls the Death Dice.'):`Ölüm zarını ${L==v?'sen atıyorsun.':'rakip atıyor.'}`;
       const blessingName=tr('Ölümün Takdiri','Death\'s Favor'),decreeName=tr('Ölüm Fermanı','Death Decree');
-      return `${duelWinnerTxt}${howTxt}.<br>${rollerTxt}<div class="d20-box" data-roll="${roll}" data-raw="${rr}" data-mod="${rawOv!=null?0:(hpB+execPen)}" data-dc="${th}" data-m="${L==v?1:0}" data-s="${surv?'ok':L==v?'death':'win'}">
+      return `${duelWinnerTxt}${howTxt}<br>${rollerTxt}<div class="d20-box" data-roll="${roll}" data-raw="${rr}" data-mod="${rawOv!=null?0:(hpB+execPen)}" data-dc="${th}" data-m="${L==v?1:0}" data-s="${surv?'ok':L==v?'death':'win'}">
       <div class="bg3-roll-card">
         <div class="bg3-card-border"></div>
         <i class="bg3-corner tl"></i><i class="bg3-corner tr"></i><i class="bg3-corner bl"></i><i class="bg3-corner br"></i>
@@ -1283,7 +1283,7 @@ function endRound(){
         ${(hpB||execPen)?`<div class="d20-hp-mod">${hpB?`<span class="d20-mod-pill pos"><b>${blessingName}</b><i>+${hpB}</i></span>`:''}${execPen?`<span class="d20-mod-pill neg"><b>${decreeName}</b><i>−2</i></span>`:''}</div>`:''}
         ${L==v?`<button id="rl" class="btn d20-btn">${tr('ÖLÜM ZARINI AT','ROLL DEATH DICE')}</button>`:''}
       </div>
-    </div><div class="after"><b>${tr('Zar Sonucu','Roll Result')}: ${roll}${(hpB||execPen)&&rawOv==null?` (${rr}${hpB?`+${hpB} ${blessingName}`:''}${execPen?`−2 ${decreeName}`:''})`:''}</b><br>`+(surv?(L==v?tr('Kurtuldun! Hayatta kaldın.','You survived!'):tr('Rakip hayatta kaldı.','Opponent survived.')):(`<b>${L==v?tr('Öldün. Oyunu rakip kazandı.','You died. Opponent won the game.'):tr('Rakip öldü. Oyunu sen kazandın!','Opponent died. You won the game!')}</b>`))+'</div>'};
+    </div><div class="after"><b>${tr('Zar Sonucu','Roll Result')}: ${roll}${(hpB||execPen)&&rawOv==null?` (${rr}${hpB?`+${hpB} ${blessingName}`:''}${execPen?`−2 ${decreeName}`:''})`:''}</b><br>`+(surv?(L==v?tr('Kurtuldun!<br>Hayatta kaldın.','You survived!'):tr('Rakip hayatta kaldı.','Opponent survived.')):(`<b>${L==v?tr('Öldün.<br>Oyunu rakip kazandı.','You died.<br>Opponent won the game.'):tr('Rakip öldü.<br>Oyunu sen kazandın!','Opponent died.<br>You won the game!')}</b>`))+'</div>'};
     const openDeathModal=()=>{
       const full=v=>mk(v,roll,surv)+(!surv&&!rig&&!uRev?`<template class="end-tpl">${buildEndScreenHtml(S,v,L,roll,th)}</template>`:''),rig=MODE=='bot'&&avKey(S,1)==='u'&&L==1&&!surv&&!S.rigDone; // Bilinmeyen (İmkansız bot): oyun başına bir kez ölümden döner
       const uRev=(MODE==='host'?(L===0||L===1):L===0)&&avKey(S,L)==='u'&&!surv&&!(S.uRevived&&S.uRevived[L]);
@@ -1300,8 +1300,8 @@ function endRound(){
         const vi=v===2?0:v,w=L===vi?1:0;
         const myLbl=v===2?tr('1. Oyuncu','Player 1'):tr('Senin Zarların','Your Dice');
         const opLbl=v===2?tr('2. Oyuncu','Player 2'):tr('Rakibin Zarları','Opponent\'s Dice');
-        const resTxt=v===2?(w===0?tr('1. Oyuncu düelloyu kazandı!','Player 1 won the duel!'):tr('2. Oyuncu düelloyu kazandı!','Player 2 won the duel!')):(w===0?tr('Düelloyu sen kazandın! Rakip Ölüm Zarı atacak.','You won the duel! Opponent will roll the Death Dice.'):tr('Düelloyu rakip kazandı! Ölüm Zarını sen atacaksın.','Opponent won the duel! You will roll the Death Dice.'));
-        return `<h3>${tr('Düello Berabere!','Duel Tied!')}</h3><p class="tie-sub">${tr('Puanlar ve kalan jokerler eşit. Yüksek atan düelloyu kazanır!','Points and remaining jokers are tied. Higher roll wins!')}</p><div class="tie-box" data-d0a="${hd[vi][0]}" data-d0b="${hd[vi][1]}" data-d1a="${hd[1-vi][0]}" data-d1b="${hd[1-vi][1]}" data-win="${w}"><div class="tie-sides"><div class="tie-side me"><span class="tie-lbl">${myLbl}</span><div id="tie-d0" class="dice tie-dice">${die(1)}${die(6)}</div><b id="tie-s0" class="tie-sum">?</b></div><div class="tie-vs">VS</div><div class="tie-side opp"><span class="tie-lbl">${opLbl}</span><div id="tie-d1" class="dice tie-dice">${die(6)}${die(1)}</div><b id="tie-s1" class="tie-sum">?</b></div></div><button id="tie-rl" class="btn d20-btn">${tr('ZAR AT','ROLL DICE')}</button><div class="tie-after"><b>${hx[vi]} – ${hx[1-vi]}</b><br>${resTxt}</div></div>`;
+        const resTxt=v===2?(w===0?tr('1. Oyuncu düelloyu kazandı!','Player 1 won the duel!'):tr('2. Oyuncu düelloyu kazandı!','Player 2 won the duel!')):(w===0?tr('Düelloyu sen kazandın!<br>Rakip Ölüm Zarı atacak.','You won the duel!<br>Opponent will roll the Death Dice.'):tr('Düelloyu rakip kazandı!<br>Ölüm Zarını sen atacaksın.','Opponent won the duel!<br>You will roll the Death Dice.'));
+        return `<h3>${tr('Düello Berabere!','Duel Tied!')}</h3><p class="tie-sub">${tr('Puanlar ve kalan jokerler eşit.<br>Yüksek atan düelloyu kazanır!','Points and remaining jokers are tied.<br>Higher roll wins!')}</p><div class="tie-box" data-d0a="${hd[vi][0]}" data-d0b="${hd[vi][1]}" data-d1a="${hd[1-vi][0]}" data-d1b="${hd[1-vi][1]}" data-win="${w}"><div class="tie-sides"><div class="tie-side me"><span class="tie-lbl">${myLbl}</span><div id="tie-d0" class="dice tie-dice">${die(1)}${die(6)}</div><b id="tie-s0" class="tie-sum">?</b></div><div class="tie-vs">VS</div><div class="tie-side opp"><span class="tie-lbl">${opLbl}</span><div id="tie-d1" class="dice tie-dice">${die(6)}${die(1)}</div><b id="tie-s1" class="tie-sum">?</b></div></div><button id="tie-rl" class="btn d20-btn">${tr('ZAR AT','ROLL DICE')}</button><div class="tie-after"><b>${hx[vi]} – ${hx[1-vi]}</b><br>${resTxt}</div></div>`;
       };
       MM(tieFn,tr('Ölüm Zarına Geç','Proceed to Death Dice'),openDeathModal);
     }else{
