@@ -1793,12 +1793,29 @@ body.dragging-joker #fx::after {
   width: 100%;
   max-width: 1040px;
   display: flex;
+  flex-wrap: nowrap !important;
   align-items: center;
   justify-content: center;
   gap: clamp(8px, 1.4vw, 16px);
   min-height: 0 !important;
   padding: 0 12px;
   perspective: 900px;
+}
+.zone .cards.cards-2row {
+  gap: 0 !important;
+}
+.zone .cards.cards-2row .c + .c {
+  margin-left: clamp(-22px, -1.6vw, -10px);
+}
+.zone .cards.cards-2row .c:hover {
+  z-index: 6;
+}
+.zone .cards.cards-dense .c + .c {
+  margin-left: clamp(-36px, -2.8vw, -18px);
+}
+.zone .cards.cards-2row .gap {
+  flex: 0 0 8px;
+  width: 8px;
 }
 #opp .cards {
   align-items: flex-end;
@@ -2989,17 +3006,23 @@ body.dragging-joker #fx::after {
     margin-bottom: 0 !important;
   }
   .cards.cards-2row {
-    flex-wrap: wrap !important;
-    gap: 3px !important;
-    min-height: 0 !important;
+    flex-wrap: nowrap !important;
+    gap: 0 !important;
+    min-height: calc(var(--mch) + 8px) !important;
   }
   .cards.cards-2row .c {
-    flex: 0 0 38px !important;
-    width: 38px !important;
-    height: 55px !important;
-    min-height: 55px !important;
-    max-height: 55px !important;
-    font-size: 17px !important;
+    flex: 0 0 clamp(44px, 12.2vw, 58px) !important;
+    width: clamp(44px, 12.2vw, 58px) !important;
+    height: calc(clamp(44px, 12.2vw, 58px) * 1.45) !important;
+    min-height: calc(clamp(44px, 12.2vw, 58px) * 1.45) !important;
+    max-height: calc(clamp(44px, 12.2vw, 58px) * 1.45) !important;
+    font-size: 18px !important;
+  }
+  .cards.cards-2row .c + .c {
+    margin-left: clamp(-18px, -3.6vw, -10px) !important;
+  }
+  .cards.cards-dense .c + .c {
+    margin-left: clamp(-26px, -5.8vw, -16px) !important;
   }
   .cards.cards-2row .c:not(.n):not(.bk) {
     font-size: 21px !important;
