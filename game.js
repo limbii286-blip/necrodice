@@ -1269,22 +1269,28 @@ function endRound(){
       S.log.push({p:vp,t:'Kanla Mühürlenen Kader! Beraberliği galibiyete çevirdi!'});
     }
   }
-  if(r!==0){S.cWins=S.cWins||[0,0];S.cWins[r>0?0:1]++;}
   if(S.stats&&S.stats.rounds){if(r>0)S.stats.rounds[0]++;else if(r<0)S.stats.rounds[1]++;else S.stats.rounds[2]++;}
   if(MODE=='bot'){profRec(S,a[0],T);lrnRound(r)}
-  S.pts[0]+=r>0?1:r==0?.5:0;S.pts[1]+=r<0?1:r==0?.5:0;S.rounds++;S.res.push(r);S.wait=true;S.rev=true;S.winSide=null;S.vampWinSide=vampWinSide;
-  R();snd('flip');lock=true; // 1) Kapalı kartlar açılır ve masada açık kalır
+  S.wait=true;S.rev=true;S.winSide=null;S.vampWinSide=vampWinSide;
+  R();snd('flip');lock=true; // 1) Kapalı kartlar açılır ve masada açık kalır (düello kutusu henüz yanmaz)
   setTimeout(()=>{
     if(S!==G)return;
     // 2) Kazanan kahraman ikonu kalkıp kaybedenin ikonuna Hearthstone tarzı saldırı vuruşu yapar
     S.winSide=r;
     if(MODE=='bot'){talk(r==0?'tie':r<0?'win':(a[1]>T&&!lowW(S)?'bust':'lose'),2)}
-    if(!(S.pts.some(x=>x>=2)||S.rounds>=3)&&r==0){
-      [0,1].forEach(p=>S.jdeck.length&&S.hand[p].push(S.jdeck.pop()));
-    }
     snd(r>0?'win':r<0?'lose':'ok');
     R();
     setTimeout(()=>{if(S===G){if(vampWinSide>=0){const btn=document.querySelector(vampWinSide===0?'#me .hp-btn':'#opp .hp-btn');if(btn){const hr=btn.getBoundingClientRect(),fx=document.createElement('div');fx.className='hp-cast-fx'+(vampWinSide===1?' opp':'');fx.style.left=(hr.left+hr.width/2)+'px';fx.style.top=(hr.top+hr.height/2)+'px';fx.innerHTML=`<i class="hp-cast-ring"></i><span class="hp-cast-pop">${tr('Kanla Mühürlenen Kader!','Blood-Sealed Fate!')}</span>`;document.body.appendChild(fx);setTimeout(()=>fx.remove(),1350);}heroClash();}else if(tankedSide>=0)heroAttack(1-tankedSide,true);else if(r!==0)heroAttack(r>0?0:1);else heroClash();}},1000);
+    setTimeout(()=>{
+      if(S!==G)return;
+      // Vuruş animasyonu tamamlandıktan sonra düello kutusu (yeşil/kırmızı/gri) ve puanlar güncellenir
+      if(r!==0){S.cWins=S.cWins||[0,0];S.cWins[r>0?0:1]++;}
+      S.pts[0]+=r>0?1:r==0?.5:0;S.pts[1]+=r<0?1:r==0?.5:0;S.rounds++;S.res.push(r);
+      if(!(S.pts.some(x=>x>=2)||S.rounds>=3)&&r==0){
+        [0,1].forEach(p=>S.jdeck.length&&S.hand[p].push(S.jdeck.pop()));
+      }
+      R();
+    },3300);
     setTimeout(()=>{
       if(S!==G)return;
       // 3) Yerdeki bütün sayı kartları tozlaşır gibi yok olur, sonra diğer tura geçilir
