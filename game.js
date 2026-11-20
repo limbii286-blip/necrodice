@@ -2338,6 +2338,12 @@ function buildEndScreenHtml(S,v,L,roll,th){
     </g>
   </svg>`;
   const crestBgSvg=(won||isSpec)?winCrestSvg:defeatCrestSvg;
+  const eloRes=(!isSpec&&v===0&&MODE!=='tutorial'&&typeof recordMatchElo==='function')?recordMatchElo(S,won):null;
+  const eloHtml=eloRes?`<div class="end-elo-bar ${eloRes.delta>=0?'pos':'neg'}">
+      <span class="end-elo-rk">${eloRes.rank.ic} ${eloRes.rank.name}</span>
+      <span class="end-elo-val">${eloRes.before} → <b>${eloRes.after}</b></span>
+      <span class="end-elo-d">${eloRes.delta>=0?'+':''}${eloRes.delta} ELO</span>
+    </div>`:'';
   return `<div class="end-screen hs-victory ${isSpec?'spec':won?'win':'lose'}">
     <div class="end-glow"></div>
     <div class="hs-crest-stage">
@@ -2347,6 +2353,7 @@ function buildEndScreenHtml(S,v,L,roll,th){
       </div>
       <div class="hs-wood-plaque"><span>${titleTxt}</span></div>
     </div>
+    ${eloHtml}
     <div class="end-stats hs-end-stats">
       <div class="end-stat" style="--d:0.12s"><span>${tr('Tur','Rounds')}</span><b>${rw}${tr('G','W')} · ${rl}${tr('M','L')}${rt?` · ${rt}${tr('B','T')}`:''}</b></div>
       <div class="end-stat" style="--d:0.20s"><span>${tr('Joker','Jokers')}</span><b>${mj} – ${oj}</b></div>
@@ -2574,6 +2581,7 @@ function applyLang(lang){
   if($('#sc-1'))$('#sc-1').title=tr('Rakibin Kalan Süresi','Opponent\'s Remaining Time');
   if($('#sc-0'))$('#sc-0').title=tr('Senin Kalan Süren','Your Remaining Time');
   if($('.side-clocks'))$('.side-clocks').setAttribute('aria-label',tr('Satranç Saati','Chess Clock'));
+  if(typeof renderAuthBar==='function')renderAuthBar();
   if(G){
     if(MODE==='bot'&&sayT){sayT=''}
     R();
@@ -3376,11 +3384,11 @@ function createSmoothDragLoop(onFrame){
   window.addEventListener('blur',cleanup);
 })();
 
-/* ---------- JOKER SÜRÜKLE-BIRAK & TIKLAYINCA OYNAMA (SMOOTH GHOST LERP) ---------- */
+/* ---------- JOKER SÜRÜKLE-BIRAK & TIKLAYIP ELDE TUTMA (SMOOTH GHOST LERP) ---------- */
 (function initJokerDragAndDrop(){
-  let dragEl=null,ghost=null,dragId=0,startX=0,startY=0,isDragging=false,pointerId=null;
+  let dragEl=null,ghost=null,dragId=0,startX=0,startY=0,originX=0,originY=0,isDragging=false,sticky=false,pointerId=null,maxDist=0,returning=false;
   const loop=createSmoothDragLoop((x,y,tilt,sc)=>{
-    if(!isDragging||!ghost)return false;
+    if(!isDragging||!ghost||returning)return false;
     ghost.style.transform=`translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) translate(-50%, -50%) rotate(${tilt.toFixed(2)}deg) scale(${sc.toFixed(3)})`;
   });
 
@@ -3398,21 +3406,26 @@ function createSmoothDragLoop(onFrame){
   function startGhost(x,y){
     if(isDragging||!dragEl)return;
     isDragging=true;
+    returning=false;
+    const rc=dragEl.getBoundingClientRect();
+    originX=rc.left+rc.width/2;
+    originY=rc.top+rc.height/2;
     dragEl.classList.remove('pinned','hovered');
     dragEl.classList.add('drag-source-hidden');
     document.body.classList.add('dragging-joker');
     ghost=document.createElement('img');
-    ghost.className='joker-drag-ghost';
+    ghost.className='joker-drag-ghost held';
     ghost.draggable=false;
     ghost.alt='';
     ghost.src=dragEl.currentSrc||dragEl.src||IMG.j[dragId]||'';
     hi(ghost,dragId);
-    ghost.style.transform=`translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) translate(-50%, -50%) scale(1)`;
+    ghost.style.transform=`translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) translate(-50%, -50%) scale(1.06)`;
     document.body.appendChild(ghost);
-    loop.start(x,y,1,1.08);
+    loop.start(x,y,1.06,1.18);
     const hot=isOverDropZone(y);
     ghost.classList.toggle('ready',hot);
     document.body.classList.toggle('drop-ready',hot);
+    try{snd('hover')}catch(err){}
   }
 
   function cleanupDrag(){
@@ -3420,11 +3433,58 @@ function createSmoothDragLoop(onFrame){
     if(ghost){ghost.remove();ghost=null}
     if(dragEl){dragEl.classList.remove('drag-source-hidden','is-dragging','drop-hot')}
     document.body.classList.remove('dragging-joker','drop-ready');
-    dragEl=null;dragId=0;isDragging=false;pointerId=null;
+    dragEl=null;dragId=0;isDragging=false;sticky=false;pointerId=null;maxDist=0;returning=false;
+  }
+
+  function returnToOrigin(){
+    if(!ghost||!dragEl){return cleanupDrag()}
+    returning=true;
+    sticky=false;
+    loop.stop();
+    const g=ghost,el=dragEl;
+    let ox=originX,oy=originY;
+    try{
+      if(el.isConnected){
+        const rc=el.getBoundingClientRect();
+        if(rc.width>0&&rc.height>0){ox=rc.left+rc.width/2;oy=rc.top+rc.height/2}
+      }
+    }catch(err){}
+    document.body.classList.remove('dragging-joker','drop-ready');
+    g.classList.remove('ready','held');
+    g.classList.add('returning');
+    requestAnimationFrame(()=>{
+      g.style.transform=`translate3d(${ox.toFixed(2)}px, ${oy.toFixed(2)}px, 0) translate(-50%, -50%) rotate(0deg) scale(1)`;
+      g.style.opacity='0.88';
+    });
+    ghost=null;dragEl=null;dragId=0;isDragging=false;pointerId=null;maxDist=0;
+    setTimeout(()=>{
+      g.remove();
+      if(el)el.classList.remove('drag-source-hidden','is-dragging','drop-hot');
+      returning=false;
+    },210);
   }
 
   document.addEventListener('pointerdown',e=>{
-    if(e.button!=null&&e.button!==0)return;
+    if(e.button!=null&&e.button!==0){
+      if(sticky){e.preventDefault();returnToOrigin()}
+      return;
+    }
+    // Eğer kart zaten tıklanarak elimizde tutuluyorsa (sticky):
+    if(sticky&&isDragging&&ghost){
+      e.preventDefault();
+      e.stopPropagation();
+      const id=dragId;
+      const dropOk=isOverDropZone(e.clientY)&&canPlayJoker(id);
+      window._suppressJokerClick=true;
+      setTimeout(()=>{window._suppressJokerClick=false},160);
+      if(dropOk){
+        cleanupDrag();
+        startJoker(id);
+      }else{
+        returnToOrigin();
+      }
+      return;
+    }
     const jEl=e.target.closest&&e.target.closest('#hand .j[data-j]');
     if(!jEl)return;
     const id=+jEl.dataset.j;
@@ -3435,47 +3495,77 @@ function createSmoothDragLoop(onFrame){
     dragId=id;
     startX=e.clientX;
     startY=e.clientY;
+    maxDist=0;
     isDragging=false;
+    sticky=false;
     pointerId=e.pointerId;
     try{jEl.setPointerCapture(e.pointerId)}catch(err){}
-    // Masaüstünde (mouse/pen) basıldığı anda kartı hemen ele al; ortaya sürükleyip bırakınca oyna
     if(e.pointerType!=='touch'){
       startGhost(e.clientX,e.clientY);
     }
-  });
+  },true);
 
   document.addEventListener('pointermove',e=>{
+    if(sticky&&isDragging&&ghost){
+      loop.move(e.clientX,e.clientY);
+      const hot=isOverDropZone(e.clientY);
+      ghost.classList.toggle('ready',hot);
+      loop.setScale(hot?1.24:1.18);
+      document.body.classList.toggle('drop-ready',hot);
+      return;
+    }
     if(!dragEl||e.pointerId!==pointerId)return;
     const dx=e.clientX-startX,dy=e.clientY-startY;
-    if(!isDragging&&Math.hypot(dx,dy)>8){
+    const dist=Math.hypot(dx,dy);
+    if(dist>maxDist)maxDist=dist;
+    if(!isDragging&&dist>8){
       startGhost(e.clientX,e.clientY);
     }
     if(isDragging&&ghost){
       loop.move(e.clientX,e.clientY);
       const hot=isOverDropZone(e.clientY);
       ghost.classList.toggle('ready',hot);
-      loop.setScale(hot?1.14:1.08);
+      loop.setScale(hot?1.24:1.16);
       document.body.classList.toggle('drop-ready',hot);
     }
   });
 
   function finishPointer(e,cancelled){
+    if(sticky)return;
     if(!dragEl||e.pointerId!==pointerId)return;
     const wasDragging=isDragging;
     const id=dragId;
+    const isDesktop=e.pointerType!=='touch';
+    // Masaüstünde kısa tıklama yapıldıysa: kart büyümüş şekilde elimizde kalsın (sticky mod)
+    if(!cancelled&&wasDragging&&isDesktop&&maxDist<=10&&!isOverDropZone(e.clientY)){
+      sticky=true;
+      pointerId=null;
+      if(ghost){
+        loop.setScale(1.18);
+        ghost.classList.add('held');
+      }
+      window._suppressJokerClick=true;
+      setTimeout(()=>{window._suppressJokerClick=false},160);
+      return;
+    }
     const dropOk=!cancelled&&wasDragging&&isOverDropZone(e.clientY)&&canPlayJoker(id);
-    cleanupDrag();
     if(wasDragging){
       window._suppressJokerClick=true;
-      setTimeout(()=>{window._suppressJokerClick=false},140);
+      setTimeout(()=>{window._suppressJokerClick=false},160);
       if(dropOk){
+        cleanupDrag();
         startJoker(id);
+      }else{
+        returnToOrigin();
       }
+    }else{
+      cleanupDrag();
     }
   }
 
   document.addEventListener('pointerup',e=>finishPointer(e,false));
   document.addEventListener('pointercancel',e=>finishPointer(e,true));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sticky)returnToOrigin()});
   window.addEventListener('blur',cleanupDrag);
 })();
 
@@ -4319,10 +4409,13 @@ function startTutorial(){
   sayT='';sayAt=0;botGen++;thinkOn=false;
   tutStep=0;
   R();
-  tutRender();
+  const tutDelay=entering?1900:380;
+  setTimeout(()=>{
+    if(MODE==='tutorial'&&tutStep===0)tutRender();
+  },tutDelay);
 }
 
-/* ---------- NECROENGINE v3: MULTI-PV BAYESIAN EV & MAÇ ANALİZ MOTORU ---------- */
+/* ---------- NECROENGINE v4: EXACT SOLVER + HERO POWER + MULTI-PV BAYESIAN EV ---------- */
 let LAST_MATCH_HIST=[];
 function recMove(S,action,label){
   if(!S||S.over||MODE==='tutorial'||MODE==='spectator')return;
@@ -4383,6 +4476,162 @@ function calcDeckOdds(S){
     safePct:Math.round((safeCnt/n)*100),
     exactPct:Math.round((exactCnt/n)*100)
   };
+}
+/* Kesin Matematiksel Çözücü (Exact Combinatorial Endgame Solver):
+   Rakip pas geçtiğinde veya kalan bilinmeyen kart havuzu <= 6 olduğunda,
+   Monte-Carlo varyansı olmadan tam Bayesian ağırlıklı kombinatoryal EV hesaplar. */
+function exactCompare(myT,oppT,Tg,low,noBust){
+  if(low)return myT<oppT?1:(myT>oppT?-1:0);
+  const mb=!noBust&&myT>Tg,ob=!noBust&&oppT>Tg;
+  if(mb&&ob)return myT<oppT?1:(myT>oppT?-1:0);
+  if(mb)return -1;
+  if(ob)return 1;
+  return myT>oppT?1:(myT<oppT?-1:0);
+}
+function exactEndgameEval(S,action){
+  if(!S)return null;
+  if(action&&action.t!=='d')return null; // sadece Pas ve Kart Çek için kesin kapalı form
+  const oppPassed=S.turns>0&&!S.acted;
+  const cl=S.pl[1]&&S.pl[1].closed&&S.pl[1].closed[0];
+  const peeked=!!(cl&&((S.oppPeek&&S.oppPeek.includes(cl.id))||cl.o!=null));
+  const seenN=new Set([...(S.pl[0].open||[]),...(S.pl[0].closed||[]),...(S.pl[1].open||[]),...(S.dead||[])].map(c=>c.n).filter(n=>n>0));
+  if(peeked&&cl.n>0)seenN.add(cl.n);
+  const pool=range(11).filter(n=>!seenN.has(n));
+  if(!oppPassed&&pool.length>6)return null;
+  const Tg=tg(S),low=lowW(S),noBust=act(S,20);
+  const myBase=total(S,0,true),oppOpenBase=total(S,1,false);
+  const oppDist=[];
+  if(!cl){
+    oppDist.push({cOpp:0,w:1,rem:pool});
+  }else if(peeked){
+    oppDist.push({cOpp:cl.o!=null?cl.o:cl.n,w:1,rem:pool});
+  }else if(pool.length){
+    const ws=oppCardWeights(S,0,{beta:0.75,gap:6},pool);
+    const sm=ws.reduce((a,b)=>a+b,0)||1;
+    for(let i=0;i<pool.length;i++){
+      const rem=pool.slice();rem.splice(i,1);
+      oppDist.push({cOpp:pool[i],w:ws[i]/sm,rem});
+    }
+  }else{
+    oppDist.push({cOpp:0,w:1,rem:[]});
+  }
+  const oppFixed=cOpp=>oppOpenBase+(cl?cOpp:0);
+  if(!action){
+    // Pas: doğrudan rakibin olası tüm kapalı kartları üzerinden kesin EV
+    let ev=0;
+    for(const d of oppDist){
+      const oppT=oppFixed(d.cOpp);
+      if(oppPassed||!d.rem.length){
+        ev+=d.w*exactCompare(myBase,oppT,Tg,low,noBust);
+      }else{
+        // Rakip henüz pas geçmediyse ve kart havuzu küçükse (<=6), rakibin optimal 1-kart tepkisini kesin hesapla
+        const standRes=exactCompare(myBase,oppT,Tg,low,noBust);
+        let drawRes=0;
+        for(const c of d.rem)drawRes+=exactCompare(myBase,oppT+c,Tg,low,noBust);
+        drawRes/=d.rem.length;
+        // Rakip kendisi için en iyi (bizim için en kötü) seçeneği seçer
+        ev+=d.w*Math.min(standRes,drawRes);
+      }
+    }
+    return ev;
+  }
+  // Kart Çek: her olası (cOpp, cDraw) çifti üzerinden kesin EV
+  let ev=0;
+  for(const d of oppDist){
+    const oppT=oppFixed(d.cOpp);
+    if(!d.rem.length){
+      ev+=d.w*exactCompare(myBase,oppT,Tg,low,noBust);
+      continue;
+    }
+    let sub=0;
+    for(let j=0;j<d.rem.length;j++){
+      const cDraw=d.rem[j];
+      const newMy=myBase+cDraw;
+      if(oppPassed){
+        // Çektikten sonra durmak vs 1 kart daha çekmek (optimal devam)
+        const sVal=exactCompare(newMy,oppT,Tg,low,noBust);
+        let bestNext=sVal;
+        if(!low&&newMy<Tg&&d.rem.length>1){
+          let d2=0;
+          for(let k=0;k<d.rem.length;k++){
+            if(k===j)continue;
+            d2+=exactCompare(newMy+d.rem[k],oppT,Tg,low,noBust);
+          }
+          d2/=(d.rem.length-1);
+          if(d2>bestNext)bestNext=d2;
+        }
+        sub+=bestNext;
+      }else{
+        const sVal=exactCompare(newMy,oppT,Tg,low,noBust);
+        let oppDraw=0;
+        if(d.rem.length>1){
+          for(let k=0;k<d.rem.length;k++){
+            if(k===j)continue;
+            oppDraw+=exactCompare(newMy,oppT+d.rem[k],Tg,low,noBust);
+          }
+          oppDraw/=(d.rem.length-1);
+          sub+=Math.min(sVal,oppDraw);
+        }else{
+          sub+=sVal;
+        }
+      }
+    }
+    ev+=d.w*(sub/d.rem.length);
+  }
+  return ev;
+}
+/* Kahraman Gücü Fırsat Analizi (Hero Power Opportunity Cost) */
+function analyzeHeroPowerOpp(S,played,wpPlayed,wpBest,odds,loss){
+  if(!S||(S.hpUsed&&S.hpUsed[0]))return null;
+  const hid=avKey(S,0);
+  const h=HERO_MAP[hid];
+  if(!h||h.passive)return null;
+  const cl=S.pl[1]&&S.pl[1].closed&&S.pl[1].closed[0];
+  const peeked=!!(cl&&((S.oppPeek&&S.oppPeek.includes(cl.id))||cl.o!=null));
+  const matchPoint=S.rounds>=2||(S.pts&&(S.pts[0]>=1.5||S.pts[1]>=1.5));
+  if(hid==='w'&&cl&&!peeked){
+    if(loss>=6||matchPoint||(odds.bustPct>=22&&odds.bustPct<=78)){
+      return {
+        hid,name:h.hpName,
+        sev:loss>=12||matchPoint?'high':'med',
+        msg:tr(`${h.hpName} hazırdı: Rakibin kapalı kartını görüp %0 tahmin hatasıyla karar verebilirdin.`,`${h.hpName} was ready: You could reveal opponent's hidden card before making this decision.`)
+      };
+    }
+  }else if(hid==='a'&&S.deck&&S.deck.length>0){
+    const drew=played&&played.t==='d';
+    if((drew&&odds.bustPct>=22)||(loss>=8&&odds.bustPct>=18&&odds.bustPct<=78)||matchPoint){
+      return {
+        hid,name:h.hpName,
+        sev:(drew&&odds.bustPct>=40)||loss>=14?'high':'med',
+        msg:tr(`${h.hpName} hazırdı: Destenin üstündeki 2 kartı önceden görüp sırasını değiştirerek patlama riskini (%${odds.bustPct}) yönetebilirdin.`,`${h.hpName} was ready: Scrying and reordering the top 2 cards would let you control the ${odds.bustPct}% bust risk.`)
+      };
+    }
+  }else if(hid==='l'&&(S.pl[0].open.length||S.pl[0].closed.length)&&(S.pl[1].open.length||S.pl[1].closed.length)){
+    if(wpPlayed<=40&&(loss>=6||matchPoint)){
+      return {
+        hid,name:h.hpName,
+        sev:wpPlayed<=28?'high':'med',
+        msg:tr(`${h.hpName} hazırdı: Kazanma şansın %${wpPlayed}'e düşmüşken masadaki kartları temizleyip dezavantajı kırabilirdin.`,`${h.hpName} was ready: With win odds down to ${wpPlayed}%, wiping table cards could reset the disadvantage.`)
+      };
+    }
+  }else if(hid==='c'&&((S.cWins&&S.cWins[0])||0)>=4){
+    if(wpPlayed<=45){
+      return {
+        hid,name:h.hpName,
+        sev:'high',
+        msg:tr(`${h.hpName} (4/4) doluydu: Dezavantajlı bu turda zamanı geri sarıp üstünlüğü ele alabilirdin.`,`${h.hpName} (4/4) was charged: Rewinding this unfavorable round could turn the duel around.`)
+      };
+    }
+  }else if(hid==='p'&&S.hand&&S.hand[0]&&S.hand[0].length>0&&S.jdeck&&S.jdeck.length>0){
+    if(wpPlayed<=42&&(!played||played.t!=='j')&&(loss>=8||matchPoint)){
+      return {
+        hid,name:h.hpName,
+        sev:'med',
+        msg:tr(`${h.hpName} hazırdı: Elindeki kullanışsız bir jokeri yakıp daha güçlü bir taktik kart arayabilirdin.`,`${h.hpName} was ready: Burning a weak joker in hand could find a decisive tactical tool.`)
+      };
+    }
+  }
+  return null;
 }
 function worldForPlayer(S,stratIdx){ // Oyuncunun o an bildiği bilgilere göre katmanlı Bayesian olasılık dünyası
   const T=clone(S);T.log=[];T.jdeck=[];
@@ -4449,9 +4698,13 @@ function evalOneMove(h){
   if(canDraw(S,0)&&!lowW(S)&&total(S,0,true)<tg(S))ensure({t:'d'});
   ensure(h.action);
   const piOrig=cands.findIndex(c=>sameAct(c.a,h.action));
+  // 1. Kesin Matematiksel Çözücü kontrolü (rakip pas geçtiğinde veya kalan havuz <= 6)
+  const exactVals=cands.map(c=>exactEndgameEval(S,c.a));
+  const exactUsed=exactVals.some(v=>v!==null);
+  const needMC=exactVals.some(v=>v===null);
   const K1=48,K2=isMobilePerf()?92:192;
-  const Ktot=K1+K2;
-  const sums=cands.map(()=>0),cnts=cands.map(()=>0),alive=cands.map(()=>true);
+  const Ktot=needMC?(K1+K2):0;
+  const sums=cands.map(()=>0),cnts=cands.map(()=>0),alive=cands.map((_,i)=>exactVals[i]===null);
   const matchPoint=S.rounds>=2||(S.pts&&(S.pts[0]>=1.5||S.pts[1]>=1.5));
   const jCost=matchPoint?0.012:0.034;
   for(let k=0;k<Ktot;k++){
@@ -4467,17 +4720,17 @@ function evalOneMove(h){
     }
     // Successive Halving: ilk 48 katmanlı dünyadan sonra açıkça zayıf adayları ele, bütçeyi en yakın 4 adaya + oynanan hamleye yoğunlaştır
     if(k===K1-1&&cands.length>4){
-      const means=cands.map((_,i)=>sums[i]/Math.max(1,cnts[i]));
+      const means=cands.map((_,i)=>exactVals[i]!==null?exactVals[i]:sums[i]/Math.max(1,cnts[i]));
       const bestM=Math.max(...means);
       const ord=cands.map((_,i)=>i).sort((a,b)=>means[b]-means[a]);
       const keep=new Set(ord.slice(0,4));
       if(piOrig>=0)keep.add(piOrig);
       for(let i=0;i<cands.length;i++){
-        if(!keep.has(i)&&means[i]<bestM-0.32)alive[i]=false;
+        if(alive[i]&&!keep.has(i)&&means[i]<bestM-0.32)alive[i]=false;
       }
     }
   }
-  const evs=cands.map((_,i)=>sums[i]/Math.max(1,cnts[i]));
+  const evs=cands.map((_,i)=>exactVals[i]!==null?exactVals[i]:sums[i]/Math.max(1,cnts[i]));
   const ordAll=cands.map((_,i)=>i).sort((a,b)=>evs[b]-evs[a]);
   const bi=ordAll[0],si=ordAll.length>1?ordAll[1]:-1;
   const pi=piOrig>=0?piOrig:0;
@@ -4490,12 +4743,14 @@ function evalOneMove(h){
   const grade=classifyMove(loss,isSame,brilliant);
   const acc=100*Math.exp(-0.032*loss);
   const reason=isSame?'':explainMoveV3(S,h.action,cands[bi].a,loss,odds,wpBest,wpPlayed);
+  const hpOpp=analyzeHeroPowerOpp(S,h.action,wpPlayed,wpBest,odds,loss);
   const top3=ordAll.slice(0,3).map(idx=>({
     label:fmtAct(cands[idx].a,S),
     wp:toWp(evs[idx]),
     diff:Math.max(0,wpBest-toWp(evs[idx])),
     isPlayed:idx===pi,
-    isBest:idx===bi
+    isBest:idx===bi,
+    isExact:exactVals[idx]!==null
   }));
   return {
     ...h,
@@ -4507,6 +4762,8 @@ function evalOneMove(h){
     acc,
     grade,
     reason,
+    exactUsed,
+    hpOpp,
     bestLabel:fmtAct(cands[bi].a,S),
     isSame
   };
@@ -4534,13 +4791,17 @@ function computeMatchStats(results){
     duelMap.get(r.duel).push(r);
   });
   const duels=[...duelMap.entries()].map(([d,arr])=>({duel:d,acc:avgOf(arr),moves:arr.length}));
-  // Kırılma Anı (en büyük EV kaybı) & En Parlak Hamle
+  // Kırılma Anı (en büyük EV kaybı), En Parlak Hamle & Kaçan Kahraman Gücü Fırsatları
   let worstIdx=-1,bestIdx=-1;
+  const hpMissed=[];
+  let exactCount=0;
   results.forEach((r,i)=>{
+    if(r.exactUsed)exactCount++;
+    if(r.hpOpp)hpMissed.push({idx:i,...r.hpOpp});
     if(r.loss>0&&(worstIdx<0||r.loss>results[worstIdx].loss))worstIdx=i;
     if(bestIdx<0||(r.grade.cls==='brill'&&results[bestIdx].grade.cls!=='brill')||(r.grade.cls===results[bestIdx].grade.cls&&r.wpPlayed>results[bestIdx].wpPlayed))bestIdx=i;
   });
-  return {avgAcc,avgLoss:avgLoss.toFixed(1),elo,rank,cnt,skills,duels,worstIdx,bestIdx};
+  return {avgAcc,avgLoss:avgLoss.toFixed(1),elo,rank,cnt,skills,duels,worstIdx,bestIdx,hpMissed,exactCount};
 }
 function buildWinGraphSvg(results,selectedIdx){
   if(!results.length)return '';
@@ -4585,8 +4846,8 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
   mb.classList.remove('end-mode','set-mode');
   mb.classList.add('an-mode');
   mb.innerHTML=`<div class="an-loading">
-    <h3>${tr('NecroEngine v3 Maç Analizi','NecroEngine v3 Match Analysis')}</h3>
-    <p class="an-sub">${tr('Multi-PV Bayesian olasılık dünyaları ve kombo hatları taranıyor…','Scanning Multi-PV Bayesian worlds and tactical lines…')}</p>
+    <h3>${tr('NecroEngine v4 Maç Analizi','NecroEngine v4 Match Analysis')}</h3>
+    <p class="an-sub">${tr('Kesin kombinatoryal çözücü, kahraman gücü fırsatları ve Multi-PV hatları taranıyor…','Scanning Exact Endgame Solver, Hero Power opportunities & Multi-PV lines…')}</p>
     <div class="an-pbar"><i id="an-fill"></i></div>
     <div id="an-stat" class="an-stat">0 / ${hist.length}</div>
   </div>`;
@@ -4622,6 +4883,10 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
         </div>`;
       }).join('');
       const duelsHtml=st.duels.map(d=>`<div class="an-duel-chip"><span>${tr('Düello','Duel')} ${d.duel}</span><b>%${d.acc}</b><small>${d.moves} ${tr('hamle','moves')}</small></div>`).join('');
+      const hpMissedHtml=st.hpMissed&&st.hpMissed.length
+        ?`<div class="an-sec-lbl">${tr('Kahraman Gücü Fırsatları','Hero Power Opportunities')} (${st.hpMissed.length})</div>
+          <div class="an-hp-list">${st.hpMissed.slice(0,4).map(m=>`<button type="button" class="an-hp-chip ${m.sev}" data-jump="${m.idx}"><b>⚡ ${m.name} · #${m.idx+1}</b><span>${m.msg}</span></button>`).join('')}</div>`
+        :'';
       bodyContent=`<div class="an-summary-scroll">
         <div class="an-sec-lbl">${tr('Yetenek Karnesi','Skill Breakdown')}</div>
         <div class="an-skills">${skillsHtml}</div>
@@ -4630,6 +4895,7 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
           ${kmBest?`<button type="button" class="an-km-card good" data-jump="${st.bestIdx}"><span>${tr('En İyi Hamle','Top Move')} · #${st.bestIdx+1}</span><b>${kmBest.label}</b><small>%${kmBest.wpPlayed} ${tr('kazanma','win')}</small></button>`:''}
           ${kmWorst?`<button type="button" class="an-km-card bad" data-jump="${st.worstIdx}"><span>${tr('En Büyük Kayıp','Biggest Slip')} · #${st.worstIdx+1}</span><b>${kmWorst.label}</b><small>−%${kmWorst.loss} → ${kmWorst.bestLabel}</small></button>`:`<div class="an-km-card good"><span>${tr('Kusursuz Maç','Flawless Match')}</span><b>${tr('Büyük hata yok!','No major slips!')}</b><small>${tr('Harika disiplin','Great discipline')}</small></div>`}
         </div>
+        ${hpMissedHtml}
         <div class="an-sec-lbl">${tr('Düello Bazlı Doğruluk','Duel Accuracy')}</div>
         <div class="an-duels">${duelsHtml}</div>
       </div>`;
@@ -4642,6 +4908,8 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
       const rowsHtml=shown.length?shown.map(({r,i})=>{
         const isOpen=i===openMoveIdx;
         const ctx=`D${r.duel}·T${r.round} · ${tr('Toplam','Tot')} ${r.myTot}/${r.low?tr('En Az','Low'):r.tg}`;
+        const exactTag=r.exactUsed?`<span class="an-exact-tag" title="${tr('Kesin Matematiksel Çözüm (%0 varyans)','Exact Combinatorial Solution (0% variance)')}">∑ ${tr('Kesin','Exact')}</span>`:'';
+        const hpTag=r.hpOpp?`<span class="an-hp-tag" title="${r.hpOpp.name}">⚡ ${tr('Güç','Power')}</span>`:'';
         const rec=r.isSame||r.loss<=3
           ?`<span class="an-ok">${r.grade.cls==='brill'?tr('Harika hamle! Tek kazandıran yol.','Brilliant move! Unique winning line.'):tr('En iyi hamle!','Best move!')}</span>`
           :`<span class="an-rec">${tr('Öneri','Best')}: <b>${r.bestLabel}</b> <i>(%${r.wpBest})</i> · −%${r.loss}</span>`;
@@ -4649,7 +4917,7 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
         if(isOpen){
           const pvHtml=(r.top3||[]).map((pv,k)=>`<div class="an-pv${pv.isPlayed?' played':''}${pv.isBest?' best':''}">
             <span class="an-pv-rk">#${k+1}</span>
-            <span class="an-pv-lbl">${pv.label}${pv.isPlayed?` <em>(${tr('Sen','You')})</em>`:''}</span>
+            <span class="an-pv-lbl">${pv.label}${pv.isExact?' <sup>∑</sup>':''}${pv.isPlayed?` <em>(${tr('Sen','You')})</em>`:''}</span>
             <div class="an-pv-bar"><i style="width:${pv.wp}%"></i></div>
             <b class="an-pv-wp">%${pv.wp}</b>
           </div>`).join('');
@@ -4663,9 +4931,10 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
               <span>${tr('Kartların','Your cards')}: <b>${myCardsTxt}</b></span>
               <span>${tr('Rakip açık','Opp open')}: <b>${oppCardsTxt}</b></span>
             </div>
-            <div class="an-odds-line">${oddsTxt}</div>
+            <div class="an-odds-line">${oddsTxt}${r.exactUsed?` · <b>∑ ${tr('Kesin Matematiksel Çözüm','Exact Endgame Solver')}</b>`:''}</div>
             <div class="an-pv-title">${tr('Motorun En İyi 3 Hattı (Multi-PV)','Top 3 Engine Lines (Multi-PV)')}</div>
             <div class="an-pvs">${pvHtml}</div>
+            ${r.hpOpp?`<div class="an-hp-alert"><b>⚡ ${tr('Kahraman Gücü Fırsatı','Hero Power Opportunity')} (${r.hpOpp.name}):</b> ${r.hpOpp.msg}</div>`:''}
             ${r.reason?`<div class="an-why">${r.reason}</div>`:''}
           </div>`;
         }
@@ -4673,7 +4942,7 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
           <div class="an-row-main">
             <div class="an-badge ${r.grade.cls}">${r.grade.sym}</div>
             <div class="an-body">
-              <div class="an-top"><span class="an-ctx">#${i+1} · ${ctx}</span><span class="an-gname ${r.grade.cls}">${r.grade.name}</span></div>
+              <div class="an-top"><span class="an-ctx">#${i+1} · ${ctx}</span><span class="an-tags">${exactTag}${hpTag}<span class="an-gname ${r.grade.cls}">${r.grade.name}</span></span></div>
               <div class="an-move"><b>${r.label}</b> <i>(%${r.wpPlayed})</i></div>
               <div class="an-bot">${rec}</div>
             </div>
@@ -4692,8 +4961,8 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
     mb.innerHTML=`<div class="an-report">
       <div class="an-hdr">
         <div>
-          <h3>${tr('NecroEngine v3','NecroEngine v3')}</h3>
-          <div class="an-meta">${tr('Tahmini ELO','Est. ELO')}: <b>${st.elo}</b> · ${tr('Ort. Kayıp','Avg Loss')}: <b>−%${st.avgLoss}</b></div>
+          <h3>${tr('NecroEngine v4','NecroEngine v4')}</h3>
+          <div class="an-meta">${tr('Performans ELO','Perf. ELO')}: <b>${st.elo}</b> · ${tr('Ort. Kayıp','Avg Loss')}: <b>−%${st.avgLoss}</b>${st.exactCount?` · <b>∑ ${st.exactCount}</b>`:''}</div>
         </div>
         <div class="an-hdr-r">
           <div class="an-rank-box ${st.rank.c}"><b>${st.rank.g}</b><span>${st.rank.t}</span></div>
@@ -4756,3 +5025,359 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
   };
   setTimeout(step,30);
 }
+
+/* ---------- ELO & ÜYELİK SİSTEMİ (KAYIT / GİRİŞ / MİSAFİR) ---------- */
+const AUTH_SESS_KEY='nd_session_v1';
+const AUTH_LOCAL_KEY='nd_users_local_v1';
+let USER_ACC=null;
+
+function escHtml(s){
+  return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function normUserKey(u){
+  return String(u||'').trim().toLowerCase().replace(/[^a-z0-9_çğıöşü-]/g,'');
+}
+function hashPass(p){
+  const str='nd_salt_v1::'+String(p||'');
+  let h1=0x811c9dc5,h2=0x9e3779b9;
+  for(let i=0;i<str.length;i++){
+    const c=str.charCodeAt(i);
+    h1=Math.imul(h1^c,0x01000193);
+    h2=Math.imul(h2^(c+i),0x85ebca6b);
+  }
+  return ((h1>>>0).toString(16).padStart(8,'0'))+((h2>>>0).toString(16).padStart(8,'0'));
+}
+function eloRank(elo){
+  const e=Math.round(elo||1200);
+  if(e>=1800)return {ic:'♛',name:tr('Ölümsüz Hükümdar','Undying Sovereign'),cls:'rk-sov'};
+  if(e>=1600)return {ic:'✦',name:tr('Ölüm Büyücüsü','Necromancer'),cls:'rk-nec'};
+  if(e>=1400)return {ic:'◈',name:tr('Kan Efendisi','Blood Lord'),cls:'rk-bld'};
+  if(e>=1200)return {ic:'⚔',name:tr('Kara Şövalye','Dark Knight'),cls:'rk-knt'};
+  if(e>=1000)return {ic:'☾',name:tr('Gölge Gezgini','Shadow Walker'),cls:'rk-shd'};
+  return {ic:'☠',name:tr('Kemik Çırağı','Bone Initiate'),cls:'rk-bon'};
+}
+function loadLocalUsers(){
+  try{return JSON.parse(localStorage.getItem(AUTH_LOCAL_KEY)||'{}')||{}}catch(e){return {}}
+}
+function saveLocalUsers(map){
+  try{localStorage.setItem(AUTH_LOCAL_KEY,JSON.stringify(map))}catch(e){}
+}
+function loadSession(){
+  try{
+    const raw=localStorage.getItem(AUTH_SESS_KEY);
+    if(!raw)return null;
+    const o=JSON.parse(raw);
+    if(o&&typeof o.elo==='number')return o;
+  }catch(e){}
+  return null;
+}
+function saveSession(acc){
+  USER_ACC=acc;
+  try{
+    if(acc)localStorage.setItem(AUTH_SESS_KEY,JSON.stringify(acc));
+    else localStorage.removeItem(AUTH_SESS_KEY);
+  }catch(e){}
+  if(acc&&!acc.isGuest&&acc.key){
+    const map=loadLocalUsers();
+    map[acc.key]={...(map[acc.key]||{}),...acc};
+    saveLocalUsers(map);
+    syncAccountToCloud(acc);
+  }
+  renderAuthBar();
+}
+function syncAccountToCloud(acc){
+  if(!fbDb||!acc||acc.isGuest||!acc.key)return;
+  try{
+    fbDb.collection('users').doc(acc.key).set({
+      key:acc.key,
+      username:acc.username,
+      passHash:acc.passHash||'',
+      elo:acc.elo,
+      peakElo:acc.peakElo||acc.elo,
+      wins:acc.wins||0,
+      losses:acc.losses||0,
+      matches:acc.matches||0,
+      history:(acc.history||[]).slice(0,12),
+      updatedAt:Date.now()
+    },{merge:true}).catch(()=>{});
+  }catch(e){}
+}
+function createGuestAccount(){
+  const acc={
+    uid:'guest_'+Date.now().toString(36),
+    key:'',
+    username:tr('Misafir','Guest'),
+    isGuest:true,
+    elo:1200,
+    peakElo:1200,
+    wins:0,
+    losses:0,
+    matches:0,
+    history:[],
+    createdAt:Date.now()
+  };
+  saveSession(acc);
+  return acc;
+}
+function getOppElo(){
+  if(MODE==='bot'){
+    if(DIFF==='easy')return 900;
+    if(DIFF==='med')return 1150;
+    if(DIFF==='hard')return 1400;
+    if(DIFF==='imp')return 1750;
+    return 1150;
+  }
+  return 1250;
+}
+function getOppLabel(){
+  if(MODE==='bot'){
+    if(DIFF==='easy')return tr('Bot (Kolay)','Bot (Easy)');
+    if(DIFF==='med')return tr('Bot (Orta)','Bot (Medium)');
+    if(DIFF==='hard')return tr('Bot (Zor)','Bot (Hard)');
+    if(DIFF==='imp')return tr('Bilinmeyen (İmkansız)','Unknown (Impossible)');
+  }
+  return tr('Çevrim İçi Rakip','Online Opponent');
+}
+function recordMatchElo(S,won){
+  if(!S||MODE==='tutorial'||MODE==='spectator')return null;
+  if(S._eloRes)return S._eloRes;
+  if(!USER_ACC)createGuestAccount();
+  const acc=USER_ACC;
+  const before=Math.round(acc.elo||1200);
+  const oppElo=getOppElo();
+  const expected=1/(1+Math.pow(10,(oppElo-before)/400));
+  const K=(acc.matches||0)<15?32:24;
+  let delta=Math.round(K*((won?1:0)-expected));
+  if(won&&delta<4)delta=4;
+  if(!won&&delta>-4)delta=-4;
+  const after=Math.max(400,before+delta);
+  acc.elo=after;
+  acc.peakElo=Math.max(acc.peakElo||before,after);
+  acc.matches=(acc.matches||0)+1;
+  if(won)acc.wins=(acc.wins||0)+1;
+  else acc.losses=(acc.losses||0)+1;
+  acc.history=acc.history||[];
+  acc.history.unshift({ts:Date.now(),opp:getOppLabel(),won:!!won,delta,elo:after});
+  if(acc.history.length>12)acc.history.length=12;
+  saveSession(acc);
+  S._eloRes={before,after,delta,rank:eloRank(after)};
+  return S._eloRes;
+}
+function renderAuthBar(){
+  const bar=$('#auth-bar');
+  if(!bar)return;
+  if(!USER_ACC){
+    bar.hidden=false;
+    bar.innerHTML=`<button type="button" class="auth-pill auth-pill-empty" id="ab-login"><span>${tr('Giriş Yap / Kayıt Ol','Sign In / Register')}</span></button>`;
+    const btn=$('#ab-login');
+    if(btn)btn.onclick=()=>{snd('click');openAuthModal('login',false)};
+    return;
+  }
+  const rk=eloRank(USER_ACC.elo);
+  const nm=USER_ACC.isGuest?tr('Misafir','Guest'):escHtml(USER_ACC.username);
+  bar.hidden=false;
+  bar.innerHTML=`<button type="button" class="auth-pill ${rk.cls}" id="ab-prof" title="${tr('Profil & ELO Detayları','Profile & ELO Details')}">
+    <span class="ap-ic">${rk.ic}</span>
+    <span class="ap-info">
+      <b>${nm}${USER_ACC.isGuest?` <em>(${tr('Misafir','Guest')})</em>`:''}</b>
+      <small>${rk.name}</small>
+    </span>
+    <span class="ap-elo">${Math.round(USER_ACC.elo||1200)} <i>ELO</i></span>
+  </button>`;
+  const pb=$('#ab-prof');
+  if(pb)pb.onclick=()=>{snd('click');openProfileModal()};
+}
+function openProfileModal(){
+  if(!USER_ACC)return openAuthModal('login',false);
+  const acc=USER_ACC;
+  const rk=eloRank(acc.elo);
+  const nm=acc.isGuest?tr('Misafir Oyuncu','Guest Player'):escHtml(acc.username);
+  const wr=acc.matches?Math.round(((acc.wins||0)/acc.matches)*100):0;
+  const histHtml=(acc.history&&acc.history.length)
+    ?acc.history.slice(0,6).map(h=>`<div class="pr-hrow ${h.won?'w':'l'}">
+        <span>${h.won?tr('Zafer','Win'):tr('Mağlubiyet','Loss')} · ${escHtml(h.opp)}</span>
+        <b>${h.delta>=0?'+':''}${h.delta} ELO <i>(${h.elo})</i></b>
+      </div>`).join('')
+    :`<div class="pr-hempty">${tr('Henüz dereceli maç oynanmadı.','No ranked matches played yet.')}</div>`;
+  const mb=$('#mb');
+  lock=true;
+  mb.classList.remove('end-mode','an-mode','set-mode');
+  mb.classList.add('auth-mode');
+  mb.innerHTML=`<div class="pr-wrap">
+    <div class="pr-head">
+      <div class="pr-badge ${rk.cls}">${rk.ic}</div>
+      <div class="pr-titles">
+        <h3>${nm}</h3>
+        <div class="pr-rank">${rk.name} · <b>${Math.round(acc.elo||1200)} ELO</b></div>
+      </div>
+    </div>
+    <div class="pr-grid">
+      <div class="pr-stat"><span>${tr('Güncel ELO','Current ELO')}</span><b>${Math.round(acc.elo||1200)}</b></div>
+      <div class="pr-stat"><span>${tr('Zirve ELO','Peak ELO')}</span><b>${Math.round(acc.peakElo||acc.elo||1200)}</b></div>
+      <div class="pr-stat"><span>${tr('Galibiyet / Mağlubiyet','Wins / Losses')}</span><b>${acc.wins||0} / ${acc.losses||0}</b></div>
+      <div class="pr-stat"><span>${tr('Kazanma Oranı','Win Rate')}</span><b>%${wr}</b></div>
+    </div>
+    <div class="pr-sec-lbl">${tr('Son Maçlar','Recent Matches')}</div>
+    <div class="pr-hist">${histHtml}</div>
+    <div class="row pr-acts">
+      ${acc.isGuest
+        ?`<button type="button" id="pr-upg" class="btn alt sm">${tr('Üye Ol (ELO’nu Kaydet)','Register (Save ELO)')}</button>
+          <button type="button" id="pr-sw" class="btn sm">${tr('Giriş Yap','Sign In')}</button>`
+        :`<button type="button" id="pr-out" class="btn sm">${tr('Çıkış Yap','Sign Out')}</button>`}
+      <button type="button" id="pr-close" class="btn alt sm">${tr('Kapat','Close')}</button>
+    </div>
+  </div>`;
+  $('#m').hidden=false;
+  const close=()=>{mb.classList.remove('auth-mode');$('#m').hidden=true;lock=false};
+  if($('#pr-close'))$('#pr-close').onclick=()=>{snd('click');close()};
+  if($('#pr-upg'))$('#pr-upg').onclick=()=>{snd('click');openAuthModal('register',true)};
+  if($('#pr-sw'))$('#pr-sw').onclick=()=>{snd('click');openAuthModal('login',false)};
+  if($('#pr-out'))$('#pr-out').onclick=()=>{snd('click');saveSession(null);openAuthModal('login',false)};
+}
+function openAuthModal(initialTab='login',isUpgrade=false){
+  let tab=initialTab==='register'?'register':'login';
+  const mb=$('#mb');
+  lock=true;
+  mb.classList.remove('end-mode','an-mode','set-mode');
+  mb.classList.add('auth-mode');
+  const render=()=>{
+    const isReg=tab==='register';
+    mb.innerHTML=`<div class="auth-wrap">
+      <div class="auth-crest">⚔</div>
+      <h3>${isUpgrade?tr('Misafir Hesabını Kaydet','Save Guest Progress'):tr('Necrodice Hesabı','Necrodice Account')}</h3>
+      <p class="auth-sub">${isUpgrade
+        ?tr(`Mevcut ${Math.round((USER_ACC&&USER_ACC.elo)||1200)} ELO puanın ve istatistiklerin yeni hesabına aktarılacak.`,`Your current ${Math.round((USER_ACC&&USER_ACC.elo)||1200)} ELO and stats will be transferred to your new account.`)
+        :tr('ELO puanını kaydetmek ve rütbeni yükseltmek için giriş yap veya misafir olarak hemen oyna.','Sign in to save your ELO rating & rank, or jump right in as a guest.')}</p>
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab${!isReg?' act':''}" data-at="login">${tr('Giriş Yap','Sign In')}</button>
+        <button type="button" class="auth-tab${isReg?' act':''}" data-at="register">${tr('Kayıt Ol','Register')}</button>
+      </div>
+      <form id="auth-form" class="auth-form" autocomplete="off">
+        <label class="auth-lbl">${tr('Kullanıcı Adı','Username')}</label>
+        <input id="auth-u" class="auth-inp" type="text" minlength="3" maxlength="18" placeholder="${tr('Örn: KaraSovalye','e.g. DarkKnight')}" required>
+        <label class="auth-lbl">${tr('Şifre','Password')}</label>
+        <input id="auth-p" class="auth-inp" type="password" minlength="4" maxlength="32" placeholder="••••••" required>
+        <div id="auth-err" class="auth-err"></div>
+        <button type="submit" id="auth-sub-btn" class="btn alt auth-submit">${isReg?tr('Hesap Oluştur','Create Account'):tr('Giriş Yap','Sign In')}</button>
+      </form>
+      <div class="auth-div"><span>${tr('veya','or')}</span></div>
+      <div class="row auth-foot">
+        ${isUpgrade
+          ?`<button type="button" id="auth-cancel" class="btn sm">${tr('Vazgeç','Cancel')}</button>`
+          :`<button type="button" id="auth-guest" class="btn sm auth-guest-btn">${tr('Misafir Olarak Katıl','Continue as Guest')}</button>`}
+      </div>
+    </div>`;
+    mb.querySelectorAll('.auth-tab').forEach(b=>b.onclick=()=>{snd('click');tab=b.dataset.at;render()});
+    const guestBtn=$('#auth-guest');
+    if(guestBtn)guestBtn.onclick=()=>{
+      snd('click');
+      if(!USER_ACC)createGuestAccount();
+      mb.classList.remove('auth-mode');
+      $('#m').hidden=true;lock=false;
+      renderAuthBar();
+    };
+    const cancelBtn=$('#auth-cancel');
+    if(cancelBtn)cancelBtn.onclick=()=>{
+      snd('click');
+      mb.classList.remove('auth-mode');
+      $('#m').hidden=true;lock=false;
+    };
+    const form=$('#auth-form');
+    if(form)form.onsubmit=async e=>{
+      e.preventDefault();
+      const errEl=$('#auth-err'),btn=$('#auth-sub-btn');
+      const rawU=($('#auth-u').value||'').trim();
+      const rawP=$('#auth-p').value||'';
+      const key=normUserKey(rawU);
+      if(key.length<3){errEl.textContent=tr('Kullanıcı adı en az 3 karakter olmalı.','Username must be at least 3 characters.');return}
+      if(rawP.length<4){errEl.textContent=tr('Şifre en az 4 karakter olmalı.','Password must be at least 4 characters.');return}
+      const pHash=hashPass(rawP);
+      errEl.textContent='';
+      if(btn){btn.disabled=true;btn.textContent=tr('Kontrol ediliyor…','Checking…')}
+      try{
+        let cloudDoc=null;
+        if(fbDb){
+          try{
+            const snap=await fbDb.collection('users').doc(key).get();
+            if(snap.exists)cloudDoc=snap.data();
+          }catch(fe){}
+        }
+        const localMap=loadLocalUsers();
+        const existing=cloudDoc||localMap[key]||null;
+        if(isReg){
+          if(existing){
+            errEl.textContent=tr('Bu kullanıcı adı zaten alınmış.','This username is already taken.');
+            if(btn){btn.disabled=false;btn.textContent=tr('Hesap Oluştur','Create Account')}
+            return;
+          }
+          const base=(isUpgrade&&USER_ACC&&USER_ACC.isGuest)?USER_ACC:null;
+          const newAcc={
+            uid:'u_'+key+'_'+Date.now().toString(36),
+            key,
+            username:rawU,
+            passHash:pHash,
+            isGuest:false,
+            elo:base?Math.round(base.elo||1200):1200,
+            peakElo:base?Math.round(base.peakElo||base.elo||1200):1200,
+            wins:base?(base.wins||0):0,
+            losses:base?(base.losses||0):0,
+            matches:base?(base.matches||0):0,
+            history:base?(base.history||[]):[],
+            createdAt:Date.now()
+          };
+          saveSession(newAcc);
+          snd('ok');
+          mb.classList.remove('auth-mode');
+          $('#m').hidden=true;lock=false;
+        }else{
+          if(!existing){
+            errEl.textContent=tr('Kullanıcı bulunamadı. Kayıt Ol sekmesinden hesap oluşturabilirsin.','Account not found. Switch to Register to create one.');
+            if(btn){btn.disabled=false;btn.textContent=tr('Giriş Yap','Sign In')}
+            return;
+          }
+          if(existing.passHash&&existing.passHash!==pHash){
+            errEl.textContent=tr('Şifre hatalı.','Incorrect password.');
+            if(btn){btn.disabled=false;btn.textContent=tr('Giriş Yap','Sign In')}
+            return;
+          }
+          const logged={
+            uid:existing.uid||('u_'+key),
+            key,
+            username:existing.username||rawU,
+            passHash:existing.passHash||pHash,
+            isGuest:false,
+            elo:typeof existing.elo==='number'?existing.elo:1200,
+            peakElo:typeof existing.peakElo==='number'?existing.peakElo:(existing.elo||1200),
+            wins:existing.wins||0,
+            losses:existing.losses||0,
+            matches:existing.matches||0,
+            history:Array.isArray(existing.history)?existing.history:[]
+          };
+          saveSession(logged);
+          snd('ok');
+          mb.classList.remove('auth-mode');
+          $('#m').hidden=true;lock=false;
+        }
+      }catch(ex){
+        errEl.textContent=tr('Bir hata oluştu, tekrar dene.','An error occurred, please try again.');
+        if(btn){btn.disabled=false;btn.textContent=isReg?tr('Hesap Oluştur','Create Account'):tr('Giriş Yap','Sign In')}
+      }
+    };
+  };
+  $('#m').hidden=false;
+  render();
+}
+(function initAuthAndElo(){
+  USER_ACC=loadSession();
+  renderAuthBar();
+  // Oyun ilk açıldığında oturum yoksa açılış perdesi biterken Üyelik / Misafir modalını aç
+  if(!USER_ACC){
+    const hasSplash=!!document.getElementById('splash');
+    setTimeout(()=>{
+      const menu=$('#menu');
+      if(!USER_ACC&&menu&&!menu.hidden&&!lock){
+        openAuthModal('login',false);
+      }
+    },hasSplash?2600:250);
+  }
+})();
