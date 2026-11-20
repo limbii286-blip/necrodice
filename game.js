@@ -3211,9 +3211,9 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
     return;
   }
   if(m.k=='slot_full'){
-    st(tr('Oyuncu slotu doldu! İzleyici olarak katılabilirsin.','Player slot is full! You can join as a spectator.'));
+    st(tr('Oda dolu!','Room is full!'));
     const btnP = $('#btnJoinPlayer');
-    if(btnP){ btnP.disabled = true; btnP.textContent = tr('Dolu','Full'); }
+    if(btnP){ btnP.disabled = true; btnP.textContent = tr('Oda Dolu','Room Full'); }
     return;
   }
   if(m.k=='spec_full'){
@@ -3414,10 +3414,7 @@ function showJoinModal(slots, specCount){
       
       <div class="slot-actions">
         <button id="btnJoinPlayer" class="btn ${p1Free?'':'dim'}" ${p1Free?'':'disabled'}>
-          ${p1Free?tr('Oyuncu Olarak Katıl','Join as Player'):tr('Oyuncu Slotu Dolu','Player Slot Full')}
-        </button>
-        <button id="btnJoinSpec" class="btn alt ${specFree?'':'dim'}" ${specFree?'':'disabled'}>
-          ${specFree ? `${tr('İzleyici Olarak Katıl','Join as Spectator')} (${specCount||0}/${MAX_SPECTATORS})` : `${tr('İzleyici Dolu','Spectators Full')} (${MAX_SPECTATORS}/${MAX_SPECTATORS})`}
+          ${p1Free?tr('Oyuncu Olarak Katıl','Join as Player'):tr('Oda Dolu','Room Full')}
         </button>
       </div>
     </div>
@@ -3435,15 +3432,6 @@ function showJoinModal(slots, specCount){
       }, () => {
         if(conn && conn.open) showJoinModal(slots, specCount);
       });
-    };
-  }
-
-  const bs = $('#btnJoinSpec');
-  if(bs && specFree){
-    bs.onclick = () => {
-      bs.disabled = true;
-      bs.textContent = tr('İzleyici olarak giriliyor…','Joining as spectator…');
-      if(conn && conn.open) conn.send({k:'join_as', role:'spectator'});
     };
   }
 
