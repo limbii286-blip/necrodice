@@ -876,7 +876,7 @@ function bot(){
         }else if((!low&&bt>bT)||(total(S,0,false)>=bT-2)){
           useW=true;
         }
-        if(useW){execWolf(S,1);snd('play');R();return think(AFTER[DIFF])}
+        if(useW){execWolf(S,1,()=>think(AFTER[DIFF]));return}
       }
     }
     const a=plan?plan.a:(n++<8?(prm.mc?decideH:decide)(S,1,prm.mc?{...prm,K:90,ms:400}:prm):null);plan=null;pid++;
@@ -2004,11 +2004,57 @@ function execPlague(S,p,idx){
   S.hpUsed=S.hpUsed||[false,false];S.hpUsed[p]=true;S.acted=true;S.graceLeft=0;
   S.log.push({p,t:`Vebalı Takas kullandı (${J[burned]} yaktı, ${drawn.length} joker çekti)`});
 }
-function execWolf(S,p){
-  const destroyRand=side=>{const pool=S.pl[side].open.length?S.pl[side].open:S.pl[side].closed;return pool.length?pool.splice(Math.floor(Math.random()*pool.length),1)[0]:null};
-  destroyRand(0);destroyRand(1);
-  S.hpUsed=S.hpUsed||[false,false];S.hpUsed[p]=true;S.acted=true;S.graceLeft=0;
-  S.log.push({p,t:'Kanlı Dolunay kullandı (İki taraftan 1\'er kart imha edildi)'});
+function playWolfClawFx(ids){
+  if(!ids||!ids.length)return;
+  try{snd('stamp');noise(.24,.24,900);shake();vib([70,40,120])}catch(e){}
+  ids.forEach((cid,idx)=>{
+    const el=document.querySelector(`.cards .c[data-c="${cid}"]`);
+    if(!el||!el.getBoundingClientRect)return;
+    const r=el.getBoundingClientRect();
+    el.classList.add('wolf-slashed');
+    const fx=document.createElement('div');
+    fx.className='wolf-claw-fx';
+    fx.style.left=(r.left+r.width/2)+'px';
+    fx.style.top=(r.top+r.height/2)+'px';
+    fx.style.width=Math.max(84,Math.round(r.width*1.45))+'px';
+    fx.style.height=Math.max(108,Math.round(r.height*1.32))+'px';
+    fx.style.animationDelay=(idx*70)+'ms';
+    fx.innerHTML=`<svg viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="wcG${idx}" x1="15" y1="12" x2="105" y2="128" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#fff5f5"/>
+          <stop offset="32%" stop-color="#f87171"/>
+          <stop offset="72%" stop-color="#dc2626"/>
+          <stop offset="100%" stop-color="#7f1d1d" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path class="wc-s s1" d="M22 14 C40 44, 58 76, 78 122" stroke="url(#wcG${idx})" stroke-width="7.5" stroke-linecap="round"/>
+      <path class="wc-s s2" d="M48 10 C64 46, 80 82, 98 130" stroke="url(#wcG${idx})" stroke-width="8.5" stroke-linecap="round"/>
+      <path class="wc-s s3" d="M74 18 C86 50, 98 82, 110 120" stroke="url(#wcG${idx})" stroke-width="6.5" stroke-linecap="round"/>
+    </svg>`;
+    document.body.appendChild(fx);
+    setTimeout(()=>fx.remove(),680);
+  });
+}
+function execWolf(S,p,afterCb){
+  const pickRand=side=>{const pool=S.pl[side].open.length?S.pl[side].open:S.pl[side].closed;if(!pool.length)return null;const i=Math.floor(Math.random()*pool.length);return{pool,i,c:pool[i]}};
+  const r0=pickRand(0),r1=pickRand(1);
+  const ids=[r0&&r0.c.id,r1&&r1.c.id].filter(Boolean);
+  playWolfClawFx(ids);
+  if(MODE==='host'){
+    if(conn&&conn.open)conn.send({k:'wolf_claw',ids});
+    spectators.forEach(s=>{try{if(s.open)s.send({k:'wolf_claw',ids})}catch(e){}});
+  }
+  const finish=()=>{
+    if(S!==G)return;
+    if(r0){const i=r0.pool.findIndex(x=>x.id===r0.c.id);if(i>=0)r0.pool.splice(i,1)}
+    if(r1){const i=r1.pool.findIndex(x=>x.id===r1.c.id);if(i>=0)r1.pool.splice(i,1)}
+    S.hpUsed=S.hpUsed||[false,false];S.hpUsed[p]=true;S.acted=true;S.graceLeft=0;
+    S.log.push({p,t:'Kanlı Dolunay kullandı (İki taraftan 1\'er kart imha edildi)'});
+    R();
+    if(afterCb)afterCb();
+  };
+  setTimeout(finish,360);
 }
 function useHeroPower(){
   const S=G;if(!S||S.over||S.wait||S.turn!==0||lock||P||(S.hpUsed&&S.hpUsed[0])||MODE==='tutorial')return;
@@ -2042,7 +2088,7 @@ function useHeroPower(){
   }else if(hid==='l'){
     if(!(S.pl[0].open.length||S.pl[0].closed.length)||!(S.pl[1].open.length||S.pl[1].closed.length))return box(`<h3>${tr('Kanlı Dolunay','Blood Full Moon')}</h3><p>${tr('İmha edilecek yeterli kart yok.','Not enough cards on the table to destroy.')}</p>`);
     if(MODE==='guest'){S.hpUsed[0]=true;snd('play');R();return conn.send({k:'hp_wolf'})}
-    execWolf(S,0);snd('play');R();
+    execWolf(S,0);
   }else{
     return;
   }
@@ -2647,11 +2693,7 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
   else if(m.k=='hp_wolf'){
     S.hpUsed=S.hpUsed||[false,false];
     if(avKey(S,1)!=='l'||S.hpUsed[1])return;
-    const destroyRand=side=>{const pool=S.pl[side].open.length?S.pl[side].open:S.pl[side].closed;return pool.length?pool.splice(Math.floor(Math.random()*pool.length),1)[0]:null};
-    destroyRand(0);destroyRand(1);
-    S.hpUsed[1]=true;S.acted=true;S.graceLeft=0;
-    S.log.push({p:1,t:'Kanlı Dolunay kullandı (İki taraftan 1\'er kart imha edildi)'});
-    R();
+    execWolf(S,1);
   }
   else if(m.k=='hp_vamp'){
     S.hpUsed=S.hpUsed||[false,false];
@@ -2734,6 +2776,9 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
   }
   else if(m.k=='tie_roll'){
     if(window._triggerTieRoll)window._triggerTieRoll();
+  }
+  else if(m.k=='wolf_claw'){
+    if(Array.isArray(m.ids))playWolfClawFx(m.ids);
   }
   else if(m.k=='j')cast(m.p,m.id,R);
   else if(m.k=='hp_scry_res'){
