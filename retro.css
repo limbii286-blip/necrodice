@@ -761,6 +761,7 @@ body:has(#menu:not([hidden])) #fl {
   align-items: center;
   justify-content: center;
   gap: 18px;
+  animation: splash 3s forwards;
 }
 #slogo, .veil img {
   width: min(44vw, 165px);

@@ -1400,8 +1400,8 @@ function impSave(html,cont,msg){ // BİLİNMEYEN ölecekken: zar düşer, sahne 
     if(d.classList.contains('finished')){clearInterval(w);setTimeout(()=>cutscene(msg,()=>{$('#mb').classList.remove('rig');cont()}),1000)}},120);
 }
 let entering=false;
-function veil(ms=2000){const v=document.createElement('div');v.className='veil';v.style.animationDuration=ms+'ms';v.style.setProperty('--ms',ms*.9+'ms');v.innerHTML=`<img alt="" src="limbi_favicon.png?v=limbi3"><b>limbigames</b><span class="ldb"><i></i></span>`;document.body.appendChild(v);setTimeout(()=>v.remove(),ms+100)}
-function enter(fn){if(entering)return;entering=true;veil();setMusic('game');setTimeout(()=>{$('#menu').hidden=true;entering=false;fn()},1700)}
+function veil(ms=3000){const v=document.createElement('div');v.className='veil';v.style.animationDuration=ms+'ms';v.innerHTML=`<img alt="" src="limbi_favicon.png?v=limbi4"><b>limbigames</b>`;document.body.appendChild(v);setTimeout(()=>v.remove(),ms+100)}
+function enter(fn){if(entering)return;entering=true;veil(3000);setMusic('game');setTimeout(()=>{$('#menu').hidden=true;entering=false;fn()},2500)}
 let MY_HERO='c',OPP_HERO='n';
 const HEROES_TR=[
   {id:'c',name:'Lanetli Tüccar',hpName:'Zamanın İadesi',desc:'Kullanıldığında masadaki tüm sayı kartları desteye geri karıştırılır. Kullanılmış Joker kartları yakılır ve yeni bir sayı kartı destesi dağıtılır. 4 tur galibiyet elde ettiğinde aktifleşir.'},
@@ -2361,7 +2361,7 @@ function exitGame(){ // limbigames perdesi, sonra ilk ekrana dön
   if(entering)return;entering=true;leaving=true;botGen++;thinkOn=false;
   tutClear();
   const c=$('#cast');if(c)c.remove();$('#m').hidden=true;lock=true;P=null;
-  veil();
+  veil(3000);
   setTimeout(()=>{
     try{if(conn)conn.close()}catch(e){}
     try{spectators.forEach(s=>{try{s.close()}catch(err){}})}catch(e){}
@@ -2369,7 +2369,7 @@ function exitGame(){ // limbigames perdesi, sonra ilk ekrana dön
     conn=null;spectators=[];peer=null;waitM=false;specCount=0;
     if(G)G.over=true;G=null;MODE='bot';sayT='';try{document.body.classList.remove('dead')}catch(e){}
     st('');$('#menu').hidden=false;lock=false;entering=false;setMusic('menu');
-  },1700);
+  },2500);
 }
 document.addEventListener('click',e=>{
   const jClick=e.target.closest&&e.target.closest('#hand .j[data-j]');
@@ -2926,7 +2926,7 @@ document.addEventListener('keydown',e=>{
   settings();
 });
 try{if(RM)document.body.classList.add('rm');if(CB)document.body.classList.add('cb');if(!CRT)document.documentElement.classList.add('nocrt')}catch(e){}
-try{$('#slogo').src='limbi_favicon.png?v=limbi3'}catch(e){}setTimeout(()=>{const s=$('#splash');s&&s.remove()},2900);
+try{$('#slogo').src='limbi_favicon.png?v=limbi4'}catch(e){}setTimeout(()=>{const s=$('#splash');s&&s.remove()},3050);
 on('#b2',()=>{if(noNet())return;chooseHero(h=>{MY_HERO=h;hostRoom()})});on('#b3',joinRoom);
 
 /* ---------- SÜRÜKLENEBİLİR KARTLAR İÇİN ORTAK SMOOTH LERP DÖNGÜSÜ ---------- */
