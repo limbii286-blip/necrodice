@@ -5202,8 +5202,9 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
    NECROENGINE: MAÇ ANALİZ MODALI (#mb.an-mode)
    ========================================================================== */
 #mb.an-mode {
-  width: min(95vw, 560px) !important;
-  max-width: 560px !important;
+  width: min(95vw, 580px) !important;
+  max-width: 580px !important;
+  height: min(86dvh, 720px) !important;
   max-height: 90dvh !important;
   padding: 16px 18px 14px !important;
   display: flex;
@@ -5250,8 +5251,17 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex: 1 1 auto;
+  height: 100%;
   min-height: 0;
-  max-height: calc(90dvh - 34px);
+  overflow: hidden;
+}
+.an-hdr,
+.an-graph-wrap,
+.an-view-tabs,
+.an-filters,
+.an-acts {
+  flex-shrink: 0;
 }
 .an-hdr {
   display: flex;
@@ -5301,16 +5311,35 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
 .an-p.mistake { color: #fdba74; border-color: rgba(249, 115, 22, 0.6); }
 .an-p.blunder { color: #fca5a5; border-color: rgba(239, 68, 68, 0.7); }
 .an-list {
-  flex: 1;
-  min-height: 120px;
+  flex: 1 1 0;
+  min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  padding-right: 4px;
+  gap: 8px;
+  padding: 2px 6px 4px 2px;
   touch-action: pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 168, 85, 0.55) rgba(0, 0, 0, 0.25);
+}
+.an-list::-webkit-scrollbar,
+.an-summary-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.an-list::-webkit-scrollbar-track,
+.an-summary-scroll::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 999px;
+}
+.an-list::-webkit-scrollbar-thumb,
+.an-summary-scroll::-webkit-scrollbar-thumb {
+  background: rgba(212, 168, 85, 0.55);
+  border-radius: 999px;
 }
 .an-row {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -5606,14 +5635,18 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   font-weight: 800;
 }
 .an-summary-scroll {
-  flex: 1;
-  min-height: 120px;
+  flex: 1 1 0;
+  min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-right: 4px;
+  padding: 2px 6px 4px 2px;
   text-align: left;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 168, 85, 0.55) rgba(0, 0, 0, 0.25);
 }
 .an-sec-lbl {
   font: 700 12.5px/1.1 var(--mf);
