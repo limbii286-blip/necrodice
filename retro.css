@@ -1751,10 +1751,13 @@ body.dragging-joker #fx::after {
 .who .pq {
   font: 800 clamp(26px, 4.2dvh, 38px)/1 var(--mf) !important;
   font-style: normal !important;
+  font-variant-numeric: lining-nums tabular-nums !important;
+  font-feature-settings: "lnum" 1, "tnum" 1 !important;
   color: #f7e6c4 !important;
   text-shadow: 0 2px 6px #000, 0 0 12px rgba(230, 190, 110, 0.35) !important;
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
+  line-height: 1 !important;
 }
 .who .tot.bust b {
   color: var(--blood2) !important;
@@ -1766,9 +1769,9 @@ body.dragging-joker #fx::after {
 }
 .who .tl {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: center !important;
-  gap: 5px;
+  gap: 4px;
 }
 
 .who .jbs {
@@ -6351,8 +6354,8 @@ body {
   font-size: 16.5px;
 }
 html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, h3 {
-  font-variant-numeric: lining-nums tabular-nums;
-  font-feature-settings: "lnum" 1, "tnum" 1;
+  font-variant-numeric: lining-nums tabular-nums !important;
+  font-feature-settings: "lnum" 1, "tnum" 1 !important;
 }
 .btn {
   font-size: 16.5px !important;
