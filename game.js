@@ -1042,24 +1042,45 @@ function isMobilePerf(){
   return window.innerWidth<=760||(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches);
 }
 function dustTableCards(){
-  const cards=[...document.querySelectorAll('#opp .cards .c, #me .cards .c')];
+  const cards=[...document.querySelectorAll('#opp .cards .c, #me .cards .c, #jo .e, #jm .e')];
   const rects=cards.map(c=>c.getBoundingClientRect());
   const frag=document.createDocumentFragment();
   const motes=[];
-  const perCard=isMobilePerf()?5:10;
+  const mob=isMobilePerf();
+  const perCard=mob?6:11;
+  const flamesPer=mob?2:3;
+  try{if(VS>0){noise(.46,.22,480);tone(115,.42,'sawtooth',.075,0,-50)}}catch(e){}
+  if(!RM){
+    const sweep=document.createElement('div');
+    sweep.className='fire-sweep';
+    document.body.appendChild(sweep);
+    setTimeout(()=>sweep.remove(),820);
+  }
   cards.forEach((c,idx)=>{
     const r=rects[idx];
-    c.style.animationDelay=(idx*28)+'ms';
+    const delay=idx*32;
+    c.style.animationDelay=delay+'ms';
     c.classList.add('dust-out');
     if(!RM&&r.width>0&&r.height>0){
+      for(let f=0;f<flamesPer;f++){
+        const fl=document.createElement('span');
+        fl.className='fire-flame';
+        fl.style.left=(r.left+r.width*(0.2+0.6*(f/(Math.max(1,flamesPer-1))))+(Math.random()-0.5)*10)+'px';
+        fl.style.top=(r.top+r.height*(0.45+Math.random()*0.4))+'px';
+        fl.style.setProperty('--fw',(18+Math.random()*16).toFixed(0)+'px');
+        fl.style.setProperty('--fh',(26+Math.random()*24).toFixed(0)+'px');
+        fl.style.animationDelay=(delay+Math.random()*140)+'ms';
+        frag.appendChild(fl);
+        motes.push(fl);
+      }
       for(let i=0;i<perCard;i++){
         const m=document.createElement('span');
-        m.className='dust-mote';
+        m.className='dust-mote fire-ember';
         m.style.left=(r.left+Math.random()*r.width)+'px';
         m.style.top=(r.top+Math.random()*r.height)+'px';
-        m.style.setProperty('--dx',((Math.random()-0.5)*70).toFixed(1)+'px');
-        m.style.setProperty('--dy',(-20-Math.random()*65).toFixed(1)+'px');
-        m.style.animationDelay=(idx*25+Math.random()*160)+'ms';
+        m.style.setProperty('--dx',((Math.random()-0.5)*90).toFixed(1)+'px');
+        m.style.setProperty('--dy',(-45-Math.random()*95).toFixed(1)+'px');
+        m.style.animationDelay=(delay+Math.random()*200)+'ms';
         frag.appendChild(m);
         motes.push(m);
       }
@@ -1067,7 +1088,7 @@ function dustTableCards(){
   });
   if(motes.length){
     document.body.appendChild(frag);
-    setTimeout(()=>motes.forEach(m=>m.remove()),950);
+    setTimeout(()=>motes.forEach(m=>m.remove()),1050);
   }
 }
 function heroAttack(winIdx,tanked=false){
