@@ -6327,6 +6327,10 @@ body, button, input, select, textarea {
 body {
   font-size: 16.5px;
 }
+html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, h3 {
+  font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: "lnum" 1, "tnum" 1;
+}
 .btn {
   font-size: 16.5px !important;
   letter-spacing: 0.3px;
