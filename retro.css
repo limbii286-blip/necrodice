@@ -3067,7 +3067,7 @@ body.dragging-joker #fx::after {
   }
   .cards .c.dust-out,
   #fx .e.dust-out {
-    animation: cardBurnOut 0.78s cubic-bezier(0.25, 0.85, 0.35, 1) forwards !important;
+    animation: thanosCardDust 0.72s cubic-bezier(0.32, 0, 0.2, 1) forwards !important;
   }
 }
 @keyframes cardDustOutMobile {
@@ -3262,75 +3262,43 @@ body.dragging-joker #fx::after {
 
 .cards .c.dust-out,
 #fx .e.dust-out {
-  animation: cardBurnOut 0.84s cubic-bezier(0.25, 0.85, 0.35, 1) forwards !important;
+  animation: thanosCardDust 0.74s cubic-bezier(0.32, 0, 0.2, 1) forwards !important;
   will-change: transform, opacity, filter;
   pointer-events: none;
 }
-@keyframes cardBurnOut {
+@keyframes thanosCardDust {
   0% {
     opacity: 1;
     transform: translate3d(0, 0, 0) scale(1);
-    filter: brightness(1) saturate(1);
+    filter: saturate(1) brightness(1);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
   }
-  26% {
-    opacity: 1;
-    transform: translate3d(0, -4px, 0) scale(1.04);
-    filter: brightness(1.55) sepia(0.85) saturate(2.8) hue-rotate(-14deg) drop-shadow(0 0 18px rgba(249, 115, 22, 0.95));
+  35% {
+    opacity: 0.88;
+    transform: translate3d(5px, -3px, 0) scale(0.99);
+    filter: saturate(0.45) sepia(0.35) brightness(0.88);
+    clip-path: polygon(0 0, 74% 0, 100% 42%, 100% 100%, 0 100%);
   }
-  62% {
-    opacity: 0.72;
-    transform: translate3d(0, -14px, 0) scale(0.92);
-    filter: brightness(0.45) contrast(1.45) sepia(0.9) saturate(2.2) hue-rotate(-25deg) drop-shadow(0 0 14px rgba(220, 38, 38, 0.85));
+  72% {
+    opacity: 0.42;
+    transform: translate3d(14px, -9px, 0) scale(0.95);
+    filter: grayscale(0.85) brightness(0.65) blur(1.5px);
+    clip-path: polygon(0 22%, 38% 36%, 48% 100%, 0 100%);
   }
   100% {
     opacity: 0;
-    transform: translate3d(0, -34px, 0) scale(0.68);
-    filter: brightness(0.18) blur(5px);
+    transform: translate3d(26px, -16px, 0) scale(0.88);
+    filter: grayscale(1) brightness(0.4) blur(3px);
+    clip-path: polygon(0 85%, 10% 90%, 10% 100%, 0 100%);
   }
 }
-
-.fire-sweep {
+.thanos-canvas {
   position: fixed;
   inset: 0;
-  z-index: 42;
-  pointer-events: none;
-  background: linear-gradient(90deg, transparent 0%, rgba(234, 88, 12, 0.12) 28%, rgba(251, 146, 60, 0.38) 50%, rgba(220, 38, 38, 0.16) 72%, transparent 100%);
-  transform: translateX(-110%);
-  animation: fireSweepAcross 0.78s cubic-bezier(0.22, 0.85, 0.36, 1) forwards;
-}
-@keyframes fireSweepAcross {
-  0%   { transform: translateX(-110%); opacity: 0.2; }
-  35%  { opacity: 0.95; }
-  100% { transform: translateX(110%); opacity: 0; }
-}
-
-.fire-flame {
-  position: fixed;
-  width: var(--fw, 24px);
-  height: var(--fh, 36px);
-  border-radius: 50% 50% 42% 42% / 65% 65% 35% 35%;
-  background: radial-gradient(ellipse at 50% 72%, #fffbeb 0%, #fde047 26%, #f97316 58%, rgba(220, 38, 38, 0.75) 82%, transparent 100%);
-  box-shadow: 0 0 18px rgba(249, 115, 22, 0.85);
-  pointer-events: none;
-  z-index: 43;
-  transform: translate(-50%, -50%) scale(0.4);
-  will-change: transform, opacity;
-  animation: fireFlameRise 0.76s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
-}
-@keyframes fireFlameRise {
-  0%   { opacity: 0; transform: translate(-50%, -30%) scale(0.45) rotate(-5deg); }
-  25%  { opacity: 0.96; transform: translate(-50%, -60%) scale(1.18) rotate(5deg); }
-  65%  { opacity: 0.82; transform: translate(-50%, -105%) scale(0.95) rotate(-4deg); }
-  100% { opacity: 0; transform: translate(-50%, -155%) scale(0.35) rotate(6deg); }
-}
-
-.dust-mote.fire-ember {
-  width: 6px;
-  height: 6px;
-  background: radial-gradient(circle, #fffbeb 0%, #fbbf24 38%, #f97316 74%, transparent 100%);
-  box-shadow: 0 0 10px rgba(249, 115, 22, 0.95);
+  width: 100vw;
+  height: 100dvh;
   z-index: 44;
-  animation: dustMoteFloat 0.92s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  pointer-events: none;
 }
 
 .dust-mote {
