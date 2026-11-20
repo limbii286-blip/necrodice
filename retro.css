@@ -750,7 +750,7 @@ body:has(#menu:not([hidden])) #fl {
   border-color: #f2d28b;
 }
 
-/* Açılış ve Geçiş Perdesi (#splash, .veil) */
+/* Açılış ve Geçiş Perdesi (#splash, .veil) — Sinematik yumuşak geçiş */
 #splash, .veil {
   position: fixed;
   inset: 0;
@@ -761,7 +761,25 @@ body:has(#menu:not([hidden])) #fl {
   align-items: center;
   justify-content: center;
   gap: 18px;
-  animation: splash 3s forwards;
+  will-change: opacity;
+}
+#splash {
+  animation: splashSmooth 3.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.veil {
+  animation: veilCinematic 3.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes splashSmooth {
+  0%, 56% { opacity: 1; visibility: visible; pointer-events: auto; }
+  74%     { opacity: 0.72; pointer-events: none; }
+  100%    { opacity: 0; visibility: hidden; pointer-events: none; }
+}
+@keyframes veilCinematic {
+  0%      { opacity: 0; visibility: visible; pointer-events: auto; }
+  15%     { opacity: 1; visibility: visible; pointer-events: auto; }
+  58%     { opacity: 1; visibility: visible; pointer-events: auto; }
+  78%     { opacity: 0.58; pointer-events: none; }
+  100%    { opacity: 0; visibility: hidden; pointer-events: none; }
 }
 #slogo, .veil img {
   width: min(44vw, 165px);
@@ -769,6 +787,20 @@ body:has(#menu:not([hidden])) #fl {
   border-radius: 50%;
   border: 2px solid #9c783e;
   box-shadow: 0 0 35px rgba(196, 154, 82, 0.28);
+  animation: veilLogoGlide 3.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes veilLogoGlide {
+  0%   { opacity: 0; transform: scale(0.92); }
+  20%  { opacity: 1; transform: scale(1); }
+  62%  { opacity: 1; transform: scale(1.015); }
+  100% { opacity: 0; transform: scale(1.05); }
+}
+main.arena-enter {
+  animation: arenaReveal 1.35s 0.9s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@keyframes arenaReveal {
+  0%   { opacity: 0.55; transform: scale(1.018); filter: brightness(0.65); }
+  100% { opacity: 1; transform: none; filter: none; }
 }
 #splash b, .veil b {
   font: 700 28px/1 var(--hf) !important;
