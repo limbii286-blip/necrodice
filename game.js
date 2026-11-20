@@ -4310,19 +4310,30 @@ function startTutorial(){
   tutRender();
 }
 
-/* ---------- NECROENGINE: MAÇ SONU BEKLENEN DEĞER (EV) HAMLE ANALİZ MOTORU ---------- */
+/* ---------- NECROENGINE v3: MULTI-PV BAYESIAN EV & MAÇ ANALİZ MOTORU ---------- */
 let LAST_MATCH_HIST=[];
 function recMove(S,action,label){
   if(!S||S.over||MODE==='tutorial'||MODE==='spectator')return;
   const snap=clone(S);
   snap.log=[];snap.stats=null;
+  const kind=!action?'pass':(action.t==='d'?'draw':'joker');
+  const myOpen=(S.pl[0].open||[]).map(c=>c.o!=null?c.o:c.n);
+  const myClosed=(S.pl[0].closed||[]).map(c=>c.o!=null?c.o:c.n);
+  const oppOpenCards=(S.pl[1].open||[]).map(c=>c.o!=null?c.o:c.n);
+  const matchPoint=S.rounds>=2||(S.pts&&(S.pts[0]>=1.5||S.pts[1]>=1.5))||(S.bo>=2);
   LAST_MATCH_HIST.push({
     duel:(S.bo||0)+1,
     round:(S.rounds||0)+1,
+    d20Th:TH[Math.min(S.bo||0,3)],
     myTot:total(S,0,true),
     oppOpen:total(S,1,false),
+    myOpen,
+    myClosed,
+    oppOpenCards,
     tg:tg(S),
     low:lowW(S),
+    kind,
+    matchPoint,
     action:action?clone(action):null,
     label:label||(action&&action.t==='d'?tr('Kart Çek','Draw Card'):tr('Pas','Pass')),
     snap
@@ -4344,6 +4355,23 @@ function fmtAct(a,S){
   if(a.id===22&&a.pk&&a.pk.length)return `${nm} (${a.pk[0]>0?'+':'−'})`;
   return `${tr('Joker','Joker')}: ${nm}`;
 }
+function calcDeckOdds(S){
+  const low=lowW(S),Tg=tg(S),myT=total(S,0,true);
+  const pool=unk(S,0),n=pool.length;
+  if(!n)return {poolLen:0,bustCnt:0,safeCnt:0,exactCnt:0,bustPct:0,safePct:0,exactPct:0};
+  const bustCnt=low?0:pool.filter(x=>myT+x>Tg).length;
+  const exactCnt=low?0:pool.filter(x=>myT+x===Tg).length;
+  const safeCnt=n-bustCnt;
+  return {
+    poolLen:n,
+    bustCnt,
+    safeCnt,
+    exactCnt,
+    bustPct:Math.round((bustCnt/n)*100),
+    safePct:Math.round((safeCnt/n)*100),
+    exactPct:Math.round((exactCnt/n)*100)
+  };
+}
 function worldForPlayer(S,stratIdx){ // Oyuncunun o an bildiği bilgilere göre katmanlı Bayesian olasılık dünyası
   const T=clone(S);T.log=[];T.jdeck=[];
   const cl=T.pl[1]&&T.pl[1].closed&&T.pl[1].closed[0];
@@ -4352,7 +4380,7 @@ function worldForPlayer(S,stratIdx){ // Oyuncunun o an bildiği bilgilere göre 
   if(peeked&&cl.n>0)seenN.add(cl.n);
   let pool=shuf(range(11).filter(n=>!seenN.has(n)));
   if(cl&&!peeked&&pool.length){
-    const w=oppCardWeights(S,0,{beta:0.7,gap:6},pool);
+    const w=oppCardWeights(S,0,{beta:0.75,gap:6},pool);
     const sm=w.reduce((a,b)=>a+b,0);
     let r=(stratIdx!=null?((stratIdx%16)+Math.random())/16:Math.random())*sm,i=0;
     while(i<w.length-1&&(r-=w[i])>0)i++;
@@ -4377,60 +4405,70 @@ function classifyMove(loss,isSame,brilliant){
   if(loss<=30)return {cls:'mistake',sym:'?',name:tr('Hata','Mistake')};
   return {cls:'blunder',sym:'??',name:tr('Vahim Hata','Blunder')};
 }
-function explainMove(S,played,best,loss){
+function explainMoveV3(S,played,best,loss,odds,wpBest,wpPlayed){
   if(loss<=3)return '';
-  const low=lowW(S),Tg=tg(S),myT=total(S,0,true),oppOpen=total(S,1,false);
-  const pool=unk(S,0);
-  const bustCnt=pool.filter(n=>myT+n>Tg).length;
-  const bustPct=pool.length?Math.round((bustCnt/pool.length)*100):0;
-  const safePct=100-bustPct;
+  const low=lowW(S),Tg=tg(S),oppOpen=total(S,1,false);
   if(!best&&!low&&oppOpen>Tg&&!act(S,20)){
-    return tr('Rakip açıktan hedefi aşmışken kaynak harcamadan pas geçmek en güvenliydi.','Opponent was already visibly busted; passing without spending resources was safest.');
+    return tr(`Rakip açıktan ${oppOpen}/${Tg} ile patlamışken kaynak harcamadan pas geçmek %${wpBest} kazanma şansı veriyordu.`,`Opponent was visibly busted (${oppOpen}/${Tg}); standing gave ${wpBest}% win odds without spending resources.`);
   }
   if(played&&played.t==='d'&&!best){
-    return tr(`Patlama riski yüksekti (%${bustPct}); pas geçmek daha avantajlıydı.`,`Bust risk was high (${bustPct}%); standing gave higher EV.`);
+    return tr(`Kalan ${odds.poolLen} bilinmeyen kartın ${odds.bustCnt}'i patlatıyordu (%${odds.bustPct} patlama riski). Pas geçmek kazanma şansını %${wpBest} seviyesinde tutuyordu.`,`${odds.bustCnt} of ${odds.poolLen} unseen cards would bust you (${odds.bustPct}% bust risk). Standing kept ${wpBest}% win odds.`);
   }
   if(!played&&best&&best.t==='d'){
-    return tr(`Güvenli çekim oranı yüksekti (%${safePct}); kart çekerek üstünlük kurulabilirdi.`,`Safe draw odds were strong (${safePct}%); drawing improved winning chances.`);
+    return tr(`Bilinmeyen ${odds.poolLen} kartın ${odds.safeCnt}'i güvenliydi (%${odds.safePct}${odds.exactCnt?`, ${odds.exactCnt} tam hedef`:''}). Kart çekerek %${wpBest} kazanma şansına ulaşılabilirdi.`,`${odds.safeCnt} of ${odds.poolLen} unseen cards were safe (${odds.safePct}%${odds.exactCnt?`, ${odds.exactCnt} exact target`:''}). Drawing raised win odds to ${wpBest}%.`);
   }
   if(best&&best.t==='j'){
-    return tr('Bu joker tur veya hedef dengesini lehine çeviriyordu.','This joker shifted the round or target balance in your favor.');
+    return tr(`"${fmtAct(best,S)}" hamlesi puan/hedef dengesini lehine çevirip kazanma şansını %${wpPlayed} → %${wpBest} seviyesine taşıyordu.`,`"${fmtAct(best,S)}" swung the round/target balance, lifting win odds from ${wpPlayed}% to ${wpBest}%.`);
   }
   if(played&&played.t==='j'&&!best){
-    return tr('Joker harcamak yerine pas geçip kaynağı sonraki tura saklamak daha kârlıydı.','Saving the joker for a later round had higher expected value.');
+    return tr(`Bu tur joker harcamak yerine pas geçip kaynağı sonraki turlara saklamak (+%${loss} daha yüksek EV) daha kârlıydı.`,`Saving the joker for later rounds instead of spending it here gave +${loss}% higher win equity.`);
   }
-  return tr('Alternatif hamle düello kazanma olasılığını belirgin biçimde artırıyordu.','The alternative line significantly increased your duel win probability.');
+  return tr(`Önerilen hat kazanma olasılığını %${wpPlayed} yerine %${wpBest} seviyesine çıkarıyordu.`,`The recommended line lifted win probability from ${wpPlayed}% to ${wpBest}%.`);
 }
 function evalOneMove(h){
   const S=h.snap;
-  const AN_PRM={rand:0,noise:0,jc:.08,jl:.03,jp:1,dm:.01,depth:1,beta:.7,gap:6,hero:1,bo3:1,deepRoll:1};
-  const AN_RP={rand:0,noise:0,jc:.1,jl:.04,jp:.95,dm:.01,depth:1,beta:.45,gap:6,hero:1,bo3:1};
+  const odds=calcDeckOdds(S);
+  const AN_PRM={rand:0,noise:0,jc:.07,jl:.025,jp:1,dm:.01,depth:1,beta:.75,gap:6,hero:1,bo3:1,deepRoll:1};
+  const AN_RP={rand:0,noise:0,jc:.09,jl:.035,jp:.95,dm:.01,depth:1,beta:.5,gap:6,hero:1,bo3:1};
   let all=listC(S,0,AN_PRM).sort((x,y)=>y.v-x.v);
-  const cands=all.slice(0,8);
+  const cands=all.slice(0,9);
   const ensure=a=>{if(!cands.some(c=>sameAct(c.a,a)))cands.push({a,v:0})};
   ensure(null);
   if(canDraw(S,0)&&!lowW(S)&&total(S,0,true)<tg(S))ensure({t:'d'});
   ensure(h.action);
-  const K=isMobilePerf()?125:200;
-  const sums=cands.map(()=>0);
+  const piOrig=cands.findIndex(c=>sameAct(c.a,h.action));
+  const K1=48,K2=isMobilePerf()?92:192;
+  const Ktot=K1+K2;
+  const sums=cands.map(()=>0),cnts=cands.map(()=>0),alive=cands.map(()=>true);
   const matchPoint=S.rounds>=2||(S.pts&&(S.pts[0]>=1.5||S.pts[1]>=1.5));
-  const jCost=matchPoint?0.012:0.036;
-  for(let k=0;k<K;k++){
+  const jCost=matchPoint?0.012:0.034;
+  for(let k=0;k<Ktot;k++){
     const W=worldForPlayer(S,k);
     for(let i=0;i<cands.length;i++){
+      if(!alive[i])continue;
       const T=clone(W);
       const j0=[jCnt(T,0),jCnt(T,1)];
       let r=0;
       try{r=rollout(T,0,cands[i].a,AN_RP)}catch(e){r=0}
       sums[i]+=r-jCost*((jCnt(T,0)-j0[0])-0.5*(jCnt(T,1)-j0[1]));
+      cnts[i]++;
+    }
+    // Successive Halving: ilk 48 katmanlı dünyadan sonra açıkça zayıf adayları ele, bütçeyi en yakın 4 adaya + oynanan hamleye yoğunlaştır
+    if(k===K1-1&&cands.length>4){
+      const means=cands.map((_,i)=>sums[i]/Math.max(1,cnts[i]));
+      const bestM=Math.max(...means);
+      const ord=cands.map((_,i)=>i).sort((a,b)=>means[b]-means[a]);
+      const keep=new Set(ord.slice(0,4));
+      if(piOrig>=0)keep.add(piOrig);
+      for(let i=0;i<cands.length;i++){
+        if(!keep.has(i)&&means[i]<bestM-0.32)alive[i]=false;
+      }
     }
   }
-  const evs=sums.map(s=>s/K);
-  let bi=0,si=-1;
-  for(let i=1;i<evs.length;i++){if(evs[i]>evs[bi]+1e-6)bi=i}
-  for(let i=0;i<evs.length;i++){if(i!==bi&&(si<0||evs[i]>evs[si]))si=i}
-  let pi=cands.findIndex(c=>sameAct(c.a,h.action));
-  if(pi<0)pi=0;
+  const evs=cands.map((_,i)=>sums[i]/Math.max(1,cnts[i]));
+  const ordAll=cands.map((_,i)=>i).sort((a,b)=>evs[b]-evs[a]);
+  const bi=ordAll[0],si=ordAll.length>1?ordAll[1]:-1;
+  const pi=piOrig>=0?piOrig:0;
   const toWp=v=>Math.max(0,Math.min(100,Math.round(((Math.max(-1,Math.min(1,v))+1)/2)*100)));
   const wpBest=toWp(evs[bi]),wpPlayed=toWp(evs[pi]);
   const wpSecond=si>=0?toWp(evs[si]):wpBest;
@@ -4439,9 +4477,18 @@ function evalOneMove(h){
   const brilliant=isSame&&cands.length>=2&&(wpBest-wpSecond>=12)&&!!(cands[bi].a&&(cands[bi].a.t==='j'||cands[bi].a.t==='d'));
   const grade=classifyMove(loss,isSame,brilliant);
   const acc=100*Math.exp(-0.032*loss);
-  const reason=isSame?'' : explainMove(S,h.action,cands[bi].a,loss);
+  const reason=isSame?'':explainMoveV3(S,h.action,cands[bi].a,loss,odds,wpBest,wpPlayed);
+  const top3=ordAll.slice(0,3).map(idx=>({
+    label:fmtAct(cands[idx].a,S),
+    wp:toWp(evs[idx]),
+    diff:Math.max(0,wpBest-toWp(evs[idx])),
+    isPlayed:idx===pi,
+    isBest:idx===bi
+  }));
   return {
     ...h,
+    odds,
+    top3,
     wpPlayed,
     wpBest,
     loss,
@@ -4452,24 +4499,64 @@ function evalOneMove(h){
     isSame
   };
 }
-function buildWinGraphSvg(results){
+function computeMatchStats(results){
+  const n=Math.max(1,results.length);
+  const avgAcc=Math.round(results.reduce((a,r)=>a+r.acc,0)/n);
+  const avgLoss=results.reduce((a,r)=>a+r.loss,0)/n;
+  const cnt={brill:0,best:0,good:0,inacc:0,mistake:0,blunder:0};
+  results.forEach(r=>{if(cnt[r.grade.cls]!=null)cnt[r.grade.cls]++});
+  // Tahmini NecroElo (900 - 2550)
+  const rawElo=920+avgAcc*14.8+cnt.brill*45-cnt.blunder*65-cnt.mistake*22;
+  const elo=Math.max(850,Math.min(2600,Math.round(rawElo/10)*10));
+  const rank=avgAcc>=93?{g:'S+',t:tr('Efsane','Grandmaster'),c:'brill'}:avgAcc>=85?{g:'A',t:tr('Usta','Master'),c:'best'}:avgAcc>=75?{g:'B',t:tr('İyi','Strong'),c:'good'}:avgAcc>=62?{g:'C',t:tr('Orta','Solid'),c:'inacc'}:{g:'D',t:tr('Gelişmeli','Needs Work'),c:'blunder'};
+  const avgOf=arr=>arr.length?Math.round(arr.reduce((a,r)=>a+r.acc,0)/arr.length):null;
+  const skills=[
+    {name:tr('Kart Çekme','Card Drawing'),val:avgOf(results.filter(r=>r.kind==='draw')),cnt:results.filter(r=>r.kind==='draw').length},
+    {name:tr('Pas Zamanlaması','Stand / Pass'),val:avgOf(results.filter(r=>r.kind==='pass')),cnt:results.filter(r=>r.kind==='pass').length},
+    {name:tr('Joker Stratejisi','Joker Play'),val:avgOf(results.filter(r=>r.kind==='joker')),cnt:results.filter(r=>r.kind==='joker').length},
+    {name:tr('Kritik Anlar','Clutch Moments'),val:avgOf(results.filter(r=>r.matchPoint)),cnt:results.filter(r=>r.matchPoint).length}
+  ];
+  const duelMap=new Map();
+  results.forEach(r=>{
+    if(!duelMap.has(r.duel))duelMap.set(r.duel,[]);
+    duelMap.get(r.duel).push(r);
+  });
+  const duels=[...duelMap.entries()].map(([d,arr])=>({duel:d,acc:avgOf(arr),moves:arr.length}));
+  // Kırılma Anı (en büyük EV kaybı) & En Parlak Hamle
+  let worstIdx=-1,bestIdx=-1;
+  results.forEach((r,i)=>{
+    if(r.loss>0&&(worstIdx<0||r.loss>results[worstIdx].loss))worstIdx=i;
+    if(bestIdx<0||(r.grade.cls==='brill'&&results[bestIdx].grade.cls!=='brill')||(r.grade.cls===results[bestIdx].grade.cls&&r.wpPlayed>results[bestIdx].wpPlayed))bestIdx=i;
+  });
+  return {avgAcc,avgLoss:avgLoss.toFixed(1),elo,rank,cnt,skills,duels,worstIdx,bestIdx};
+}
+function buildWinGraphSvg(results,selectedIdx){
   if(!results.length)return '';
-  const W=460,H=76,padX=14,padY=10;
+  const W=460,H=78,padX=14,padY=10;
   const n=results.length;
   const xOf=i=>n===1?W/2:padX+(i/(n-1))*(W-padX*2);
   const yOf=wp=>padY+((100-wp)/100)*(H-padY*2);
   const pts=results.map((r,i)=>`${xOf(i).toFixed(1)},${yOf(r.wpPlayed).toFixed(1)}`).join(' ');
   const area=`${xOf(0).toFixed(1)},${H-padY} ${pts} ${xOf(n-1).toFixed(1)},${H-padY}`;
   const colMap={brill:'#38bdf8',best:'#fde68a',good:'#4ade80',inacc:'#fbbf24',mistake:'#fb923c',blunder:'#f87171'};
+  let dividers='';
+  for(let i=1;i<n;i++){
+    if(results[i].duel!==results[i-1].duel){
+      const mx=((xOf(i-1)+xOf(i))/2).toFixed(1);
+      dividers+=`<line x1="${mx}" y1="${padY}" x2="${mx}" y2="${H-padY}" stroke="rgba(212,168,85,0.28)" stroke-dasharray="2 3" stroke-width="1"/>`;
+    }
+  }
   const dots=results.map((r,i)=>{
     const c=colMap[r.grade.cls]||'#fde68a';
-    const rad=(r.grade.cls==='blunder'||r.grade.cls==='brill')?4.2:2.8;
-    return `<circle cx="${xOf(i).toFixed(1)}" cy="${yOf(r.wpPlayed).toFixed(1)}" r="${rad}" fill="${c}" stroke="#0b0809" stroke-width="1.2"/>`;
+    const isSel=i===selectedIdx;
+    const rad=isSel?5.5:(r.grade.cls==='blunder'||r.grade.cls==='brill')?4.2:3.1;
+    return `<circle class="an-dot" data-mi="${i}" cx="${xOf(i).toFixed(1)}" cy="${yOf(r.wpPlayed).toFixed(1)}" r="${rad}" fill="${c}" stroke="${isSel?'#ffffff':'#0b0809'}" stroke-width="${isSel?2:1.2}"><title>#${i+1}: ${r.label} (%${r.wpPlayed})</title></circle>`;
   }).join('');
   return `<div class="an-graph-wrap">
-    <div class="an-graph-lbl"><span>${tr('Kazanma Olasılığı Eğrisi','Win Probability Curve')}</span><b>50%</b></div>
+    <div class="an-graph-lbl"><span>${tr('Kazanma Olasılığı Eğrisi (Hamleye tıkla)','Win Probability Curve (Click any move)')}</span><b>%50</b></div>
     <svg class="an-graph" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
       <defs><linearGradient id="anFillG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fde68a" stop-opacity="0.34"/><stop offset="100%" stop-color="#fde68a" stop-opacity="0.02"/></linearGradient></defs>
+      ${dividers}
       <line x1="${padX}" y1="${(H/2).toFixed(1)}" x2="${W-padX}" y2="${(H/2).toFixed(1)}" stroke="rgba(255,255,255,0.18)" stroke-dasharray="4 4" stroke-width="1"/>
       <polygon points="${area}" fill="url(#anFillG)"/>
       <polyline points="${pts}" fill="none" stroke="#f5d07a" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
@@ -4482,12 +4569,12 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
   if(!mb||!LAST_MATCH_HIST.length)return;
   const hist=[...LAST_MATCH_HIST];
   const results=[];
-  let idx=0,cancelled=false,anFilter='all';
-  mb.classList.remove('end-mode');
+  let idx=0,cancelled=false,anView='moves',anFilter='all',openMoveIdx=-1;
+  mb.classList.remove('end-mode','set-mode');
   mb.classList.add('an-mode');
   mb.innerHTML=`<div class="an-loading">
-    <h3>${tr('NecroEngine v2 Maç Analizi','NecroEngine v2 Match Analysis')}</h3>
-    <p class="an-sub">${tr('Hamlelerin Bayesian olasılık dünyalarında simüle ediliyor…','Simulating your moves across Bayesian probability worlds…')}</p>
+    <h3>${tr('NecroEngine v3 Maç Analizi','NecroEngine v3 Match Analysis')}</h3>
+    <p class="an-sub">${tr('Multi-PV Bayesian olasılık dünyaları ve kombo hatları taranıyor…','Scanning Multi-PV Bayesian worlds and tactical lines…')}</p>
     <div class="an-pbar"><i id="an-fill"></i></div>
     <div id="an-stat" class="an-stat">0 / ${hist.length}</div>
   </div>`;
@@ -4507,63 +4594,136 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
       if(mxBtn){mxBtn.style.visibility='';row.appendChild(mxBtn)}
     }
   };
-  const renderReport=()=>{
-    const avgAcc=Math.round(results.reduce((a,r)=>a+r.acc,0)/Math.max(1,results.length));
-    const avgLoss=(results.reduce((a,r)=>a+r.loss,0)/Math.max(1,results.length)).toFixed(1);
-    const rank=avgAcc>=93?{g:'S+',t:tr('Efsane','Grandmaster'),c:'brill'}:avgAcc>=85?{g:'A',t:tr('Usta','Master'),c:'best'}:avgAcc>=75?{g:'B',t:tr('İyi','Strong'),c:'good'}:avgAcc>=62?{g:'C',t:tr('Orta','Solid'),c:'inacc'}:{g:'D',t:tr('Gelişmeli','Needs Work'),c:'blunder'};
-    const cnt={brill:0,best:0,good:0,inacc:0,mistake:0,blunder:0};
-    results.forEach(r=>{if(cnt[r.grade.cls]!=null)cnt[r.grade.cls]++});
-    const shown=results.map((r,i)=>({r,i})).filter(({r})=>{
-      if(anFilter==='crit')return r.grade.cls==='blunder'||r.grade.cls==='mistake'||r.grade.cls==='inacc';
-      if(anFilter==='best')return r.grade.cls==='brill'||r.grade.cls==='best';
-      return true;
-    });
-    const rowsHtml=shown.length?shown.map(({r,i})=>{
-      const ctx=`D${r.duel}·T${r.round} · ${tr('Toplam','Tot')} ${r.myTot}/${r.low?tr('En Az','Low'):r.tg}`;
-      const rec=r.isSame||r.loss<=3
-        ?`<span class="an-ok">${r.grade.cls==='brill'?tr('Harika hamle! Tek kazandıran yol.','Brilliant move! Unique winning line.'):tr('En iyi hamle!','Best move!')}</span>`
-        :`<span class="an-rec">${tr('Öneri','Best')}: <b>${r.bestLabel}</b> <i>(%${r.wpBest})</i> · −%${r.loss}</span>${r.reason?`<div class="an-why">${r.reason}</div>`:''}`;
-      return `<div class="an-row ${r.grade.cls}">
-        <div class="an-badge ${r.grade.cls}">${r.grade.sym}</div>
-        <div class="an-body">
-          <div class="an-top"><span class="an-ctx">#${i+1} · ${ctx}</span><span class="an-gname ${r.grade.cls}">${r.grade.name}</span></div>
-          <div class="an-move"><b>${r.label}</b> <i>(%${r.wpPlayed})</i></div>
-          <div class="an-bot">${rec}</div>
+  const renderReport=(scrollToIdx)=>{
+    const st=computeMatchStats(results);
+    const cnt=st.cnt;
+    let bodyContent='';
+    if(anView==='summary'){
+      const kmWorst=st.worstIdx>=0?results[st.worstIdx]:null;
+      const kmBest=st.bestIdx>=0?results[st.bestIdx]:null;
+      const skillsHtml=st.skills.map(sk=>{
+        const v=sk.val;
+        const barCol=v==null?'#64748b':v>=85?'#4ade80':v>=68?'#fde68a':'#fb923c';
+        return `<div class="an-sk-row">
+          <div class="an-sk-top"><span>${sk.name}</span><b>${v==null?'—':`%${v}`}</b></div>
+          <div class="an-sk-bar"><i style="width:${v||0}%;background:${barCol}"></i></div>
+        </div>`;
+      }).join('');
+      const duelsHtml=st.duels.map(d=>`<div class="an-duel-chip"><span>${tr('Düello','Duel')} ${d.duel}</span><b>%${d.acc}</b><small>${d.moves} ${tr('hamle','moves')}</small></div>`).join('');
+      bodyContent=`<div class="an-summary-scroll">
+        <div class="an-sec-lbl">${tr('Yetenek Karnesi','Skill Breakdown')}</div>
+        <div class="an-skills">${skillsHtml}</div>
+        <div class="an-sec-lbl">${tr('Kırılma Anları','Key Moments')}</div>
+        <div class="an-km-grid">
+          ${kmBest?`<button type="button" class="an-km-card good" data-jump="${st.bestIdx}"><span>${tr('En İyi Hamle','Top Move')} · #${st.bestIdx+1}</span><b>${kmBest.label}</b><small>%${kmBest.wpPlayed} ${tr('kazanma','win')}</small></button>`:''}
+          ${kmWorst?`<button type="button" class="an-km-card bad" data-jump="${st.worstIdx}"><span>${tr('En Büyük Kayıp','Biggest Slip')} · #${st.worstIdx+1}</span><b>${kmWorst.label}</b><small>−%${kmWorst.loss} → ${kmWorst.bestLabel}</small></button>`:`<div class="an-km-card good"><span>${tr('Kusursuz Maç','Flawless Match')}</span><b>${tr('Büyük hata yok!','No major slips!')}</b><small>${tr('Harika disiplin','Great discipline')}</small></div>`}
         </div>
+        <div class="an-sec-lbl">${tr('Düello Bazlı Doğruluk','Duel Accuracy')}</div>
+        <div class="an-duels">${duelsHtml}</div>
       </div>`;
-    }).join(''):`<div class="an-empty">${tr('Bu filtrede hamle yok.','No moves in this filter.')}</div>`;
+    }else{
+      const shown=results.map((r,i)=>({r,i})).filter(({r})=>{
+        if(anFilter==='crit')return r.grade.cls==='blunder'||r.grade.cls==='mistake'||r.grade.cls==='inacc';
+        if(anFilter==='best')return r.grade.cls==='brill'||r.grade.cls==='best';
+        return true;
+      });
+      const rowsHtml=shown.length?shown.map(({r,i})=>{
+        const isOpen=i===openMoveIdx;
+        const ctx=`D${r.duel}·T${r.round} · ${tr('Toplam','Tot')} ${r.myTot}/${r.low?tr('En Az','Low'):r.tg}`;
+        const rec=r.isSame||r.loss<=3
+          ?`<span class="an-ok">${r.grade.cls==='brill'?tr('Harika hamle! Tek kazandıran yol.','Brilliant move! Unique winning line.'):tr('En iyi hamle!','Best move!')}</span>`
+          :`<span class="an-rec">${tr('Öneri','Best')}: <b>${r.bestLabel}</b> <i>(%${r.wpBest})</i> · −%${r.loss}</span>`;
+        let detailHtml='';
+        if(isOpen){
+          const pvHtml=(r.top3||[]).map((pv,k)=>`<div class="an-pv${pv.isPlayed?' played':''}${pv.isBest?' best':''}">
+            <span class="an-pv-rk">#${k+1}</span>
+            <span class="an-pv-lbl">${pv.label}${pv.isPlayed?` <em>(${tr('Sen','You')})</em>`:''}</span>
+            <div class="an-pv-bar"><i style="width:${pv.wp}%"></i></div>
+            <b class="an-pv-wp">%${pv.wp}</b>
+          </div>`).join('');
+          const myCardsTxt=[...(r.myOpen||[]),...(r.myClosed||[]).map(x=>`[${x}]`)].join(', ')||'—';
+          const oppCardsTxt=(r.oppOpenCards||[]).join(', ')||'—';
+          const oddsTxt=r.low
+            ?tr('En az kazanır modu aktif','Lowest-wins mode active')
+            :tr(`Patlama riski: %${r.odds.bustPct} · Güvenli çekim: %${r.odds.safePct}`,`Bust risk: ${r.odds.bustPct}% · Safe draw: ${r.odds.safePct}%`);
+          detailHtml=`<div class="an-detail">
+            <div class="an-pos-bar">
+              <span>${tr('Kartların','Your cards')}: <b>${myCardsTxt}</b></span>
+              <span>${tr('Rakip açık','Opp open')}: <b>${oppCardsTxt}</b></span>
+            </div>
+            <div class="an-odds-line">${oddsTxt}</div>
+            <div class="an-pv-title">${tr('Motorun En İyi 3 Hattı (Multi-PV)','Top 3 Engine Lines (Multi-PV)')}</div>
+            <div class="an-pvs">${pvHtml}</div>
+            ${r.reason?`<div class="an-why">${r.reason}</div>`:''}
+          </div>`;
+        }
+        return `<div class="an-row ${r.grade.cls}${isOpen?' open':''}" data-mi="${i}">
+          <div class="an-row-main">
+            <div class="an-badge ${r.grade.cls}">${r.grade.sym}</div>
+            <div class="an-body">
+              <div class="an-top"><span class="an-ctx">#${i+1} · ${ctx}</span><span class="an-gname ${r.grade.cls}">${r.grade.name}</span></div>
+              <div class="an-move"><b>${r.label}</b> <i>(%${r.wpPlayed})</i></div>
+              <div class="an-bot">${rec}</div>
+            </div>
+            <span class="an-chev">${isOpen?'▾':'▸'}</span>
+          </div>
+          ${detailHtml}
+        </div>`;
+      }).join(''):`<div class="an-empty">${tr('Bu filtrede hamle yok.','No moves in this filter.')}</div>`;
+      bodyContent=`<div class="an-filters">
+        <button type="button" class="an-flt${anFilter==='all'?' act':''}" data-af="all">${tr('Tümü','All')} (${results.length})</button>
+        <button type="button" class="an-flt${anFilter==='crit'?' act':''}" data-af="crit">${tr('Hatalar','Mistakes')} (${cnt.inacc+cnt.mistake+cnt.blunder})</button>
+        <button type="button" class="an-flt${anFilter==='best'?' act':''}" data-af="best">${tr('En İyiler','Best')} (${cnt.brill+cnt.best})</button>
+      </div>
+      <div class="an-list">${rowsHtml}</div>`;
+    }
     mb.innerHTML=`<div class="an-report">
       <div class="an-hdr">
         <div>
-          <h3>${tr('NecroEngine Analizi','NecroEngine Analysis')}</h3>
-          <div class="an-meta">${tr('Ort. Kayıp','Avg Loss')}: <b>−%${avgLoss}</b> · ${results.length} ${tr('hamle','moves')}</div>
+          <h3>${tr('NecroEngine v3','NecroEngine v3')}</h3>
+          <div class="an-meta">${tr('Tahmini ELO','Est. ELO')}: <b>${st.elo}</b> · ${tr('Ort. Kayıp','Avg Loss')}: <b>−%${st.avgLoss}</b></div>
         </div>
         <div class="an-hdr-r">
-          <div class="an-rank-box ${rank.c}"><b>${rank.g}</b><span>${rank.t}</span></div>
-          <div class="an-acc-box"><span>${tr('Doğruluk','Accuracy')}</span><b>%${avgAcc}</b></div>
+          <div class="an-rank-box ${st.rank.c}"><b>${st.rank.g}</b><span>${st.rank.t}</span></div>
+          <div class="an-acc-box"><span>${tr('Doğruluk','Accuracy')}</span><b>%${st.avgAcc}</b></div>
         </div>
       </div>
-      ${buildWinGraphSvg(results)}
-      <div class="an-pills">
-        ${cnt.brill?`<span class="an-p brill">!! ${cnt.brill}</span>`:''}
-        <span class="an-p best">★ ${cnt.best}</span>
-        <span class="an-p good">✓ ${cnt.good}</span>
-        <span class="an-p inacc">?! ${cnt.inacc}</span>
-        <span class="an-p mistake">? ${cnt.mistake}</span>
-        <span class="an-p blunder">?? ${cnt.blunder}</span>
+      ${buildWinGraphSvg(results,openMoveIdx)}
+      <div class="an-view-tabs">
+        <button type="button" class="an-vtab${anView==='moves'?' act':''}" data-av="moves">${tr('Hamleler & Multi-PV','Moves & Multi-PV')}</button>
+        <button type="button" class="an-vtab${anView==='summary'?' act':''}" data-av="summary">${tr('Özet Karne','Match Report')}</button>
       </div>
-      <div class="an-filters">
-        <button type="button" class="an-flt${anFilter==='all'?' act':''}" data-af="all">${tr('Tümü','All')} (${results.length})</button>
-        <button type="button" class="an-flt${anFilter==='crit'?' act':''}" data-af="crit">${tr('Kritik Hatalar','Mistakes')} (${cnt.inacc+cnt.mistake+cnt.blunder})</button>
-        <button type="button" class="an-flt${anFilter==='best'?' act':''}" data-af="best">${tr('En İyiler','Best')} (${cnt.brill+cnt.best})</button>
-      </div>
-      <div class="an-list">${rowsHtml}</div>
+      ${bodyContent}
       <div class="row an-acts">
         <button id="an-back" class="btn alt sm">${tr('← Sonuçlara Dön','← Back to Results')}</button>
         <button id="an-menu" class="btn sm">${tr('Ana Menü','Main Menu')}</button>
       </div>
     </div>`;
+    mb.querySelectorAll('.an-vtab').forEach(b=>b.onclick=()=>{snd('click');anView=b.dataset.av;renderReport()});
     mb.querySelectorAll('.an-flt').forEach(b=>b.onclick=()=>{snd('click');anFilter=b.dataset.af;renderReport()});
+    mb.querySelectorAll('.an-row-main').forEach(el=>el.onclick=()=>{
+      const rEl=el.closest('.an-row');if(!rEl)return;
+      const mi=+rEl.dataset.mi;
+      snd('click');
+      openMoveIdx=(openMoveIdx===mi)?-1:mi;
+      renderReport();
+    });
+    mb.querySelectorAll('.an-dot').forEach(dot=>dot.onclick=()=>{
+      const mi=+dot.dataset.mi;
+      snd('click');
+      anView='moves';anFilter='all';openMoveIdx=mi;
+      renderReport(mi);
+    });
+    mb.querySelectorAll('[data-jump]').forEach(b=>b.onclick=()=>{
+      const mi=+b.dataset.jump;
+      snd('click');
+      anView='moves';anFilter='all';openMoveIdx=mi;
+      renderReport(mi);
+    });
+    if(scrollToIdx!=null&&scrollToIdx>=0){
+      const target=mb.querySelector(`.an-row[data-mi="${scrollToIdx}"]`);
+      if(target&&target.scrollIntoView)target.scrollIntoView({block:'center',behavior:'smooth'});
+    }
     const bk=$('#an-back'),mn=$('#an-menu');
     if(bk)bk.onclick=()=>{snd('click');restoreEnd()};
     if(mn)mn.onclick=()=>{snd('click');exitGame()};
