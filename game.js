@@ -218,7 +218,12 @@ function hiLoad(id,cb){
   }
   if(cb){if(i.complete&&i.naturalWidth)cb(i.src);else i.addEventListener('load',()=>cb(i.src),{once:true})}}
 let hiPre=false;
-function hiPreload(){if(hiPre)return;hiPre=true;range(24).forEach((id,n)=>setTimeout(()=>hiLoad(id),200+n*80))} // tüm HD jokerler arka planda önceden yüklenir, tıklayınca anında hazır olur
+function hiPreload(){
+  if(hiPre)return;
+  hiPre=true;
+  const baseDelay=entering?1700:350;
+  range(24).forEach((id,n)=>setTimeout(()=>hiLoad(id),baseDelay+n*90));
+} // tüm HD jokerler geçiş sonrasında arka planda yumuşakça yüklenir
 function hi(el,id){if(!el)return;if(id===25){if(IMG.j&&IMG.j[25])el.src=IMG.j[25];return}const fb=IMG.j[id];el.onerror=()=>{el.onerror=null;if(fb)el.src=fb}; // HD açılmazsa gömülü görsele dön
   hiLoad(id,u=>{if(el.isConnected)el.src=u})}
 function tone(f,d,ty='sine',v=.12,w=0,sl=0){const a=ac(),t=a.currentTime+w,o=a.createOscillator(),g=a.createGain();o.type=ty;o.frequency.setValueAtTime(f,t);if(sl)o.frequency.linearRampToValueAtTime(Math.max(30,f+sl),t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(SG);o.start(t);o.stop(t+d)}
@@ -1537,20 +1542,33 @@ function impSave(html,cont,msg){ // BİLİNMEYEN ölecekken: zar düşer, sahne 
     if(d.classList.contains('finished')){clearInterval(w);setTimeout(()=>cutscene(msg,()=>{$('#mb').classList.remove('rig');cont()}),1000)}},120);
 }
 let entering=false;
-function veil(ms=3400){const v=document.createElement('div');v.className='veil';v.style.animationDuration=ms+'ms';v.innerHTML=`<img alt="" src="limbi_favicon.png?v=limbi4"><b>limbigames</b>`;document.body.appendChild(v);setTimeout(()=>v.remove(),ms+150)}
+function veil(ms=1900){
+  const v=document.createElement('div');
+  v.className='veil';
+  v.style.animationDuration=ms+'ms';
+  v.innerHTML=`<img alt="" src="limbi_favicon.png?v=limbi4" style="animation-duration:${ms}ms"><b>limbigames</b>`;
+  document.body.appendChild(v);
+  setTimeout(()=>v.remove(),ms+120);
+}
 function enter(fn){
   if(entering)return;
   entering=true;
-  const dur=3400;
+  const dur=1900;
   veil(dur);
   setMusic('game');
   setTimeout(()=>{
     $('#menu').hidden=true;
     fn();
     const mn=document.querySelector('main');
-    if(mn){mn.classList.remove('arena-enter');void mn.offsetWidth;mn.classList.add('arena-enter')}
-  },1050);
-  setTimeout(()=>{entering=false},dur-400);
+    if(mn){
+      mn.classList.remove('arena-enter');
+      requestAnimationFrame(()=>{
+        mn.classList.add('arena-enter');
+        setTimeout(()=>mn.classList.remove('arena-enter'),1050);
+      });
+    }
+  },540);
+  setTimeout(()=>{entering=false},dur-220);
 }
 let MY_HERO='c',OPP_HERO='n';
 const HEROES_TR=[
@@ -3847,7 +3865,7 @@ function createSmoothDragLoop(onFrame){
   seedParticles();
 
   function resize(){
-    DPR=isMobilePerf()?1:Math.min(window.devicePixelRatio||1,2);
+    DPR=isMobilePerf()?1:Math.min(window.devicePixelRatio||1,1.25);
     W=window.innerWidth;
     H=window.innerHeight;
     cvs.width=Math.round(W*DPR);
@@ -3861,8 +3879,6 @@ function createSmoothDragLoop(onFrame){
     ctx.save();
     ctx.globalAlpha=alpha;
     ctx.strokeStyle=color;
-    ctx.shadowColor=glowColor;
-    ctx.shadowBlur=14;
     ctx.lineWidth=width;
     ctx.lineCap='round';
     ctx.lineJoin='round';
@@ -3878,11 +3894,12 @@ function createSmoothDragLoop(onFrame){
   let lastRender=0;
   function render(now){
     requestAnimationFrame(render);
+    if(entering||document.hidden)return;
     const mob=isMobilePerf();
     const mn=document.getElementById('menu');
     const menuOpen=mn&&!mn.hidden;
     const rm=document.body.classList.contains('rm');
-    if(!menuOpen&&(rm?now-lastRender>=400:(!mob||now-lastRender>=36))){
+    if(!menuOpen&&(rm?now-lastRender>=400:now-lastRender>=(mob?40:32))){
       lastRender=now;
       const t=rm?0:now*0.001;
       ctx.clearRect(0,0,W,H);
@@ -3977,7 +3994,7 @@ function createSmoothDragLoop(onFrame){
   }
 
   function resize(){
-    DPR=isMobilePerf()?1:Math.min(window.devicePixelRatio||1,2);
+    DPR=isMobilePerf()?1:Math.min(window.devicePixelRatio||1,1.25);
     W=window.innerWidth;
     H=window.innerHeight;
     cvs.width=Math.round(W*DPR);
@@ -3991,10 +4008,11 @@ function createSmoothDragLoop(onFrame){
   let lastMenuDraw=0;
   function render(now){
     requestAnimationFrame(render);
+    if(entering||document.hidden)return;
     const menuEl=document.getElementById('menu');
     const rm=document.body.classList.contains('rm');
-    // Hareketi azalt: kül/kıvılcım yok, titreşen ışık yok; sahne seyrek ve sabit çizilir
-    if(menuEl&&!menuEl.hidden&&(!rm||now-lastMenuDraw>=400)){
+    // Hareketi azalt: kül/kıvılcım yok, titreşen ışık yok; normalde akıcı 30fps GPU tasarrufu
+    if(menuEl&&!menuEl.hidden&&(rm?now-lastMenuDraw>=400:now-lastMenuDraw>=(isMobilePerf()?42:32))){
       lastMenuDraw=now;
       const t=rm?0:now*0.001;
       ctx.clearRect(0,0,W,H);
@@ -4022,20 +4040,21 @@ function createSmoothDragLoop(onFrame){
         ctx.fillStyle=bkGrad;
         ctx.fill();
 
-        // Kitap kapağına parlayan mor/altın rün amblemi işle
+        // Kitap kapağına parlayan mor/altın rün amblemi işle (shadowBlur yerine hafif çift katman)
         const bcx = dx + dw*0.426, bcy = dy + dh*0.688;
         ctx.translate(bcx, bcy);
         ctx.rotate(-0.18);
         ctx.scale(1, 0.72);
         const rPulse = 0.65 + 0.35*Math.sin(t*2.4);
-        ctx.strokeStyle = `rgba(216, 150, 255, ${0.65*rPulse})`;
-        ctx.shadowColor = '#c084fc';
-        ctx.shadowBlur = 12;
-        ctx.lineWidth = 1.8;
+        ctx.strokeStyle = `rgba(192, 132, 252, ${0.26*rPulse})`;
+        ctx.lineWidth = 5;
         ctx.beginPath();
         ctx.arc(0, 0, dw*0.024, 0, Math.PI*2);
         ctx.stroke();
-        ctx.font = `700 ${Math.round(dw*0.022)}px "Cinzel Decorative", serif`;
+        ctx.strokeStyle = `rgba(216, 150, 255, ${0.65*rPulse})`;
+        ctx.lineWidth = 1.8;
+        ctx.stroke();
+        ctx.font = `700 ${Math.round(dw*0.022)}px 'Alegreya', serif`;
         ctx.fillStyle = `rgba(235, 195, 255, ${0.8*rPulse})`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -4426,7 +4445,7 @@ function startTutorial(){
   sayT='';sayAt=0;botGen++;thinkOn=false;
   tutStep=0;
   R();
-  const tutDelay=entering?1900:380;
+  const tutDelay=entering?1400:320;
   setTimeout(()=>{
     if(MODE==='tutorial'&&tutStep===0)tutRender();
   },tutDelay);
@@ -5395,6 +5414,6 @@ function openAuthModal(initialTab='login',isUpgrade=false){
       if(!USER_ACC&&menu&&!menu.hidden&&!lock){
         openAuthModal('login',false);
       }
-    },hasSplash?2600:250);
+    },hasSplash?1850:220);
   }
 })();
