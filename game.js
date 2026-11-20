@@ -417,8 +417,8 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı animas
 }
 
 /* ---------- MOTOR ---------- */
-const DUEL_CLOCK_INIT=44; // Her sırası gelen oyuncunun 44 saniyesi vardır
-const ONLINE_CLOCK_INIT=44;
+const DUEL_CLOCK_INIT=33; // Her sırası gelen oyuncunun 33 saniyesi vardır
+const ONLINE_CLOCK_INIT=33;
 const initClockSec=()=>((MODE==='host'||MODE==='guest'||MODE==='spectator')?ONLINE_CLOCK_INIT:DUEL_CLOCK_INIT);
 const GRACE_INIT=5;       // İlk düello ve geçişlerde jokerlere bakmak için 5 saniye hazırlık süresi
 function newBO3(S){
@@ -1962,7 +1962,7 @@ function guide(){
   <div class="gd-sec">
     <h4 class="gd-h">3. On Your Turn</h4>
     <ul class="gd-ul">
-      <li><b>Chess Clock (44s):</b> Your clock ticks only on your turn (with a 5s grace period at the start of a round). Running out of time passes your turn.</li>
+      <li><b>Chess Clock (33s):</b> Your clock ticks only on your turn (with a 5s grace period at the start of a round). Running out of time passes your turn.</li>
       <li><b>Draw a Card:</b> Tap or drag from the deck to draw as many open number cards as you want.</li>
       <li><b>Play a Joker:</b> You may play up to <b>2 Jokers</b> per round (the Thief Joker ignores this limit). Drag a Joker onto the table or tap it and press <b>Use</b>.</li>
       <li><b>Hero Power:</b> If your hero has an active power, tap the emblem next to your portrait on your turn. Passive powers trigger automatically.</li>
@@ -2010,7 +2010,7 @@ function guide(){
   <div class="gd-sec">
     <h4 class="gd-h">3. Sıran Geldiğinde</h4>
     <ul class="gd-ul">
-      <li><b>Satranç Saati (44 sn):</b> Sıra sendeyken yalnızca senin saatin akar (ilk düello ve geçişlerde 5 sn hazırlık süresi vardır). Süre biterse turu kaybedersin.</li>
+      <li><b>Satranç Saati (33 sn):</b> Sıra sendeyken yalnızca senin saatin akar (ilk düello ve geçişlerde 5 sn hazırlık süresi vardır). Süre biterse turu kaybedersin.</li>
       <li><b>Kart Çek:</b> Destedeki kartlara dokunarak veya sürükleyerek istediğin kadar açık kart çekebilirsin.</li>
       <li><b>Joker Oyna:</b> Bir turda en fazla <b>2 joker</b> oynayabilirsin (Hırsız jokeri bu limitten bağımsızdır). Kartı sürükleyip masaya bırakabilir veya tıklayıp <b>Oyna</b> diyebilirsin.</li>
       <li><b>Kahraman Gücü:</b> Aktif güce sahip bir kahramanın varsa, sıra sendeyken portre yanındaki güç düğmesinden kullanabilirsin. Pasif güçler otomatik çalışır.</li>
