@@ -1026,7 +1026,14 @@ function pass(fromTimeout=false){
 }
 function next(){
   if(MODE=='tutorial'&&G&&G.turn==1&&!lock&&!G.over){setTimeout(()=>{if(MODE=='tutorial'&&G&&G.turn==1&&!lock&&!G.over)pass()},650);return}
-  if(MODE=='bot'&&G.turn==1&&!lock&&!G.over)bot()
+  if(MODE=='bot'&&G&&G.turn==1&&!lock&&!G.over){
+    if(entering){
+      const gRef=G;
+      setTimeout(()=>{if(MODE=='bot'&&G===gRef&&G.turn==1&&!lock&&!G.over)bot()},2200);
+      return;
+    }
+    bot();
+  }
 }
 function M(html,btn,cb,end){lock=true;const mb=$('#mb');mb.classList.remove('end-mode','an-mode','set-mode');mb.innerHTML=html+(btn?`<br><br><button id="mo" class="btn">${btn}</button>`:end?'':`<br><i>${tr('Oda sahibinin devam etmesi bekleniyor…','Waiting for the host to continue…')}</i>`)+(end?`<br><br><button id="mx" class="btn alt">${tr('Ana menüye dön','Return to Main Menu')}</button>`:'');$('#m').hidden=false;
   if(end&&$('#mb .dice'))$('#mx').style.visibility='hidden'; // zar atılmadan sonuç sızmasın
@@ -1922,8 +1929,9 @@ function fly(){ // yeni kartlar desteden teker teker, yumuşak yay çizerek uça
   void d.offsetWidth;
   const rects=ordered.map(el=>el.getBoundingClientRect());
   const isBatch=ordered.length>=2;
-  const stepMs=isBatch?320:0;
-  const baseMs=isBatch?110:0;
+  const stepMs=isBatch?300:0;
+  // Geçiş perdesi (.veil) açıkken kart sesleri/uçuşu beklemede kalsın; önce oyun ekranı gelsin, sonra kartlar dağılsın
+  const baseMs=entering?1150:(isBatch?110:0);
   const pulseDeck=()=>{
     if(!d.isConnected)return;
     d.classList.remove('pull');
