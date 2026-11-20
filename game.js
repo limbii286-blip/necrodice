@@ -592,7 +592,7 @@ function outcHero(S,p){
   }
   if(r!==0){
     const loser=r>0?1-p:p;
-    if(avKey(S,loser)==='e')r*=0.9; // Buz Devi %20 hasar savuşturup berabereye çevirebilir
+    if(avKey(S,loser)==='e')r*=0.91; // Buz Devi %18 hasar savuşturup berabereye çevirebilir
   }
   return r;
 }
@@ -1207,7 +1207,7 @@ function endRound(){
   let r=outc(S,0),tankedSide=-1,vampWinSide=-1;
   if(r!==0){
     const loser=r<0?0:1;
-    if(avKey(S,loser)==='e'&&Math.random()<0.20){
+    if(avKey(S,loser)==='e'&&Math.random()<0.18){
       r=0;tankedSide=loser;
       S.log.push({p:loser,t:'Kadim Direnç! Hasarı savuşturup turu berabereye çevirdi!'});
     }
@@ -1335,7 +1335,7 @@ const HEROES_TR=[
   {id:'n',name:'Kara Şövalye',passive:true,hpName:'Ölüm Fermanı',desc:'Rakibinin attığı her Ölüm Zarı sonucundan 2 çıkar.'},
   {id:'a',name:'Solmuş Kraliçe',hpName:'Yitik Yazgı',desc:'Destenin en üstündeki 2 kartı gizlice incele. Dilersen bu kartların yerlerini değiştir.'},
   {id:'s',name:'Büyücü',passive:true,hpName:'Gölge Hırsızı',desc:'Her düelloya 4. olarak Hırsız Jokeriyle başla.'},
-  {id:'e',name:'Buz Devi',passive:true,hpName:'Kadim Direnç',desc:'Kaybettiğin her turda %20 ihtimalle gelen hasarı tamamen savuşturur ve turu beraberliğe dönüştürür.'},
+  {id:'e',name:'Buz Devi',passive:true,hpName:'Kadim Direnç',desc:'Kaybettiğin her turda %18 ihtimalle gelen hasarı tamamen savuşturur ve turu beraberliğe dönüştürür.'},
   {id:'m',name:'Ölümün Efendisi',passive:true,hpName:'Ölümün Takdiri',desc:'Attığın her Ölüm Zarı sonucuna +2 bonus kazan.'},
   {id:'w',name:'Cadı',hpName:'Kuzgunun Kehaneti',desc:'Rakibinin kapalı sayı kartını gizlice incele.'},
   {id:'l',name:'Kurt Adam',hpName:'Kanlı Dolunay',desc:'Her iki oyuncunun da masadaki rastgele 1 sayı kartını imha et.'},
@@ -1348,7 +1348,7 @@ const HEROES_EN=[
   {id:'n',name:'Dark Knight',passive:true,hpName:'Death Decree',desc:'Subtract 2 from every Death Dice roll made by your opponent.'},
   {id:'a',name:'Withered Queen',hpName:'Lost Fate',desc:'Secretly inspect the top 2 cards of the deck. Swap their order if you wish.'},
   {id:'s',name:'Sorcerer',passive:true,hpName:'Shadow Thief',desc:'Start every duel with the Thief Joker as your 4th card.'},
-  {id:'e',name:'Frost Giant',passive:true,hpName:'Ancient Resilience',desc:'Each time you lose a round, you have a 20% chance to deflect the damage and turn the round into a tie.'},
+  {id:'e',name:'Frost Giant',passive:true,hpName:'Ancient Resilience',desc:'Each time you lose a round, you have an 18% chance to deflect the damage and turn the round into a tie.'},
   {id:'m',name:'Lord of Death',passive:true,hpName:'Death\'s Favor',desc:'Gain a +2 bonus to every Death Dice roll you make.'},
   {id:'w',name:'Witch',hpName:'Raven\'s Prophecy',desc:'Secretly inspect your opponent\'s hidden number card.'},
   {id:'l',name:'Werewolf',hpName:'Blood Full Moon',desc:'Destroy 1 random number card on the table from both players.'},
