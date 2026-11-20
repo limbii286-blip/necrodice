@@ -748,7 +748,7 @@ body:has(#menu:not([hidden])) #fl {
   border-color: #f2d28b;
 }
 
-/* Açılış ve Geçiş Perdesi (#splash, .veil) — GPU Compositor-Only Akıcı Geçiş */
+/* Açılış ve Geçiş Perdesi (#splash, .veil) — Saf GPU Opacity Geçişi */
 #splash, .veil {
   position: fixed;
   inset: 0;
@@ -760,27 +760,25 @@ body:has(#menu:not([hidden])) #fl {
   justify-content: center;
   gap: 18px;
   contain: strict;
-  transform: translateZ(0);
+  transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   will-change: opacity;
 }
 #splash {
-  animation: splashSmooth 2.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: splashSmooth 2.1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 .veil {
-  animation: veilCinematic 1.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: veilCinematic 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 @keyframes splashSmooth {
-  0%, 54% { opacity: 1; visibility: visible; pointer-events: auto; }
-  78%     { opacity: 0.45; pointer-events: none; }
-  100%    { opacity: 0; visibility: hidden; pointer-events: none; }
+  0%, 58% { opacity: 1; pointer-events: auto; }
+  100%    { opacity: 0; pointer-events: none; }
 }
 @keyframes veilCinematic {
-  0%      { opacity: 0; visibility: visible; pointer-events: auto; }
-  20%     { opacity: 1; visibility: visible; pointer-events: auto; }
-  56%     { opacity: 1; visibility: visible; pointer-events: auto; }
-  80%     { opacity: 0.45; pointer-events: none; }
-  100%    { opacity: 0; visibility: hidden; pointer-events: none; }
+  0%      { opacity: 0; pointer-events: auto; }
+  22%     { opacity: 1; pointer-events: auto; }
+  54%     { opacity: 1; pointer-events: auto; }
+  100%    { opacity: 0; pointer-events: none; }
 }
 #slogo, .veil img {
   width: min(44vw, 165px);
@@ -789,24 +787,32 @@ body:has(#menu:not([hidden])) #fl {
   border: 2px solid #9c783e;
   box-shadow: 0 0 35px rgba(196, 154, 82, 0.28);
   will-change: transform, opacity;
-  animation: veilLogoGlide 1.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: veilLogoGlide 1.6s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 #splash #slogo {
-  animation-duration: 2.2s;
+  animation-duration: 2.1s;
 }
 @keyframes veilLogoGlide {
-  0%   { opacity: 0; transform: translateZ(0) scale(0.93); }
-  22%  { opacity: 1; transform: translateZ(0) scale(1); }
-  62%  { opacity: 1; transform: translateZ(0) scale(1.015); }
-  100% { opacity: 0; transform: translateZ(0) scale(1.04); }
+  0%   { opacity: 0; transform: translate3d(0, 0, 0) scale(0.95); }
+  24%  { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  58%  { opacity: 1; transform: translate3d(0, 0, 0) scale(1.012); }
+  100% { opacity: 0; transform: translate3d(0, 0, 0) scale(1.03); }
 }
-main.arena-enter {
+/* Modal Açılış Geçişleri — Saf GPU Opacity + Transform */
+#m:not([hidden]) {
+  animation: modalBgIn 0.2s ease-out both;
+}
+#mb {
   will-change: transform, opacity;
-  animation: arenaReveal 0.65s 0.25s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation: modalPopSmooth 0.24s cubic-bezier(0.22, 1, 0.36, 1) both !important;
 }
-@keyframes arenaReveal {
-  0%   { opacity: 0.72; transform: translateZ(0) scale(1.014); }
-  100% { opacity: 1; transform: translateZ(0) scale(1); }
+@keyframes modalBgIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes modalPopSmooth {
+  from { opacity: 0; transform: translate3d(0, 10px, 0) scale(0.96); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
 #splash b, .veil b {
   font: 700 30px/1 var(--mf) !important;

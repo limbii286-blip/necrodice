@@ -1549,33 +1549,25 @@ function impSave(html,cont,msg){ // BİLİNMEYEN ölecekken: zar düşer, sahne 
     if(d.classList.contains('finished')){clearInterval(w);setTimeout(()=>cutscene(msg,()=>{$('#mb').classList.remove('rig');cont()}),1000)}},120);
 }
 let entering=false;
-function veil(ms=1900){
+function veil(ms=1600){
   const v=document.createElement('div');
   v.className='veil';
   v.style.animationDuration=ms+'ms';
-  v.innerHTML=`<img alt="" src="limbi_favicon.png?v=limbi4" style="animation-duration:${ms}ms"><b>limbigames</b>`;
+  v.innerHTML=`<img alt="" src="limbi_favicon.png?v=limbi4" decoding="async" style="animation-duration:${ms}ms"><b>limbigames</b>`;
   document.body.appendChild(v);
-  setTimeout(()=>v.remove(),ms+120);
+  setTimeout(()=>v.remove(),ms+80);
 }
 function enter(fn){
   if(entering)return;
   entering=true;
-  const dur=1900;
+  const dur=1600;
   veil(dur);
-  setMusic('game');
+  setTimeout(()=>setMusic('game'),320);
   setTimeout(()=>{
     $('#menu').hidden=true;
     fn();
-    const mn=document.querySelector('main');
-    if(mn){
-      mn.classList.remove('arena-enter');
-      requestAnimationFrame(()=>{
-        mn.classList.add('arena-enter');
-        setTimeout(()=>mn.classList.remove('arena-enter'),1050);
-      });
-    }
-  },540);
-  setTimeout(()=>{entering=false},dur-220);
+  },460);
+  setTimeout(()=>{entering=false},dur-120);
 }
 let MY_HERO='c',OPP_HERO='n';
 const HEROES_TR=[
@@ -1929,9 +1921,9 @@ function fly(){ // yeni kartlar desteden teker teker, yumuşak yay çizerek uça
   void d.offsetWidth;
   const rects=ordered.map(el=>el.getBoundingClientRect());
   const isBatch=ordered.length>=2;
-  const stepMs=isBatch?300:0;
+  const stepMs=isBatch?290:0;
   // Geçiş perdesi (.veil) açıkken kart sesleri/uçuşu beklemede kalsın; önce oyun ekranı gelsin, sonra kartlar dağılsın
-  const baseMs=entering?1150:(isBatch?110:0);
+  const baseMs=entering?1020:(isBatch?110:0);
   const pulseDeck=()=>{
     if(!d.isConnected)return;
     d.classList.remove('pull');
@@ -2155,7 +2147,7 @@ const HERO_FOCUS={c:'44% 28%',p:'56% 24%',n:'64% 25%',a:'50% 24%',s:'48% 25%',e:
 function chooseHero(onPick,onCancel){
   lock=true;
   const cards=HEROES.filter(h=>!h.bossOnly).map(h=>{const dl=h.desc.length,dc=dl<=55?'hpc-desc-lg':dl<=105?'hpc-desc-md':'hpc-desc-sm';return `<button class="hero-pick-card${MY_HERO===h.id?' sel':''}" data-pick-hero="${h.id}">
-    <div class="hpc-art"><img class="hpc-av" src="${avSrc(h.id)}" alt="${h.name}" style="object-position:${HERO_FOCUS[h.id]||'50% 25%'};transform-origin:${HERO_FOCUS[h.id]||'50% 25%'}"></div>
+    <div class="hpc-art"><img class="hpc-av" src="${avSrc(h.id)}" alt="${h.name}" decoding="async" style="object-position:${HERO_FOCUS[h.id]||'50% 25%'};transform-origin:${HERO_FOCUS[h.id]||'50% 25%'}"></div>
     <div class="hpc-body">
       <div class="hpc-name">${h.name}</div>
       <div class="hpc-pw"><span class="hpc-ic">${HP_IC[h.id]}</span><b>${h.hpName}</b></div>
@@ -2752,7 +2744,7 @@ function exitGame(){ // limbigames perdesi, sonra ilk ekrana dön
   if(entering)return;entering=true;leaving=true;botGen++;thinkOn=false;
   tutClear();
   const c=$('#cast');if(c)c.remove();$('#m').hidden=true;lock=true;P=null;
-  veil(3400);
+  veil(1600);
   setTimeout(()=>{
     try{if(conn)conn.close()}catch(e){}
     try{spectators.forEach(s=>{try{s.close()}catch(err){}})}catch(e){}
@@ -2760,8 +2752,8 @@ function exitGame(){ // limbigames perdesi, sonra ilk ekrana dön
     conn=null;spectators=[];peer=null;waitM=false;specCount=0;
     if(G)G.over=true;G=null;MODE='bot';sayT='';try{document.body.classList.remove('dead')}catch(e){}
     st('');$('#menu').hidden=false;lock=false;setMusic('menu');
-  },1050);
-  setTimeout(()=>{entering=false},3000);
+  },460);
+  setTimeout(()=>{entering=false},1480);
 }
 document.addEventListener('click',e=>{
   const jClick=e.target.closest&&e.target.closest('#hand .j[data-j]');
@@ -3844,26 +3836,23 @@ function createSmoothDragLoop(onFrame){
   const cvs=document.createElement('canvas');
   cvs.id='lor-valley-bg';
   cvs.setAttribute('aria-hidden','true');
+  // Statik masa görseli tek seferlik GPU katmanında tutulur (her karede dev JPEG çizilmez)
+  cvs.style.background="url('board_gothic.jpg?v=20261115_sym1') center/cover no-repeat #0a0d13";
   mainEl.insertBefore(cvs,mainEl.firstChild);
   const ctx=cvs.getContext('2d');
 
   let W=0,H=0,DPR=1;
-  const bgImg=new Image();
-  let bgLoaded=false;
-  bgImg.onload=()=>{bgLoaded=true;requestAnimationFrame(render);};
-  bgImg.src='board_gothic.jpg?v=20261115_sym1';
-
   const particles=[];
 
   function seedParticles(){
     particles.length=0;
-    for(let i=0;i<42;i++){
-      const zone=i%4; // 0: sol meşale/ocak, 1: sağ kazan/fener, 2: vitray ay ışığı, 3: orta taş rün
+    for(let i=0;i<36;i++){
+      const zone=i%4;
       particles.push({
         zone,
         x:Math.random(),
         y:Math.random(),
-        r:1.3+Math.random()*2.3,
+        r:1.3+Math.random()*2.2,
         vx:(Math.random()-0.5)*0.0004,
         vy:-0.0003-Math.random()*0.0005,
         phase:Math.random()*Math.PI*2
@@ -3883,22 +3872,6 @@ function createSmoothDragLoop(onFrame){
   window.addEventListener('resize',resize);
   resize();
 
-  function drawCrackedLightning(points,color,glowColor,width,alpha){
-    ctx.save();
-    ctx.globalAlpha=alpha;
-    ctx.strokeStyle=color;
-    ctx.lineWidth=width;
-    ctx.lineCap='round';
-    ctx.lineJoin='round';
-    ctx.beginPath();
-    points.forEach((pt,i)=>{
-      if(i===0)ctx.moveTo(pt[0],pt[1]);
-      else ctx.lineTo(pt[0],pt[1]);
-    });
-    ctx.stroke();
-    ctx.restore();
-  }
-
   let lastRender=0;
   function render(now){
     requestAnimationFrame(render);
@@ -3907,43 +3880,27 @@ function createSmoothDragLoop(onFrame){
     const mn=document.getElementById('menu');
     const menuOpen=mn&&!mn.hidden;
     const rm=document.body.classList.contains('rm');
-    if(!menuOpen&&(rm?now-lastRender>=400:now-lastRender>=(mob?40:32))){
+    if(!menuOpen&&(rm?now-lastRender>=500:now-lastRender>=(mob?42:32))){
       lastRender=now;
       const t=rm?0:now*0.001;
       ctx.clearRect(0,0,W,H);
 
-      // 1. ARKA PLAN: Üstten Görünümlü Gotik Taş Arena, 4 Çeyrekli Rünik Çember ve Orta Rün Yarığı
-      if(bgLoaded && bgImg.naturalWidth>0){
-        const iw=bgImg.naturalWidth, ih=bgImg.naturalHeight;
-        const scale=Math.max(W/iw, H/ih);
-        const dw=iw*scale, dh=ih*scale;
-        const dx=(W-dw)*0.5, dy=(H-dh)*0.5;
-        ctx.drawImage(bgImg, dx, dy, dw, dh);
+      // 4 köşedeki simetrik ateş kaseleri için titreyen sıcak meşale parıltıları
+      const flicker = 0.78 + 0.22*Math.sin(t*7.1)*Math.cos(t*4.3);
+      const drawLight = (u, v, rad, col) => {
+        const lx = W*u, ly = H*v, lr = Math.min(W,H)*rad;
+        const lg = ctx.createRadialGradient(lx, ly, 2, lx, ly, lr);
+        lg.addColorStop(0, col);
+        lg.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = lg;
+        ctx.fillRect(lx-lr, ly-lr, lr*2, lr*2);
+      };
+      drawLight(0.155, 0.045, 0.19, `rgba(255, 155, 55, ${0.24*flicker})`);
+      drawLight(0.845, 0.045, 0.19, `rgba(255, 155, 55, ${0.24*flicker})`);
+      drawLight(0.155, 0.955, 0.19, `rgba(255, 145, 45, ${0.24*flicker})`);
+      drawLight(0.845, 0.955, 0.19, `rgba(255, 145, 45, ${0.24*flicker})`);
 
-        // 4 köşedeki simetrik ateş kaseleri için titreyen sıcak meşale parıltıları
-        const flicker = 0.78 + 0.22*Math.sin(t*7.1)*Math.cos(t*4.3);
-        const drawLight = (u, v, rad, col) => {
-          const lx = dx + dw*u, ly = dy + dh*v, lr = Math.min(W,H)*rad;
-          const lg = ctx.createRadialGradient(lx, ly, 2, lx, ly, lr);
-          lg.addColorStop(0, col);
-          lg.addColorStop(1, 'rgba(0,0,0,0)');
-          ctx.fillStyle = lg;
-          ctx.fillRect(lx-lr, ly-lr, lr*2, lr*2);
-        };
-        drawLight(0.155, 0.045, 0.19, `rgba(255, 155, 55, ${0.26*flicker})`);
-        drawLight(0.845, 0.045, 0.19, `rgba(255, 155, 55, ${0.26*flicker})`);
-        drawLight(0.155, 0.955, 0.19, `rgba(255, 145, 45, ${0.26*flicker})`);
-        drawLight(0.845, 0.955, 0.19, `rgba(255, 145, 45, ${0.26*flicker})`);
-      } else {
-        const g=ctx.createRadialGradient(W*0.5,H*0.5,40,W*0.5,H*0.5,Math.max(W,H)*0.75);
-        g.addColorStop(0,'#1b222c');
-        g.addColorStop(0.55,'#0e131a');
-        g.addColorStop(1,'#05070a');
-        ctx.fillStyle=g;
-        ctx.fillRect(0,0,W,H);
-      }
-
-      // 2. CANLI ATMOSFER PARÇACIKLARI (Meşale Kıvılcımları ve Rün Tozları)
+      // Canlı atmosfer parçacıkları (Meşale kıvılcımları ve rün tozları)
       if(!rm)particles.forEach(p => {
         p.x += p.vx;
         p.y += p.vy;
@@ -3974,21 +3931,22 @@ function createSmoothDragLoop(onFrame){
   const ctx=cvs.getContext('2d');
   let W=0,H=0,DPR=1;
 
-  const menuImg=new Image();
-  let menuImgLoaded=false;
   let isMobileMenuBg=false;
+  let imgW=1920,imgH=1080;
+  const menuImg=new Image();
   function pickMenuImg(){
     const wantMobile=window.innerWidth<=760||window.innerHeight>window.innerWidth*1.15;
     if(wantMobile===isMobileMenuBg&&menuImg.src)return;
     isMobileMenuBg=wantMobile;
-    menuImgLoaded=false;
-    menuImg.src=wantMobile?'menu_gothic_mobile.jpg?v=20261116_m1':'menu_gothic.jpg?v=20261114_sanctum1';
+    const url=wantMobile?'menu_gothic_mobile.jpg?v=20261116_m1':'menu_gothic.jpg?v=20261114_sanctum1';
+    cvs.style.background=`url('${url}') center/cover no-repeat #09060a`;
+    menuImg.src=url;
   }
-  menuImg.onload=()=>{menuImgLoaded=true;};
+  menuImg.onload=()=>{if(menuImg.naturalWidth){imgW=menuImg.naturalWidth;imgH=menuImg.naturalHeight}};
   pickMenuImg();
 
   const motes=[];
-  for(let i=0;i<52;i++){
+  for(let i=0;i<40;i++){
     const kind=i%3; // 0: mum/ocak altın kıvılcımı, 1: vitray ay ışığı tozu, 2: mor rün parıltısı
     motes.push({
       kind,
@@ -4020,17 +3978,15 @@ function createSmoothDragLoop(onFrame){
     const menuEl=document.getElementById('menu');
     const rm=document.body.classList.contains('rm');
     // Hareketi azalt: kül/kıvılcım yok, titreşen ışık yok; normalde akıcı 30fps GPU tasarrufu
-    if(menuEl&&!menuEl.hidden&&(rm?now-lastMenuDraw>=400:now-lastMenuDraw>=(isMobilePerf()?42:32))){
+    if(menuEl&&!menuEl.hidden&&(rm?now-lastMenuDraw>=500:now-lastMenuDraw>=(isMobilePerf()?44:32))){
       lastMenuDraw=now;
       const t=rm?0:now*0.001;
       ctx.clearRect(0,0,W,H);
 
-      if(menuImgLoaded && menuImg.naturalWidth>0){
-        const iw=menuImg.naturalWidth, ih=menuImg.naturalHeight;
-        const scale=Math.max(W/iw, H/ih);
-        const dw=iw*scale, dh=ih*scale;
+      if(imgW>0&&imgH>0){
+        const scale=Math.max(W/imgW, H/imgH);
+        const dw=imgW*scale, dh=imgH*scale;
         const dx=(W-dw)*0.5, dy=(H-dh)*0.5;
-        ctx.drawImage(menuImg, dx, dy, dw, dh);
 
         // Görseldeki büyü kitabının üzerindeki sabit yazıyı ("Oyna / Koleksiyon / Macera") yalnızca masaüstü görselinde ört
         if(!isMobileMenuBg){
@@ -5414,14 +5370,26 @@ function openAuthModal(initialTab='login',isUpgrade=false){
 (function initAuthAndElo(){
   USER_ACC=loadSession();
   renderAuthBar();
+  const sp=document.getElementById('splash');
+  if(sp)setTimeout(()=>{if(sp.isConnected)sp.remove()},2350);
+  // Kahraman portrelerini açılıştan sonra arka planda çöz ki Kahraman Seç modalı 0ms takılmayla açılsın
+  setTimeout(()=>{
+    try{
+      HEROES.filter(h=>!h.bossOnly).forEach((h,i)=>{
+        setTimeout(()=>{
+          const im=new Image();im.decoding='async';im.src=avSrc(h.id);
+          if(im.decode)im.decode().catch(()=>{});
+        },i*90);
+      });
+    }catch(e){}
+  },2400);
   // Oyun ilk açıldığında oturum yoksa açılış perdesi biterken Üyelik / Misafir modalını aç
   if(!USER_ACC){
-    const hasSplash=!!document.getElementById('splash');
     setTimeout(()=>{
       const menu=$('#menu');
       if(!USER_ACC&&menu&&!menu.hidden&&!lock){
         openAuthModal('login',false);
       }
-    },hasSplash?1850:220);
+    },sp?1900:220);
   }
 })();
