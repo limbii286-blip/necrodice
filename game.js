@@ -737,7 +737,22 @@ function listC(S,p,prm){
       let bonus=0;
       if(id===25&&prm.hero){const st=(S.pj||[]).find(e=>e.uid===pk[0]);if(st&&HI_THIEF.has(st.id))bonus=0.12}
       play(T,p,id,pk);
-      out.push({a:{t:'j',id,pk},v:look(T,p,d)+bonus-(id===25?0:cost)})});
+      let val=look(T,p,d);
+      // 2-Hamlelik Kombo Lookahead (İmkansız Bot): Joker oynadıktan hemen sonra 1 kart çekme zincirinin EV'sini ölç
+      if(prm.deepRoll&&canDraw(T,p)&&!lowW(T)&&total(T,p,true)<tg(T)){
+        const pool2=unk(T,p);
+        if(pool2.length){
+          let dSum=0;
+          const lim=Math.min(pool2.length,8);
+          for(let ci=0;ci<lim;ci++){
+            const U=clone(T);U.pl[p].open.push({id:++U.u,n:pool2[ci]});
+            dSum+=look(U,p,0);
+          }
+          const comboVal=dSum/lim;
+          if(comboVal>val)val=val*0.35+comboVal*0.65;
+        }
+      }
+      out.push({a:{t:'j',id,pk},v:val+bonus-(id===25?0:cost)})});
   });
   return out;
 }
@@ -745,6 +760,8 @@ function oppCardWeights(S,p,prm,pool){
   const q=1-p,Tg=tg(S),low=lowW(S),base=total(S,q,false);
   const stood=!!(S.pa&&S.pa[q]>0);
   const Lr=!!(prm&&prm.learn&&PROF.n>=6);
+  const liveArr=(prm&&prm.deepRoll&&p===1&&S._liveStand&&S._liveStand.length)?S._liveStand:null;
+  const liveMean=liveArr?(liveArr.reduce((a,b)=>a+b,0)/liveArr.length):null;
   const beta=(prm&&prm.beta)||0,gap=(prm&&prm.gap)||6;
   return pool.map(n=>{
     const t=base+n;
@@ -759,6 +776,12 @@ function oppCardWeights(S,p,prm,pool){
         else if(t>=Tg-3)wt=1+beta*1.35;
         else if(t>=Tg-gap)wt=1+beta*0.75;
         else wt=0.8;
+      }
+      // Canlı oyun içi adaptasyon: Bu maçta oyuncunun ortalama pas eşiğine yakın kapalı kartları ağırlıklandır
+      if(!low&&liveMean!=null){
+        const diff=Math.abs((Tg-t)-liveMean);
+        const liveBoost=t>Tg?0.55:(diff<=1.5?1.55:diff<=3.5?1.18:0.85);
+        wt*=liveBoost;
       }
     }
     return Math.max(0.15,wt);
@@ -852,7 +875,95 @@ function decideH(S,p,prm){
   let bi=0;sc.forEach((s,i)=>{if(s>sc[bi]+1e-9)bi=i});
   return top[bi].a;
 }
-function decideHA(S,p,prm,done,budCap){ // zaman dilimli Monte-Carlo: ekranı dondurmadan çok daha fazla örnek
+function exactEndgameEvalBot(S,p,action,prm){
+  if(!S||!prm||!prm.deepRoll)return null;
+  if(action&&action.t!=='d')return null;
+  const q=1-p,oppPassed=S.turns>0&&!S.acted;
+  const pool=unk(S,p);
+  if(!oppPassed&&pool.length>6)return null;
+  const Tg=tg(S),low=lowW(S),noBust=act(S,20);
+  const myBase=total(S,p,true),oppOpenBase=total(S,q,false);
+  const cl=S.pl[q]&&S.pl[q].closed&&S.pl[q].closed[0];
+  const peekVal=(p===1&&S.botPeekVal!=null)?S.botPeekVal:(cl&&cl.o!=null?cl.o:null);
+  const cmp=(m,o)=>{
+    let r=0;
+    if(low)r=m<o?1:(m>o?-1:0);
+    else{
+      const mb=!noBust&&m>Tg,ob=!noBust&&o>Tg;
+      if(mb&&ob)r=m<o?1:(m>o?-1:0);
+      else if(mb)r=-1;
+      else if(ob)r=1;
+      else r=m>o?1:(m<o?-1:0);
+    }
+    return prm.bo3?bo3v(S,p,r):r;
+  };
+  const oppDist=[];
+  if(!cl){
+    oppDist.push({cOpp:0,w:1,rem:pool});
+  }else if(peekVal!=null){
+    oppDist.push({cOpp:peekVal,w:1,rem:pool});
+  }else if(pool.length){
+    const ws=oppCardWeights(S,p,prm,pool);
+    const sm=ws.reduce((a,b)=>a+b,0)||1;
+    for(let i=0;i<pool.length;i++){
+      const rem=pool.slice();rem.splice(i,1);
+      oppDist.push({cOpp:pool[i],w:ws[i]/sm,rem});
+    }
+  }else{
+    oppDist.push({cOpp:0,w:1,rem:[]});
+  }
+  const oppT=cOpp=>oppOpenBase+(cl?cOpp:0);
+  if(!action){
+    let ev=0;
+    for(const d of oppDist){
+      const oT=oppT(d.cOpp);
+      if(oppPassed||!d.rem.length){
+        ev+=d.w*cmp(myBase,oT);
+      }else{
+        const sVal=cmp(myBase,oT);
+        let dVal=0;
+        for(const c of d.rem)dVal+=cmp(myBase,oT+c);
+        ev+=d.w*Math.min(sVal,dVal/d.rem.length);
+      }
+    }
+    return ev;
+  }
+  // Kart Çek: Scry biliniyorsa üst kartı doğrudan kullan, değilse tam kombinatoryal ağırlıklı ortalama
+  const scryTop=(p===1&&S.botScry&&S.botScry.length)?S.botScry[0]:null;
+  let ev=0;
+  for(const d of oppDist){
+    const oT=oppT(d.cOpp);
+    const drawPool=(scryTop!=null&&d.rem.includes(scryTop))?[scryTop]:d.rem;
+    if(!drawPool.length){ev+=d.w*cmp(myBase,oT);continue}
+    let sub=0;
+    for(let j=0;j<drawPool.length;j++){
+      const cDraw=drawPool[j],newMy=myBase+cDraw;
+      const sVal=cmp(newMy,oT);
+      if(oppPassed){
+        let bestN=sVal;
+        if(!low&&newMy<Tg&&d.rem.length>1){
+          let d2=0,cnt2=0;
+          for(let k=0;k<d.rem.length;k++){
+            if(d.rem[k]===cDraw)continue;
+            d2+=cmp(newMy+d.rem[k],oT);cnt2++;
+          }
+          if(cnt2&&d2/cnt2>bestN)bestN=d2/cnt2;
+        }
+        sub+=bestN;
+      }else{
+        let oDraw=0,cnt2=0;
+        for(let k=0;k<d.rem.length;k++){
+          if(d.rem[k]===cDraw)continue;
+          oDraw+=cmp(newMy,oT+d.rem[k]);cnt2++;
+        }
+        sub+=cnt2?Math.min(sVal,oDraw/cnt2):sVal;
+      }
+    }
+    ev+=d.w*(sub/drawPool.length);
+  }
+  return ev;
+}
+function decideHA(S,p,prm,done,budCap){ // zaman dilimli Monte-Carlo + Exact Endgame Solver + Match-Point All-In
   const now=()=>(typeof performance!='undefined'?performance:Date).now();
   const low=lowW(S),Tg=tg(S),myT=total(S,p,true);
   // Rakip pas geçtiyse ve rakip açıktan hedefi aşıp patladıysa (ve biz patlamadıysak) hiç kaynak harcamadan pas geç
@@ -865,31 +976,42 @@ function decideHA(S,p,prm,done,budCap){ // zaman dilimli Monte-Carlo: ekranı do
   TACTICAL.forEach(tid=>{const bestT=all.find(c=>c.a&&c.a.id===tid&&!top.includes(c));if(bestT)top.push(bestT)});
   if(top.length==1)return done(top[0].a);
   const matchPoint=S.rounds>=2||(S.pts&&(S.pts[0]>=1.5||S.pts[1]>=1.5));
-  const rawCost=matchPoint&&prm.deepRoll?0.015:(S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc);
-  const cost=prm.bo3?(matchPoint?rawCost*0.2:rawCost*0.45):rawCost;
-  const sum=top.map(()=>0),cnt=top.map(()=>0),alive=top.map(()=>true);
-  const RP={...ROLL,...(prm.rjp!=null?{jp:prm.rjp}:{}),...(prm.deepRoll?{depth:1,jc:0.06,jl:0.03,jp:1,beta:0.55}:{}),bo3:prm.bo3,hm:prm.learn&&LRN.ht>=15};
+  const highStakes=matchPoint||(S.bo>=2);
+  // Maç Puanı Acımasızlığı (Match-Point All-In): İmkansız bot kritik turlarda joker saklama maliyetini neredeyse sıfırlar
+  const rawCost=(highStakes&&prm.deepRoll)?0.004:(S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc);
+  const cost=prm.bo3?(highStakes&&prm.deepRoll?0.002:(matchPoint?rawCost*0.2:rawCost*0.45)):rawCost;
+  const exactVals=top.map(c=>exactEndgameEvalBot(S,p,c.a,prm));
+  const sum=top.map(()=>0),cnt=top.map(()=>0),alive=top.map((_,i)=>exactVals[i]===null);
+  const RP={...ROLL,...(prm.rjp!=null?{jp:prm.rjp}:{}),...(prm.deepRoll?{depth:1,jc:0.05,jl:0.02,jp:1,beta:0.65}:{}),bo3:prm.bo3,hm:prm.learn&&LRN.ht>=15};
   const clkMs=S.clocks&&S.clocks[p]!=null?Math.max(1000,Math.round(S.clocks[p]*220)):99999;
-  const K=prm.K||40,bud=Math.min(prm.ms||0,clkMs,budCap||99999),t0=now();let k=0;
-  if(prm.pf&&pass){top.splice(top.indexOf(pass),1);top.unshift(pass)} // eşitlikte paslamak öncelikli
+  const K=alive.some(Boolean)?(prm.K||40):0,bud=Math.min(prm.ms||0,clkMs,budCap||99999),t0=now();let k=0;
+  if(prm.pf&&pass){
+    const pi=top.indexOf(pass);
+    if(pi>0){
+      top.splice(pi,1);top.unshift(pass);
+      const ev0=exactVals.splice(pi,1)[0];exactVals.unshift(ev0);
+      const al0=alive.splice(pi,1)[0];alive.unshift(al0);
+    }
+  }
   const prune=()=>{
     if(!prm.deepRoll||top.length<=3)return;
-    const means=top.map((_,i)=>alive[i]?(sum[i]/Math.max(1,cnt[i])):-99);
+    const means=top.map((_,i)=>exactVals[i]!==null?exactVals[i]:(alive[i]?(sum[i]/Math.max(1,cnt[i])):-99));
     const bestM=Math.max(...means);
     if(k===36){
       let kept=0;
-      for(let i=0;i<top.length;i++)if(alive[i]&&means[i]>=bestM-0.34)kept++;
+      for(let i=0;i<top.length;i++)if((exactVals[i]!==null||alive[i])&&means[i]>=bestM-0.34)kept++;
       if(kept>=2)for(let i=0;i<top.length;i++)if(alive[i]&&means[i]<bestM-0.34)alive[i]=false;
     }else if(k===96){
-      const ord=top.map((_,i)=>i).filter(i=>alive[i]).sort((a,b)=>means[b]-means[a]);
-      if(ord.length>4)ord.slice(4).forEach(i=>{alive[i]=false});
+      const ord=top.map((_,i)=>i).filter(i=>exactVals[i]!==null||alive[i]).sort((a,b)=>means[b]-means[a]);
+      if(ord.length>4)ord.slice(4).forEach(i=>{if(alive[i])alive[i]=false});
     }
   };
   const fin=()=>{
-    const sc=top.map((c,i)=>alive[i]?(sum[i]/Math.max(1,cnt[i])+(prm.w||0)*c.v):-99);
+    const sc=top.map((c,i)=>exactVals[i]!==null?exactVals[i]:(alive[i]?(sum[i]/Math.max(1,cnt[i])+(prm.w||0)*c.v):-99));
     let bi=0;sc.forEach((v,i)=>{if(v>sc[bi]+1e-9)bi=i});
     done(top[bi].a);
   };
+  if(K===0)return fin();
   const tick=()=>{const t1=now();
     while(k<K&&now()-t1<22){
       const W=world(S,p,prm,prm.deepRoll?k:null);
@@ -1055,7 +1177,7 @@ function MM(fn,btn,cb,sd,end){
   M(fn(0),btn,cb,end);snd(sd&&sd(0));
 }
 const PROF=(()=>{try{const o=JSON.parse(LS('prof')||'null');if(o&&Array.isArray(o.p)&&o.p.length==19)return o}catch(e){}return{n:0,p:new Array(19).fill(0)}})(); // oyuncunun pas geçtiği toplamlar (hedefe uzaklık) bu cihazda saklanır
-function profRec(S,tot,T){if(lowW(S)||!S.pa||!(S.pa[0]>0))return;const d=Math.max(-6,Math.min(12,T-tot));PROF.p[d+6]++;PROF.n++;LS('prof',JSON.stringify(PROF));syncToFirebase()}
+function profRec(S,tot,T){if(lowW(S)||!S.pa||!(S.pa[0]>0))return;const d=Math.max(-6,Math.min(12,T-tot));S._liveStand=S._liveStand||[];S._liveStand.push(d);if(S._liveStand.length>8)S._liveStand.shift();PROF.p[d+6]++;PROF.n++;LS('prof',JSON.stringify(PROF));syncToFirebase()}
 
 /* ---------- FIREBASE / GLOBAL BOT MEMORY ---------- */
 const FB_CFG={
@@ -2036,8 +2158,11 @@ function R(){
   const isMob=window.matchMedia&&window.matchMedia('(max-width: 760px), (hover: none) and (pointer: coarse)').matches;
   const hpBtn0=isSpec?'':`<button id="hp-btn" class="hp-btn${hpObj0.passive?' passive':''}${hpUsed0?' used':canHp?' ready':''}" data-hp="1" data-hp-id="${myHId}" data-hp-side="0"${(canHp||isMob)?'':' disabled'}>${HP_IC[myHId]||HP_IC.c}${cProg}</button>`;
   const hpBtn1=`<span class="hp-btn opp-hp${hpObj1.passive?' passive':''}${hpUsed1?' used':!cReady1?' locked':''}" data-hp-id="${oppHId}" data-hp-side="1">${HP_IC[oppHId]||HP_IC.c}${cProg1}</span>`;
+  const myNick=(typeof USER_ACC!=='undefined'&&USER_ACC&&!USER_ACC.isGuest&&USER_ACC.username)?escHtml(USER_ACC.username):tr('Misafir','Guest');
+  const oppBotSub=DIFF==='easy'?tr('Kolay Bot','Easy Bot'):DIFF==='med'?tr('Orta Bot','Medium Bot'):DIFF==='hard'?tr('Zor Bot','Hard Bot'):tr('İmkansız Bot','Impossible Bot');
+  const oppSub=MODE==='bot'?oppBotSub:(MODE==='tutorial'?tr('Eğitim','Tutorial'):(OPP_PROFILE&&OPP_PROFILE.name?`${escHtml(OPP_PROFILE.name)} · ${Math.round(OPP_PROFILE.elo||1200)} ELO`:tr('Çevrim İçi','Online')));
   const cCnt1=S.pl[1].open.length+S.pl[1].closed.length;
-  setH('#opp',`${oppHandHtml}<div class="who">${av1}${hpBtn1}<div class="nm"><b>${p1Name}</b>${MODE=='bot'?'':'<span class="meta">Online</span>'}</div><div class="tot${obust?' bust':oexact?' exact':''}"><small>${tr('Toplam','Total')}</small><div class="tl"><b>${lastTot[1]}</b>${oppHidZero?'<i class="pq">+</i><i class="pq">0</i>':oppClosedKnown?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards${cCnt1>=6?' cards-2row':''}${cCnt1>=9?' cards-dense':''}">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!(S.rev||c.o!=null||(S.oppPeek&&S.oppPeek.includes(c.id))),S.rev)).join('')}</div>`);
+  setH('#opp',`${oppHandHtml}<div class="who">${av1}${hpBtn1}<div class="nm"><b>${p1Name}</b><span class="meta nick">${oppSub}</span></div><div class="tot${obust?' bust':oexact?' exact':''}"><small>${tr('Toplam','Total')}</small><div class="tl"><b>${lastTot[1]}</b>${oppHidZero?'<i class="pq">+</i><i class="pq">0</i>':oppClosedKnown?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards${cCnt1>=6?' cards-2row':''}${cCnt1>=9?' cards-dense':''}">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!(S.rev||c.o!=null||(S.oppPeek&&S.oppPeek.includes(c.id))),S.rev)).join('')}</div>`);
   const activeTg=tgE(S);
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x,isSup=!e.neg&&TGS.has(e.id)&&activeTg&&e.uid!==activeTg.uid;return `<span class="e${BLOCK.has(e.id)?'':' used'}${e.neg||isSup?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${(k=='eff'||k=='steal_j')&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}"><img src="${IMG.j[e.id]}" alt=""></span>`};
   $('#deck b').textContent=S.deck.length;
@@ -2053,7 +2178,7 @@ function R(){
   if(prevSeal&&prevSeal!=seal){sl.classList.remove('stamp');void sl.offsetWidth;sl.classList.add('stamp')}
   $('#me').className='zone'+(my?' act':'')+(S.winSide!=null?(S.winSide<0?' round-lose':S.winSide===0?' round-tie':''):'');
   const cCnt0=S.pl[0].open.length+S.pl[0].closed.length;
-  setH('#me',`<div class="who">${av0}${hpBtn0}<div class="nm"><b>${p0Name}</b></div><div class="tot${bust?' bust':exact?' exact':''}"><small>${tr('Toplam','Total')}</small><b>${lastTot[0]}</b></div></div><div class="cards${cCnt0>=6?' cards-2row':''}${cCnt0>=9?' cards-dense':''}">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||c.o!=null||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`);
+  setH('#me',`<div class="who">${av0}${hpBtn0}<div class="nm"><b>${p0Name}</b><span class="meta nick">${isSpec?tr('İzleyici','Spectator'):myNick}</span></div><div class="tot${bust?' bust':exact?' exact':''}"><small>${tr('Toplam','Total')}</small><b>${lastTot[0]}</b></div></div><div class="cards${cCnt0>=6?' cards-2row':''}${cCnt0>=9?' cards-dense':''}">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||c.o!=null||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`);
   const myAv=$('#me .who .av');if(myAv)myAv.onclick=e=>{e.stopPropagation();toggleEmoteMenu()};
   const pr=$('#prompt');
   pr.className=P?(P.hp?'ask'+(k==='hand_j'?' hand-mode':''):'ask has-joker'+(k==='sign'?' sign-mode':'')):'';
@@ -2390,11 +2515,17 @@ function buildEndScreenHtml(S,v,L,roll,th){
   </svg>`;
   const crestBgSvg=(won||isSpec)?winCrestSvg:defeatCrestSvg;
   const eloRes=(!isSpec&&v===0&&MODE!=='tutorial'&&typeof recordMatchElo==='function')?recordMatchElo(S,won):null;
-  const eloHtml=eloRes?`<div class="end-elo-bar ${eloRes.delta>=0?'pos':'neg'}">
+  const eloHtml=eloRes?(eloRes.unranked
+    ?`<div class="end-elo-bar unranked">
+      <span class="end-elo-rk">${eloRes.rank.ic} ${eloRes.rank.name}</span>
+      <span class="end-elo-val"><b>${eloRes.before}</b> ELO</span>
+      <span class="end-elo-d">${tr('Derecesiz','Unranked')}</span>
+    </div>`
+    :`<div class="end-elo-bar ${eloRes.delta>=0?'pos':'neg'}">
       <span class="end-elo-rk">${eloRes.rank.ic} ${eloRes.rank.name}</span>
       <span class="end-elo-val">${eloRes.before} → <b>${eloRes.after}</b></span>
       <span class="end-elo-d">${eloRes.delta>=0?'+':''}${eloRes.delta} ELO</span>
-    </div>`:'';
+    </div>`):'';
   return `<div class="end-screen hs-victory ${isSpec?'spec':won?'win':'lose'}">
     <div class="end-glow"></div>
     <div class="hs-crest-stage">
@@ -2848,6 +2979,14 @@ $('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE==='tutorial'&&tutStep!=
 
 /* ---------- ONLINE (PeerJS) ---------- */
 let MODE='bot',peer,conn,spectators=[],specCount=0,waitM=false,rematchReady=[false,false],rematchHeroes=[null,null],deathContReady=[false,false],deathContGo=null;
+let OPP_PROFILE={name:'',elo:1200,isGuest:true};
+function sendMyProfile(c){
+  if(!c||!c.open)return;
+  const acc=(typeof USER_ACC!=='undefined'&&USER_ACC)?USER_ACC:null;
+  const name=(acc&&!acc.isGuest&&acc.username)?acc.username:tr('Misafir','Guest');
+  const elo=acc&&typeof acc.elo==='number'?Math.round(acc.elo):1200;
+  try{c.send({k:'profile',name,elo,isGuest:!(acc&&!acc.isGuest)})}catch(e){}
+}
 function showDeathContWait(){
   box(`<h3>${tr('Hazırsın','Ready')}</h3><p>${tr('Rakibin devam etmesi bekleniyor…','Waiting for opponent to continue…')}</p>`,false);
 }
@@ -2969,6 +3108,16 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     checkDeathCont();
     return;
   }
+  if(m.k=='profile'&&fromConn===conn){
+    OPP_PROFILE={
+      name:String(m.name||tr('Misafir','Guest')).slice(0,22),
+      elo:Math.max(400,Math.min(4000,Math.round(+m.elo||1200))),
+      isGuest:!!m.isGuest
+    };
+    if(!m.ack)sendMyProfile(fromConn);
+    if(G)R();
+    return;
+  }
   if(m.k=='tie_roll'){
     if(fromConn!==conn)return;
     if(window._triggerTieRoll)window._triggerTieRoll();
@@ -3081,9 +3230,20 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
       veil();setMusic('game');
     }else if(m.role=='player'){
       MODE='guest';
+      OPP_PROFILE={name:'',elo:1200,isGuest:true};
+      sendMyProfile(conn);
       st(tr('Odaya oyuncu olarak katıldın.','Joined room as player.'));
       veil();setMusic('game');
     }
+    return;
+  }
+  if(m.k=='profile'){
+    OPP_PROFILE={
+      name:String(m.name||tr('Misafir','Guest')).slice(0,22),
+      elo:Math.max(400,Math.min(4000,Math.round(+m.elo||1200))),
+      isGuest:!!m.isGuest
+    };
+    if(G)R();
     return;
   }
   if(m.k=='emote'&&EMOTE_SET.has(m.e)){
@@ -3111,7 +3271,16 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
   else if(m.k=='m'){
     waitM=true;
     if(m.end&&MODE==='guest'){
-      M(m.html,tr('Yeniden Oyna','Play Again'),()=>chooseHero(hid=>{
+      let endHtml=m.html;
+      if(G&&typeof recordMatchElo==='function'){
+        const guestWon=/data-s="win"/.test(endHtml);
+        const eRes=recordMatchElo(G,guestWon);
+        if(eRes&&!eRes.unranked){
+          const eloBar=`<div class="end-elo-bar ${eRes.delta>=0?'pos':'neg'}"><span class="end-elo-rk">${eRes.rank.ic} ${eRes.rank.name}</span><span class="end-elo-val">${eRes.before} → <b>${eRes.after}</b></span><span class="end-elo-d">${eRes.delta>=0?'+':''}${eRes.delta} ELO</span></div>`;
+          endHtml=endHtml.replace('<div class="end-stats hs-end-stats">',eloBar+'<div class="end-stats hs-end-stats">');
+        }
+      }
+      M(endHtml,tr('Yeniden Oyna','Play Again'),()=>chooseHero(hid=>{
         MY_HERO=hid;waitM=true;
         if(conn&&conn.open)conn.send({k:'rematch_ready',hero:hid});
         showRematchWait(tr('Rakibin "Yeniden Oyna" demesi ve kahraman seçmesi bekleniyor…','Waiting for opponent to click "Play Again" and choose a hero…'));
@@ -5169,13 +5338,11 @@ function createGuestAccount(){
 }
 function getOppElo(){
   if(MODE==='bot'){
-    if(DIFF==='easy')return 900;
-    if(DIFF==='med')return 1150;
-    if(DIFF==='hard')return 1400;
+    if(DIFF==='hard')return 1320;
     if(DIFF==='imp')return 1750;
-    return 1150;
+    return 0; // Kolay ve Orta bot derecesizdir (0 ELO)
   }
-  return 1250;
+  return (OPP_PROFILE&&typeof OPP_PROFILE.elo==='number'&&OPP_PROFILE.elo>=400)?Math.round(OPP_PROFILE.elo):1200;
 }
 function getOppLabel(){
   if(MODE==='bot'){
@@ -5184,6 +5351,7 @@ function getOppLabel(){
     if(DIFF==='hard')return tr('Bot (Zor)','Bot (Hard)');
     if(DIFF==='imp')return tr('Bilinmeyen (İmkansız)','Unknown (Impossible)');
   }
+  if(OPP_PROFILE&&OPP_PROFILE.name)return `${OPP_PROFILE.name} (${Math.round(OPP_PROFILE.elo||1200)})`;
   return tr('Çevrim İçi Rakip','Online Opponent');
 }
 function recordMatchElo(S,won){
@@ -5192,12 +5360,23 @@ function recordMatchElo(S,won){
   if(!USER_ACC)createGuestAccount();
   const acc=USER_ACC;
   const before=Math.round(acc.elo||1200);
+  // Kolay ve Orta bot puan vermez / düşürmez (derecesiz antrenman)
+  if(MODE==='bot'&&(DIFF==='easy'||DIFF==='med')){
+    S._eloRes={before,after:before,delta:0,rank:eloRank(before),unranked:true};
+    return S._eloRes;
+  }
   const oppElo=getOppElo();
   const expected=1/(1+Math.pow(10,(oppElo-before)/400));
-  const K=(acc.matches||0)<15?32:24;
+  let K=(acc.matches||0)<15?32:24;
+  if(MODE==='bot'&&DIFF==='hard')K=14;      // Zor bot: az puan
+  else if(MODE==='bot'&&DIFF==='imp')K=22;  // İmkansız bot: daha yüksek ödül
   let delta=Math.round(K*((won?1:0)-expected));
-  if(won&&delta<4)delta=4;
-  if(!won&&delta>-4)delta=-4;
+  if(won){
+    const minGain=(MODE==='bot'&&DIFF==='hard')?3:(MODE==='bot'&&DIFF==='imp')?6:4;
+    if(delta<minGain)delta=minGain;
+  }else{
+    if(delta>-4)delta=-4;
+  }
   const after=Math.max(400,before+delta);
   acc.elo=after;
   acc.peakElo=Math.max(acc.peakElo||before,after);
@@ -5208,7 +5387,7 @@ function recordMatchElo(S,won){
   acc.history.unshift({ts:Date.now(),opp:getOppLabel(),won:!!won,delta,elo:after});
   if(acc.history.length>12)acc.history.length=12;
   saveSession(acc);
-  S._eloRes={before,after,delta,rank:eloRank(after)};
+  S._eloRes={before,after,delta,rank:eloRank(after),unranked:false};
   return S._eloRes;
 }
 function renderAuthBar(){
