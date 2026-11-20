@@ -389,24 +389,19 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
           const isCrit = num >= 20;
           const isFail = num == 1 || res == 'death';
           const ov = (num !== rawTarget) ? num : null;
-          let popStep = 0;
-          const popSeq = [
-            { s: 1.12, p: 1.28 },
-            { s: 1.06, p: 1.18 },
-            { s: 0.98, p: 1.04 },
-            { s: 1.0,  p: 1.0 }
-          ];
-          const doPop = () => {
+          // 60 FPS akıcı yay oturuşu (eski 4 karelik sert zıplama yerine)
+          const popStart = performance.now(), popDur = 340;
+          const smoothPop = tNow => {
             if(!d.isConnected) return;
-            if(popStep < popSeq.length) {
-              const fr = popSeq[popStep++];
-              render(rawTarget, isCrit, isFail, fr.s, fr.p, ov);
-              setTimeout(doPop, 48);
-            } else {
-              render(rawTarget, isCrit, isFail, 1.0, 1.0, ov);
-            }
+            const p = Math.min(1, (tNow - popStart) / popDur);
+            const damp = Math.exp(-5.2 * p) * Math.sin(p * Math.PI * 1.35);
+            const sc = 1 + damp * 0.14;
+            const tp = 1 + damp * 0.28;
+            render(rawTarget, isCrit, isFail, sc, tp, ov);
+            if(p < 1) requestAnimationFrame(smoothPop);
+            else render(rawTarget, isCrit, isFail, 1.0, 1.0, ov);
           };
-          doPop();
+          requestAnimationFrame(smoothPop);
           if(triggerEffects){
             if(isCrit){snd('win');flash();vib([80,80,200])}
             else if(isFail){snd('death');if(res=='death'){try{document.body.classList.add('dead')}catch(e){}}vib([300,100,500])}
@@ -440,10 +435,21 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
 
         const pills = [...d.querySelectorAll('.d20-mod-pill[data-val]')];
         if(pills.length > 0){
-          render(rawTarget, false, false, 1.08, 1.16);
-          setTimeout(()=>{ if(d.isConnected) render(rawTarget, false, false, 1.0, 1.0); }, 200);
+          // İlk zar oturuşu: 60 FPS yumuşak nefes/oturuş (keskin zıplama yok)
+          const setStart = performance.now(), setDur = 280;
+          const settleRaw = tNow => {
+            if(!d.isConnected) return;
+            const p = Math.min(1, (tNow - setStart) / setDur);
+            const env = Math.sin(p * Math.PI) * (1 - p * 0.45);
+            render(rawTarget, false, false, 1 + env * 0.06, 1 + env * 0.14);
+            if(p < 1) requestAnimationFrame(settleRaw);
+            else render(rawTarget, false, false, 1.0, 1.0);
+          };
+          requestAnimationFrame(settleRaw);
+
           let curNum = rawTarget;
           const stageEl = d.querySelector('.d20-stage');
+          const glowEl = d.querySelector('.d20-glow');
           const applyNext = idx => {
             if(!d.isConnected) return;
             if(idx >= pills.length){
@@ -458,8 +464,8 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
             const nextNum = Math.max(1, Math.min(20, curNum + delta));
             pill.classList.add('igniting');
             try{
-              if(isPos) tone(494, .20, 'triangle', .13, 0, 160);
-              else tone(220, .22, 'sawtooth', .11, 0, -55);
+              if(isPos) tone(523, .22, 'triangle', .11, 0, 130);
+              else tone(215, .24, 'triangle', .11, 0, -50);
             }catch(e){}
             if(stageEl){
               const pr = pill.getBoundingClientRect(), sr = stageEl.getBoundingClientRect();
@@ -473,52 +479,63 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
               fly.style.setProperty('--dx', (tx - sx) + 'px');
               fly.style.setProperty('--dy', (ty - sy) + 'px');
               document.body.appendChild(fly);
-              setTimeout(() => fly.remove(), 520);
+              setTimeout(() => fly.remove(), 660);
             }
             setTimeout(() => {
               if(!d.isConnected) return;
               pill.classList.remove('igniting');
               pill.classList.add('applied');
+              if(glowEl){
+                glowEl.classList.remove('mod-pos','mod-neg');
+                void glowEl.offsetWidth;
+                glowEl.classList.add(isPos ? 'mod-pos' : 'mod-neg');
+              }
               if(stageEl){
+                const burst = document.createElement('div');
+                burst.className = 'bg3-sunburst ' + (isPos ? 'pos' : 'neg');
+                stageEl.appendChild(burst);
+                setTimeout(() => burst.remove(), 640);
                 const ring = document.createElement('div');
                 ring.className = 'bg3-impact-ring ' + (isPos ? 'pos' : 'neg');
                 stageEl.appendChild(ring);
-                setTimeout(() => ring.remove(), 620);
+                setTimeout(() => ring.remove(), 660);
               }
-              let stepDone = 0;
-              const tickStep = () => {
+              // Tek kesintisiz 60 FPS rAF eğrisi ile +2 / -2 geçişi (arada donma ve çift sıçrama yok)
+              const startVal = curNum;
+              const totalDur = 460 + steps * 90;
+              const mStart = performance.now();
+              let lastSpoken = startVal;
+              const modFrame = tNow => {
                 if(!d.isConnected) return;
-                stepDone++;
-                const valNow = Math.max(1, Math.min(20, curNum + stepSign * stepDone));
-                try{
-                  if(isPos) tone(587 + stepDone * 110, .24, 'triangle', .15);
-                  else tone(210 - stepDone * 35, .24, 'sawtooth', .13, 0, -35);
-                }catch(e){}
-                // Zar ters yüzlere savrulmadan sabit kalır; sadece üzerindeki sayı pürüzsüz nabızla güncellenir
-                const mStart = performance.now(), mDur = 220;
-                const modFrame = tNow => {
-                  if(!d.isConnected) return;
-                  const p = Math.min(1, (tNow - mStart) / mDur);
-                  const pulse = Math.sin(p * Math.PI);
-                  const sc = 1 + pulse * 0.11;
-                  const tp = 1 + pulse * 0.34;
-                  render(rawTarget, isPos && valNow >= 20, !isPos && valNow <= 1, sc, tp, valNow);
-                  if(p < 1) requestAnimationFrame(modFrame);
-                  else {
-                    render(rawTarget, isPos && valNow >= 20, !isPos && valNow <= 1, 1.0, 1.0, valNow);
-                    if(stepDone < steps) setTimeout(tickStep, 130);
-                    else {
-                      curNum = nextNum;
-                      setTimeout(() => applyNext(idx + 1), 360);
-                    }
-                  }
-                };
-                requestAnimationFrame(modFrame);
+                const p = Math.min(1, (tNow - mStart) / totalDur);
+                // Smooth ease-in-out sayı akışı
+                const eased = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+                const valNow = Math.max(1, Math.min(20, Math.round(startVal + (nextNum - startVal) * eased)));
+                if(valNow !== lastSpoken){
+                  lastSpoken = valNow;
+                  const sIdx = Math.abs(valNow - startVal);
+                  try{
+                    if(isPos) tone(587 + sIdx * 95, .20, 'triangle', .12);
+                    else tone(205 - sIdx * 28, .22, 'triangle', .12, 0, -25);
+                  }catch(e){}
+                }
+                // İpeksi tek nefeslik yay nabzı (çarpma anında hafif büyüyüp yumuşakça oturur)
+                const pulse = Math.sin(p * Math.PI) * (1 - p * 0.25);
+                const sc = 1 + pulse * 0.10;
+                const tp = 1 + pulse * 0.26;
+                render(rawTarget, isPos && valNow >= 20, !isPos && valNow <= 1, sc, tp, valNow);
+                if(p < 1){
+                  requestAnimationFrame(modFrame);
+                }else{
+                  render(rawTarget, isPos && nextNum >= 20, !isPos && nextNum <= 1, 1.0, 1.0, nextNum);
+                  curNum = nextNum;
+                  setTimeout(() => applyNext(idx + 1), 240);
+                }
               };
-              tickStep();
-            }, 440);
+              requestAnimationFrame(modFrame);
+            }, 460);
           };
-          setTimeout(() => applyNext(0), 520);
+          setTimeout(() => applyNext(0), 420);
         } else {
           finishFinal(finalTarget, true);
         }
