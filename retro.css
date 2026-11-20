@@ -483,6 +483,11 @@ body:has(#menu:not([hidden])) #fl {
   font-size: clamp(12px, 1.65dvh, 15px) !important;
   letter-spacing: 0.6px !important;
 }
+#mb2 .hs-drawer #btut {
+  grid-column: 1 / -1;
+  border-color: #d4a855 !important;
+  color: #fde68a !important;
+}
 
 #mb2 #st {
   position: relative;
@@ -4236,5 +4241,178 @@ body.dragging-range * {
     width: 38px !important;
     height: 38px !important;
     padding: 5px !important;
+  }
+}
+
+/* ==========================================================================
+   EĞİTİM MODU (KUZGUN REHBER & BALONCUK)
+   ========================================================================== */
+#tut-wrap {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 75;
+  width: min(94vw, 520px);
+  pointer-events: none;
+  transition: top 0.35s cubic-bezier(0.22, 1, 0.36, 1), bottom 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+#tut-wrap.pos-bottom {
+  bottom: max(12px, env(safe-area-inset-bottom, 12px));
+  top: auto;
+}
+#tut-wrap.pos-top {
+  top: calc(max(10px, env(safe-area-inset-top, 10px)) + 48px);
+  bottom: auto;
+}
+#tut-card {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  animation: gothicPop 0.28s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+#tut-raven {
+  flex: 0 0 auto;
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  border: 2.5px solid #d4a855;
+  background: radial-gradient(circle at 40% 35%, #2a1f24 0%, #0d090b 80%);
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.92),
+    0 0 20px rgba(212, 168, 85, 0.38);
+  overflow: hidden;
+  animation: ravenBob 2.8s ease-in-out infinite;
+}
+#tut-raven svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+@keyframes ravenBob {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(-4px) rotate(1.5deg); }
+}
+#tut-bubble {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px 11px;
+  border-radius: 14px;
+  border: 2px solid #d4a855;
+  background: linear-gradient(180deg, rgba(28, 20, 18, 0.97) 0%, rgba(12, 9, 10, 0.98) 100%);
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, 0.94),
+    0 0 24px rgba(212, 168, 85, 0.28),
+    inset 0 1px 0 rgba(255, 224, 160, 0.2);
+  color: #f5e6c8;
+  text-align: left;
+}
+#tut-bubble::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  bottom: 22px;
+  width: 16px;
+  height: 16px;
+  background: #140f0f;
+  border-left: 2px solid #d4a855;
+  border-bottom: 2px solid #d4a855;
+  transform: rotate(45deg);
+}
+.tut-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+.tut-title {
+  font: 800 14px/1.15 var(--mf);
+  color: #fde68a;
+  letter-spacing: 0.4px;
+}
+.tut-step {
+  font: 700 11px/1 var(--mf);
+  color: #c9a252;
+  padding: 3px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(212, 168, 85, 0.45);
+  background: rgba(212, 168, 85, 0.12);
+  white-space: nowrap;
+}
+.tut-txt {
+  font: 500 13.5px/1.42 var(--bf);
+  color: #f3e4ca;
+  margin: 0 0 9px;
+}
+.tut-txt b {
+  color: #fde68a;
+}
+.tut-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tut-task {
+  font: 700 12px/1.2 var(--mf);
+  color: #a7f3d0;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(52, 211, 153, 0.45);
+}
+.tut-btns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.tut-hl {
+  position: relative;
+  z-index: 65 !important;
+  outline: 3px solid #fde68a !important;
+  outline-offset: 4px !important;
+  box-shadow:
+    0 0 0 6px rgba(234, 179, 84, 0.25),
+    0 0 28px rgba(253, 224, 138, 0.95) !important;
+  animation: tutPulse 1.15s ease-in-out infinite alternate !important;
+}
+@keyframes tutPulse {
+  from { outline-color: #fde68a; filter: brightness(1.06); }
+  to   { outline-color: #fff8dc; filter: brightness(1.22); }
+}
+@media (max-width: 760px) {
+  #tut-wrap {
+    width: calc(100vw - 14px);
+  }
+  #tut-wrap.pos-top {
+    top: calc(max(6px, env(safe-area-inset-top, 6px)) + 40px);
+  }
+  #tut-card {
+    gap: 8px;
+  }
+  #tut-raven {
+    width: 60px;
+    height: 60px;
+  }
+  #tut-bubble {
+    padding: 9px 11px 9px;
+  }
+  #tut-bubble::before {
+    left: -8px;
+    bottom: 16px;
+    width: 12px;
+    height: 12px;
+  }
+  .tut-title {
+    font-size: 13px;
+  }
+  .tut-txt {
+    font-size: 12.5px;
+    line-height: 1.35;
+    margin-bottom: 7px;
   }
 }

@@ -842,7 +842,10 @@ function pass(fromTimeout=false){
   S.timeOut=S.timeOut||[false,false];S.timeOut[opp]=false;
   R();next();
 }
-function next(){if(MODE=='bot'&&G.turn==1&&!lock&&!G.over)bot()}
+function next(){
+  if(MODE=='tutorial'&&G&&G.turn==1&&!lock&&!G.over){setTimeout(()=>{if(MODE=='tutorial'&&G&&G.turn==1&&!lock&&!G.over)pass()},650);return}
+  if(MODE=='bot'&&G.turn==1&&!lock&&!G.over)bot()
+}
 function M(html,btn,cb,end){lock=true;$('#mb').innerHTML=html+(btn?`<br><br><button id="mo" class="btn">${btn}</button>`:end?'':`<br><i>${tr('Oda sahibinin devam etmesi bekleniyor…','Waiting for the host to continue…')}</i>`)+(end?`<br><br><button id="mx" class="btn alt">${tr('Ana menüye dön','Return to Main Menu')}</button>`:'');$('#m').hidden=false;
   if(end&&$('#mb .dice'))$('#mx').style.visibility='hidden'; // zar atılmadan sonuç sızmasın
   anim();
@@ -1225,6 +1228,10 @@ function endRound(){
   },750);
   function fin(){
     S.winSide=null;S.vampWinSide=-1;
+    if(MODE==='tutorial'){
+      tutStep=7;R();tutRender();
+      return;
+    }
     const duelEnds=S.pts.some(x=>x>=2)||S.rounds>=3;
     if(!duelEnds){
       deal(S);R();next();
@@ -1771,6 +1778,7 @@ function R(){
   const mt0=S.turn==0&&!S.wait;if(mt0&&!prevT)snd('turn');prevT=mt0;
   const last=S.log[S.log.length-1],lk=S.log.length+JSON.stringify(last);if(lk!=lastLk){lastLk=lk;if(last&&last.t=='pas dedi')snd('pass')}
   fly();flipId=null;
+  if(MODE==='tutorial')tutApplyHighlights();
   if(MODE=='host'){
     if(conn&&conn.open)conn.send({k:'s',v:view(G)});
     if(spectators.length){
@@ -1810,7 +1818,7 @@ function playHeroPowerAnim(hId,side,hObj){
   else if(hId==='w'&&side===0)spawnBoard('hp-fx-witch',document.querySelector('#opp .cards .c.bk'));
   else if(hId==='l')spawnBoard('hp-fx-wolf',document.querySelector('#fx'));
 }
-function doPlay(id,pk){const S=G;P=null;if(MODE=='guest'){conn.send({k:'play',id,pk});return R()}S.graceLeft=0;lrnAct(S,'j',id);play(S,0,id,pk);S.acted=true;S.log.push({p:0,t:`joker oynadı: ${J[id]}`});note(0,id,()=>{if(MODE=='bot')talk('react',1,.5);R()})}
+function doPlay(id,pk){const S=G;P=null;if(MODE=='guest'){conn.send({k:'play',id,pk});return R()}S.graceLeft=0;lrnAct(S,'j',id);play(S,0,id,pk);S.acted=true;S.log.push({p:0,t:`joker oynadı: ${J[id]}`});note(0,id,()=>{if(MODE=='bot')talk('react',1,.5);R();if(MODE==='tutorial'&&tutStep===3)tutAdvance('joker')})}
 function execAlchSwap(cid){
   const S=G;if(!S||!S.deck.length)return;
   if(MODE==='guest'){snd('flip');return conn.send({k:'hp_alch',cid})}
@@ -1826,7 +1834,7 @@ function execAlchSwap(cid){
   }
 }
 function pick(v){if(P&&P.hp==='u'){const id=v;P=null;return execSwapDeckHeroPower(0,id)}if(P&&P.hp==='a'){const id=v;P=null;return execAlchSwap(id)}if(P&&P.hp==='p'){const idx=v;P=null;if(!G||idx<0||idx>=G.hand[0].length)return R();snd('play');if(MODE==='guest'){G.hpUsed[0]=true;R();return conn.send({k:'hp_plague',idx})}execPlague(G,0,idx);return R()}P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
-function startJoker(id){const ks=NEED[id]||[];if(ks.length){P={id,ks,pk:[]};R()}else doPlay(id,[])}
+function startJoker(id){if(MODE==='tutorial'&&(tutStep!==3||id!==3))return;const ks=NEED[id]||[];if(ks.length){P={id,ks,pk:[]};R()}else doPlay(id,[])}
 const HERO_FOCUS={c:'44% 28%',p:'56% 24%',n:'64% 25%',a:'50% 24%',s:'48% 25%',e:'52% 28%',m:'50% 30%',w:'45% 23%',l:'68% 28%',v:'50% 25%'};
 function chooseHero(onPick,onCancel){
   lock=true;
@@ -1902,7 +1910,7 @@ function execWolf(S,p){
   S.log.push({p,t:'Kanlı Dolunay kullandı (İki taraftan 1\'er kart imha edildi)'});
 }
 function useHeroPower(){
-  const S=G;if(!S||S.over||S.wait||S.turn!==0||lock||P||(S.hpUsed&&S.hpUsed[0]))return;
+  const S=G;if(!S||S.over||S.wait||S.turn!==0||lock||P||(S.hpUsed&&S.hpUsed[0])||MODE==='tutorial')return;
   S.hpUsed=S.hpUsed||[false,false];
   const hid=avKey(S,0);
   if(hid==='c'){
@@ -2147,6 +2155,7 @@ function applyLang(lang){
   if($('#code'))$('#code').placeholder=tr('ODA KODU','ROOM CODE');
   if($('#b3'))$('#b3').textContent=tr('Odaya Katıl','Join Room');
   if($('#b6'))$('#b6').textContent=tr('Ayarlar','Settings');
+  if($('#btut'))$('#btut').textContent=tr('Eğitim (Karga Rehberi)','Tutorial (Raven Guide)');
   if($('#b4'))$('#b4').textContent=tr('Joker Kodeksi','Joker Codex');
   if($('#b5'))$('#b5').textContent=tr('Nasıl Oynanır','How to Play');
   if($('#b7'))$('#b7').textContent=tr('İngilizceye Geç','Türkçeye Geç');
@@ -2157,6 +2166,7 @@ function applyLang(lang){
   if(G){
     if(MODE==='bot'&&sayT){sayT=''}
     R();
+    if(MODE==='tutorial')tutRender();
   }
 }
 function toggleLang(){
@@ -2202,6 +2212,7 @@ function peerLeft(msg){ // rakip çıktı: ana menüye ASLA doğrudan atma, yaln
 }
 function exitGame(){ // limbigames perdesi, sonra ilk ekrana dön
   if(entering)return;entering=true;leaving=true;botGen++;thinkOn=false;
+  tutClear();
   const c=$('#cast');if(c)c.remove();$('#m').hidden=true;lock=true;P=null;
   veil();
   setTimeout(()=>{
@@ -2251,10 +2262,13 @@ document.addEventListener('click',e=>{
     return;
   }
   if(t.dataset.c&&t.dataset.pk){
+    if(MODE==='tutorial'&&tutStep!==1)return;
     snd('flip');
     if(peek.has(c))peek.delete(c);else peek.add(c);
     flipId=c;
-    return R();
+    R();
+    if(MODE==='tutorial'&&tutStep===1)tutAdvance('peek');
+    return;
   }
   if(t.dataset.e){
     if(window.matchMedia&&window.matchMedia('(max-width: 760px), (hover: none) and (pointer: coarse)').matches){
@@ -2265,6 +2279,11 @@ document.addEventListener('click',e=>{
   if(t.dataset.j){
     if(window._suppressJokerClick)return;
     const id=+t.dataset.j;
+    if(MODE==='tutorial'){
+      if(tutStep!==3||id!==3)return;
+      document.querySelectorAll('#hand .j.pinned,#hand .j.hovered').forEach(el=>el.classList.remove('pinned','hovered'));
+      return startJoker(id);
+    }
     if(window.matchMedia&&window.matchMedia('(max-width: 760px)').matches){
       const canUse=S.turn==0&&!S.wait&&MODE!=='spectator'&&playable(S,0,id);
       return preview(id,canUse,BLOCK.has(id)?tr('Etkisiz kılınabilir','Can be negated'):tr('Etkisiz kılınamaz','Cannot be negated'));
@@ -2279,8 +2298,8 @@ document.addEventListener('click',e=>{
     return;
   }
 });
-function drawFromDeck(){const S=G;if(!S||S.turn||lock||P||!canDraw(S,0))return;snd('draw');if(MODE=='guest')return conn.send({k:'draw'});S.graceLeft=0;lrnAct(S,'d');if(S.botScry&&S.botScry.length)S.botScry.shift();const c=S.deck.pop();S.pl[0].open.push(c);S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R()}
-$('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE=='guest')conn.send({k:'pass'});else{lrnAct(G,'p');pass()}}};
+function drawFromDeck(){const S=G;if(!S||S.turn||lock||P||!canDraw(S,0))return;if(MODE==='tutorial'&&tutStep!==2)return;snd('draw');if(MODE=='guest')return conn.send({k:'draw'});S.graceLeft=0;lrnAct(S,'d');if(S.botScry&&S.botScry.length)S.botScry.shift();const c=S.deck.pop();S.pl[0].open.push(c);S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R();if(MODE==='tutorial'&&tutStep===2)tutAdvance('draw')}
+$('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE==='tutorial'&&tutStep!==6)return;if(MODE=='guest')conn.send({k:'pass'});else{lrnAct(G,'p');pass();if(MODE==='tutorial'&&tutStep===6)tutClearHighlights()}}};
 
 /* ---------- ONLINE (PeerJS) ---------- */
 let MODE='bot',peer,conn,spectators=[],specCount=0,waitM=false,rematchReady=[false,false],rematchHeroes=[null,null],deathContReady=[false,false],deathContGo=null;
@@ -2743,6 +2762,7 @@ function joinRoom(){
 }
 const on=(id,f)=>{const e=document.querySelector(id);if(e)e.onclick=f}; // bir öğe yoksa diğer düğmeler yine de çalışır
 document.querySelectorAll('.d').forEach(b=>b.onclick=()=>{DIFF=b.dataset.d;MODE='bot';chooseHero(h=>{MY_HERO=h;enter(start)})});
+on('#btut',()=>{MODE='tutorial';MY_HERO='p';OPP_HERO='n';enter(startTutorial)});
 on('#b4',codex);on('#b5',guide);on('#b6',settings);on('#b7',toggleLang);
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;
@@ -3525,7 +3545,7 @@ function createSmoothDragLoop(onFrame){
     const menu=$('#menu');
     const modalEl=$('#m'),mbEl=$('#mb');
     const isMenuModal=!!(modalEl&&!modalEl.hidden&&mbEl&&!mbEl.querySelector('.d20-box,.tie-box,.scry-row,#hp-p2,.hero-grid'));
-    const active=!!(G && !G.over && !G.wait && (!lock || (MODE!=='bot' && isMenuModal)) && (!menu || menu.hidden));
+    const active=!!(G && MODE!=='tutorial' && !G.over && !G.wait && (!lock || (MODE!=='bot' && isMenuModal)) && (!menu || menu.hidden));
     if(!active){
       if(sc0){sc0.classList.remove('ticking','low');sc0.classList.toggle('turn-on',!!(G&&G.turn===0));sc0.classList.toggle('turn-off',!!(G&&G.turn!==0))}
       if(sc1){sc1.classList.remove('ticking','low');sc1.classList.toggle('turn-on',!!(G&&G.turn===1));sc1.classList.toggle('turn-off',!!(G&&G.turn!==1))}
@@ -3612,3 +3632,170 @@ function createSmoothDragLoop(onFrame){
     setTimeout(()=>r.remove(),480);
   });
 })();
+
+/* ---------- İNTERAKTİF EĞİTİM MODU (KUZGUN REHBER) ---------- */
+let tutStep=-1;
+const RAVEN_SVG=`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="rvBg" cx="45%" cy="35%" r="65%"><stop offset="0%" stop-color="#2c1d22"/><stop offset="100%" stop-color="#0b0709"/></radialGradient>
+    <linearGradient id="rvFea" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#292c38"/><stop offset="55%" stop-color="#14151c"/><stop offset="100%" stop-color="#08080b"/></linearGradient>
+    <linearGradient id="rvBeak" x1="0%" y1="0%" x2="100%" y2="80%"><stop offset="0%" stop-color="#4e4b52"/><stop offset="65%" stop-color="#252328"/><stop offset="100%" stop-color="#111014"/></linearGradient>
+  </defs>
+  <rect width="120" height="120" fill="url(#rvBg)"/>
+  <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(212,168,85,0.28)" stroke-width="1.5"/>
+  <path d="M22 114 C24 84 40 70 60 70 C82 70 96 86 98 114 Z" fill="url(#rvFea)"/>
+  <path d="M36 92 C46 82 74 82 84 92" fill="none" stroke="#b98a38" stroke-width="3" stroke-linecap="round" opacity="0.85"/>
+  <circle cx="60" cy="91" r="4.5" fill="#d4a855" stroke="#2a1c08" stroke-width="1.2"/>
+  <path d="M34 62 C32 34 48 18 66 20 C82 22 90 36 86 58 C84 72 74 80 60 80 C44 80 35 72 34 62 Z" fill="url(#rvFea)"/>
+  <path d="M40 34 C46 23 62 19 74 25 C64 25 50 30 42 40 Z" fill="#4c5875" opacity="0.45"/>
+  <path d="M78 44 L108 53 L83 62 C80 57 78 50 78 44 Z" fill="url(#rvBeak)" stroke="#09080a" stroke-width="1.2"/>
+  <path d="M80 56 L101 54 L82 61 Z" fill="#17151a"/>
+  <circle cx="68" cy="44" r="7.5" fill="#0d0a0c" stroke="#c99c42" stroke-width="1.4"/>
+  <circle cx="68.5" cy="44" r="4.6" fill="#f59e0b"/>
+  <circle cx="69.5" cy="43.5" r="2.2" fill="#120904"/>
+  <circle cx="71" cy="41.8" r="1.3" fill="#fffbeb"/>
+  <path d="M46 58 C42 66 44 74 52 78 M56 60 C54 68 56 76 62 79" fill="none" stroke="#2c3142" stroke-width="1.6" stroke-linecap="round"/>
+</svg>`;
+const TUT_STEPS=()=>[
+  {
+    sel:'#me .tot',
+    pos:'top',
+    title:tr('Kuzgun Rehber · Hedef 21','Raven Guide · Target 21'),
+    txt:tr('Gak! Ben <b>Kuzgun</b>. Necrodice masasına hoş geldin! Amacın: açık ve kapalı sayı kartlarının toplamını <b>21</b>\'e rakibinden daha yakın tutmak. 21\'i aşarsan patlar ve turu kaybedersin.','Caw! I am the <b>Raven</b>. Welcome to Necrodice! Your goal: bring your open and hidden number cards closer to <b>21</b> than your opponent without going over 21.'),
+    next:true
+  },
+  {
+    sel:'#me .cards .c[data-pk="1"]',
+    pos:'top',
+    title:tr('Kapalı Sayı Kartın','Your Hidden Number Card'),
+    txt:tr('Her tur başında 1 açık, <b>1 kapalı</b> kart alırsın. Kapalı kartını yalnızca sen görebilirsin. Hadi parlayan <b>kapalı kartına dokun</b> ve değerine bak!','Each round starts with 1 open and <b>1 hidden</b> card. Only you can see your hidden card. Go ahead and <b>tap your glowing hidden card</b> to peek!'),
+    task:tr('Kapalı kartına tıkla','Tap your hidden card')
+  },
+  {
+    sel:'#deck',
+    pos:'bottom',
+    title:tr('Desteden Kart Çekme','Drawing Number Cards'),
+    txt:tr('Şu an toplamın <b>12</b> (7 + 5). Sıra sendeyken istediğin kadar sayı kartı çekebilirsin. Şimdi parlayan <b>Desteye tıkla</b> (veya sürükle) ve bir kart çek!','Your total is currently <b>12</b> (7 + 5). On your turn, you can draw as many number cards as you want. Now <b>tap the glowing Deck</b> to draw a card!'),
+    task:tr('Desteden 1 kart çek','Draw 1 card from the Deck')
+  },
+  {
+    sel:'#hand .j[data-j="3"]',
+    pos:'top',
+    title:tr('Joker Kartları (+5)','Joker Cards (+5)'),
+    txt:tr('Harika, 4 geldi ve toplamın <b>16</b> oldu! Her tur en fazla <b>2 Joker</b> oynayabilirsin. Elindeki parlayan <b>+5 Jokerine tıkla</b> ve tam <b>21</b>\'e ulaş!','Nice! You drew a 4, reaching <b>16</b>. You may play up to <b>2 Jokers</b> per round. Tap the glowing <b>+5 Joker</b> in your hand to hit a perfect <b>21</b>!'),
+    task:tr('+5 Jokerini oyna','Play the +5 Joker')
+  },
+  {
+    sel:'#jm .e',
+    pos:'bottom',
+    title:tr('Aktif Etkiler & Etkisiz Kılma','Active Effects & Negation'),
+    txt:tr('Masadaki orta şeritte oynanan jokerler birikir: <b>Altın</b> senin, <b>Kırmızı</b> rakibin jokeridir. Kesik çizgililer anlık etkidir; düz çerçeveli <b>Blok Jokerleri</b> ise tur sonuna kadar sürer (üzerine gelip/dokunup okuyabilirsin).','Played jokers appear in the center bar: <b>Gold</b> is yours, <b>Red</b> is your opponent\'s. Dashed means instant; solid-bordered <b>Block Jokers</b> stay active until the round ends.'),
+    next:true
+  },
+  {
+    sel:'#me .hp-btn',
+    pos:'top',
+    title:tr('Kahraman Güçleri','Hero Powers'),
+    txt:tr('Her kahramanın kendine özel bir <b>Aktif</b> veya <b>Pasif</b> gücü vardır. Portrenin yanındaki bu madalyona dokunarak gücünü okuyabilir ve aktif güçleri kendi turunda kullanabilirsin.','Every hero has a unique <b>Active</b> or <b>Passive</b> power. Tap or hover this emblem next to your portrait to inspect it or cast active powers on your turn.'),
+    next:true
+  },
+  {
+    sel:'#pass',
+    pos:'bottom',
+    title:tr('Pas Geçme ve Turu Bitirme','Passing & Ending the Round'),
+    txt:tr('Toplamın tam <b>21</b>! Artık risk almaya gerek yok. Parlayan <b>Pas</b> butonuna bas; rakip de pas geçerse kapalı kartlar açılır ve tur sonuçlanır!','You are at a perfect <b>21</b>! No need to risk busting. Tap the glowing <b>Pass</b> button — when both pass, hidden cards reveal and the round resolves!'),
+    task:tr('Pas butonuna bas','Tap the Pass button')
+  },
+  {
+    sel:null,
+    pos:'bottom',
+    title:tr('Düellolar & D20 Ölüm Zarı','Duels & The D20 Death Dice'),
+    txt:tr('Tebrikler, turu kazandın! 3 turluk düelloda <b>2 puana</b> ulaşan düelloyu kazanır; kaybeden ise hayatta kalmak için kırmızı <b>D20 Ölüm Zarı</b> atar (hedefler: <b>4 → 8 → 14 → 18</b>). Artık tavernaya hazırsın!','Congrats, you won the round! First to <b>2 points</b> in a 3-round duel wins; the loser rolls the crimson <b>D20 Death Dice</b> to survive (thresholds: <b>4 → 8 → 14 → 18</b>). You\'re ready for the tavern!'),
+    finish:true
+  }
+];
+function tutClearHighlights(){
+  document.querySelectorAll('.tut-hl').forEach(el=>el.classList.remove('tut-hl'));
+}
+function tutApplyHighlights(){
+  tutClearHighlights();
+  if(MODE!=='tutorial'||tutStep<0)return;
+  const st=TUT_STEPS()[tutStep];
+  if(!st||!st.sel)return;
+  const el=document.querySelector(st.sel);
+  if(el)el.classList.add('tut-hl');
+}
+function tutClear(){
+  tutStep=-1;
+  tutClearHighlights();
+  const w=$('#tut-wrap');
+  if(w)w.remove();
+}
+function tutRender(){
+  if(MODE!=='tutorial'||tutStep<0)return;
+  const steps=TUT_STEPS();
+  const st=steps[tutStep];
+  if(!st)return tutClear();
+  let w=$('#tut-wrap');
+  if(!w){
+    w=document.createElement('div');
+    w.id='tut-wrap';
+    document.body.appendChild(w);
+  }
+  w.className='pos-'+(st.pos||'bottom');
+  const stepLbl=`${tr('Adım','Step')} ${tutStep+1}/${steps.length}`;
+  const btnHtml=st.finish
+    ?`<button id="tut-next" class="btn sm">${tr('Eğitimi Bitir','Finish Tutorial')}</button>`
+    :st.next
+      ?`<button id="tut-next" class="btn sm">${tr('Devam Et →','Continue →')}</button>`
+      :`<span class="tut-task">${st.task}</span>`;
+  w.innerHTML=`<div id="tut-card">
+    <div id="tut-raven" aria-hidden="true">${RAVEN_SVG}</div>
+    <div id="tut-bubble">
+      <div class="tut-head"><span class="tut-title">${st.title}</span><span class="tut-step">${stepLbl}</span></div>
+      <p class="tut-txt">${st.txt}</p>
+      <div class="tut-foot">${btnHtml}<div class="tut-btns"><button id="tut-exit" class="btn alt sm">${tr('Çık','Exit')}</button></div></div>
+    </div>
+  </div>`;
+  const nx=$('#tut-next');
+  if(nx){
+    nx.onclick=()=>{
+      snd('click');
+      if(st.finish){exitGame();return}
+      tutStep++;
+      tutRender();
+    };
+  }
+  const ex=$('#tut-exit');
+  if(ex)ex.onclick=()=>{snd('click');exitGame()};
+  tutApplyHighlights();
+}
+function tutAdvance(evName){
+  if(MODE!=='tutorial')return;
+  if(evName==='peek'&&tutStep===1){tutStep=2;tutRender()}
+  else if(evName==='draw'&&tutStep===2){tutStep=3;tutRender()}
+  else if(evName==='joker'&&tutStep===3){tutStep=4;tutRender()}
+}
+function startTutorial(){
+  hiPreload();setMusic('game');
+  try{document.body.classList.remove('dead')}catch(e){}
+  MODE='tutorial';MY_HERO='p';OPP_HERO='n';
+  G={u:0,bo:0,log:[],over:false,used:[],av:['p','n'],hero:['p','n'],uRevived:[false,false],vampUsed:[false,false],cWins:[0,0],vampWinSide:-1,mast:[0,0]};
+  prevAv[0]=prevAv[1]=undefined;prevHpAnim=[false,false];
+  newBO3(G);
+  G.hand=[[3,14,1,8],[4,9,10,11]];
+  G.deck=[1,2,3,6,10,11,4].map(n=>({id:++G.u,n})); // en üstte 4 var
+  G.pl=[
+    {open:[{id:++G.u,n:7}],closed:[{id:++G.u,n:5}]},
+    {open:[{id:++G.u,n:8}],closed:[{id:++G.u,n:9}]}
+  ];
+  G.eff=[];G.pj=[];G.jUsed=[0,0];G.jTurn=[0,0];G.noJ=[false,false];G.acted=false;G.turns=0;
+  G.hpMod=[0,0];G.plagueMod=[0,0];G.hpTgMod=0;G.oppPeek=[];G.oppPeek1=[];G.botPeekVal=null;G.botScry=null;G.vampWinSide=-1;
+  G.turn=0;G.wait=false;G.rev=false;G.winSide=null;G.timeOut=[false,false];G.hadTimeout=false;G.dead=[];G.pa=[0,0];G.st={pb:0,ob:0,px:0};
+  G.graceLeft=0;
+  peek.clear();seen.clear();seenE.clear();
+  sayT='';sayAt=0;botGen++;thinkOn=false;
+  tutStep=0;
+  R();
+  tutRender();
+}
