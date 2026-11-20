@@ -3798,7 +3798,7 @@ function createSmoothDragLoop(onFrame){
   }
   function updateOracle(targetJ){
     const S=G;
-    if(!S||S.over||S.wait||S.turn!==0||lock||(S.noJ&&S.noJ[0])||!targetJ||targetJ.classList.contains('dim')){
+    if(!S||S.over||S.wait||MODE==='spectator'||!targetJ){
       clearOracle();return;
     }
     const id=+targetJ.dataset.j;
