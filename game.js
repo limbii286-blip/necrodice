@@ -939,7 +939,7 @@ function M(html,btn,cb,end){lock=true;const mb=$('#mb');mb.classList.remove('end
   if(end&&$('#mb .dice'))$('#mx').style.visibility='hidden'; // zar atılmadan sonuç sızmasın
   anim();
   let done=false;
-  if(btn)$('#mo').onclick=()=>{if(done)return;done=true;$('#m').hidden=true;lock=false;cb()};
+  if(btn)$('#mo').onclick=()=>{if(done)return;done=true;$('#mb').classList.remove('end-mode','an-mode');$('#m').hidden=true;lock=false;cb()};
   if(end)$('#mx').onclick=exitGame}
 function MM(fn,btn,cb,sd,end){
   if(MODE=='host'){
@@ -1996,6 +1996,7 @@ function chooseHero(onPick,onCancel){
       <p class="hpc-desc ${dc}">${h.desc}</p>
     </div>
   </button>`}).join('');
+  $('#mb').classList.remove('end-mode','an-mode');
   $('#mb').innerHTML=`<h3>${tr('Kahramanını Seç','Choose Your Hero')}</h3><div class="hero-grid">${cards}</div><div class="row"><button id="hp-cancel" class="btn alt sm">${tr('Geri','Back')}</button></div>`;
   $('#m').hidden=false;
   $('#mb').querySelectorAll('[data-pick-hero]').forEach(btn=>btn.onclick=()=>{
@@ -2278,6 +2279,7 @@ function zoomCard(id){const S=G;let f=null;
     btn:closed&&own&&!S.rev?tr('Kartımı gizle','Hide card'):'',fn:()=>{snd('flip');peek.delete(id);R()}})}
 function preview(id,use,note,back){ // jokeri büyük göster: Kullan / Kapat
   lock=true;snd('info');
+  $('#mb').classList.remove('end-mode','an-mode');
   $('#mb').innerHTML=`<img class="big" src="${IMG.j[id]}" alt="${J[id]}">${note?`<div class="pn">${note}</div>`:''}<div class="row">${use?`<button id="pu" class="btn alt">${tr('Kullan','Use')}</button>`:''}<button id="pc" class="btn">${tr('Kapat','Close')}</button></div>`;
   $('#m').hidden=false;hi($('#mb .big'),id);
   $('#pc').onclick=()=>{if(back)return back();$('#m').hidden=true;lock=false;if(G)R()};
