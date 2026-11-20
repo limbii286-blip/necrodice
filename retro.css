@@ -948,9 +948,56 @@ body:has(#menu:not([hidden])) #fl {
   position: fixed;
   z-index: 120;
   pointer-events: none;
-  font: 900 26px/1 var(--mf);
+  font: 900 30px/1 var(--mf);
   transform: translate(-50%, -50%) scale(0.75);
-  animation: bg3ModFly 0.42s cubic-bezier(0.22, 0.9, 0.32, 1) forwards;
+  animation: bg3ModFly 0.56s cubic-bezier(0.22, 0.9, 0.32, 1) forwards;
+}
+.bg3-bonus-card {
+  flex-direction: column;
+  min-width: 96px;
+  padding: 8px 12px 7px !important;
+  gap: 4px !important;
+  border-radius: 10px !important;
+  border-width: 2px !important;
+  text-align: center;
+}
+.bg3-bonus-card .mod-ic {
+  width: 22px;
+  height: 22px;
+}
+.bg3-bonus-card b {
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  opacity: 0.92;
+}
+.bg3-bonus-card i {
+  font-size: 20px !important;
+  line-height: 1;
+  padding: 0;
+}
+.bg3-sunburst {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 5;
+  transform: translate(-50%, -50%) scale(0.35);
+  animation: bg3SunBurst 0.58s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.bg3-sunburst.pos {
+  background: radial-gradient(circle, rgba(254, 240, 138, 0.92) 0%, rgba(250, 204, 21, 0.45) 45%, transparent 72%);
+}
+.bg3-sunburst.neg {
+  background: radial-gradient(circle, rgba(254, 202, 202, 0.9) 0%, rgba(220, 38, 38, 0.48) 45%, transparent 72%);
+}
+@keyframes bg3SunBurst {
+  0%   { opacity: 0.95; transform: translate(-50%, -50%) scale(0.35); }
+  40%  { opacity: 0.85; transform: translate(-50%, -50%) scale(1.25); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.7); }
 }
 .bg3-mod-fly.pos {
   color: #fef08a;
@@ -4637,61 +4684,218 @@ body.cb .tie-side.lose .tie-sum::after { content: " ✕"; }
 body.cb .tut-task { color: #cfeafb; background: rgba(0, 114, 178, 0.22); border-color: rgba(86, 180, 233, 0.6); }
 
 /* ==========================================================================
-   MASAÜSTÜ ÖLÜM ZARI: TEK EKRAN (SCROLLSUZ)
+   MASAÜSTÜ ÖLÜM ZARI: GENİŞ, FERAH, TEK EKRAN (SCROLLSUZ)
    ========================================================================== */
+.d20-box ~ .after {
+  margin-top: 14px;
+  line-height: 1.5;
+}
+.after-roll {
+  margin-bottom: 8px;
+}
+.after-msg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.after-sub {
+  display: block;
+  margin-top: 2px;
+  opacity: 0.92;
+}
 @media (min-width: 761px) {
   #mb:has(.d20-box) {
     max-height: 96dvh !important;
     overflow: hidden !important;
-    padding: 14px 22px 16px !important;
-    width: min(90vw, 460px) !important;
-    font-size: 16px !important;
-    line-height: 1.35 !important;
+    padding: 20px 30px 22px !important;
+    width: min(92vw, 540px) !important;
+    max-width: 540px !important;
+    font-size: 17px !important;
+    line-height: 1.45 !important;
   }
   #mb:has(.d20-box)::before {
-    margin: -14px -22px 10px !important;
-    padding: 6px 14px !important;
+    margin: -20px -30px 14px !important;
+    padding: 7px 14px !important;
   }
   #mb:has(.d20-box) .d20-box {
-    margin: 8px auto !important;
+    margin: 12px auto 10px !important;
   }
   #mb:has(.d20-box) .bg3-roll-card {
-    padding: 10px 14px 12px !important;
+    width: 316px !important;
+    padding: 14px 18px 16px !important;
   }
   #mb:has(.d20-box) .d20-stage {
-    width: clamp(118px, 19.5dvh, 152px) !important;
-    height: clamp(118px, 19.5dvh, 152px) !important;
-    margin: 4px 0 !important;
+    width: clamp(134px, 21dvh, 168px) !important;
+    height: clamp(134px, 21dvh, 168px) !important;
+    margin: 6px 0 !important;
   }
   #mb:has(.d20-box) .d20-canvas {
-    width: clamp(112px, 18.5dvh, 144px) !important;
-    height: clamp(112px, 18.5dvh, 144px) !important;
+    width: clamp(126px, 20dvh, 158px) !important;
+    height: clamp(126px, 20dvh, 158px) !important;
   }
   #mb:has(.d20-box) br + br {
     display: none;
   }
   #mb:has(.d20-box) #mo,
   #mb:has(.d20-box) #mx {
-    margin-top: 8px !important;
+    margin-top: 12px !important;
   }
 }
 
 /* ==========================================================================
-   OYUN SONU ZAFER / YENİLGİ EKRANI & İSTATİSTİKLER
+   OYUN SONU: HEARTHSTONE TARZI YÜZEN ZAFER / YENİLGİ ARMASI & İSTATİSTİKLER
    ========================================================================== */
+#m:has(#mb.end-mode) {
+  background: rgba(6, 5, 8, 0.72) !important;
+  backdrop-filter: blur(8px) grayscale(0.75) !important;
+  -webkit-backdrop-filter: blur(8px) grayscale(0.75) !important;
+}
 #mb.end-mode {
-  width: min(94vw, 480px) !important;
-  max-height: 94dvh !important;
-  overflow: hidden !important;
-  padding: 18px 20px 18px !important;
-  animation: endCardIn 0.45s cubic-bezier(0.2, 0.9, 0.3, 1) both !important;
+  width: min(96vw, 520px) !important;
+  max-width: 520px !important;
+  max-height: 96dvh !important;
+  overflow: visible !important;
+  padding: 6px 8px 12px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  animation: endCardIn 0.52s cubic-bezier(0.2, 1.15, 0.3, 1) both !important;
 }
 #mb.end-mode::before {
   display: none !important;
 }
 @keyframes endCardIn {
-  from { opacity: 0; transform: scale(0.86) translateY(18px); }
+  from { opacity: 0; transform: scale(0.72) translateY(22px); }
   to   { opacity: 1; transform: none; }
+}
+.hs-crest-stage {
+  position: relative;
+  width: min(90vw, 410px);
+  aspect-ratio: 420 / 330;
+  margin: 0 auto 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hs-crest-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.92));
+  z-index: 1;
+}
+.hs-arch-frame {
+  position: relative;
+  z-index: 2;
+  width: 41%;
+  height: 55%;
+  margin-top: -12%;
+  border-radius: 50% 50% 8px 8px / 44% 44% 8px 8px;
+  border: 4px solid #d4a038;
+  background: #0d0a0c;
+  box-shadow:
+    0 0 0 2px #3b2407,
+    0 12px 26px rgba(0, 0, 0, 0.92),
+    inset 0 0 18px rgba(0, 0, 0, 0.85);
+  overflow: hidden;
+}
+.end-screen.lose .hs-arch-frame {
+  border-color: #b83232;
+}
+.end-screen.lose .hs-arch-frame img {
+  filter: grayscale(0.75) brightness(0.72);
+}
+.hs-arch-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.hs-arch-bar {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 6px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: rgba(12, 9, 10, 0.92);
+  border: 1.5px solid #c99c42;
+}
+.hs-lvl {
+  font: 900 10px/1 var(--mf);
+  color: #fde68a;
+  min-width: 12px;
+  text-align: center;
+}
+.hs-bar-fill {
+  flex: 1;
+  height: 7px;
+  border-radius: 999px;
+  background: #1c1622;
+  overflow: hidden;
+}
+.hs-bar-fill i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #7c3aed, #c084fc);
+  animation: hsXpFill 0.9s 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.end-screen.lose .hs-bar-fill i {
+  background: linear-gradient(90deg, #7f1d1d, #ef4444);
+}
+@keyframes hsXpFill {
+  to { width: 78%; }
+}
+.hs-wood-plaque {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: 15%;
+  transform: translateX(-50%);
+  min-width: 58%;
+  padding: 10px 26px 9px;
+  border-radius: 10px;
+  border: 3.5px solid #c4b5a0;
+  background:
+    linear-gradient(180deg, rgba(138, 86, 42, 0.94) 0%, rgba(84, 48, 22, 0.98) 100%),
+    url('wood_plank.jpg?v=20261116_w2') center / cover;
+  box-shadow:
+    0 0 0 2px #1c120b,
+    0 12px 28px rgba(0, 0, 0, 0.94),
+    inset 0 2px 4px rgba(255, 224, 175, 0.32),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.72);
+  animation: hsPlaquePop 0.55s 0.14s cubic-bezier(0.2, 1.25, 0.3, 1) both;
+}
+.end-screen.lose .hs-wood-plaque {
+  border-color: #8f4747;
+  background: linear-gradient(180deg, #4f161b 0%, #24080b 100%);
+}
+.hs-wood-plaque span {
+  font: 900 clamp(24px, 4.6vw, 34px)/1 var(--mf);
+  color: #ffffff;
+  letter-spacing: 1px;
+  text-shadow: 0 3px 0 #1f1106, 0 5px 14px rgba(0, 0, 0, 0.95);
+}
+@keyframes hsPlaquePop {
+  from { opacity: 0; transform: translateX(-50%) scale(0.75); }
+  to   { opacity: 1; transform: translateX(-50%) scale(1); }
+}
+.hs-end-stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  max-width: 440px;
+}
+.hs-end-stats .end-stat {
+  background: rgba(14, 10, 12, 0.88);
+  border-color: rgba(212, 168, 85, 0.48);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.85);
 }
 .end-screen {
   position: relative;

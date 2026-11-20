@@ -437,7 +437,7 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
         const pills = [...d.querySelectorAll('.d20-mod-pill[data-val]')];
         if(pills.length > 0){
           render(rawTarget, false, false, 1.08, 1.18);
-          setTimeout(()=>{ if(d.isConnected) render(rawTarget, false, false, 1.0, 1.0); }, 190);
+          setTimeout(()=>{ if(d.isConnected) render(rawTarget, false, false, 1.0, 1.0); }, 220);
           let curNum = rawTarget;
           const stageEl = d.querySelector('.d20-stage');
           const applyNext = idx => {
@@ -450,12 +450,14 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
             const pill = pills[idx];
             const delta = +pill.dataset.val;
             const isPos = delta > 0;
+            const steps = Math.abs(delta);
+            const stepSign = isPos ? 1 : -1;
             const nextNum = Math.max(1, Math.min(20, curNum + delta));
             const nextAng = (typeof getD20FaceAngles === 'function') ? getD20FaceAngles(nextNum) : finalAng;
             pill.classList.add('igniting');
             try{
-              if(isPos) tone(520, .18, 'triangle', .13, 0, 160);
-              else tone(240, .2, 'sawtooth', .11, 0, -70);
+              if(isPos) tone(494, .22, 'triangle', .14, 0, 180);
+              else tone(220, .24, 'sawtooth', .12, 0, -65);
             }catch(e){}
             if(stageEl){
               const pr = pill.getBoundingClientRect(), sr = stageEl.getBoundingClientRect();
@@ -463,13 +465,13 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
               const tx = sr.left + sr.width / 2, ty = sr.top + sr.height / 2;
               const fly = document.createElement('div');
               fly.className = 'bg3-mod-fly ' + (isPos ? 'pos' : 'neg');
-              fly.textContent = isPos ? `+${delta}` : `−${Math.abs(delta)}`;
+              fly.textContent = isPos ? `+${delta}` : `−${steps}`;
               fly.style.left = sx + 'px';
               fly.style.top = sy + 'px';
               fly.style.setProperty('--dx', (tx - sx) + 'px');
               fly.style.setProperty('--dy', (ty - sy) + 'px');
               document.body.appendChild(fly);
-              setTimeout(() => fly.remove(), 520);
+              setTimeout(() => fly.remove(), 620);
             }
             setTimeout(() => {
               if(!d.isConnected) return;
@@ -479,36 +481,51 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
                 const ring = document.createElement('div');
                 ring.className = 'bg3-impact-ring ' + (isPos ? 'pos' : 'neg');
                 stageEl.appendChild(ring);
-                setTimeout(() => ring.remove(), 560);
+                setTimeout(() => ring.remove(), 680);
+                const burst = document.createElement('div');
+                burst.className = 'bg3-sunburst ' + (isPos ? 'pos' : 'neg');
+                stageEl.appendChild(burst);
+                setTimeout(() => burst.remove(), 620);
               }
-              try{
-                if(isPos){tone(659, .26, 'triangle', .16);tone(880, .32, 'sine', .14, .05)}
-                else{tone(185, .28, 'sawtooth', .14, 0, -55);noise(.12, .15, 700)}
-              }catch(e){}
-              const mStart = performance.now(), mDur = 360;
-              const sRx = rx, sRy = ry, sRz = rz;
-              const modFrame = tNow => {
+              let stepDone = 0;
+              const tickStep = () => {
                 if(!d.isConnected) return;
-                const p = Math.min(1, (tNow - mStart) / mDur);
-                const e = 1 - Math.pow(1 - p, 3);
-                rx = sRx + (nextAng.rx - sRx) * e;
-                ry = sRy + (nextAng.ry - sRy) * e;
-                rz = sRz + (nextAng.rz - sRz) * e;
-                const sc = 1 + Math.sin(p * Math.PI) * 0.18;
-                const tp = 1 + Math.sin(p * Math.PI) * 0.36;
-                render(p < 0.3 ? curNum : nextNum, false, false, sc, tp);
-                if(p < 1) requestAnimationFrame(modFrame);
-                else {
-                  curNum = nextNum;
-                  rx = nextAng.rx; ry = nextAng.ry; rz = nextAng.rz;
-                  render(curNum, false, false, 1.0, 1.0);
-                  setTimeout(() => applyNext(idx + 1), 420);
-                }
+                stepDone++;
+                const valNow = Math.max(1, Math.min(20, curNum + stepSign * stepDone));
+                const angNow = (typeof getD20FaceAngles === 'function') ? getD20FaceAngles(valNow) : nextAng;
+                try{
+                  if(isPos) tone(587 + stepDone * 110, .28, 'triangle', .16);
+                  else tone(210 - stepDone * 35, .28, 'sawtooth', .14, 0, -40);
+                }catch(e){}
+                const mStart = performance.now(), mDur = 260;
+                const sRx = rx, sRy = ry, sRz = rz;
+                const modFrame = tNow => {
+                  if(!d.isConnected) return;
+                  const p = Math.min(1, (tNow - mStart) / mDur);
+                  const e = 1 - Math.pow(1 - p, 3);
+                  rx = sRx + (angNow.rx - sRx) * e;
+                  ry = sRy + (angNow.ry - sRy) * e;
+                  rz = sRz + (angNow.rz - sRz) * e;
+                  const sc = 1 + Math.sin(p * Math.PI) * 0.16;
+                  const tp = 1 + Math.sin(p * Math.PI) * 0.38;
+                  render(valNow, false, false, sc, tp);
+                  if(p < 1) requestAnimationFrame(modFrame);
+                  else {
+                    rx = angNow.rx; ry = angNow.ry; rz = angNow.rz;
+                    render(valNow, false, false, 1.0, 1.0);
+                    if(stepDone < steps) setTimeout(tickStep, 170);
+                    else {
+                      curNum = nextNum;
+                      setTimeout(() => applyNext(idx + 1), 460);
+                    }
+                  }
+                };
+                requestAnimationFrame(modFrame);
               };
-              requestAnimationFrame(modFrame);
-            }, 340);
+              tickStep();
+            }, 520);
           };
-          setTimeout(() => applyNext(0), 540);
+          setTimeout(() => applyNext(0), 720);
         } else {
           finishFinal(finalTarget, true);
         }
@@ -1354,10 +1371,10 @@ function endRound(){
           <div class="d20-glow"></div>
           <canvas id="d20cv" class="d20-canvas" width="280" height="280"></canvas>
         </div>
-        ${(rawOv==null&&(hpB||execPen))?`<div class="d20-hp-mod">${hpB?`<span class="d20-mod-pill pos" data-val="${hpB}"><span class="mod-ic">${HP_IC.m}</span><b>${blessingName}</b><i>+${hpB}</i></span>`:''}${execPen?`<span class="d20-mod-pill neg" data-val="-2"><span class="mod-ic">${HP_IC.n}</span><b>${decreeName}</b><i>−2</i></span>`:''}</div>`:''}
+        ${(rawOv==null&&(hpB||execPen))?`<div class="d20-hp-mod">${hpB?`<span class="d20-mod-pill bg3-bonus-card pos" data-val="${hpB}"><span class="mod-ic">${HP_IC.m}</span><b>${blessingName}</b><i>+${hpB}</i></span>`:''}${execPen?`<span class="d20-mod-pill bg3-bonus-card neg" data-val="-2"><span class="mod-ic">${HP_IC.n}</span><b>${decreeName}</b><i>−2</i></span>`:''}</div>`:''}
         ${L==v?`<button id="rl" class="btn d20-btn">${tr('ÖLÜM ZARINI AT','ROLL DEATH DICE')}</button>`:''}
       </div>
-    </div><div class="after"><b>${tr('Zar Sonucu','Roll Result')}: ${roll}${(hpB||execPen)&&rawOv==null?` (${rr}${hpB?`+${hpB} ${blessingName}`:''}${execPen?`−2 ${decreeName}`:''})`:''}</b><br>`+(surv?(L==v?tr('Kurtuldun!<br>Hayatta kaldın.','You survived!'):tr('Rakip hayatta kaldı.','Opponent survived.')):(`<b>${L==v?tr('Öldün.<br>Oyunu rakip kazandı.','You died.<br>Opponent won the game.'):tr('Rakip öldü.<br>Oyunu sen kazandın!','Opponent died.<br>You won the game!')}</b>`))+'</div>'};
+    </div><div class="after"><div class="after-roll"><b>${tr('Zar Sonucu','Roll Result')}: ${roll}${(hpB||execPen)&&rawOv==null?` (${rr}${hpB?`+${hpB} ${blessingName}`:''}${execPen?`−2 ${decreeName}`:''})`:''}</b></div><div class="after-msg">`+(surv?(L==v?`${tr('Kurtuldun!','You survived!')}<span class="after-sub">${tr('Hayatta kaldın.','You live to fight on.')}</span>`:tr('Rakip hayatta kaldı.','Opponent survived.')):(`<b>${L==v?`${tr('Öldün.','You died.')}<span class="after-sub">${tr('Oyunu rakip kazandı.','Opponent won the game.')}</span>`:`${tr('Rakip öldü.','Opponent died.')}<span class="after-sub">${tr('Oyunu sen kazandın!','You won the game!')}</span>`}</b>`))+'</div></div>'};
     const openDeathModal=()=>{
       const full=v=>mk(v,roll,surv)+(!surv&&!rig&&!uRev?`<template class="end-tpl">${buildEndScreenHtml(S,v,L,roll,th)}</template>`:''),rig=MODE=='bot'&&avKey(S,1)==='u'&&L==1&&!surv&&!S.rigDone; // Bilinmeyen (İmkansız bot): oyun başına bir kez ölümden döner
       const uRev=(MODE==='host'?(L===0||L===1):L===0)&&avKey(S,L)==='u'&&!surv&&!(S.uRevived&&S.uRevived[L]);
@@ -2098,42 +2115,57 @@ function buildEndScreenHtml(S,v,L,roll,th){
   const won=L!==vi;
   const st=S.stats||{rounds:[0,0,0],draws:[0,0],jokers:[0,0],d20Surv:[0,0],startAt:Date.now()};
   const myH=avKey(S,vi),oppH=avKey(S,1-vi);
-  const myNm=NAMES[myH]||tr('Sen','You'),oppNm=NAMES[oppH]||tr('Rakip','Opponent');
+  const featH=isSpec?(L===1?myH:oppH):myH;
+  const featNm=NAMES[featH]||tr('Kahraman','Hero');
   const rw=st.rounds[vi]||0,rl=st.rounds[1-vi]||0,rt=st.rounds[2]||0;
   const mj=st.jokers[vi]||0,oj=st.jokers[1-vi]||0;
-  const md=st.draws[vi]||0,od=st.draws[1-vi]||0;
   const sec=Math.max(1,Math.round((Date.now()-(st.startAt||Date.now()))/1000));
   const durTxt=`${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
-  const titleTxt=isSpec?tr('MAÇ SONA ERDİ','MATCH OVER'):(won?tr('ZAFER','VICTORY'):tr('YENİLGİ','DEFEAT'));
-  const subTxt=isSpec
-    ?(L===1?`${myNm} ${tr('kazandı!','won!')}`:`${oppNm} ${tr('kazandı!','won!')}`)
-    :(won?tr('Ölüm zarı rakibin kaderini mühürledi!','The Death Dice sealed your opponent\'s fate!'):tr('Kaderin mühürlendi, ama taverna seni tekrar bekler…','Your fate was sealed, yet the tavern awaits you again…'));
-  const crestSvg=won
-    ?`<svg viewBox="0 0 64 64" fill="none"><path d="M10 46L16 20L32 32L48 20L54 46H10Z" fill="url(#crG)" stroke="#fef08a" stroke-width="2.2" stroke-linejoin="round"/><rect x="10" y="46" width="44" height="7" rx="3" fill="#b45309" stroke="#fde68a" stroke-width="1.8"/><circle cx="16" cy="17" r="3.5" fill="#fef08a"/><circle cx="32" cy="13" r="4" fill="#fef08a"/><circle cx="48" cy="17" r="3.5" fill="#fef08a"/><defs><linearGradient id="crG" x1="32" y1="16" x2="32" y2="48" gradientUnits="userSpaceOnUse"><stop stop-color="#fde68a"/><stop offset="1" stop-color="#b45309"/></linearGradient></defs></svg>`
-    :`<svg viewBox="0 0 64 64" fill="none"><path d="M32 10C19 10 12 19 12 31C12 39 16 44 21 47V54H43V47C48 44 52 39 52 31C52 19 45 10 32 10Z" fill="#2b1216" stroke="#f87171" stroke-width="2.4"/><circle cx="23" cy="31" r="5" fill="#ef4444"/><circle cx="41" cy="31" r="5" fill="#ef4444"/><path d="M29 41L32 36L35 41H29Z" fill="#f87171"/><path d="M25 54V47M32 54V47M39 54V47" stroke="#f87171" stroke-width="2"/></svg>`;
-  return `<div class="end-screen ${isSpec?'spec':won?'win':'lose'}">
+  const titleTxt=isSpec?tr('Maç Bitti!','Match Over!'):(won?tr('Zafer!','Victory!'):tr('Yenilgi!','Defeat!'));
+  const bannerFill=won?'url(#hsBanBlue)':'url(#hsBanRed)';
+  const bannerStroke=won?'#f0c453':'#b83232';
+  const crestBgSvg=`<svg class="hs-crest-svg" viewBox="0 0 420 330" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="hsGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fff0a8"/><stop offset="45%" stop-color="#d4a038"/><stop offset="100%" stop-color="#7c5215"/></linearGradient>
+      <linearGradient id="hsBanBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3b5fc0"/><stop offset="55%" stop-color="#223a82"/><stop offset="100%" stop-color="#142352"/></linearGradient>
+      <linearGradient id="hsBanRed" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#9b1c26"/><stop offset="55%" stop-color="#5c0d14"/><stop offset="100%" stop-color="#2b0609"/></linearGradient>
+    </defs>
+    <!-- Hanging Banners -->
+    <path d="M84 128 L138 148 L138 294 L111 278 L84 294 Z" fill="${bannerFill}" stroke="${bannerStroke}" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M336 128 L282 148 L282 294 L309 278 L336 294 Z" fill="${bannerFill}" stroke="${bannerStroke}" stroke-width="4" stroke-linejoin="round"/>
+    <!-- Crossed Golden Horns / Trumpets -->
+    <path d="M52 102 L268 256 L260 268 L44 114 Z" fill="url(#hsGold)" stroke="#3d2608" stroke-width="2"/>
+    <path d="M368 102 L152 256 L160 268 L376 114 Z" fill="url(#hsGold)" stroke="#3d2608" stroke-width="2"/>
+    <ellipse cx="44" cy="104" rx="18" ry="26" transform="rotate(-34 44 104)" fill="url(#hsGold)" stroke="#3d2608" stroke-width="2.5"/>
+    <ellipse cx="376" cy="104" rx="18" ry="26" transform="rotate(34 376 104)" fill="url(#hsGold)" stroke="#3d2608" stroke-width="2.5"/>
+    <!-- Golden Laurel Branches -->
+    <path d="M126 226 C92 184, 92 116, 144 64" stroke="url(#hsGold)" stroke-width="7" stroke-linecap="round"/>
+    <path d="M294 226 C328 184, 328 116, 276 64" stroke="url(#hsGold)" stroke-width="7" stroke-linecap="round"/>
+    <path d="M114 196 C82 190, 74 166, 98 158 C108 172, 114 182, 114 196 Z" fill="url(#hsGold)" stroke="#3d2608" stroke-width="1.5"/>
+    <path d="M106 150 C74 140, 72 112, 98 108 C104 122, 108 134, 106 150 Z" fill="url(#hsGold)" stroke="#3d2608" stroke-width="1.5"/>
+    <path d="M120 104 C94 86, 98 58, 126 62 C126 78, 124 90, 120 104 Z" fill="url(#hsGold)" stroke="#3d2608" stroke-width="1.5"/>
+    <path d="M306 196 C338 190, 346 166, 322 158 C312 172, 306 182, 306 196 Z" fill="url(#hsGold)" stroke="#3d2608" stroke-width="1.5"/>
+    <path d="M314 150 C346 140, 348 112, 322 108 C316 122, 312 134, 314 150 Z" fill="url(#hsGold)" stroke="#3d2608" stroke-width="1.5"/>
+    <path d="M300 104 C326 86, 322 58, 294 62 C294 78, 296 90, 300 104 Z" fill="url(#hsGold)" stroke="#3d2608" stroke-width="1.5"/>
+    <!-- Crown on Top -->
+    <path d="M162 68 L152 28 L184 44 L210 14 L236 44 L268 28 L258 68 Z" fill="url(#hsGold)" stroke="#3d2608" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="160" y="64" width="100" height="14" rx="4" fill="url(#hsGold)" stroke="#3d2608" stroke-width="2"/>
+  </svg>`;
+  return `<div class="end-screen hs-victory ${isSpec?'spec':won?'win':'lose'}">
     <div class="end-glow"></div>
-    <div class="end-crest">${crestSvg}</div>
-    <div class="end-title">${titleTxt}</div>
-    <p class="end-sub">${subTxt}</p>
-    <div class="end-vs">
-      <div class="end-hero ${won?'winner':'loser'}">
-        <div class="end-av-wrap"><img src="${avSrc(myH)}" alt="${myNm}" style="object-position:${HERO_FOCUS[myH]||'50% 25%'}"><span class="end-badge">${won?'👑':'💀'}</span></div>
-        <b>${myNm}</b>
+    <div class="hs-crest-stage">
+      ${crestBgSvg}
+      <div class="hs-arch-frame">
+        <img src="${avSrc(featH)}" alt="${featNm}" style="object-position:${HERO_FOCUS[featH]||'50% 25%'}">
+        <div class="hs-arch-bar"><span class="hs-lvl">${S.bo+1}</span><span class="hs-bar-fill"><i></i></span></div>
       </div>
-      <div class="end-vs-mid">VS</div>
-      <div class="end-hero ${!won?'winner':'loser'}">
-        <div class="end-av-wrap"><img src="${avSrc(oppH)}" alt="${oppNm}" style="object-position:${HERO_FOCUS[oppH]||'50% 25%'}"><span class="end-badge">${!won?'👑':'💀'}</span></div>
-        <b>${oppNm}</b>
-      </div>
+      <div class="hs-wood-plaque"><span>${titleTxt}</span></div>
     </div>
-    <div class="end-stats">
-      <div class="end-stat" style="--d:0.08s"><span>${tr('Düello','Duels')}</span><b>${S.bo+1}</b></div>
-      <div class="end-stat" style="--d:0.16s"><span>${tr('Tur Skoru','Rounds')}</span><b>${rw}${tr('G','W')} · ${rl}${tr('M','L')}${rt?` · ${rt}${tr('B','T')}`:''}</b></div>
-      <div class="end-stat" style="--d:0.24s"><span>${tr('Jokerler','Jokers')}</span><b>${mj} – ${oj}</b></div>
-      <div class="end-stat" style="--d:0.32s"><span>${tr('Son D20','Final D20')}</span><b>${roll} / ${th}</b></div>
-      <div class="end-stat" style="--d:0.40s"><span>${tr('Çekilen Kart','Draws')}</span><b>${md} – ${od}</b></div>
-      <div class="end-stat" style="--d:0.48s"><span>${tr('Süre','Duration')}</span><b>${durTxt}</b></div>
+    <div class="end-stats hs-end-stats">
+      <div class="end-stat" style="--d:0.12s"><span>${tr('Tur','Rounds')}</span><b>${rw}${tr('G','W')} · ${rl}${tr('M','L')}${rt?` · ${rt}${tr('B','T')}`:''}</b></div>
+      <div class="end-stat" style="--d:0.20s"><span>${tr('Joker','Jokers')}</span><b>${mj} – ${oj}</b></div>
+      <div class="end-stat" style="--d:0.28s"><span>${tr('Son D20','Final D20')}</span><b>${roll} / ${th}</b></div>
+      <div class="end-stat" style="--d:0.36s"><span>${tr('Süre','Time')}</span><b>${durTxt}</b></div>
     </div>
     <div class="end-acts row"></div>
   </div>`;
