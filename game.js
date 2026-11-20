@@ -5302,6 +5302,44 @@ function saveSession(acc){
   }
   renderAuthBar();
 }
+function dayKey(offsetDays=0){
+  const d=new Date();
+  if(offsetDays)d.setDate(d.getDate()+offsetDays);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function showStreakToast(streak,continued){
+  if(!streak||streak<1)return;
+  const old=document.getElementById('streak-toast');
+  if(old)old.remove();
+  const el=document.createElement('div');
+  el.id='streak-toast';
+  el.className='streak-toast';
+  const title=streak===1
+    ?tr('Günlük Seri Başladı!','Daily Streak Started!')
+    :tr(`${streak} Günlük Seri!`,`${streak}-Day Streak!`);
+  const sub=continued
+    ?tr('Her gün gelmeye devam et, serini büyüt!','Keep coming back daily to grow your streak!')
+    :tr('Yarın tekrar girerek serini 2 güne çıkar.','Return tomorrow to reach a 2-day streak.');
+  el.innerHTML=`<span class="st-fire">🔥</span><div class="st-txt"><b>${title}</b><small>${sub}</small></div>`;
+  document.body.appendChild(el);
+  setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),420)},3600);
+}
+function updateDailyStreak(acc,silent=false){
+  if(!acc)return false;
+  const today=dayKey(0),yest=dayKey(-1);
+  if(acc.lastStreakDay===today){
+    if(!acc.streak)acc.streak=1;
+    if(!acc.bestStreak)acc.bestStreak=acc.streak;
+    return false;
+  }
+  const continued=acc.lastStreakDay===yest;
+  acc.streak=continued?((acc.streak|0)+1):1;
+  acc.bestStreak=Math.max(acc.bestStreak|0,acc.streak);
+  acc.lastStreakDay=today;
+  saveSession(acc);
+  if(!silent)showStreakToast(acc.streak,continued);
+  return true;
+}
 function syncAccountToCloud(acc){
   if(!fbDb||!acc||acc.isGuest||!acc.key)return;
   try{
@@ -5314,12 +5352,16 @@ function syncAccountToCloud(acc){
       wins:acc.wins||0,
       losses:acc.losses||0,
       matches:acc.matches||0,
+      streak:acc.streak||1,
+      bestStreak:acc.bestStreak||acc.streak||1,
+      lastStreakDay:acc.lastStreakDay||dayKey(0),
       history:(acc.history||[]).slice(0,12),
       updatedAt:Date.now()
     },{merge:true}).catch(()=>{});
   }catch(e){}
 }
 function createGuestAccount(){
+  const today=dayKey(0);
   const acc={
     uid:'guest_'+Date.now().toString(36),
     key:'',
@@ -5330,10 +5372,14 @@ function createGuestAccount(){
     wins:0,
     losses:0,
     matches:0,
+    streak:1,
+    bestStreak:1,
+    lastStreakDay:today,
     history:[],
     createdAt:Date.now()
   };
   saveSession(acc);
+  showStreakToast(1,false);
   return acc;
 }
 function getOppElo(){
@@ -5402,13 +5448,15 @@ function renderAuthBar(){
   }
   const rk=eloRank(USER_ACC.elo);
   const nm=USER_ACC.isGuest?tr('Misafir','Guest'):escHtml(USER_ACC.username);
+  const stDays=Math.max(1,USER_ACC.streak||1);
   bar.hidden=false;
-  bar.innerHTML=`<button type="button" class="auth-pill ${rk.cls}" id="ab-prof" title="${tr('Profil & ELO Detayları','Profile & ELO Details')}">
+  bar.innerHTML=`<button type="button" class="auth-pill ${rk.cls}" id="ab-prof" title="${tr('Profil, ELO & Günlük Seri','Profile, ELO & Daily Streak')}">
     <span class="ap-ic">${rk.ic}</span>
     <span class="ap-info">
       <b>${nm}${USER_ACC.isGuest?` <em>(${tr('Misafir','Guest')})</em>`:''}</b>
       <small>${rk.name}</small>
     </span>
+    <span class="ap-streak" title="${tr(`${stDays} Günlük Seri`,`${stDays}-Day Streak`)}">🔥 ${stDays}</span>
     <span class="ap-elo">${Math.round(USER_ACC.elo||1200)} <i>ELO</i></span>
   </button>`;
   const pb=$('#ab-prof');
@@ -5420,6 +5468,7 @@ function openProfileModal(){
   const rk=eloRank(acc.elo);
   const nm=acc.isGuest?tr('Misafir Oyuncu','Guest Player'):escHtml(acc.username);
   const wr=acc.matches?Math.round(((acc.wins||0)/acc.matches)*100):0;
+  const stCur=Math.max(1,acc.streak||1),stBest=Math.max(stCur,acc.bestStreak||1);
   const histHtml=(acc.history&&acc.history.length)
     ?acc.history.slice(0,6).map(h=>`<div class="pr-hrow ${h.won?'w':'l'}">
         <span>${h.won?tr('Zafer','Win'):tr('Mağlubiyet','Loss')} · ${escHtml(h.opp)}</span>
@@ -5435,7 +5484,7 @@ function openProfileModal(){
       <div class="pr-badge ${rk.cls}">${rk.ic}</div>
       <div class="pr-titles">
         <h3>${nm}</h3>
-        <div class="pr-rank">${rk.name} · <b>${Math.round(acc.elo||1200)} ELO</b></div>
+        <div class="pr-rank">${rk.name} · <b>${Math.round(acc.elo||1200)} ELO</b> · <span class="pr-st-tag">🔥 ${stCur} ${tr('Gün','Day')}</span></div>
       </div>
     </div>
     <div class="pr-grid">
@@ -5443,6 +5492,8 @@ function openProfileModal(){
       <div class="pr-stat"><span>${tr('Zirve ELO','Peak ELO')}</span><b>${Math.round(acc.peakElo||acc.elo||1200)}</b></div>
       <div class="pr-stat"><span>${tr('Galibiyet / Mağlubiyet','Wins / Losses')}</span><b>${acc.wins||0} / ${acc.losses||0}</b></div>
       <div class="pr-stat"><span>${tr('Kazanma Oranı','Win Rate')}</span><b>%${wr}</b></div>
+      <div class="pr-stat pr-stat-fire"><span>${tr('Günlük Seri','Daily Streak')}</span><b>🔥 ${stCur} ${tr('Gün','Days')}</b></div>
+      <div class="pr-stat"><span>${tr('En İyi Seri','Best Streak')}</span><b>${stBest} ${tr('Gün','Days')}</b></div>
     </div>
     <div class="pr-sec-lbl">${tr('Son Maçlar','Recent Matches')}</div>
     <div class="pr-hist">${histHtml}</div>
@@ -5538,6 +5589,7 @@ function openAuthModal(initialTab='login',isUpgrade=false){
             return;
           }
           const base=(isUpgrade&&USER_ACC&&USER_ACC.isGuest)?USER_ACC:null;
+          const today=dayKey(0);
           const newAcc={
             uid:'u_'+key+'_'+Date.now().toString(36),
             key,
@@ -5549,10 +5601,14 @@ function openAuthModal(initialTab='login',isUpgrade=false){
             wins:base?(base.wins||0):0,
             losses:base?(base.losses||0):0,
             matches:base?(base.matches||0):0,
+            streak:base?Math.max(1,base.streak||1):1,
+            bestStreak:base?Math.max(1,base.bestStreak||base.streak||1):1,
+            lastStreakDay:(base&&base.lastStreakDay)||today,
             history:base?(base.history||[]):[],
             createdAt:Date.now()
           };
           saveSession(newAcc);
+          if(!base)showStreakToast(1,false);
           snd('ok');
           mb.classList.remove('auth-mode');
           $('#m').hidden=true;lock=false;
@@ -5578,9 +5634,13 @@ function openAuthModal(initialTab='login',isUpgrade=false){
             wins:existing.wins||0,
             losses:existing.losses||0,
             matches:existing.matches||0,
+            streak:existing.streak||0,
+            bestStreak:existing.bestStreak||existing.streak||0,
+            lastStreakDay:existing.lastStreakDay||'',
             history:Array.isArray(existing.history)?existing.history:[]
           };
           saveSession(logged);
+          updateDailyStreak(logged,false);
           snd('ok');
           mb.classList.remove('auth-mode');
           $('#m').hidden=true;lock=false;
@@ -5596,8 +5656,15 @@ function openAuthModal(initialTab='login',isUpgrade=false){
 }
 (function initAuthAndElo(){
   USER_ACC=loadSession();
-  renderAuthBar();
   const sp=document.getElementById('splash');
+  if(USER_ACC){
+    const hadNewDay=updateDailyStreak(USER_ACC,true);
+    if(hadNewDay){
+      const stVal=USER_ACC.streak||1;
+      setTimeout(()=>showStreakToast(stVal,stVal>1),sp?2250:400);
+    }
+  }
+  renderAuthBar();
   if(sp)setTimeout(()=>{if(sp.isConnected)sp.remove()},2350);
   // Kahraman portrelerini açılıştan sonra arka planda çöz ki Kahraman Seç modalı 0ms takılmayla açılsın
   setTimeout(()=>{

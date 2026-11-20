@@ -6747,3 +6747,84 @@ html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, 
     max-width: 120px;
   }
 }
+
+/* ==========================================================================
+   GÜNLÜK GİRİŞ SERİSİ (DAILY STREAK) ROZET & BİLDİRİM BANDI
+   ========================================================================== */
+.ap-streak {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(234, 88, 12, 0.2);
+  border: 1px solid rgba(251, 146, 60, 0.52);
+  color: #fed7aa;
+  font-weight: 800;
+  font-size: 13.5px;
+  line-height: 1.1;
+}
+.pr-st-tag {
+  color: #fdba74;
+  font-weight: 800;
+}
+.pr-stat-fire {
+  border-color: rgba(251, 146, 60, 0.45) !important;
+  background: linear-gradient(135deg, rgba(124, 45, 18, 0.34), rgba(20, 12, 10, 0.6)) !important;
+}
+.pr-stat-fire b {
+  color: #fed7aa !important;
+}
+.streak-toast {
+  position: fixed;
+  top: max(18px, env(safe-area-inset-top, 18px));
+  left: 50%;
+  transform: translate3d(-50%, 0, 0);
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 18px 10px 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(36, 18, 12, 0.96), rgba(14, 9, 11, 0.97));
+  border: 1.5px solid rgba(251, 146, 60, 0.72);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.8), 0 0 24px rgba(234, 88, 12, 0.32);
+  pointer-events: none;
+  animation: streakIn 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.streak-toast.out {
+  animation: streakOut 0.38s ease forwards;
+}
+.st-fire {
+  font-size: 24px;
+  line-height: 1;
+}
+.st-txt {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  line-height: 1.2;
+}
+.st-txt b {
+  font-size: 16px;
+  color: #ffedd5;
+}
+.st-txt small {
+  font-size: 13px;
+  color: #d6c3a4;
+}
+@keyframes streakIn {
+  from { opacity: 0; transform: translate3d(-50%, -18px, 0) scale(0.94); }
+  to   { opacity: 1; transform: translate3d(-50%, 0, 0) scale(1); }
+}
+@keyframes streakOut {
+  from { opacity: 1; transform: translate3d(-50%, 0, 0) scale(1); }
+  to   { opacity: 0; transform: translate3d(-50%, -14px, 0) scale(0.96); }
+}
+@media (max-width: 600px) {
+  .ap-streak {
+    font-size: 12px;
+    padding: 2px 6px;
+  }
+  .streak-toast {
+    width: calc(100vw - 24px);
+    max-width: 360px;
+  }
+}
