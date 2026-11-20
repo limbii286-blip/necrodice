@@ -3223,8 +3223,7 @@ function createSmoothDragLoop(onFrame){
       pop.onpointerdown=null;
       pop.onclick=null;
     }
-    const activeTg=tgE(S),isSup=!x.neg&&TGS.has(x.id)&&activeTg&&x.uid!==activeTg.uid;
-    const statusTxt=`${x.o==0?tr('Senin Jokerin','Your Joker'):tr('Rakibin Jokeri','Opponent\'s Joker')}${x.neg?tr(' · Etkisiz Kılındı',' · Negated'):isSup?tr(' · Geçersiz (Yeni Hedef Aktif)',' · Overridden (New Target Active)'):(BLOCK.has(x.id)?tr(' · Aktif Blok Etkisi',' · Active Block Effect'):tr(' · Anlık Etki (Kullanıldı)',' · Instant Effect (Used)'))}${x.id==22?(x.s>0?tr(' (Ekler)',' (Adds)'):tr(' (Çıkarır)',' (Subtracts)')):''}`;
+    const statusTxt=`${x.o==0?tr('Senin Jokerin','Your Joker'):tr('Rakibin Jokeri','Opponent\'s Joker')}${x.id==22?(x.s>0?tr(' (Ekler)',' (Adds)'):tr(' (Çıkarır)',' (Subtracts)')):''}`;
     pop.innerHTML=`<div class="jip-card" style="pointer-events:none!important"><img src="${IMG.j[x.id]}" alt="${J[x.id]||''}" style="pointer-events:none!important"><div class="jip-tag ${x.o==0?'mine':'opp'}" style="pointer-events:none!important">${statusTxt}</div></div>`;
     const im=pop.querySelector('img');
     if(im)hi(im,x.id);
