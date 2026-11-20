@@ -1344,7 +1344,7 @@ html::after {
 #hdr .hc {
   position: fixed;
   top: max(10px, env(safe-area-inset-top, 10px));
-  right: 124px;
+  right: 152px;
   display: flex;
   align-items: center;
   gap: 12px;
