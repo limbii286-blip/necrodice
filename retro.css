@@ -1472,7 +1472,7 @@ body.dragging-joker #fx::after {
   flex-shrink: 0 !important;
   margin: 0 auto !important;
   display: grid !important;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 18px;
   min-width: clamp(430px, 46vw, 560px);
@@ -3359,7 +3359,7 @@ body.dragging-joker #fx::after {
    ========================================================================== */
 .who .hp-btn {
   position: absolute;
-  left: calc(50% + clamp(76px, 11.4dvh, 108px) / 2 + 12px);
+  left: calc(50% + clamp(38px, 5.7dvh, 54px) + 12px);
   top: 50%;
   transform: translateY(-50%);
   z-index: 4;
@@ -4025,12 +4025,6 @@ body.dragging-joker #fx::after {
   #hand {
     max-width: calc(100vw - 12px);
   }
-  .who .hp-btn,
-  .who .hp-btn.opp-hp {
-    left: calc(50% + 22px);
-    width: 28px;
-    height: 28px;
-  }
   #mb:has(.d20-box) {
     width: min(92vw, 410px) !important;
     padding: 18px 16px 16px !important;
@@ -4130,7 +4124,7 @@ body.dragging-joker #fx::after {
   .who .hp-btn.opp-hp,
   .who .hp-btn.passive,
   .who .hp-btn.used {
-    left: calc(50% + clamp(68px, 9.72dvh, 82px) / 2 + 9px) !important;
+    left: calc(50% + clamp(34px, 4.86dvh, 41px) + 9px) !important;
     width: 32px !important;
     height: 32px !important;
     pointer-events: auto !important;
