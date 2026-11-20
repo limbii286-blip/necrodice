@@ -17,10 +17,10 @@
   --lime: #5ec27e;
   --bone: #e6d7b8;
   --txt: #e8dcc4;
-  --gf: 'Cinzel', Georgia, serif;
-  --hf: 'Cinzel', Georgia, serif;
-  --mf: 'Cinzel', Georgia, serif;
-  --bf: 'Cinzel', Georgia, serif;
+  --gf: 'Alegreya', Georgia, serif;
+  --hf: 'Alegreya', Georgia, serif;
+  --mf: 'Alegreya', Georgia, serif;
+  --bf: 'Alegreya', Georgia, serif;
   --sf: 'Cinzel', Georgia, serif;
   --cur-hand: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M6 3 L12.5 11.2 L16.2 9.4 C17.5 8.8 19 9.5 19.4 10.9 L20.4 10.6 C21.7 10.2 23 11 23.3 12.3 L24.2 12.2 C25.5 12 26.6 13 26.7 14.3 L26.9 19.5 C27 22.8 25 25.8 21.9 27.1 L16.4 29.2 C13.8 30.1 10.9 29 9.5 26.6 L4.6 18.6 C3.9 17.4 4.3 15.8 5.5 15.1 C6.6 14.4 8 14.7 8.8 15.6 L9.3 16.2 L4.4 4.9 C3.9 3.7 5 2.4 6 3 Z' fill='%23090605'/%3E%3Cpath d='M6.3 4.1 L12 12.3 L15.9 10.4 C16.9 9.9 18 10.4 18.3 11.4 L18.9 13.5 L20.2 11.7 C21.1 11.3 22.1 11.8 22.3 12.8 L22.7 14.8 L24 13.3 C24.9 13.1 25.7 13.8 25.8 14.7 L25.9 19.5 C26 22.2 24.3 24.8 21.6 25.9 L16.3 27.9 C14.1 28.7 11.7 27.8 10.5 25.8 L5.7 18 C5.2 17.2 5.4 16.2 6.2 15.7 C7 15.2 8 15.5 8.6 16.2 L10.6 18.7 L5.3 5.2 C5 4.4 5.7 3.7 6.3 4.1 Z' fill='%233b322c' stroke='%23d4a855' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpath d='M6.5 4.8 L11.4 12.9 L10.2 14.1 L5.6 5.3 Z' fill='%23786a5e'/%3E%3Cpath d='M11.6 18.2 L23.8 15.6 L24.3 19.3 C24.3 21.4 22.9 23.6 20.8 24.5 L16 26.3 C14.2 27 12.2 26.2 11.3 24.6 L9.4 21.2 Z' fill='%23251e1a' stroke='%239b743d' stroke-width='0.9'/%3E%3Cpath d='M12.2 24.2 L23.2 20.6 L22.6 23.2 L13.4 26.4 Z' fill='%23d4a855'/%3E%3Ccircle cx='18.1' cy='23.5' r='2.1' fill='%23cf2e3c' stroke='%23fde68a' stroke-width='0.8'/%3E%3C/svg%3E") 5 3;
   --cur-point: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M7.2 2.6 C8.5 2.4 9.7 3.2 10.2 4.4 L12.9 11.1 L16.2 9.4 C17.5 8.8 19 9.5 19.4 10.9 L20.4 10.6 C21.7 10.2 23 11 23.3 12.3 L24.2 12.2 C25.5 12 26.6 13 26.7 14.3 L26.9 19.5 C27 22.8 25 25.8 21.9 27.1 L16.4 29.2 C13.8 30.1 10.9 29 9.5 26.6 L4.6 18.6 C3.9 17.4 4.3 15.8 5.5 15.1 C6.6 14.4 8 14.7 8.8 15.6 L9.3 16.2 L5.4 4.8 C5 3.6 5.9 2.8 7.2 2.6 Z' fill='%23090605'/%3E%3Cpath d='M7.3 3.6 C8 3.5 8.8 4 9.1 4.8 L12.4 12.3 L15.9 10.4 C16.9 9.9 18 10.4 18.3 11.4 L18.9 13.5 L20.2 11.7 C21.1 11.3 22.1 11.8 22.3 12.8 L22.7 14.8 L24 13.3 C24.9 13.1 25.7 13.8 25.8 14.7 L25.9 19.5 C26 22.2 24.3 24.8 21.6 25.9 L16.3 27.9 C14.1 28.7 11.7 27.8 10.5 25.8 L5.7 18 C5.2 17.2 5.4 16.2 6.2 15.7 C7 15.2 8 15.5 8.6 16.2 L10.6 18.7 L6.4 5 C6.1 4.2 6.6 3.7 7.3 3.6 Z' fill='%234c3f35' stroke='%23fde68a' stroke-width='1.2' stroke-linejoin='round'/%3E%3Cpath d='M7.2 4.3 L11.7 12.9 L10.3 14.1 L6.4 5.1 Z' fill='%23f2d28b'/%3E%3Cpath d='M11.6 18.2 L23.8 15.6 L24.3 19.3 C24.3 21.4 22.9 23.6 20.8 24.5 L16 26.3 C14.2 27 12.2 26.2 11.3 24.6 L9.4 21.2 Z' fill='%232c221c' stroke='%23e6c36a' stroke-width='1'/%3E%3Cpath d='M12.2 24.2 L23.2 20.6 L22.6 23.2 L13.4 26.4 Z' fill='%23fde68a'/%3E%3Ccircle cx='18.1' cy='23.5' r='2.3' fill='%23ef4444' stroke='%23fff6d6' stroke-width='0.9'/%3E%3C/svg%3E") 6 3;
@@ -342,7 +342,6 @@ body:has(#menu:not([hidden])) #fl {
   font: 700 clamp(11px, 1.55dvh, 14px)/1.2 var(--bf);
   letter-spacing: 2.5px;
   color: #f3e6ca;
-  text-transform: uppercase;
 }
 
 /* Orta Gövde: Oyma Taş & Büyü Kitabı (Grimoire) Kutucukları */
@@ -376,7 +375,6 @@ body:has(#menu:not([hidden])) #fl {
   color: #fde68a !important;
   text-shadow: 0 2px 5px #000 !important;
   margin-bottom: clamp(8px, 1.3dvh, 12px) !important;
-  text-transform: uppercase;
 }
 
 /* Zorluk Seçim Düğmeleri: Hearthstone Kabartmalı Orta Çağ Plakaları */
@@ -803,8 +801,8 @@ main.arena-enter {
   100% { opacity: 1; transform: none; filter: none; }
 }
 #splash b, .veil b {
-  font: 600 30px/1 'Cormorant Garamond', Georgia, serif !important;
-  letter-spacing: 3px !important;
+  font: 700 30px/1 var(--mf) !important;
+  letter-spacing: 2.5px !important;
   color: var(--bone) !important;
   text-transform: lowercase !important;
   font-variant: normal !important;
@@ -871,7 +869,6 @@ main.arena-enter {
   letter-spacing: 3px;
   padding-left: 3px;
   color: #bfa67a;
-  text-transform: uppercase;
   margin-bottom: 4px;
 }
 .bg3-dc-arch .val {
@@ -904,7 +901,6 @@ main.arena-enter {
   color: #f2dfc0;
   font: 700 14px/1 var(--mf);
   letter-spacing: 2px;
-  text-transform: uppercase;
   border-radius: 6px;
   cursor: pointer;
   transition: opacity 0.2s ease;
@@ -1007,7 +1003,6 @@ main.arena-enter {
 .bg3-bonus-card b {
   font-size: 11px;
   letter-spacing: 0.5px;
-  text-transform: uppercase;
   opacity: 0.92;
 }
 .bg3-bonus-card i {
@@ -1100,7 +1095,6 @@ main.arena-enter {
   font: 700 11px/1 var(--mf);
   letter-spacing: 2px;
   color: #d4b483;
-  text-transform: uppercase;
   margin-bottom: 4px;
 }
 .lobby-code {
@@ -1371,7 +1365,6 @@ html::after {
   font: 800 17px/1 var(--mf) !important;
   letter-spacing: 1.4px;
   color: #f3dfb9 !important;
-  text-transform: uppercase;
 }
 #hdr .pip {
   width: 17px;
@@ -1710,7 +1703,6 @@ body.dragging-joker #fx::after {
   font: 700 11px/1 var(--mf) !important;
   letter-spacing: 1.5px !important;
   color: #b8a278 !important;
-  text-transform: uppercase;
   margin-bottom: 0;
 }
 .who .tot b,
@@ -2064,7 +2056,6 @@ body.dragging-joker #fx::after {
   word-spacing: 999px;
   font: 800 clamp(12px, 1.9dvh, 16px)/1.1 var(--mf) !important;
   letter-spacing: 0.8px !important;
-  text-transform: uppercase;
   position: relative;
   margin-right: 8px;
   cursor: pointer;
@@ -2408,7 +2399,6 @@ body.dragging-joker #fx::after {
   box-shadow: none;
   font: 700 13px/1.2 var(--mf);
   letter-spacing: 1.3px;
-  text-transform: uppercase;
   text-align: center;
   color: #f5e6c8;
   text-shadow: 0 2px 4px #000;
@@ -2468,7 +2458,6 @@ body.dragging-joker #fx::after {
   z-index: 2;
   font: 700 10px/1 var(--mf) !important;
   letter-spacing: 1.2px;
-  text-transform: uppercase;
   color: #f5deb3;
 }
 #fx .seal b {
@@ -4855,10 +4844,9 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   background: linear-gradient(180deg, #26262b 0%, #111114 100%);
 }
 .hs-wood-plaque span {
-  font: 900 clamp(21px, 4.2vw, 30px)/1 var(--mf);
+  font: 800 clamp(22px, 4.4vw, 32px)/1 var(--mf);
   color: #fde68a;
-  letter-spacing: 2px;
-  text-transform: uppercase;
+  letter-spacing: 1px;
   white-space: nowrap;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.96);
 }
@@ -4936,7 +4924,6 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   z-index: 1;
   font: 900 clamp(28px, 5vw, 38px)/1 var(--mf);
   letter-spacing: 3px;
-  text-transform: uppercase;
   text-shadow: 0 4px 16px rgba(0, 0, 0, 0.95);
 }
 .end-screen.win .end-title {
@@ -5044,7 +5031,6 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
 .end-stat span {
   font: 600 10.5px/1.1 var(--mf);
   color: #bfa67a;
-  text-transform: uppercase;
   letter-spacing: 0.4px;
 }
 .end-stat b {
@@ -5206,7 +5192,6 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
 .an-acc-box span {
   font: 700 10px/1 var(--mf);
   color: #c9a252;
-  text-transform: uppercase;
   letter-spacing: 0.8px;
 }
 .an-acc-box b {
@@ -5288,7 +5273,6 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
 }
 .an-gname {
   font: 800 11px/1.1 var(--mf);
-  text-transform: uppercase;
 }
 .an-gname.best { color: #fde68a; }
 .an-gname.good { color: #86efac; }
@@ -5341,7 +5325,6 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
 }
 .an-rank-box span {
   font: 700 9.5px/1.1 var(--mf);
-  text-transform: uppercase;
   opacity: 0.9;
 }
 .an-rank-box.brill { border-color: #38bdf8; color: #7dd3fc; box-shadow: 0 0 14px rgba(56, 189, 248, 0.35); }
@@ -5361,7 +5344,6 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   align-items: center;
   font: 700 10.5px/1 var(--mf);
   color: #bfa67a;
-  text-transform: uppercase;
   letter-spacing: 0.6px;
   margin-bottom: 4px;
 }
@@ -5479,9 +5461,8 @@ body, button, input, select, textarea {
   touch-action: pan-y;
 }
 .set-sec-title {
-  font: 800 11px/1.1 var(--mf);
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  font: 700 13px/1.1 var(--mf);
+  letter-spacing: 0.4px;
   color: #c9a252;
   padding-bottom: 5px;
   border-bottom: 1px solid rgba(212, 168, 85, 0.22);
