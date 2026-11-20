@@ -4629,8 +4629,6 @@ body.cb #hdr .pip.d::after { content: "="; }
 body.cb .who .tot.bust b {
   color: var(--cb-bad) !important;
   text-shadow: 0 0 12px rgba(230, 159, 0, 0.85) !important;
-  text-decoration: line-through;
-  text-decoration-thickness: 3px;
 }
 body.cb .who .tot.bust b::after { content: " ✕"; font-size: 0.6em; vertical-align: middle; }
 body.cb .who .tot.exact b {
