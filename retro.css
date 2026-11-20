@@ -4753,12 +4753,14 @@ body.cb .tut-task { color: #cfeafb; background: rgba(0, 114, 178, 0.22); border-
   z-index: 1;
 }
 .hs-arch-frame {
-  position: relative;
+  position: absolute;
   z-index: 2;
-  width: 41%;
-  height: 55%;
-  margin-top: -12%;
-  border-radius: 50% 50% 8px 8px / 44% 44% 8px 8px;
+  left: 50%;
+  top: 22%;
+  transform: translateX(-50%);
+  width: 39%;
+  height: 54%;
+  border-radius: 50% 50% 10px 10px / 44% 44% 10px 10px;
   border: 4px solid #d4a038;
   background: #0d0a0c;
   box-shadow:
@@ -4779,55 +4781,14 @@ body.cb .tut-task { color: #cfeafb; background: rgba(0, 114, 178, 0.22); border-
   object-fit: cover;
   display: block;
 }
-.hs-arch-bar {
-  position: absolute;
-  left: 6px;
-  right: 6px;
-  bottom: 6px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 2px 5px;
-  border-radius: 999px;
-  background: rgba(12, 9, 10, 0.92);
-  border: 1.5px solid #c99c42;
-}
-.hs-lvl {
-  font: 900 10px/1 var(--mf);
-  color: #fde68a;
-  min-width: 12px;
-  text-align: center;
-}
-.hs-bar-fill {
-  flex: 1;
-  height: 7px;
-  border-radius: 999px;
-  background: #1c1622;
-  overflow: hidden;
-}
-.hs-bar-fill i {
-  display: block;
-  height: 100%;
-  width: 0;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #7c3aed, #c084fc);
-  animation: hsXpFill 0.9s 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-.end-screen.lose .hs-bar-fill i {
-  background: linear-gradient(90deg, #7f1d1d, #ef4444);
-}
-@keyframes hsXpFill {
-  to { width: 78%; }
-}
 .hs-wood-plaque {
   position: absolute;
   z-index: 4;
   left: 50%;
-  bottom: 15%;
+  bottom: 14%;
   transform: translateX(-50%);
-  min-width: 58%;
-  padding: 10px 26px 9px;
+  min-width: 56%;
+  padding: 9px 24px 8px;
   border-radius: 10px;
   border: 3.5px solid #c4b5a0;
   background:
@@ -4845,9 +4806,10 @@ body.cb .tut-task { color: #cfeafb; background: rgba(0, 114, 178, 0.22); border-
   background: linear-gradient(180deg, #4f161b 0%, #24080b 100%);
 }
 .hs-wood-plaque span {
-  font: 900 clamp(24px, 4.6vw, 34px)/1 var(--mf);
+  font: 900 clamp(22px, 4.4vw, 32px)/1 var(--mf);
   color: #ffffff;
   letter-spacing: 1px;
+  white-space: nowrap;
   text-shadow: 0 3px 0 #1f1106, 0 5px 14px rgba(0, 0, 0, 0.95);
 }
 @keyframes hsPlaquePop {
@@ -4857,11 +4819,21 @@ body.cb .tut-task { color: #cfeafb; background: rgba(0, 114, 178, 0.22); border-
 .hs-end-stats {
   grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
   max-width: 440px;
+  margin-top: -6px !important;
 }
 .hs-end-stats .end-stat {
-  background: rgba(14, 10, 12, 0.88);
+  background: rgba(14, 10, 12, 0.9);
   border-color: rgba(212, 168, 85, 0.48);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.85);
+}
+@media (max-width: 760px) {
+  .hs-crest-stage {
+    width: min(88vw, 340px);
+  }
+  .hs-end-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    max-width: 320px;
+  }
 }
 .end-screen {
   position: relative;

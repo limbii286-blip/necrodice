@@ -2189,7 +2189,6 @@ function buildEndScreenHtml(S,v,L,roll,th){
       ${crestBgSvg}
       <div class="hs-arch-frame">
         <img src="${avSrc(featH)}" alt="${featNm}" style="object-position:${HERO_FOCUS[featH]||'50% 25%'}">
-        <div class="hs-arch-bar"><span class="hs-lvl">${S.bo+1}</span><span class="hs-bar-fill"><i></i></span></div>
       </div>
       <div class="hs-wood-plaque"><span>${titleTxt}</span></div>
     </div>
