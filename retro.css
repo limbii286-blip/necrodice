@@ -1850,13 +1850,24 @@ body.dragging-joker #fx::after {
 }
 .cards .c.fresh {
   will-change: transform, opacity;
-  animation: cardFlyIn 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: cardFlyIn 0.82s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 @keyframes cardFlyIn {
-  0% { opacity: 0; transform: translate3d(var(--dx, 0px), var(--dy, -80px), 0) scale(0.36) rotate(-14deg); }
-  58% { opacity: 1; transform: translate3d(calc(var(--dx, 0px) * 0.14), calc(var(--dy, -80px) * 0.14), 0) scale(1.08) rotate(2.5deg); }
-  84% { opacity: 1; transform: translate3d(0, -2px, 0) scale(1.01) rotate(-0.6deg); }
-  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+  0% {
+    opacity: 0;
+    transform: translate3d(var(--dx, 0px), var(--dy, -80px), 0) scale(0.46) rotate(var(--rot, -10deg));
+  }
+  16% {
+    opacity: 1;
+  }
+  68% {
+    opacity: 1;
+    transform: translate3d(calc(var(--dx, 0px) * 0.08), calc(var(--dy, -80px) * 0.08 - 6px), 0) scale(1.04) rotate(calc(var(--rot, -10deg) * -0.15));
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+  }
 }
 
 /* --- ORTADAN İKİYE YARILMIŞ TAŞLI RÜNİK MERKEZ HATTI (#fx) --- */

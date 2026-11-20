@@ -1878,22 +1878,61 @@ function cast(p,id,cb){ // joker sahnede Runeterra büyüsü gibi belirir ve Kap
   setTimeout(finish,1650);
 }
 function count(el,a,b){if(!el)return;if(a==b||RM||typeof requestAnimationFrame=='undefined'){el.textContent=b;return}const t0=performance.now(),f=n=>{const x=Math.min(1,(n-t0)/520),e=1-Math.pow(1-x,3);el.textContent=Math.round(a+(b-a)*e);if(x<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
-function fly(){ // yeni kartlar desteden uçarak gelir
-  const d=$('#deck');if(!d||!d.getBoundingClientRect)return;const dr=d.getBoundingClientRect();let i=0;const F=FIT||1;
-  const freshCards=document.querySelectorAll('.fresh');
-  if(freshCards.length){
+function fly(){ // yeni kartlar desteden teker teker, yumuşak yay çizerek uçar
+  const d=$('#deck');if(!d||!d.getBoundingClientRect)return;
+  const freshNodes=[...document.querySelectorAll('.fresh')];
+  if(!freshNodes.length)return;
+  const dr=d.getBoundingClientRect(),F=FIT||1;
+  // Başlangıç dağıtımında (birden fazla kart): önce kapalı kartlar (senin -> rakibin), sonra açık sayı kartları (senin -> rakibin)
+  let ordered=freshNodes;
+  if(freshNodes.length>=2){
+    const pri=el=>{
+      const isMe=!!el.closest('#me');
+      const isClosed=el.classList.contains('mc')||el.classList.contains('bk');
+      if(isClosed&&isMe)return 0;
+      if(isClosed&&!isMe)return 1;
+      if(!isClosed&&isMe)return 2;
+      return 3;
+    };
+    ordered=[...freshNodes].sort((a,b)=>pri(a)-pri(b));
+  }
+  // Önce tüm kartların son konumunu ölç (animasyon sıfırlanmış halde)
+  ordered.forEach(el=>{el.style.animation='none';el.style.opacity='0'});
+  void d.offsetWidth;
+  const rects=ordered.map(el=>el.getBoundingClientRect());
+  const isBatch=ordered.length>=2;
+  const stepMs=isBatch?320:0;
+  const baseMs=isBatch?110:0;
+  const pulseDeck=()=>{
+    if(!d.isConnected)return;
     d.classList.remove('pull');
     void d.offsetWidth;
     d.classList.add('pull');
-    setTimeout(()=>d.classList.remove('pull'),540);
-  }
-  const rects=[...freshCards].map(el=>el.getBoundingClientRect());
-  freshCards.forEach((el,idx)=>{
+  };
+  ordered.forEach((el,idx)=>{
     const r=rects[idx];
-    el.style.setProperty('--dx',(dr.left-r.left+(dr.width-r.width)/2)/F+'px');
-    el.style.setProperty('--dy',(dr.top-r.top+(dr.height-r.height)/2)/F+'px');
-    el.style.animationDelay=(i++*.10)+'s';
+    const dx=(dr.left-r.left+(dr.width-r.width)/2)/F;
+    const dy=(dr.top-r.top+(dr.height-r.height)/2)/F;
+    const isMe=!!el.closest('#me');
+    const delayMs=baseMs+idx*stepMs;
+    el.style.setProperty('--dx',dx.toFixed(1)+'px');
+    el.style.setProperty('--dy',dy.toFixed(1)+'px');
+    el.style.setProperty('--rot',(isMe?-11:11)+'deg');
+    el.style.animationDelay=(delayMs/1000).toFixed(2)+'s';
+    el.style.opacity='';
+    el.style.animation='';
+    if(delayMs===0){
+      pulseDeck();
+      snd('draw');
+    }else{
+      setTimeout(()=>{
+        if(!el.isConnected)return;
+        pulseDeck();
+        snd('draw');
+      },delayMs);
+    }
   });
+  setTimeout(()=>{if(d.isConnected)d.classList.remove('pull')},baseMs+(ordered.length-1)*stepMs+520);
 }
 /* Mobilde kaydırma olmasın: oyun alanı ekrana sığmıyorsa tek parça olarak küçültülür (PC'ye dokunmaz) */
 let FIT=1,fitQ=0;
@@ -2015,7 +2054,7 @@ function R(){
   (S.pj||[]).forEach(e=>seenE.add(e.uid));S.hand[0].forEach(id=>hiLoad(id));
   if(prevSeal&&prevSeal!=seal)snd('stamp');prevSeal=seal;
   if(bust&&!lastBust){snd('bust');shake();vib(120)}lastBust=bust;
-  if(fresh)snd('draw');
+  // Yeni kart sesleri artık fly() içinde her kart desteden çıkarken senkron çalar
   [0,1].forEach(side=>{
     const uNow=side===0?hpUsed0:hpUsed1,hObj=side===0?hpObj0:hpObj1,hId=side===0?myHId:oppHId;
     if(uNow&&!prevHpAnim[side]&&!hObj.passive&&hId!=='w'&&hId!=='a'){
