@@ -5441,7 +5441,7 @@ function renderAuthBar(){
   bar.innerHTML=`<button type="button" class="auth-pill ${rk.cls}" id="ab-prof" title="${tr('Profil, ELO & Günlük Seri','Profile, ELO & Daily Streak')}">
     <span class="ap-ic">${rk.ic}</span>
     <span class="ap-info">
-      <b>${nm}${USER_ACC.isGuest?` <em>(${tr('Misafir','Guest')})</em>`:''}</b>
+      <b>${nm}</b>
       <small>${rk.name}</small>
     </span>
     <span class="ap-streak" title="${tr(`${stDays} Günlük Seri`,`${stDays}-Day Streak`)}">🔥 ${stDays}</span>
@@ -5671,6 +5671,6 @@ function openAuthModal(initialTab='login',isUpgrade=false){
       if(!USER_ACC&&menu&&!menu.hidden&&!lock){
         openAuthModal('login',false);
       }
-    },sp?1900:220);
+    },sp?2150:220);
   }
 })();
