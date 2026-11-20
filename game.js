@@ -1322,7 +1322,7 @@ function endRound(){
   function fin(){
     S.winSide=null;S.vampWinSide=-1;
     if(MODE==='tutorial'){
-      tutStep=7;R();tutRender();
+      tutStep=8;R();tutRender();
       return;
     }
     const duelEnds=S.pts.some(x=>x>=2)||S.rounds>=3;
@@ -2492,7 +2492,7 @@ document.addEventListener('click',e=>{
   }
 });
 function drawFromDeck(){const S=G;if(!S||S.turn||lock||P||!canDraw(S,0))return;if(MODE==='tutorial'&&tutStep!==2)return;snd('draw');if(MODE=='guest')return conn.send({k:'draw'});S.graceLeft=0;lrnAct(S,'d');if(S.botScry&&S.botScry.length)S.botScry.shift();const c=S.deck.pop();S.pl[0].open.push(c);if(S.stats&&S.stats.draws)S.stats.draws[0]++;S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R();if(MODE==='tutorial'&&tutStep===2)tutAdvance('draw')}
-$('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE==='tutorial'&&tutStep!==6)return;if(MODE=='guest')conn.send({k:'pass'});else{lrnAct(G,'p');pass();if(MODE==='tutorial'&&tutStep===6)tutClearHighlights()}}};
+$('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE==='tutorial'&&tutStep!==7)return;if(MODE=='guest')conn.send({k:'pass'});else{lrnAct(G,'p');pass();if(MODE==='tutorial'&&tutStep===7)tutClearHighlights()}}};
 
 /* ---------- ONLINE (PeerJS) ---------- */
 let MODE='bot',peer,conn,spectators=[],specCount=0,waitM=false,rematchReady=[false,false],rematchHeroes=[null,null],deathContReady=[false,false],deathContGo=null;
@@ -3878,32 +3878,46 @@ const TUT_STEPS=()=>[
     task:tr('+5 Jokerini oyna','Play the +5 Joker')
   },
   {
+    sel:'#hand',
+    pos:'top',
+    title:tr('Joker Çeşitleri & Örnekler','Joker Types & Examples'),
+    txt:tr('<b>Blok Jokerler</b> (sağ altta kalkan sembolü) tur sonuna kadar sürer: <b>+5/−5</b>, <b>Hedef 15/17/24/27</b>, <b>En Az Kazanır</b>, <b>Tekler ×2</b> gibi.<br><b>Anlık Jokerler</b> ise bozulamaz: <b>Rakip Kartını İmha</b>, <b>Kart Çal</b>, <b>Kart → 0/12</b>, <b>Açık/Kapalı Takas</b>!','<b>Block Jokers</b> (shield icon) last until round end: e.g. <b>+5/−5</b>, <b>Target 15/17/24/27</b>, <b>Lowest Wins</b>, <b>Odds ×2</b>.<br><b>Instant Jokers</b> resolve immediately: <b>Destroy Card</b>, <b>Steal Card</b>, <b>Card → 0/12</b>, <b>Swap Cards</b>!'),
+    next:true
+  },
+  {
     sel:'#jm .e',
     pos:'bottom',
-    title:tr('Aktif Etkiler & Etkisiz Kılma','Active Effects & Negation'),
-    txt:tr('Masadaki orta şeritte oynanan jokerler birikir: <b>Altın</b> senin, <b>Kırmızı</b> rakibin jokeridir. Kesik çizgililer anlık etkidir; düz çerçeveli <b>Blok Jokerleri</b> ise tur sonuna kadar sürer (üzerine gelip/dokunup okuyabilirsin).','Played jokers appear in the center bar: <b>Gold</b> is yours, <b>Red</b> is your opponent\'s. Dashed means instant; solid-bordered <b>Block Jokers</b> stay active until the round ends.'),
+    title:tr('Masadaki Aktif Etkiler','Active Effects on Table'),
+    txt:tr('Oynanan jokerler orta şeritte toplanır: <b>Altın</b> senin, <b>Kırmızı</b> rakibin jokeridir. Üzerine gelip (mobilde dokunup) ne yaptığını okuyabilir, <b>Joker Etkisiz</b> ile aktif blok jokerlerini bozabilirsin.','Played jokers gather in the center bar: <b>Gold</b> is yours, <b>Red</b> is opponent\'s. Hover (or tap on mobile) to inspect them, and use <b>Negate Joker</b> to cancel active Block Jokers.'),
     next:true
   },
   {
     sel:'#me .hp-btn',
     pos:'top',
-    title:tr('Kahraman Güçleri','Hero Powers'),
-    txt:tr('Her kahramanın kendine özel bir <b>Aktif</b> veya <b>Pasif</b> gücü vardır. Portrenin yanındaki bu madalyona dokunarak gücünü okuyabilir ve aktif güçleri kendi turunda kullanabilirsin.','Every hero has a unique <b>Active</b> or <b>Passive</b> power. Tap or hover this emblem next to your portrait to inspect it or cast active powers on your turn.'),
+    title:tr('Kahraman Güçleri & Örnekler','Hero Powers & Examples'),
+    txt:tr('Her kahramanın eşsiz bir gücü vardır:<br>• <b>Aktif:</b> <b>Veba Doktoru</b> (1 joker yak, 2 çek), <b>Cadı</b> (rakibin kapalı kartına gizlice bak), <b>Kurt Adam</b> (iki taraftan 1\'er kart imha et).<br>• <b>Pasif:</b> <b>Buz Devi</b> (%18 hasar savuşturur), <b>Vampir</b> (ilk beraberliği kazanır), <b>Ölümün Efendisi</b> (D20 +2).','Every hero has a unique power:<br>• <b>Active:</b> <b>Plague Doctor</b> (burn 1 Joker, draw 2), <b>Witch</b> (secretly peek opponent\'s hidden card), <b>Werewolf</b> (destroy 1 card per side).<br>• <b>Passive:</b> <b>Frost Giant</b> (18% deflect), <b>Vampire</b> (wins first tie), <b>Lord of Death</b> (+2 D20).'),
     next:true
   },
   {
     sel:'#pass',
     pos:'bottom',
     title:tr('Pas Geçme ve Turu Bitirme','Passing & Ending the Round'),
-    txt:tr('Toplamın tam <b>21</b>! Artık risk almaya gerek yok. Parlayan <b>Pas</b> butonuna bas; rakip de pas geçerse kapalı kartlar açılır ve tur sonuçlanır!','You are at a perfect <b>21</b>! No need to risk busting. Tap the glowing <b>Pass</b> button — when both pass, hidden cards reveal and the round resolves!'),
+    txt:tr('Toplamın tam <b>21</b>! Artık risk almaya gerek yok. Parlayan <b>Pas</b> butonuna bas; rakip de pas geçerse kapalı kartlar açılır ve ilk turu kazanırsın!','You are at a perfect <b>21</b>! No need to risk busting. Tap the glowing <b>Pass</b> button — when both pass, hidden cards reveal and you win Round 1!'),
     task:tr('Pas butonuna bas','Tap the Pass button')
+  },
+  {
+    sel:'#hdr .hc',
+    pos:'bottom',
+    title:tr('Düellolar & D20 Ölüm Zarı','Duels & The D20 Death Dice'),
+    txt:tr('Harika, ilk turu kazandın (<b>1 – 0</b>)! 3 turluk düelloda <b>2 puana</b> ulaşan kazanır; kaybeden ise hayatta kalmak için kırmızı <b>D20 Ölüm Zarı</b> atar (eşikler: <b>4 → 8 → 14 → 18</b>).','Awesome, you won Round 1 (<b>1 – 0</b>)! First to <b>2 points</b> in a 3-round duel wins; the loser rolls the crimson <b>D20 Death Dice</b> to survive (thresholds: <b>4 → 8 → 14 → 18</b>).'),
+    next:true
   },
   {
     sel:null,
     pos:'bottom',
-    title:tr('Düellolar & D20 Ölüm Zarı','Duels & The D20 Death Dice'),
-    txt:tr('Tebrikler, turu kazandın! 3 turluk düelloda <b>2 puana</b> ulaşan düelloyu kazanır; kaybeden ise hayatta kalmak için kırmızı <b>D20 Ölüm Zarı</b> atar (hedefler: <b>4 → 8 → 14 → 18</b>). Artık tavernaya hazırsın!','Congrats, you won the round! First to <b>2 points</b> in a 3-round duel wins; the loser rolls the crimson <b>D20 Death Dice</b> to survive (thresholds: <b>4 → 8 → 14 → 18</b>). You\'re ready for the tavern!'),
-    finish:true
+    title:tr('Hazırsın, Şimdi Devam Et!','You\'re Ready — Continue!'),
+    txt:tr('Artık tüm kontrol tamamen sende! Bu düelloyu <b>1 – 0</b> öndeyken <b>Kolay Bot</b> karşısında kendin tamamla. Kahraman gücünü ve kalan jokerlerini kullanmayı unutma — bol şans!','You\'re in full control now! Finish this duel from <b>1 – 0</b> ahead against the <b>Easy Bot</b>. Don\'t forget your Hero Power and remaining Jokers — good luck!'),
+    handoff:true
   }
 ];
 function tutClearHighlights(){
@@ -3936,11 +3950,13 @@ function tutRender(){
   }
   w.className='pos-'+(st.pos||'bottom');
   const stepLbl=`${tr('Adım','Step')} ${tutStep+1}/${steps.length}`;
-  const btnHtml=st.finish
-    ?`<button id="tut-next" class="btn sm">${tr('Eğitimi Bitir','Finish Tutorial')}</button>`
-    :st.next
-      ?`<button id="tut-next" class="btn sm">${tr('Devam Et →','Continue →')}</button>`
-      :`<span class="tut-task">${st.task}</span>`;
+  const btnHtml=st.handoff
+    ?`<button id="tut-next" class="btn sm">${tr('Düelloya Devam Et →','Continue Duel →')}</button>`
+    :st.finish
+      ?`<button id="tut-next" class="btn sm">${tr('Eğitimi Bitir','Finish Tutorial')}</button>`
+      :st.next
+        ?`<button id="tut-next" class="btn sm">${tr('Devam Et →','Continue →')}</button>`
+        :`<span class="tut-task">${st.task}</span>`;
   w.innerHTML=`<div id="tut-card">
     <div id="tut-raven" aria-hidden="true">${RAVEN_SVG}</div>
     <div id="tut-bubble">
@@ -3953,6 +3969,12 @@ function tutRender(){
   if(nx){
     nx.onclick=()=>{
       snd('click');
+      if(st.handoff){
+        tutClear();
+        MODE='bot';DIFF='easy';
+        deal(G);R();next();
+        return;
+      }
       if(st.finish){exitGame();return}
       tutStep++;
       tutRender();
