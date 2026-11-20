@@ -1035,7 +1035,7 @@ function next(){
     bot();
   }
 }
-function M(html,btn,cb,end){lock=true;const mb=$('#mb');mb.classList.remove('end-mode','an-mode','set-mode');mb.innerHTML=html+(btn?`<br><br><button id="mo" class="btn">${btn}</button>`:end?'':`<br><i>${tr('Oda sahibinin devam etmesi bekleniyor…','Waiting for the host to continue…')}</i>`)+(end?`<br><br><button id="mx" class="btn alt">${tr('Ana menüye dön','Return to Main Menu')}</button>`:'');$('#m').hidden=false;
+function M(html,btn,cb,end){lock=true;const mb=$('#mb');mb.classList.remove('end-mode','an-mode','set-mode');mb.innerHTML=html+(btn?`<br><br><button id="mo" class="btn">${btn}</button>`:end?'':`<br><i>${tr('Oda sahibinin devam etmesi bekleniyor…','Waiting for the host to continue…')}</i>`)+(end?`<br><br><button id="mx" class="btn alt">${tr('Ana Menüye Dön','Return to Main Menu')}</button>`:'');$('#m').hidden=false;
   if(end&&$('#mb .dice'))$('#mx').style.visibility='hidden'; // zar atılmadan sonuç sızmasın
   anim();
   let done=false;
@@ -1512,11 +1512,11 @@ function endRound(){
       const uRev=(MODE==='host'?(L===0||L===1):L===0)&&avKey(S,L)==='u'&&!surv&&!(S.uRevived&&S.uRevived[L]);
       if(surv||rig||uRev){const n=S.bo+2;
         if(surv&&S.stats&&S.stats.d20Surv)S.stats.d20Surv[L]++;
-        const lb=tr(`Düello ${n} ile devam et`,`Continue to Duel ${n}`),go=()=>{try{document.body.classList.remove('dead')}catch(e){}S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()};
+        const lb=tr(`Düello ${n} ile Devam Et`,`Continue to Duel ${n}`),go=()=>{try{document.body.classList.remove('dead')}catch(e){}S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()};
         if(rig){S.rigDone=true;S.hpUsed[1]=true;impSave(mk(0,1,false,1),()=>M(mk(0,20,true,20),lb,go))}
         else if(uRev){S.uRevived=S.uRevived||[false,false];S.uRevived[L]=true;S.hpUsed[L]=true;impSave(mk(0,roll,false),()=>MM(v=>mk(v,20,true,20),lb,go),tr('Hiçlik seni geri çevirdi… Bir kez daha ölümden döndün!','The Void refused you… You have returned from death once more!'))}
         else MM(full,lb,go)}
-      else{S.over=true;lrnGame(L==0);rematchReady=[false,false];rematchHeroes=[null,null];MM(full,tr('Yeniden oyna','Play Again'),()=>chooseHero(hid=>{if(MODE==='host'){MY_HERO=hid;rematchReady[0]=true;rematchHeroes[0]=hid;checkStartOnlineRematch()}else{MY_HERO=hid;start()}},()=>{$('#menu').hidden=false;setMusic('menu')}),null,true)}
+      else{S.over=true;lrnGame(L==0);rematchReady=[false,false];rematchHeroes=[null,null];MM(full,tr('Yeniden Oyna','Play Again'),()=>chooseHero(hid=>{if(MODE==='host'){MY_HERO=hid;rematchReady[0]=true;rematchHeroes[0]=hid;checkStartOnlineRematch()}else{MY_HERO=hid;start()}},()=>{$('#menu').hidden=false;setMusic('menu')}),null,true)}
     };
     if(how=='zar'){
       const tieFn=v=>{
@@ -2069,7 +2069,7 @@ function R(){
     $('#pass').style.display='none';
   }else{
     $('#pass').style.display='';
-    $('#pass').textContent=ends?tr('Turu bitir','End Round'):tr('Pas','Pass');$('#pass').className='btn sm'+(ends?'':' alt');
+    $('#pass').textContent=ends?tr('Turu Bitir','End Round'):tr('Pas','Pass');$('#pass').className='btn sm'+(ends?'':' alt');
   }
   const n=S.hand[0].length;
   $('#hand').classList.toggle('joker-locked',!!(S.noJ&&S.noJ[0]));
@@ -2559,7 +2559,7 @@ function guide(){
       <li><b>Kart Çek:</b> Destedeki kartlara dokunarak veya sürükleyerek istediğin kadar açık kart çekebilirsin.</li>
       <li><b>Joker Oyna:</b> Bir turda en fazla <b>2 joker</b> oynayabilirsin (Hırsız jokeri bu limitten bağımsızdır). Kartı sürükleyip masaya bırakabilir veya tıklayıp <b>Oyna</b> diyebilirsin.</li>
       <li><b>Kahraman Gücü:</b> Aktif güce sahip bir kahramanın varsa, sıra sendeyken portre yanındaki güç düğmesinden kullanabilirsin. Pasif güçler otomatik çalışır.</li>
-      <li><b>Pas / Turu Bitir:</b> Kart çekmeden, joker oynamadan ve aktif güç kullanmadan pas dersen düğme <b>Turu bitir</b> olur ve kapalı kartlar açılır (ilk tur hamlesi hariç).</li>
+      <li><b>Pas / Turu Bitir:</b> Kart çekmeden, joker oynamadan ve aktif güç kullanmadan pas dersen düğme <b>Turu Bitir</b> olur ve kapalı kartlar açılır (ilk tur hamlesi hariç).</li>
     </ul>
   </div>
   <div class="gd-sec">
@@ -2742,7 +2742,7 @@ function peerLeft(msg){ // rakip çıktı: ana menüye ASLA doğrudan atma, yaln
     const mb=$('#mb');
     if(!$('#m').hidden&&mb){const o=$('#mo');if(o){const br=o.previousElementSibling;o.remove();if(br&&br.tagName=='BR')br.remove()}
       if(!mb.querySelector('.pl'))mb.insertAdjacentHTML('afterbegin',`<div class="pn pl">${msg}</div>`);
-      if(!$('#mx')){mb.insertAdjacentHTML('beforeend',`<br><br><button id="mx" class="btn alt">${tr('Ana menüye dön','Return to Main Menu')}</button>`);$('#mx').onclick=exitGame}
+      if(!$('#mx')){mb.insertAdjacentHTML('beforeend',`<br><br><button id="mx" class="btn alt">${tr('Ana Menüye Dön','Return to Main Menu')}</button>`);$('#mx').onclick=exitGame}
       lock=true;return}
   }
   G.over=true;botGen++;thinkOn=false;waitM=false;
@@ -2854,7 +2854,7 @@ function checkDeathCont(){
   }
 }
 function showRematchWait(msg){
-  box(`<h3>${tr('Hazırsın','Ready')}</h3><p>${msg}</p><div class="row"><button id="rm-exit" class="btn alt">${tr('Ana menüye dön','Return to Main Menu')}</button></div>`,false);
+  box(`<h3>${tr('Hazırsın','Ready')}</h3><p>${msg}</p><div class="row"><button id="rm-exit" class="btn alt">${tr('Ana Menüye Dön','Return to Main Menu')}</button></div>`,false);
   const ex=$('#rm-exit');if(ex)ex.onclick=exitGame;
 }
 function checkStartOnlineRematch(){
@@ -2864,7 +2864,7 @@ function checkStartOnlineRematch(){
     rematchReady=[false,false];rematchHeroes=[null,null];
     $('#m').hidden=true;lock=false;start();
   }else if(rematchReady[0]){
-    showRematchWait(tr('Rakibin "Yeniden oyna" demesi ve kahraman seçmesi bekleniyor…','Waiting for opponent to click "Play Again" and choose a hero…'));
+    showRematchWait(tr('Rakibin "Yeniden Oyna" demesi ve kahraman seçmesi bekleniyor…','Waiting for opponent to click "Play Again" and choose a hero…'));
   }
 }
 const MAX_SPECTATORS = 5;
@@ -3103,10 +3103,10 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
   else if(m.k=='m'){
     waitM=true;
     if(m.end&&MODE==='guest'){
-      M(m.html,tr('Yeniden oyna','Play Again'),()=>chooseHero(hid=>{
+      M(m.html,tr('Yeniden Oyna','Play Again'),()=>chooseHero(hid=>{
         MY_HERO=hid;waitM=true;
         if(conn&&conn.open)conn.send({k:'rematch_ready',hero:hid});
-        showRematchWait(tr('Rakibin "Yeniden oyna" demesi ve kahraman seçmesi bekleniyor…','Waiting for opponent to click "Play Again" and choose a hero…'));
+        showRematchWait(tr('Rakibin "Yeniden Oyna" demesi ve kahraman seçmesi bekleniyor…','Waiting for opponent to click "Play Again" and choose a hero…'));
       },exitGame),true);
     }else if(!m.end&&m.btn&&MODE==='guest'){
       M(m.html,m.btn,()=>{

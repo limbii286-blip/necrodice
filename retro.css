@@ -6312,3 +6312,174 @@ body, button, input, select, textarea {
     padding: 2px 7px;
   }
 }
+
+/* ==========================================================================
+   ALEGREYA OPTİK YAZI BOYUTU ÖLÇEKLEME (TÜM KUTUCUKLARDA NET OKUNAKLILIK)
+   Alegreya'nın x-height'ı Cinzel'den küçük olduğu için tüm buton, kutucuk ve
+   panellerde optik olarak dengeli ve doyurucu boyutlara yükseltilir.
+   ========================================================================== */
+body {
+  font-size: 16.5px;
+}
+.btn {
+  font-size: 16.5px !important;
+  letter-spacing: 0.3px;
+}
+.btn.sm {
+  font-size: 14.5px !important;
+}
+/* Ana Menü Plakaları & Butonlar */
+#mb2 .hs-plaque > span {
+  font-size: 16.5px !important;
+}
+#mb2 .d.btn,
+#mb2 #b2,
+#mb2 #b3 {
+  font-size: 16.5px !important;
+}
+#mb2 #code {
+  font-size: 16px !important;
+}
+#mb2 .hs-drawer .btn.sm {
+  font-size: 14.5px !important;
+}
+/* Oyun İçi Üst Bar, Düello Kutusu, Ayarlar Butonu, Pas/Turu Bitir, Prompt */
+#hdr,
+#hdr .duel-pill,
+#hdr .bo {
+  font-size: 15px !important;
+}
+#hdr .btn.sm {
+  font-size: 14.5px !important;
+}
+#fx #pass {
+  font-size: 15.5px !important;
+  line-height: 1.12 !important;
+}
+#prompt {
+  font-size: 16px !important;
+}
+.nm {
+  font-size: 16.5px !important;
+}
+.tot {
+  font-size: 17px !important;
+}
+.say {
+  font-size: 15.5px !important;
+}
+.cap {
+  font-size: 14px !important;
+}
+/* Kahraman Gücü İpuçları & Kart Önizleme */
+.hp-tip-title {
+  font-size: 16px !important;
+}
+.hp-tip-tag {
+  font-size: 13px !important;
+}
+.hp-tip-desc {
+  font-size: 14.5px !important;
+}
+/* Modallar (#mb), Ayarlar, Profil/Üyelik, Eğitim, Maç Sonu & NecroEngine */
+#mb {
+  font-size: 16.5px;
+}
+#mb h3 {
+  font-size: 25px;
+}
+#mb p,
+#mb li {
+  font-size: 16px;
+}
+.set-tab {
+  font-size: 15px !important;
+}
+.set-row label,
+.set-row span,
+.set-lbl {
+  font-size: 15.5px !important;
+}
+.set-sub {
+  font-size: 13.5px !important;
+}
+.end-stat span {
+  font-size: 13.5px !important;
+}
+.end-stat b {
+  font-size: 18px !important;
+}
+.end-elo-bar {
+  font-size: 15px;
+}
+.auth-sub,
+.auth-lbl {
+  font-size: 15px;
+}
+.auth-tab,
+.auth-inp,
+.auth-guest-btn {
+  font-size: 16px;
+}
+.ap-info b {
+  font-size: 15px;
+}
+.ap-info small {
+  font-size: 12.5px;
+}
+.ap-elo {
+  font-size: 14.5px;
+}
+.pr-rank,
+.pr-hrow,
+.pr-sec-lbl {
+  font-size: 14.5px;
+}
+.pr-stat span {
+  font-size: 13px;
+}
+.pr-stat b {
+  font-size: 19px;
+}
+#tut-bubble {
+  font-size: 16px !important;
+}
+#tut-title {
+  font-size: 18px !important;
+}
+.an-meta,
+.an-vtab,
+.an-flt,
+.an-move,
+.an-bot,
+.an-why,
+.an-hp-alert,
+.an-sk-top {
+  font-size: 14.5px !important;
+}
+.an-ctx,
+.an-gname,
+.an-pos-bar,
+.an-odds-line,
+.an-pv {
+  font-size: 13.5px !important;
+}
+
+@media (max-width: 600px) {
+  .btn {
+    font-size: 15px !important;
+  }
+  .btn.sm {
+    font-size: 13.5px !important;
+  }
+  #fx #pass {
+    font-size: 14px !important;
+  }
+  .set-tab {
+    font-size: 13px !important;
+  }
+  .nm,
+  .tot {
+    font-size: 15px !important;
+  }
+}
