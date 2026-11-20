@@ -2510,6 +2510,13 @@ body.dragging-joker #fx::after {
   pointer-events: auto;
   background: radial-gradient(circle at 50% 50%, rgba(36, 14, 18, 0.76), rgba(6, 4, 6, 0.86)) !important;
   z-index: 45 !important;
+  animation: castBg 1.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes castBg {
+  0%   { opacity: 0; }
+  16%  { opacity: 1; }
+  82%  { opacity: 1; }
+  100% { opacity: 0; }
 }
 #cast img {
   height: min(56dvh, 440px) !important;
@@ -2517,6 +2524,13 @@ body.dragging-joker #fx::after {
   border-radius: 10px !important;
   border: 3px solid #f0ca78 !important;
   box-shadow: 0 20px 55px rgba(0, 0, 0, 0.95), 0 0 45px rgba(207, 46, 60, 0.8) !important;
+  animation: cast 1.65s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+}
+.rm #cast,
+.rm #cast img {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
 }
 
 /* Hedef Seçim Şeridi (#prompt) */

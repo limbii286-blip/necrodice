@@ -1696,13 +1696,18 @@ function cast(p,id,cb){ // joker sahnede Runeterra büyüsü gibi belirir ve Kap
   snd('play');
   if(p==0){if(DES.has(id)){shake();snd('stamp');vib(60)}cb&&cb();return}
   lock=true;
+  const oldCast=document.getElementById('cast');if(oldCast)oldCast.remove();
   const el=document.createElement('div');el.id='cast';el.className='from'+p;
   el.innerHTML=`<img src="${IMG.j[id]}" alt="">`;
-  document.body.appendChild(el);const oz=document.querySelector('#opp');if(oz&&oz.getBoundingClientRect){const r=oz.getBoundingClientRect();el.style.setProperty('--sy',Math.round(r.top+r.height/2-innerHeight/2)+'px')}hi(el.querySelector('img'),id);
+  document.body.appendChild(el);
+  const imgEl=el.querySelector('img');
+  const oz=document.querySelector('#opp');
+  if(imgEl&&oz&&oz.getBoundingClientRect){const r=oz.getBoundingClientRect();imgEl.style.setProperty('--sy',Math.round(r.top+r.height/2-innerHeight/2)+'px')}
+  hi(imgEl,id);
   let done=false;
   const finish=()=>{if(done)return;done=true;if(el.isConnected)el.remove();lock=false;if(DES.has(id)){shake();snd('stamp');vib(60)}if(MODE=='bot'&&p==1){talk(jCat(id),1,.85);R()}cb&&cb()};
   el.onclick=finish;
-  setTimeout(finish,1350);
+  setTimeout(finish,1650);
 }
 function count(el,a,b){if(!el)return;if(a==b||RM||typeof requestAnimationFrame=='undefined'){el.textContent=b;return}const t0=performance.now(),f=n=>{const x=Math.min(1,(n-t0)/520),e=1-Math.pow(1-x,3);el.textContent=Math.round(a+(b-a)*e);if(x<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
 function fly(){ // yeni kartlar desteden uçarak gelir
