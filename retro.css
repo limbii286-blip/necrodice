@@ -4214,18 +4214,27 @@ body.dragging-joker #fx::after {
     font-size: 14px !important;
   }
   #mb:has(.d20-box) .after {
-    margin-top: 10px !important;
-    font-size: 15.5px !important;
+    margin: 18px auto 14px !important;
+    font-size: 17.5px !important;
     line-height: 1.4 !important;
+  }
+  #mb:has(.d20-box) .after-roll {
+    font-size: 19px !important;
+  }
+  #mb:has(.d20-box) .after-msg {
+    font-size: 17.5px !important;
+  }
+  #mb:has(.d20-box) .after-sub {
+    font-size: 15px !important;
   }
   #mb:has(.d20-box) > br {
     display: none;
   }
   #mb:has(.d20-box) #mo,
   #mb:has(.d20-box) #mx {
-    margin-top: 10px !important;
+    margin-top: 4px !important;
     padding: 10px 20px !important;
-    font-size: 15px !important;
+    font-size: 15.5px !important;
   }
 }
 
@@ -4760,21 +4769,31 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
    MASAÜSTÜ ÖLÜM ZARI: GENİŞ, FERAH, TEK EKRAN (SCROLLSUZ)
    ========================================================================== */
 .d20-box ~ .after {
-  margin-top: 14px;
-  line-height: 1.5;
+  margin: 22px auto 18px !important;
+  line-height: 1.45;
+  text-align: center;
 }
 .after-roll {
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  font-size: 21px !important;
+  font-weight: 800;
+  color: #fde68a;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
 }
 .after-msg {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
+  font-size: 20px !important;
+  font-weight: 700;
+  color: #f6ead2;
 }
 .after-sub {
   display: block;
   margin-top: 2px;
+  font-size: 16.5px !important;
+  font-weight: 500;
   opacity: 0.92;
 }
 @media (min-width: 761px) {
@@ -4792,7 +4811,7 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
     padding: 7px 14px !important;
   }
   #mb:has(.d20-box) .d20-box {
-    margin: 12px auto 10px !important;
+    margin: 12px auto 0 !important;
   }
   #mb:has(.d20-box) .bg3-roll-card {
     width: 316px !important;
@@ -4807,12 +4826,12 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
     width: clamp(126px, 20dvh, 158px) !important;
     height: clamp(126px, 20dvh, 158px) !important;
   }
-  #mb:has(.d20-box) br + br {
+  #mb:has(.d20-box) .after ~ br {
     display: none;
   }
   #mb:has(.d20-box) #mo,
   #mb:has(.d20-box) #mx {
-    margin-top: 12px !important;
+    margin-top: 4px !important;
   }
 }
 
