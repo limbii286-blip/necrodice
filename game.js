@@ -1020,11 +1020,11 @@ function next(){
   if(MODE=='tutorial'&&G&&G.turn==1&&!lock&&!G.over){setTimeout(()=>{if(MODE=='tutorial'&&G&&G.turn==1&&!lock&&!G.over)pass()},650);return}
   if(MODE=='bot'&&G.turn==1&&!lock&&!G.over)bot()
 }
-function M(html,btn,cb,end){lock=true;const mb=$('#mb');mb.classList.remove('end-mode','an-mode');mb.innerHTML=html+(btn?`<br><br><button id="mo" class="btn">${btn}</button>`:end?'':`<br><i>${tr('Oda sahibinin devam etmesi bekleniyor…','Waiting for the host to continue…')}</i>`)+(end?`<br><br><button id="mx" class="btn alt">${tr('Ana menüye dön','Return to Main Menu')}</button>`:'');$('#m').hidden=false;
+function M(html,btn,cb,end){lock=true;const mb=$('#mb');mb.classList.remove('end-mode','an-mode','set-mode');mb.innerHTML=html+(btn?`<br><br><button id="mo" class="btn">${btn}</button>`:end?'':`<br><i>${tr('Oda sahibinin devam etmesi bekleniyor…','Waiting for the host to continue…')}</i>`)+(end?`<br><br><button id="mx" class="btn alt">${tr('Ana menüye dön','Return to Main Menu')}</button>`:'');$('#m').hidden=false;
   if(end&&$('#mb .dice'))$('#mx').style.visibility='hidden'; // zar atılmadan sonuç sızmasın
   anim();
   let done=false;
-  if(btn)$('#mo').onclick=()=>{if(done)return;done=true;$('#mb').classList.remove('end-mode','an-mode');$('#m').hidden=true;lock=false;cb()};
+  if(btn)$('#mo').onclick=()=>{if(done)return;done=true;$('#mb').classList.remove('end-mode','an-mode','set-mode');$('#m').hidden=true;lock=false;cb()};
   if(end)$('#mx').onclick=exitGame}
 function MM(fn,btn,cb,sd,end){
   if(MODE=='host'){
@@ -2081,7 +2081,7 @@ function chooseHero(onPick,onCancel){
       <p class="hpc-desc ${dc}">${h.desc}</p>
     </div>
   </button>`}).join('');
-  $('#mb').classList.remove('end-mode','an-mode');
+  $('#mb').classList.remove('end-mode','an-mode','set-mode');
   $('#mb').innerHTML=`<h3>${tr('Kahramanını Seç','Choose Your Hero')}</h3><div class="hero-grid">${cards}</div><div class="row"><button id="hp-cancel" class="btn alt sm">${tr('Geri','Back')}</button></div>`;
   $('#m').hidden=false;
   $('#mb').querySelectorAll('[data-pick-hero]').forEach(btn=>btn.onclick=()=>{
@@ -2323,7 +2323,7 @@ function buildEndScreenHtml(S,v,L,roll,th){
     <div class="end-acts row"></div>
   </div>`;
 }
-function box(html,close=true){lock=true;$('#mb').classList.remove('end-mode','an-mode');$('#mb').innerHTML=html+(close?`<div class="row"><button id="pc" class="btn">${tr('Kapat','Close')}</button></div>`:'');$('#m').hidden=false;if(close)$('#pc').onclick=()=>{$('#m').hidden=true;lock=false;if(G)R()}}
+function box(html,close=true){lock=true;$('#mb').classList.remove('end-mode','an-mode','set-mode');$('#mb').innerHTML=html+(close?`<div class="row"><button id="pc" class="btn">${tr('Kapat','Close')}</button></div>`:'');$('#m').hidden=false;if(close)$('#pc').onclick=()=>{$('#m').hidden=true;lock=false;if(G)R()}}
 /* ---------- BÜYÜK GÖRÜNÜM: karakter, sayı kartı, kapalı kart ---------- */
 const HQ={};
 function hq(key,cs,cb){let i=HQ[key];if(!i){i=HQ[key]=new Image();i._i=0;i.onerror=()=>{if(++i._i<cs.length)i.src=cs[i._i];else i._f=1};i.src=cs[0]}
@@ -2400,7 +2400,7 @@ function zoomCard(id){const S=G;let f=null;
     btn:closed&&own&&!S.rev?tr('Kartımı gizle','Hide card'):'',fn:()=>{snd('flip');peek.delete(id);R()}})}
 function preview(id,use,note,back){ // jokeri büyük göster: Kullan / Kapat
   lock=true;snd('info');
-  $('#mb').classList.remove('end-mode','an-mode');
+  $('#mb').classList.remove('end-mode','an-mode','set-mode');
   $('#mb').innerHTML=`<img class="big" src="${IMG.j[id]}" alt="${J[id]}">${note?`<div class="pn">${note}</div>`:''}<div class="row">${use?`<button id="pu" class="btn alt">${tr('Kullan','Use')}</button>`:''}<button id="pc" class="btn">${tr('Kapat','Close')}</button></div>`;
   $('#m').hidden=false;hi($('#mb .big'),id);
   $('#pc').onclick=()=>{if(back)return back();$('#m').hidden=true;lock=false;if(G)R()};
@@ -2551,56 +2551,108 @@ function toggleLang(){
   snd('click');
   applyLang(isEn()?'tr':'en');
 }
-let setTab='audio';
+let setTab='gameplay',prevVM=0.6,prevVS=0.8;
 function settings(tab){
   if(tab)setTab=tab;
   const inGame=$('#menu').hidden&&!!G;
-  const langBtnTxt=tr('İngilizceye Geç (English)','Türkçeye Geç (Turkish)');
+  const isMuted=(VM<=0&&VS<=0);
+  const langVal=isEn()?'English':'Türkçe';
+  const langBtnTxt=isEn()?'Türkçe':'English';
   const tabsHtml=`<div class="set-tabs">
+    <button type="button" class="set-tab${setTab==='gameplay'?' act':''}" data-stab="gameplay">${tr('Oynanış','Gameplay')}</button>
     <button type="button" class="set-tab${setTab==='audio'?' act':''}" data-stab="audio">${tr('Ses','Audio')}</button>
     <button type="button" class="set-tab${setTab==='display'?' act':''}" data-stab="display">${tr('Görünüm','Display')}</button>
     <button type="button" class="set-tab${setTab==='controls'?' act':''}" data-stab="controls">${tr('Kontroller','Controls')}</button>
   </div>`;
   let bodyHtml='';
-  if(setTab==='audio'){
+  if(setTab==='gameplay'){
+    const matchActs=inGame
+      ?`<div class="set-sec-title" style="margin-top:10px">${tr('Maç İşlemleri','Match Actions')}</div>
+        <div class="set-act-grid">
+          <button type="button" class="btn alt sm set-act-btn" id="sk">${tr('Joker Kodeksi','Joker Codex')}</button>
+          <button type="button" class="btn alt sm set-act-btn" id="sg">${tr('Nasıl Oynanır','How to Play')}</button>
+          ${MODE=='bot'?`<button type="button" class="btn alt sm set-act-btn" id="sa">${tr('Tekrar Oyna','Play Again')}</button>`:`<button type="button" class="btn alt sm set-act-btn" disabled style="opacity:.4;pointer-events:none">${tr('Çevrim İçi','Online')}</button>`}
+          <button type="button" class="btn alt sm set-act-btn" id="sx">${tr('Ana Menü','Main Menu')}</button>
+        </div>`
+      :`<div class="set-sec-title" style="margin-top:10px">${tr('Rehberler','Guides')}</div>
+        <div class="set-act-grid">
+          <button type="button" class="btn alt sm set-act-btn" id="sk">${tr('Joker Kodeksi','Joker Codex')}</button>
+          <button type="button" class="btn alt sm set-act-btn" id="sg">${tr('Nasıl Oynanır','How to Play')}</button>
+        </div>`;
     bodyHtml=`<div class="set-panel">
-      <div class="set-sec-title">${tr('Ses Seviyeleri','Volume Controls')}</div>
-      <label class="set-slider"><span>${tr('Müzik','Music')}</span><input type="range" id="sm" min="0" max="1" step=".05" value="${VM}"><b id="sm-v">${Math.round(VM*100)}%</b></label>
-      <label class="set-slider"><span>${tr('Efektler','Sound Effects')}</span><input type="range" id="ss" min="0" max="1" step=".05" value="${VS}"><b id="ss-v">${Math.round(VS*100)}%</b></label>
+      <div class="set-sec-title">${tr('Genel Oynanış','General Gameplay')}</div>
+      <div class="set-item">
+        <div class="set-item-txt"><b>${tr('Oyun Dili','Language')}</b><small>${tr('Mevcut: ','Current: ')}${langVal}</small></div>
+        <button type="button" class="btn alt sm set-inline-btn" id="slang">${langBtnTxt}</button>
+      </div>
+      <label class="set-item set-toggle">
+        <div class="set-item-txt"><b>${tr('Titreşim (Mobil)','Vibration (Mobile)')}</b><small>${tr('Kart ve zar dokunsal geri bildirimi','Haptic feedback on cards & dice')}</small></div>
+        <input type="checkbox" id="sv" ${VB?'checked':''}>
+      </label>
+      ${matchActs}
+    </div>`;
+  }else if(setTab==='audio'){
+    bodyHtml=`<div class="set-panel">
+      <div class="set-sec-title">${tr('Ses Seviyeleri','Audio Levels')}</div>
+      <label class="set-item set-slider">
+        <span>${tr('Müzik','Music')}</span>
+        <input type="range" id="sm" min="0" max="1" step=".05" value="${VM}">
+        <b id="sm-v">${Math.round(VM*100)}%</b>
+      </label>
+      <label class="set-item set-slider">
+        <span>${tr('Efektler','Effects')}</span>
+        <input type="range" id="ss" min="0" max="1" step=".05" value="${VS}">
+        <b id="ss-v">${Math.round(VS*100)}%</b>
+      </label>
+      <label class="set-item set-toggle">
+        <div class="set-item-txt"><b>${tr('Tümünü Sessize Al','Mute All Audio')}</b><small>${tr('Müzik ve efektleri tek tıkla kapat','Toggle all game sound on/off')}</small></div>
+        <input type="checkbox" id="smute" ${isMuted?'checked':''}>
+      </label>
     </div>`;
   }else if(setTab==='display'){
     bodyHtml=`<div class="set-panel">
-      <div class="set-sec-title">${tr('Erişilebilirlik & Dil','Accessibility & Language')}</div>
-      <label class="chk set-chk"><input type="checkbox" id="sr" ${RM?'checked':''}> <span>${tr('Hareketi azalt','Reduce Motion')}</span></label>
-      <label class="chk set-chk"><input type="checkbox" id="scb" ${CB?'checked':''}> <span>${tr('Renk körü modu (Mavi / Turuncu)','Color-blind mode (Blue / Orange)')}</span></label>
-      <label class="chk set-chk"><input type="checkbox" id="sv" ${VB?'checked':''}> <span>${tr('Titreşim (Mobil)','Vibration (Mobile)')}</span></label>
-      <div class="row" style="margin:10px 0 2px"><button class="btn alt sm" id="slang" style="width:100%">${langBtnTxt}</button></div>
+      <div class="set-sec-title">${tr('Görünüm & Erişilebilirlik','Display & Accessibility')}</div>
+      <label class="set-item set-toggle">
+        <div class="set-item-txt"><b>${tr('Hareketi Azalt','Reduce Motion')}</b><small>${tr('Yoğun ekran sarsıntısı ve parlamaları azaltır','Reduces heavy flashes and motion effects')}</small></div>
+        <input type="checkbox" id="sr" ${RM?'checked':''}>
+      </label>
+      <label class="set-item set-toggle">
+        <div class="set-item-txt"><b>${tr('Renk Körü Modu','Color-blind Mode')}</b><small>${tr('Kırmızı-yeşil yerine Mavi / Turuncu paleti','Blue / Orange palette for red-green clarity')}</small></div>
+        <input type="checkbox" id="scb" ${CB?'checked':''}>
+      </label>
     </div>`;
   }else{
     bodyHtml=`<div class="set-panel set-ctrl">
       <div class="set-sec-title">${tr('Oynanış Kontrolleri','Gameplay Controls')}</div>
-      <div class="ctrl-row"><b>${tr('Deste','Deck')}</b><span>${tr('Tıkla veya masaya sürükle → Kart çek','Click or drag to table → Draw card')}</span></div>
-      <div class="ctrl-row"><b>${tr('Kapalı Kart','Hidden Card')}</b><span>${tr('Dokun → Gizlice bak / kapat','Tap → Peek / hide secretly')}</span></div>
-      <div class="ctrl-row"><b>${tr('Jokerler','Jokers')}</b><span>${tr('Tıkla veya masaya sürükle → Oyna','Click or drag to table → Play')}</span></div>
-      <div class="ctrl-row"><b>${tr('Kullanılmış Joker','Used Jokers')}</b><span>${tr('Üzerine gel (mobilde dokun) → İncele','Hover (tap on mobile) → Inspect')}</span></div>
-      <div class="ctrl-row"><b>${tr('Portren','Your Portrait')}</b><span>${tr('Dokun → İfade (Emote) gönder','Tap → Send emote')}</span></div>
-      <div class="ctrl-row"><b>ESC</b><span>${tr('Menüyü aç / kapat','Open / close menu')}</span></div>
+      <div class="set-item ctrl-row"><b>${tr('Deste','Deck')}</b><span>${tr('Tıkla veya sürükle → Kart çek','Click or drag → Draw card')}</span></div>
+      <div class="set-item ctrl-row"><b>${tr('Kapalı Kart','Hidden Card')}</b><span>${tr('Dokun → Gizlice bak / kapat','Tap → Peek / hide secretly')}</span></div>
+      <div class="set-item ctrl-row"><b>${tr('Jokerler','Jokers')}</b><span>${tr('Tıkla veya sürükle → Oyna','Click or drag → Play')}</span></div>
+      <div class="set-item ctrl-row"><b>${tr('Kullanılmış','Used Jokers')}</b><span>${tr('Üzerine gel (mobilde dokun)','Hover (tap on mobile)')}</span></div>
+      <div class="set-item ctrl-row"><b>${tr('Portren','Portrait')}</b><span>${tr('Dokun → İfade gönder','Tap → Send emote')}</span></div>
+      <div class="set-item ctrl-row"><b>ESC</b><span>${tr('Menüyü aç / kapat','Open / close menu')}</span></div>
     </div>`;
   }
-  const matchBar=inGame?`<div class="set-match-bar"><div class="set-sec-title">${tr('Maç','Match')}</div><div class="set-match-grid"><button class="btn alt sm" id="sk">${tr('Joker Kodeksi','Joker Codex')}</button><button class="btn alt sm" id="sg">${tr('Nasıl Oynanır','How to Play')}</button>${MODE=='bot'?`<button class="btn alt sm" id="sa">${tr('Tekrar Oyna','Play Again')}</button>`:''}<button class="btn alt sm" id="sx">${tr('Ana Menü','Main Menu')}</button></div><button class="btn" id="pc" style="width:100%;margin-top:8px">${tr('Oyuna Dön','Resume')}</button></div>`:'';
-  box(`<h3>${tr('Ayarlar','Settings')}</h3>${tabsHtml}${bodyHtml}${matchBar}`, !inGame);
+  const footBtn=`<div class="set-footer"><button type="button" class="btn set-close-btn" id="pc">${inGame?tr('Oyuna Dön','Resume'):tr('Kapat','Close')}</button></div>`;
+  box(`<h3>${tr('Ayarlar','Settings')}</h3>${tabsHtml}${bodyHtml}${footBtn}`, false);
+  $('#mb').classList.add('set-mode');
   document.querySelectorAll('#mb .set-tab').forEach(b=>b.onclick=()=>{snd('click');settings(b.dataset.stab)});
-  if(inGame&&$('#pc'))$('#pc').onclick=()=>{$('#m').hidden=true;lock=false;if(G)R()};
-  if($('#sm'))$('#sm').oninput=e=>{VM=+e.target.value;LS('vm',VM);const v=$('#sm-v');if(v)v.textContent=Math.round(VM*100)+'%';ac();MG.gain.value=VM*.22;if(FILE&&mel)mel.volume=Math.min(1,VM*.22)};
-  if($('#ss')){$('#ss').oninput=e=>{VS=+e.target.value;LS('vs',VS);const v=$('#ss-v');if(v)v.textContent=Math.round(VS*100)+'%';ac();SG.gain.value=VS*.45};$('#ss').onchange=()=>snd('draw')}
+  if($('#pc'))$('#pc').onclick=()=>{$('#mb').classList.remove('set-mode');$('#m').hidden=true;lock=false;if(G)R()};
+  if($('#sm'))$('#sm').oninput=e=>{VM=+e.target.value;if(VM>0)prevVM=VM;LS('vm',VM);const v=$('#sm-v');if(v)v.textContent=Math.round(VM*100)+'%';const mu=$('#smute');if(mu)mu.checked=(VM<=0&&VS<=0);ac();MG.gain.value=VM*.22;if(FILE&&mel)mel.volume=Math.min(1,VM*.22)};
+  if($('#ss')){$('#ss').oninput=e=>{VS=+e.target.value;if(VS>0)prevVS=VS;LS('vs',VS);const v=$('#ss-v');if(v)v.textContent=Math.round(VS*100)+'%';const mu=$('#smute');if(mu)mu.checked=(VM<=0&&VS<=0);ac();SG.gain.value=VS*.45};$('#ss').onchange=()=>snd('draw')}
+  if($('#smute'))$('#smute').onchange=e=>{
+    if(e.target.checked){if(VM>0)prevVM=VM;if(VS>0)prevVS=VS;VM=0;VS=0}
+    else{VM=prevVM>0?prevVM:0.6;VS=prevVS>0?prevVS:0.8}
+    LS('vm',VM);LS('vs',VS);ac();MG.gain.value=VM*.22;SG.gain.value=VS*.45;if(FILE&&mel)mel.volume=Math.min(1,VM*.22);
+    settings('audio');
+  };
   if($('#sr'))$('#sr').onchange=e=>{RM=e.target.checked;LS('rm',RM?1:0);document.body.classList.toggle('rm',RM)};
   if($('#scb'))$('#scb').onchange=e=>{CB=e.target.checked;LS('cb',CB?1:0);document.body.classList.toggle('cb',CB)};
   if($('#sv'))$('#sv').onchange=e=>{VB=e.target.checked;LS('vb',VB?1:0)};
-  if($('#slang'))$('#slang').onclick=()=>{toggleLang();settings()};
+  if($('#slang'))$('#slang').onclick=()=>{toggleLang();settings('gameplay')};
   if($('#sk'))$('#sk').onclick=codex;if($('#sg'))$('#sg').onclick=guide;
   if($('#sa'))$('#sa').onclick=()=>{
-    botGen++;thinkOn=false;const c=$('#cast');if(c)c.remove();$('#m').hidden=true;lock=false;P=null;
-    G.over=true;chooseHero(hid=>{MY_HERO=hid;start()},()=>settings())};
+    botGen++;thinkOn=false;const c=$('#cast');if(c)c.remove();$('#mb').classList.remove('set-mode');$('#m').hidden=true;lock=false;P=null;
+    G.over=true;chooseHero(hid=>{MY_HERO=hid;start()},()=>settings('gameplay'))};
   if($('#sx'))$('#sx').onclick=exitGame;
 }
 let leaving=false;
