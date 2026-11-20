@@ -24,7 +24,7 @@ let G,P=null,lock=false;
 
 /* ---------- SES: Web Audio (müzik ve efekt ayrı ses ayarlı) ---------- */
 const LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem('nd_'+k);localStorage.setItem('nd_'+k,v)}catch(e){}return null};
-let AC,SG,MG,VM=+(LS('vm')??.45),VS=+(LS('vs')??.8),RM=LS('rm')=='1',VB=LS('vb')!='0',CRT=LS('crt')!='0';
+let AC,SG,MG,VM=+(LS('vm')??.45),VS=+(LS('vs')??.8),RM=LS('rm')=='1',CB=LS('cb')=='1',VB=LS('vb')!='0',CRT=LS('crt')!='0';
 const ac=()=>{
   if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();SG=AC.createGain();MG=AC.createGain();SG.gain.value=VS*.45;MG.gain.value=VM*.22;SG.connect(AC.destination);MG.connect(AC.destination);loadSfx();playM()}
   if(AC.state!=='running'){try{AC.resume().catch(()=>{})}catch(e){}}return AC;
@@ -415,6 +415,22 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
             else if(isFail){snd('death');if(res=='death'){try{document.body.classList.add('dead')}catch(e){}}vib([300,100,500])}
             else{snd(res);flash()}
             setTimeout(()=>{const x=document.querySelector('#mx');if(x)x.style.visibility=''},600);
+            if(res==='death'||res==='win'){
+              setTimeout(()=>{
+                const mb=document.querySelector('#mb');
+                const tpl=mb&&mb.querySelector('template.end-tpl');
+                if(!mb||!tpl||!d.isConnected)return;
+                const mo=mb.querySelector('#mo'),mx=mb.querySelector('#mx');
+                mb.classList.add('end-mode');
+                mb.innerHTML=tpl.innerHTML;
+                const row=mb.querySelector('.end-acts');
+                if(row){
+                  if(mo){mo.style.visibility='';row.appendChild(mo)}
+                  if(mx){mx.style.visibility='';row.appendChild(mx)}
+                }
+                snd(res==='win'?'win':'lose');
+              },1450);
+            }
           }
         };
 
@@ -475,6 +491,7 @@ const initClockSec=()=>((MODE==='host'||MODE==='guest'||MODE==='spectator')?ONLI
 const GRACE_INIT=5;       // İlk düello ve geçişlerde jokerlere bakmak için 5 saniye hazırlık süresi
 function newBO3(S){
   const cs=initClockSec();
+  if(!S.stats)S.stats={rounds:[0,0,0],draws:[0,0],jokers:[0,0],d20Surv:[0,0],startAt:Date.now()};
   S.dj=[];S.jdeck=shuf(range(24));
   S.hand=[0,1].map(p=>avKey(S,p)==='s'?[...S.jdeck.splice(0,3),25]:S.jdeck.splice(0,4));
   S.pts=[0,0];S.rounds=0;S.res=[];
@@ -540,6 +557,7 @@ function play(S,p,id,pk){
     return;
   }
   S.jUsed[p]++;S.jTurn=S.jTurn||[0,0];S.jTurn[p]++;
+  if(S.stats&&S.stats.jokers)S.stats.jokers[p]++;
   const uid=++S.u;(S.pj=S.pj||[]).push({id,o:p,uid});
   if(BLOCK.has(id))S.eff.push({id,o:p,uid,neg:false,s:pk[0]});
   if(id==5){if(S.botScry&&S.botScry.length)S.botScry.shift();S.pl[q].open.push(S.deck.pop())}
@@ -817,7 +835,7 @@ function bot(){
     const a=plan?plan.a:(n++<8?(prm.mc?decideH:decide)(S,1,prm.mc?{...prm,K:90,ms:400}:prm):null);plan=null;pid++;
     if(!a){R();return pass()}
     S.acted=true;
-    if(a.t=='d'){if(S.botScry&&S.botScry.length)S.botScry.shift();const c=S.deck.pop();S.pl[1].open.push(c);S.log.push({p:1,t:`kart çekti (${c.n})`});R();talk('draw',0,.3);think(AFTER[DIFF])}
+    if(a.t=='d'){if(S.botScry&&S.botScry.length)S.botScry.shift();const c=S.deck.pop();S.pl[1].open.push(c);if(S.stats&&S.stats.draws)S.stats.draws[1]++;S.acted=true;S.log.push({p:1,t:`kart çekti (${c.n})`});R();talk('draw',0,.3);think(AFTER[DIFF])}
     else{play(S,1,a.id,a.pk);S.log.push({p:1,t:`joker oynadı: ${J[a.id]}`});note(1,a.id,()=>{R();think(AFTER[DIFF])})}
   };
   think(THINK[DIFF]);
@@ -846,7 +864,7 @@ function next(){
   if(MODE=='tutorial'&&G&&G.turn==1&&!lock&&!G.over){setTimeout(()=>{if(MODE=='tutorial'&&G&&G.turn==1&&!lock&&!G.over)pass()},650);return}
   if(MODE=='bot'&&G.turn==1&&!lock&&!G.over)bot()
 }
-function M(html,btn,cb,end){lock=true;$('#mb').innerHTML=html+(btn?`<br><br><button id="mo" class="btn">${btn}</button>`:end?'':`<br><i>${tr('Oda sahibinin devam etmesi bekleniyor…','Waiting for the host to continue…')}</i>`)+(end?`<br><br><button id="mx" class="btn alt">${tr('Ana menüye dön','Return to Main Menu')}</button>`:'');$('#m').hidden=false;
+function M(html,btn,cb,end){lock=true;const mb=$('#mb');mb.classList.remove('end-mode');mb.innerHTML=html+(btn?`<br><br><button id="mo" class="btn">${btn}</button>`:end?'':`<br><i>${tr('Oda sahibinin devam etmesi bekleniyor…','Waiting for the host to continue…')}</i>`)+(end?`<br><br><button id="mx" class="btn alt">${tr('Ana menüye dön','Return to Main Menu')}</button>`:'');$('#m').hidden=false;
   if(end&&$('#mb .dice'))$('#mx').style.visibility='hidden'; // zar atılmadan sonuç sızmasın
   anim();
   let done=false;
@@ -1205,6 +1223,7 @@ function endRound(){
     }
   }
   if(r!==0){S.cWins=S.cWins||[0,0];S.cWins[r>0?0:1]++;}
+  if(S.stats&&S.stats.rounds){if(r>0)S.stats.rounds[0]++;else if(r<0)S.stats.rounds[1]++;else S.stats.rounds[2]++;}
   if(MODE=='bot'){profRec(S,a[0],T);lrnRound(r)}
   S.pts[0]+=r>0?1:r==0?.5:0;S.pts[1]+=r<0?1:r==0?.5:0;S.rounds++;S.res.push(r);S.wait=true;S.rev=true;S.winSide=null;S.vampWinSide=vampWinSide;
   R();snd('flip');lock=true; // 1) Kapalı kartlar açılır ve masada açık kalır
@@ -1266,9 +1285,10 @@ function endRound(){
       </div>
     </div><div class="after"><b>${tr('Zar Sonucu','Roll Result')}: ${roll}${(hpB||execPen)&&rawOv==null?` (${rr}${hpB?`+${hpB} ${blessingName}`:''}${execPen?`−2 ${decreeName}`:''})`:''}</b><br>`+(surv?(L==v?tr('Kurtuldun! Hayatta kaldın.','You survived!'):tr('Rakip hayatta kaldı.','Opponent survived.')):(`<b>${L==v?tr('Öldün. Oyunu rakip kazandı.','You died. Opponent won the game.'):tr('Rakip öldü. Oyunu sen kazandın!','Opponent died. You won the game!')}</b>`))+'</div>'};
     const openDeathModal=()=>{
-      const full=v=>mk(v,roll,surv),rig=MODE=='bot'&&avKey(S,1)==='u'&&L==1&&!surv&&!S.rigDone; // Bilinmeyen (İmkansız bot): oyun başına bir kez ölümden döner
+      const full=v=>mk(v,roll,surv)+(!surv&&!rig&&!uRev?`<template class="end-tpl">${buildEndScreenHtml(S,v,L,roll,th)}</template>`:''),rig=MODE=='bot'&&avKey(S,1)==='u'&&L==1&&!surv&&!S.rigDone; // Bilinmeyen (İmkansız bot): oyun başına bir kez ölümden döner
       const uRev=(MODE==='host'?(L===0||L===1):L===0)&&avKey(S,L)==='u'&&!surv&&!(S.uRevived&&S.uRevived[L]);
       if(surv||rig||uRev){const n=S.bo+2;
+        if(surv&&S.stats&&S.stats.d20Surv)S.stats.d20Surv[L]++;
         const lb=tr(`Düello ${n} ile devam et`,`Continue to Duel ${n}`),go=()=>{try{document.body.classList.remove('dead')}catch(e){}S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()};
         if(rig){S.rigDone=true;S.hpUsed[1]=true;impSave(mk(0,1,false,1),()=>M(mk(0,20,true,20),lb,go))}
         else if(uRev){S.uRevived=S.uRevived||[false,false];S.uRevived[L]=true;S.hpUsed[L]=true;impSave(mk(0,roll,false),()=>MM(v=>mk(v,20,true,20),lb,go),tr('Hiçlik seni geri çevirdi… Bir kez daha ölümden döndün!','The Void refused you… You have returned from death once more!'))}
@@ -1947,7 +1967,52 @@ function useHeroPower(){
     return;
   }
 }
-function box(html,close=true){lock=true;$('#mb').innerHTML=html+(close?`<div class="row"><button id="pc" class="btn">${tr('Kapat','Close')}</button></div>`:'');$('#m').hidden=false;if(close)$('#pc').onclick=()=>{$('#m').hidden=true;lock=false;if(G)R()}}
+function buildEndScreenHtml(S,v,L,roll,th){
+  const isSpec=v===2,vi=isSpec?0:v;
+  const won=L!==vi;
+  const st=S.stats||{rounds:[0,0,0],draws:[0,0],jokers:[0,0],d20Surv:[0,0],startAt:Date.now()};
+  const myH=avKey(S,vi),oppH=avKey(S,1-vi);
+  const myNm=NAMES[myH]||tr('Sen','You'),oppNm=NAMES[oppH]||tr('Rakip','Opponent');
+  const rw=st.rounds[vi]||0,rl=st.rounds[1-vi]||0,rt=st.rounds[2]||0;
+  const mj=st.jokers[vi]||0,oj=st.jokers[1-vi]||0;
+  const md=st.draws[vi]||0,od=st.draws[1-vi]||0;
+  const sec=Math.max(1,Math.round((Date.now()-(st.startAt||Date.now()))/1000));
+  const durTxt=`${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
+  const titleTxt=isSpec?tr('MAÇ SONA ERDİ','MATCH OVER'):(won?tr('ZAFER','VICTORY'):tr('YENİLGİ','DEFEAT'));
+  const subTxt=isSpec
+    ?(L===1?`${myNm} ${tr('kazandı!','won!')}`:`${oppNm} ${tr('kazandı!','won!')}`)
+    :(won?tr('Ölüm zarı rakibin kaderini mühürledi!','The Death Dice sealed your opponent\'s fate!'):tr('Kaderin mühürlendi, ama taverna seni tekrar bekler…','Your fate was sealed, yet the tavern awaits you again…'));
+  const crestSvg=won
+    ?`<svg viewBox="0 0 64 64" fill="none"><path d="M10 46L16 20L32 32L48 20L54 46H10Z" fill="url(#crG)" stroke="#fef08a" stroke-width="2.2" stroke-linejoin="round"/><rect x="10" y="46" width="44" height="7" rx="3" fill="#b45309" stroke="#fde68a" stroke-width="1.8"/><circle cx="16" cy="17" r="3.5" fill="#fef08a"/><circle cx="32" cy="13" r="4" fill="#fef08a"/><circle cx="48" cy="17" r="3.5" fill="#fef08a"/><defs><linearGradient id="crG" x1="32" y1="16" x2="32" y2="48" gradientUnits="userSpaceOnUse"><stop stop-color="#fde68a"/><stop offset="1" stop-color="#b45309"/></linearGradient></defs></svg>`
+    :`<svg viewBox="0 0 64 64" fill="none"><path d="M32 10C19 10 12 19 12 31C12 39 16 44 21 47V54H43V47C48 44 52 39 52 31C52 19 45 10 32 10Z" fill="#2b1216" stroke="#f87171" stroke-width="2.4"/><circle cx="23" cy="31" r="5" fill="#ef4444"/><circle cx="41" cy="31" r="5" fill="#ef4444"/><path d="M29 41L32 36L35 41H29Z" fill="#f87171"/><path d="M25 54V47M32 54V47M39 54V47" stroke="#f87171" stroke-width="2"/></svg>`;
+  return `<div class="end-screen ${isSpec?'spec':won?'win':'lose'}">
+    <div class="end-glow"></div>
+    <div class="end-crest">${crestSvg}</div>
+    <div class="end-title">${titleTxt}</div>
+    <p class="end-sub">${subTxt}</p>
+    <div class="end-vs">
+      <div class="end-hero ${won?'winner':'loser'}">
+        <div class="end-av-wrap"><img src="${avSrc(myH)}" alt="${myNm}" style="object-position:${HERO_FOCUS[myH]||'50% 25%'}"><span class="end-badge">${won?'👑':'💀'}</span></div>
+        <b>${myNm}</b>
+      </div>
+      <div class="end-vs-mid">VS</div>
+      <div class="end-hero ${!won?'winner':'loser'}">
+        <div class="end-av-wrap"><img src="${avSrc(oppH)}" alt="${oppNm}" style="object-position:${HERO_FOCUS[oppH]||'50% 25%'}"><span class="end-badge">${!won?'👑':'💀'}</span></div>
+        <b>${oppNm}</b>
+      </div>
+    </div>
+    <div class="end-stats">
+      <div class="end-stat" style="--d:0.08s"><span>${tr('Düello','Duels')}</span><b>${S.bo+1}</b></div>
+      <div class="end-stat" style="--d:0.16s"><span>${tr('Tur Skoru','Rounds')}</span><b>${rw}${tr('G','W')} · ${rl}${tr('M','L')}${rt?` · ${rt}${tr('B','T')}`:''}</b></div>
+      <div class="end-stat" style="--d:0.24s"><span>${tr('Jokerler','Jokers')}</span><b>${mj} – ${oj}</b></div>
+      <div class="end-stat" style="--d:0.32s"><span>${tr('Son D20','Final D20')}</span><b>${roll} / ${th}</b></div>
+      <div class="end-stat" style="--d:0.40s"><span>${tr('Çekilen Kart','Draws')}</span><b>${md} – ${od}</b></div>
+      <div class="end-stat" style="--d:0.48s"><span>${tr('Süre','Duration')}</span><b>${durTxt}</b></div>
+    </div>
+    <div class="end-acts row"></div>
+  </div>`;
+}
+function box(html,close=true){lock=true;$('#mb').classList.remove('end-mode');$('#mb').innerHTML=html+(close?`<div class="row"><button id="pc" class="btn">${tr('Kapat','Close')}</button></div>`:'');$('#m').hidden=false;if(close)$('#pc').onclick=()=>{$('#m').hidden=true;lock=false;if(G)R()}}
 /* ---------- BÜYÜK GÖRÜNÜM: karakter, sayı kartı, kapalı kart ---------- */
 const HQ={};
 function hq(key,cs,cb){let i=HQ[key];if(!i){i=HQ[key]=new Image();i._i=0;i.onerror=()=>{if(++i._i<cs.length)i.src=cs[i._i];else i._f=1};i.src=cs[0]}
@@ -2047,7 +2112,7 @@ function guide(){
   <div class="gd-sec">
     <h4 class="gd-h">3. On Your Turn</h4>
     <ul class="gd-ul">
-      <li><b>Chess Clock (33s):</b> Your clock ticks only on your turn (with a 5s grace period at the start of a round). Running out of time passes your turn.</li>
+      <li><b>Chess Clock (33s):</b> Your clock ticks only on your turn (with a 5s grace period at the start of a round). Running out of time does not lose the game — it automatically passes your turn.</li>
       <li><b>Draw a Card:</b> Tap or drag from the deck to draw as many open number cards as you want.</li>
       <li><b>Play a Joker:</b> You may play up to <b>2 Jokers</b> per round (the Thief Joker ignores this limit). Drag a Joker onto the table or tap it and press <b>Use</b>.</li>
       <li><b>Hero Power:</b> If your hero has an active power, tap the emblem next to your portrait on your turn. Passive powers trigger automatically.</li>
@@ -2095,7 +2160,7 @@ function guide(){
   <div class="gd-sec">
     <h4 class="gd-h">3. Sıran Geldiğinde</h4>
     <ul class="gd-ul">
-      <li><b>Satranç Saati (33 sn):</b> Sıra sendeyken yalnızca senin saatin akar (ilk düello ve geçişlerde 5 sn hazırlık süresi vardır). Süre biterse turu kaybedersin.</li>
+      <li><b>Satranç Saati (33 sn):</b> Sıra sendeyken yalnızca senin saatin akar (ilk düello ve geçişlerde 5 sn hazırlık süresi vardır). Süren biterse oyunu kaybetmezsin; sıran otomatik olarak pas geçer.</li>
       <li><b>Kart Çek:</b> Destedeki kartlara dokunarak veya sürükleyerek istediğin kadar açık kart çekebilirsin.</li>
       <li><b>Joker Oyna:</b> Bir turda en fazla <b>2 joker</b> oynayabilirsin (Hırsız jokeri bu limitten bağımsızdır). Kartı sürükleyip masaya bırakabilir veya tıklayıp <b>Oyna</b> diyebilirsin.</li>
       <li><b>Kahraman Gücü:</b> Aktif güce sahip bir kahramanın varsa, sıra sendeyken portre yanındaki güç düğmesinden kullanabilirsin. Pasif güçler otomatik çalışır.</li>
@@ -2177,11 +2242,12 @@ function toggleLang(){
 function settings(){
   const inGame=$('#menu').hidden&&!!G;
   const langBtnTxt=tr('İngilizceye Geç (English)','Türkçeye Geç (Turkish)');
-  box(`<h3>${tr('Ayarlar','Settings')}</h3><label>${tr('Müzik','Music')}<input type="range" id="sm" min="0" max="1" step=".05" value="${VM}"></label><label>${tr('Efektler','Sound Effects')}<input type="range" id="ss" min="0" max="1" step=".05" value="${VS}"></label><label class="chk"><input type="checkbox" id="sr" ${RM?'checked':''}> ${tr('Hareketi azalt','Reduce Motion')}</label><label class="chk"><input type="checkbox" id="sv" ${VB?'checked':''}> ${tr('Titreşim','Vibration')}</label><div class="row" style="margin:10px 0 4px"><button class="btn alt sm" id="slang" style="width:100%">${langBtnTxt}</button></div>${inGame?`<div class="menu-stack"><button class="btn alt" id="sk">${tr('Joker Kodeksi','Joker Codex')}</button><button class="btn alt" id="sg">${tr('Nasıl oynanır','How to Play')}</button>${MODE=='bot'?`<button class="btn alt" id="sa">${tr('Tekrar oyna','Play Again')}</button>`:''}<button class="btn alt" id="sx">${tr('Ana menüye dön','Return to Main Menu')}</button><button class="btn" id="pc">${tr('Kapat','Close')}</button></div>`:''}`, !inGame);
+  box(`<h3>${tr('Ayarlar','Settings')}</h3><label>${tr('Müzik','Music')}<input type="range" id="sm" min="0" max="1" step=".05" value="${VM}"></label><label>${tr('Efektler','Sound Effects')}<input type="range" id="ss" min="0" max="1" step=".05" value="${VS}"></label><label class="chk"><input type="checkbox" id="sr" ${RM?'checked':''}> ${tr('Hareketi azalt','Reduce Motion')}</label><label class="chk"><input type="checkbox" id="scb" ${CB?'checked':''}> ${tr('Renk körü modu','Color-blind mode')}</label><label class="chk"><input type="checkbox" id="sv" ${VB?'checked':''}> ${tr('Titreşim','Vibration')}</label><div class="row" style="margin:10px 0 4px"><button class="btn alt sm" id="slang" style="width:100%">${langBtnTxt}</button></div>${inGame?`<div class="menu-stack"><button class="btn alt" id="sk">${tr('Joker Kodeksi','Joker Codex')}</button><button class="btn alt" id="sg">${tr('Nasıl oynanır','How to Play')}</button>${MODE=='bot'?`<button class="btn alt" id="sa">${tr('Tekrar oyna','Play Again')}</button>`:''}<button class="btn alt" id="sx">${tr('Ana menüye dön','Return to Main Menu')}</button><button class="btn" id="pc">${tr('Kapat','Close')}</button></div>`:''}`, !inGame);
   if(inGame&&$('#pc'))$('#pc').onclick=()=>{$('#m').hidden=true;lock=false;if(G)R()};
   $('#sm').oninput=e=>{VM=+e.target.value;LS('vm',VM);ac();MG.gain.value=VM*.22;if(FILE&&mel)mel.volume=Math.min(1,VM*.22)};
   $('#ss').oninput=e=>{VS=+e.target.value;LS('vs',VS);ac();SG.gain.value=VS*.45};$('#ss').onchange=()=>snd('draw');
   $('#sr').onchange=e=>{RM=e.target.checked;LS('rm',RM?1:0);document.body.classList.toggle('rm',RM)};
+  $('#scb').onchange=e=>{CB=e.target.checked;LS('cb',CB?1:0);document.body.classList.toggle('cb',CB)};
   $('#sv').onchange=e=>{VB=e.target.checked;LS('vb',VB?1:0)};
   if($('#slang'))$('#slang').onclick=()=>{toggleLang();settings()};
   if($('#sk'))$('#sk').onclick=codex;if($('#sg'))$('#sg').onclick=guide;
@@ -2299,7 +2365,7 @@ document.addEventListener('click',e=>{
     return;
   }
 });
-function drawFromDeck(){const S=G;if(!S||S.turn||lock||P||!canDraw(S,0))return;if(MODE==='tutorial'&&tutStep!==2)return;snd('draw');if(MODE=='guest')return conn.send({k:'draw'});S.graceLeft=0;lrnAct(S,'d');if(S.botScry&&S.botScry.length)S.botScry.shift();const c=S.deck.pop();S.pl[0].open.push(c);S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R();if(MODE==='tutorial'&&tutStep===2)tutAdvance('draw')}
+function drawFromDeck(){const S=G;if(!S||S.turn||lock||P||!canDraw(S,0))return;if(MODE==='tutorial'&&tutStep!==2)return;snd('draw');if(MODE=='guest')return conn.send({k:'draw'});S.graceLeft=0;lrnAct(S,'d');if(S.botScry&&S.botScry.length)S.botScry.shift();const c=S.deck.pop();S.pl[0].open.push(c);if(S.stats&&S.stats.draws)S.stats.draws[0]++;S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R();if(MODE==='tutorial'&&tutStep===2)tutAdvance('draw')}
 $('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE==='tutorial'&&tutStep!==6)return;if(MODE=='guest')conn.send({k:'pass'});else{lrnAct(G,'p');pass();if(MODE==='tutorial'&&tutStep===6)tutClearHighlights()}}};
 
 /* ---------- ONLINE (PeerJS) ---------- */
@@ -2434,7 +2500,7 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
 
   const S=G;if(!S||S.over||S.wait||S.turn!=1)return;
   if(fromConn !== conn) return; // Hamleleri sadece aktif rakip (conn) yapabilir!
-  if(m.k=='draw'){if(!canDraw(S,1))return;S.graceLeft=0;const c=S.deck.pop();S.pl[1].open.push(c);S.acted=true;S.log.push({p:1,t:`kart çekti (${c.n})`});R()}
+  if(m.k=='draw'){if(!canDraw(S,1))return;S.graceLeft=0;const c=S.deck.pop();S.pl[1].open.push(c);if(S.stats&&S.stats.draws)S.stats.draws[1]++;S.acted=true;S.log.push({p:1,t:`kart çekti (${c.n})`});R()}
   else if(m.k=='pass')pass();
   else if(m.k=='play'){
     const id=m.id,ks=NEED[id]||[],pk=m.pk||[];
@@ -2779,7 +2845,7 @@ document.addEventListener('keydown',e=>{
   }
   settings();
 });
-try{if(RM)document.body.classList.add('rm');if(!CRT)document.documentElement.classList.add('nocrt')}catch(e){}
+try{if(RM)document.body.classList.add('rm');if(CB)document.body.classList.add('cb');if(!CRT)document.documentElement.classList.add('nocrt')}catch(e){}
 try{$('#slogo').src='limbi_favicon.png?v=limbi3'}catch(e){}setTimeout(()=>{const s=$('#splash');s&&s.remove()},2900);
 on('#b2',()=>{if(noNet())return;chooseHero(h=>{MY_HERO=h;hostRoom()})});on('#b3',joinRoom);
 
