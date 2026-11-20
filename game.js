@@ -4858,7 +4858,7 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
   if(!mb||!LAST_MATCH_HIST.length)return;
   const hist=[...LAST_MATCH_HIST];
   const results=[];
-  let idx=0,cancelled=false,anView='moves',anFilter='all',openMoveIdx=-1;
+  let idx=0,cancelled=false,anView='moves',anFilter='all',openMoveIdx=-1,selDuel=null;
   mb.classList.remove('end-mode','set-mode');
   mb.classList.add('an-mode');
   mb.innerHTML=`<div class="an-loading">
@@ -4898,7 +4898,7 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
           <div class="an-sk-bar"><i style="width:${v||0}%;background:${barCol}"></i></div>
         </div>`;
       }).join('');
-      const duelsHtml=st.duels.map(d=>`<div class="an-duel-chip"><span>${tr('Düello','Duel')} ${d.duel}</span><b>%${d.acc}</b><small>${d.moves} ${tr('hamle','moves')}</small></div>`).join('');
+      const duelsHtml=st.duels.map(d=>`<button type="button" class="an-duel-chip clickable" data-duel="${d.duel}"><span>${tr('Düello','Duel')} ${d.duel}</span><b>%${d.acc}</b><small>${d.moves} ${tr('hamle','moves')}</small></button>`).join('');
       const hpMissedHtml=st.hpMissed&&st.hpMissed.length
         ?`<div class="an-sec-lbl">${tr('Kahraman Gücü Fırsatları','Hero Power Opportunities')} (${st.hpMissed.length})</div>
           <div class="an-hp-list">${st.hpMissed.slice(0,4).map(m=>`<button type="button" class="an-hp-chip ${m.sev}" data-jump="${m.idx}"><b>⚡ ${m.name} · #${m.idx+1}</b><span>${m.msg}</span></button>`).join('')}</div>`
@@ -4912,11 +4912,35 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
           ${kmWorst?`<button type="button" class="an-km-card bad" data-jump="${st.worstIdx}"><span>${tr('En Büyük Kayıp','Biggest Slip')} · #${st.worstIdx+1}</span><b>${kmWorst.label}</b><small>−%${kmWorst.loss} → ${kmWorst.bestLabel}</small></button>`:`<div class="an-km-card good"><span>${tr('Kusursuz Maç','Flawless Match')}</span><b>${tr('Büyük hata yok!','No major slips!')}</b><small>${tr('Harika disiplin','Great discipline')}</small></div>`}
         </div>
         ${hpMissedHtml}
-        <div class="an-sec-lbl">${tr('Düello Bazlı Doğruluk','Duel Accuracy')}</div>
+        <div class="an-sec-lbl">${tr('Düello Bazlı Doğruluk (İncelemek için tıkla)','Duel Accuracy (Click to inspect)')}</div>
         <div class="an-duels">${duelsHtml}</div>
       </div>`;
+    }else if(st.duels.length>1&&selDuel===null){
+      // Çok düellolu maçlarda önce düzenli Düello listesi gösterilir; tıklayınca o düellonun hamleleri açılır
+      const duelCardsHtml=st.duels.map(d=>{
+        const dMoves=results.filter(r=>r.duel===d.duel);
+        const dErrs=dMoves.filter(r=>r.grade.cls==='blunder'||r.grade.cls==='mistake'||r.grade.cls==='inacc').length;
+        const dBests=dMoves.filter(r=>r.grade.cls==='brill'||r.grade.cls==='best').length;
+        const accCls=d.acc>=85?'good':d.acc>=68?'mid':'bad';
+        return `<button type="button" class="an-duel-card" data-duel="${d.duel}">
+          <div class="an-dc-l">
+            <b>${tr('Düello','Duel')} ${d.duel}</b>
+            <small>${d.moves} ${tr('hamle','moves')} · ★ ${dBests} ${tr('en iyi','best')}${dErrs?` · ⚠ ${dErrs} ${tr('hata','slips')}`:''}</small>
+          </div>
+          <div class="an-dc-r">
+            <span class="an-dc-acc ${accCls}">%${d.acc}</span>
+            <span class="an-dc-go">▸</span>
+          </div>
+        </button>`;
+      }).join('');
+      bodyContent=`<div class="an-duel-hint">${tr('Hamleleri incelemek istediğin düelloyu seç:','Select a duel to inspect its moves:')}</div>
+      <div class="an-list an-duel-pick-list">${duelCardsHtml}</div>`;
     }else{
-      const shown=results.map((r,i)=>({r,i})).filter(({r})=>{
+      const activeDuel=selDuel!==null?selDuel:(st.duels[0]?st.duels[0].duel:1);
+      const duelPool=results.map((r,i)=>({r,i})).filter(({r})=>st.duels.length<=1||r.duel===activeDuel);
+      const dErrCnt=duelPool.filter(({r})=>r.grade.cls==='blunder'||r.grade.cls==='mistake'||r.grade.cls==='inacc').length;
+      const dBestCnt=duelPool.filter(({r})=>r.grade.cls==='brill'||r.grade.cls==='best').length;
+      const shown=duelPool.filter(({r})=>{
         if(anFilter==='crit')return r.grade.cls==='blunder'||r.grade.cls==='mistake'||r.grade.cls==='inacc';
         if(anFilter==='best')return r.grade.cls==='brill'||r.grade.cls==='best';
         return true;
@@ -4967,10 +4991,14 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
           ${detailHtml}
         </div>`;
       }).join(''):`<div class="an-empty">${tr('Bu filtrede hamle yok.','No moves in this filter.')}</div>`;
-      bodyContent=`<div class="an-filters">
-        <button type="button" class="an-flt${anFilter==='all'?' act':''}" data-af="all">${tr('Tümü','All')} (${results.length})</button>
-        <button type="button" class="an-flt${anFilter==='crit'?' act':''}" data-af="crit">${tr('Hatalar','Mistakes')} (${cnt.inacc+cnt.mistake+cnt.blunder})</button>
-        <button type="button" class="an-flt${anFilter==='best'?' act':''}" data-af="best">${tr('En İyiler','Best')} (${cnt.brill+cnt.best})</button>
+      const duelNavHtml=st.duels.length>1?`<div class="an-duel-bar">
+        <button type="button" class="an-db-back" data-duel-all="1">← ${tr('Düellolar','Duels')}</button>
+        <div class="an-db-pills">${st.duels.map(d=>`<button type="button" class="an-db-pill${d.duel===activeDuel?' act':''}" data-duel="${d.duel}">${tr('D','D')}${d.duel} <i>%${d.acc}</i></button>`).join('')}</div>
+      </div>`:'';
+      bodyContent=`${duelNavHtml}<div class="an-filters">
+        <button type="button" class="an-flt${anFilter==='all'?' act':''}" data-af="all">${tr('Tümü','All')} (${duelPool.length})</button>
+        <button type="button" class="an-flt${anFilter==='crit'?' act':''}" data-af="crit">${tr('Hatalar','Mistakes')} (${dErrCnt})</button>
+        <button type="button" class="an-flt${anFilter==='best'?' act':''}" data-af="best">${tr('En İyiler','Best')} (${dBestCnt})</button>
       </div>
       <div class="an-list">${rowsHtml}</div>`;
     }
@@ -4987,7 +5015,7 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
       </div>
       ${buildWinGraphSvg(results,openMoveIdx)}
       <div class="an-view-tabs">
-        <button type="button" class="an-vtab${anView==='moves'?' act':''}" data-av="moves">${tr('Hamleler & Multi-PV','Moves & Multi-PV')}</button>
+        <button type="button" class="an-vtab${anView==='moves'?' act':''}" data-av="moves">${tr('Düellolar & Hamleler','Duels & Moves')}</button>
         <button type="button" class="an-vtab${anView==='summary'?' act':''}" data-av="summary">${tr('Özet Karne','Match Report')}</button>
       </div>
       ${bodyContent}
@@ -4998,6 +5026,8 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
     </div>`;
     mb.querySelectorAll('.an-vtab').forEach(b=>b.onclick=()=>{snd('click');anView=b.dataset.av;renderReport()});
     mb.querySelectorAll('.an-flt').forEach(b=>b.onclick=()=>{snd('click');anFilter=b.dataset.af;renderReport()});
+    mb.querySelectorAll('[data-duel]').forEach(b=>b.onclick=()=>{snd('click');anView='moves';selDuel=+b.dataset.duel;anFilter='all';openMoveIdx=-1;renderReport()});
+    mb.querySelectorAll('[data-duel-all]').forEach(b=>b.onclick=()=>{snd('click');selDuel=null;openMoveIdx=-1;renderReport()});
     mb.querySelectorAll('.an-row-main').forEach(el=>el.onclick=()=>{
       const rEl=el.closest('.an-row');if(!rEl)return;
       const mi=+rEl.dataset.mi;
@@ -5009,12 +5039,14 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
       const mi=+dot.dataset.mi;
       snd('click');
       anView='moves';anFilter='all';openMoveIdx=mi;
+      if(results[mi])selDuel=results[mi].duel;
       renderReport(mi);
     });
     mb.querySelectorAll('[data-jump]').forEach(b=>b.onclick=()=>{
       const mi=+b.dataset.jump;
       snd('click');
       anView='moves';anFilter='all';openMoveIdx=mi;
+      if(results[mi])selDuel=results[mi].duel;
       renderReport(mi);
     });
     if(scrollToIdx!=null&&scrollToIdx>=0){
