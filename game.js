@@ -5509,7 +5509,6 @@ function openAuthModal(initialTab='login',isUpgrade=false){
   const render=()=>{
     const isReg=tab==='register';
     mb.innerHTML=`<div class="auth-wrap">
-      <div class="auth-crest">⚔</div>
       <h3>${isUpgrade?tr('Misafir Hesabını Kaydet','Save Guest Progress'):tr('Necrodice Hesabı','Necrodice Account')}</h3>
       <p class="auth-sub">${isUpgrade
         ?tr(`Mevcut ${Math.round((USER_ACC&&USER_ACC.elo)||1200)} ELO puanın ve istatistiklerin yeni hesabına aktarılacak.`,`Your current ${Math.round((USER_ACC&&USER_ACC.elo)||1200)} ELO and stats will be transferred to your new account.`)
