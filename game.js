@@ -1599,7 +1599,7 @@ function R(){
   const isSpec=MODE=='spectator';
   const specHdr=isSpec?`<div class="spec-badge"><i></i>${tr('İzleyici Modu','Spectator Mode')} (${specCount||1}/${MAX_SPECTATORS})</div>`:'';
   setH('#hdr',`<div class="hs sks">${sk}</div><div class="hc"><span class="lab">${tr('Düello','Duel')} ${S.bo+1}</span><span class="pips">${pips}</span>${specHdr}</div><div class="hg"><button class="gear" data-g="1" aria-label="${tr('Ayarlar','Settings')}">${IC.gear}<span>${tr('MENÜ','MENU')}</span></button></div>`);
-  const oppClosedKnown=!!(S.rev||(S.pl[1].closed.length&&S.pl[1].closed.every(c=>c.o!=null)));
+  const oppClosedKnown=!!(S.rev||(S.pl[1].closed.length&&S.pl[1].closed.every(c=>c.o!=null||(S.oppPeek&&S.oppPeek.includes(c.id)))));
   const my=!isSpec&&S.turn==0&&!lock&&!S.wait,mt=total(S,0),ot=total(S,1,oppClosedKnown),bust=!low&&mt>T,obust=oppClosedKnown&&!low&&ot>T,seal=T+(low?'L':'');
   const exact=!low&&mt===T,oexact=oppClosedKnown&&!low&&ot===T;
   const jp=n=>`<span class="jpips" title="${tr(`Bu tur kalan joker hakkı ${n}/2`,`Jokers left this round: ${n}/2`)}">${[0,1].map(i=>`<i${i<n?' class="on"':''}></i>`).join('')}</span>`;
