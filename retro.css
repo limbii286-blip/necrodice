@@ -1671,13 +1671,16 @@ body.dragging-joker #fx::after {
 
 .who .nm {
   order: 1;
-  justify-self: center;
+  width: 100%;
+  justify-self: center !important;
+  align-self: center !important;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
   min-width: 0;
-  padding-right: 0;
+  padding: 0 4px !important;
 }
 .who .nm b {
   font: 700 clamp(15px, 2.1dvh, 20px)/1.1 var(--mf) !important;
@@ -2981,10 +2984,12 @@ body.dragging-joker #fx::after {
     justify-self: center !important;
   }
   .who .nm {
+    width: 100%;
     min-width: 0;
-    justify-self: start;
-    text-align: left;
-    padding-left: 2px;
+    justify-self: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    padding: 0 2px !important;
   }
   .who .nm b {
     font-size: clamp(12.5px, 3.5vw, 15.5px) !important;
