@@ -1476,7 +1476,7 @@ function endRound(){
     }
     const duelEnds=S.pts.some(x=>x>=2)||S.rounds>=3;
     if(!duelEnds){
-      deal(S);R();next();
+      deal(S);R();runAfterDeal(S);
       return;
     }
     let L=S.pts[0]<S.pts[1]?0:S.pts[1]<S.pts[0]?1:-1,hx=null,hd=null,how='';
@@ -1512,7 +1512,7 @@ function endRound(){
       const uRev=(MODE==='host'?(L===0||L===1):L===0)&&avKey(S,L)==='u'&&!surv&&!(S.uRevived&&S.uRevived[L]);
       if(surv||rig||uRev){const n=S.bo+2;
         if(surv&&S.stats&&S.stats.d20Surv)S.stats.d20Surv[L]++;
-        const lb=tr(`Düello ${n} ile Devam Et`,`Continue to Duel ${n}`),go=()=>{try{document.body.classList.remove('dead')}catch(e){}S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();next()};
+        const lb=tr(`Düello ${n} ile Devam Et`,`Continue to Duel ${n}`),go=()=>{try{document.body.classList.remove('dead')}catch(e){}S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();runAfterDeal(S)};
         if(rig){S.rigDone=true;S.hpUsed[1]=true;impSave(mk(0,1,false,1),()=>M(mk(0,20,true,20),lb,go))}
         else if(uRev){S.uRevived=S.uRevived||[false,false];S.uRevived[L]=true;S.hpUsed[L]=true;impSave(mk(0,roll,false),()=>MM(v=>mk(v,20,true,20),lb,go),tr('Hiçlik seni geri çevirdi… Bir kez daha ölümden döndün!','The Void refused you… You have returned from death once more!'))}
         else MM(full,lb,go)}
@@ -1612,7 +1612,7 @@ const HP_IC={
   v:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14M7 4l2 8 2-8M13 4l2 8 2-8"/><path d="M12 13.5s-3.5 3.6-3.5 5.6a3.5 3.5 0 007 0c0-2-3.5-5.6-3.5-5.6z"/></svg>',
   u:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 21l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>'
 };
-function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}LAST_MATCH_HIST=[];rematchReady=[false,false];rematchHeroes=[null,null];deathContReady=[false,false];deathContGo=null;const botPool=HEROES.filter(h=>(!h.bossOnly||DIFF==='imp')&&!(MY_HERO==='v'&&h.id==='v')).map(h=>h.id),oppH=MODE=='bot'?botPool[Math.floor(Math.random()*botPool.length)]:(OPP_HERO||'n');G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],vampUsed:[false,false],cWins:[0,0],vampWinSide:-1,mast:[0,0]};prevAv[0]=prevAv[1]=undefined;prevHpAnim=[false,false];newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
+function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}LAST_MATCH_HIST=[];rematchReady=[false,false];rematchHeroes=[null,null];deathContReady=[false,false];deathContGo=null;const botPool=HEROES.filter(h=>(!h.bossOnly||DIFF==='imp')&&!(MY_HERO==='v'&&h.id==='v')).map(h=>h.id),oppH=MODE=='bot'?botPool[Math.floor(Math.random()*botPool.length)]:(OPP_HERO||'n');G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],vampUsed:[false,false],cWins:[0,0],vampWinSide:-1,mast:[0,0]};prevAv[0]=prevAv[1]=undefined;prevHpAnim=[false,false];newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();runAfterDeal(G)}
 
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
@@ -1898,10 +1898,11 @@ function cast(p,id,cb){ // joker sahnede Runeterra büyüsü gibi belirir ve Kap
   setTimeout(finish,1650);
 }
 function count(el,a,b){if(!el)return;if(a==b||RM||typeof requestAnimationFrame=='undefined'){el.textContent=b;return}const t0=performance.now(),f=n=>{const x=Math.min(1,(n-t0)/520),e=1-Math.pow(1-x,3);el.textContent=Math.round(a+(b-a)*e);if(x<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
+let dealAnimUntil=0;
 function fly(){ // yeni kartlar desteden teker teker, yumuşak yay çizerek uçar
-  const d=$('#deck');if(!d||!d.getBoundingClientRect)return;
+  const d=$('#deck');if(!d||!d.getBoundingClientRect)return 0;
   const freshNodes=[...document.querySelectorAll('.fresh')];
-  if(!freshNodes.length)return;
+  if(!freshNodes.length)return 0;
   const dr=d.getBoundingClientRect(),F=FIT||1;
   // Başlangıç dağıtımında (birden fazla kart): önce kapalı kartlar (senin -> rakibin), sonra açık sayı kartları (senin -> rakibin)
   let ordered=freshNodes;
@@ -1921,9 +1922,11 @@ function fly(){ // yeni kartlar desteden teker teker, yumuşak yay çizerek uça
   void d.offsetWidth;
   const rects=ordered.map(el=>el.getBoundingClientRect());
   const isBatch=ordered.length>=2;
-  const stepMs=isBatch?280:0;
+  const stepMs=isBatch?300:0;
   // Geçiş perdesi (.veil) tamamen açıldıktan sonra ilk kart hem görsel hem sesli olarak aynı milisaniyede çıkar
-  const baseMs=entering?1180:(isBatch?110:0);
+  const baseMs=entering?1180:(isBatch?160:0);
+  const totalMs=isBatch?(baseMs+(ordered.length-1)*stepMs+540):0;
+  if(totalMs>0)dealAnimUntil=performance.now()+totalMs;
   const pulseDeck=()=>{
     if(!d.isConnected)return;
     d.classList.remove('pull');
@@ -1953,6 +1956,18 @@ function fly(){ // yeni kartlar desteden teker teker, yumuşak yay çizerek uça
     }
   });
   setTimeout(()=>{if(d.isConnected)d.classList.remove('pull')},baseMs+(ordered.length-1)*stepMs+520);
+  return totalMs;
+}
+function runAfterDeal(S){
+  const waitMs=Math.max(0,Math.ceil(dealAnimUntil-performance.now()));
+  if(waitMs<=40){next();return}
+  lock=true;
+  setTimeout(()=>{
+    if(S!==G||S.over)return;
+    lock=false;
+    if(S.turn==0&&!S.wait)snd('turn');
+    next();
+  },waitMs);
 }
 /* Mobilde kaydırma olmasın: oyun alanı ekrana sığmıyorsa tek parça olarak küçültülür (PC'ye dokunmaz) */
 let FIT=1,fitQ=0;
@@ -2084,9 +2099,9 @@ function R(){
     }
     prevHpAnim[side]=uNow;
   });
-  const mt0=S.turn==0&&!S.wait;if(mt0&&!prevT){if(entering)setTimeout(()=>{if(G&&!G.over)snd('turn')},2150);else snd('turn')}prevT=mt0;
+  const dealMs=fly();flipId=null;
+  const mt0=S.turn==0&&!S.wait;if(mt0&&!prevT&&!dealMs&&!entering)snd('turn');prevT=mt0;
   const last=S.log[S.log.length-1],lk=S.log.length+JSON.stringify(last);if(lk!=lastLk){lastLk=lk;if(last&&last.t=='pas dedi')snd('pass')}
-  fly();flipId=null;
   if(MODE==='tutorial')tutApplyHighlights();
   if(MODE=='host'){
     if(conn&&conn.open)conn.send({k:'s',v:view(G)});
