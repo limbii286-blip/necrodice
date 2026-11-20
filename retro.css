@@ -2990,13 +2990,30 @@ body.dragging-joker #fx::after {
     font-size: clamp(12.5px, 3.5vw, 15.5px) !important;
   }
   .who .tot {
+    position: relative;
     justify-self: end;
+    align-self: stretch;
     min-width: 48px !important;
-    padding: 3px 6px !important;
+    padding: 0 6px !important;
+    gap: 0 !important;
+    justify-content: center !important;
+  }
+  .who .tot small {
+    position: absolute;
+    top: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px !important;
+    line-height: 1 !important;
+    white-space: nowrap;
+  }
+  .who .tot > b,
+  .who .tot .tl {
+    margin-top: 7px;
   }
   .who .tot b,
   .who .tot .pq {
-    font-size: clamp(18px, 3dvh, 24px) !important;
+    font-size: clamp(19px, 3dvh, 24px) !important;
   }
   .cards {
     --mcw: clamp(50px, min(15.6vw, 9.2dvh), 70px);
@@ -6601,7 +6618,7 @@ html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, 
     font-size: clamp(15px, 4vw, 17.5px) !important;
   }
   .who .tot small {
-    font-size: 11.5px !important;
+    font-size: 10.5px !important;
   }
 }
 
