@@ -2767,22 +2767,20 @@ document.addEventListener('click',e=>{
   if(t.dataset.j){
     if(window._suppressJokerClick)return;
     const id=+t.dataset.j;
+    const isMobView=window.matchMedia&&window.matchMedia('(max-width: 760px), (hover: none) and (pointer: coarse)').matches;
     if(MODE==='tutorial'){
       if(tutStep!==3||id!==3)return;
-      document.querySelectorAll('#hand .j.pinned,#hand .j.hovered').forEach(el=>el.classList.remove('pinned','hovered'));
-      return startJoker(id);
+      if(isMobView){
+        document.querySelectorAll('#hand .j.pinned,#hand .j.hovered').forEach(el=>el.classList.remove('pinned','hovered'));
+        return startJoker(id);
+      }
+      return; // masaüstünde sadece sürükleyerek oynanır
     }
-    if(window.matchMedia&&window.matchMedia('(max-width: 760px)').matches){
+    if(isMobView){
       const canUse=S.turn==0&&!S.wait&&MODE!=='spectator'&&playable(S,0,id);
       return preview(id,canUse,BLOCK.has(id)?tr('Etkisiz kılınabilir','Can be negated'):tr('Etkisiz kılınamaz','Cannot be negated'));
     }
-    if(S.turn==0&&!S.wait&&MODE!=='spectator'&&playable(S,0,id)){
-      document.querySelectorAll('#hand .j.pinned,#hand .j.hovered').forEach(el=>el.classList.remove('pinned','hovered'));
-      return startJoker(id);
-    }
-    const wasPinned=t.classList.contains('pinned');
-    document.querySelectorAll('#hand .j.pinned').forEach(el=>el.classList.remove('pinned'));
-    if(!wasPinned){t.classList.add('pinned');snd('info')}
+    // Masaüstünde tıklayarak joker oynanmaz; basılı tutup masaya sürükleyerek oynanır
     return;
   }
 });
@@ -3388,11 +3386,33 @@ function createSmoothDragLoop(onFrame){
 
   function canPlayJoker(id){
     const S=G;
-    return !!(S&&!S.over&&!lock&&!P&&S.turn==0&&!S.wait&&playable(S,0,id));
+    if(!S||S.over||lock||P||S.turn!=0||S.wait||MODE==='spectator'||!playable(S,0,id))return false;
+    if(MODE==='tutorial')return tutStep===3&&id===3;
+    return true;
   }
 
   function isOverDropZone(clientY){
     return clientY < window.innerHeight * 0.72;
+  }
+
+  function startGhost(x,y){
+    if(isDragging||!dragEl)return;
+    isDragging=true;
+    dragEl.classList.remove('pinned','hovered');
+    dragEl.classList.add('drag-source-hidden');
+    document.body.classList.add('dragging-joker');
+    ghost=document.createElement('img');
+    ghost.className='joker-drag-ghost';
+    ghost.draggable=false;
+    ghost.alt='';
+    ghost.src=dragEl.currentSrc||dragEl.src||IMG.j[dragId]||'';
+    hi(ghost,dragId);
+    ghost.style.transform=`translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) translate(-50%, -50%) scale(1)`;
+    document.body.appendChild(ghost);
+    loop.start(x,y,1,1.08);
+    const hot=isOverDropZone(y);
+    ghost.classList.toggle('ready',hot);
+    document.body.classList.toggle('drop-ready',hot);
   }
 
   function cleanupDrag(){
@@ -3418,25 +3438,17 @@ function createSmoothDragLoop(onFrame){
     isDragging=false;
     pointerId=e.pointerId;
     try{jEl.setPointerCapture(e.pointerId)}catch(err){}
+    // Masaüstünde (mouse/pen) basıldığı anda kartı hemen ele al; ortaya sürükleyip bırakınca oyna
+    if(e.pointerType!=='touch'){
+      startGhost(e.clientX,e.clientY);
+    }
   });
 
   document.addEventListener('pointermove',e=>{
     if(!dragEl||e.pointerId!==pointerId)return;
     const dx=e.clientX-startX,dy=e.clientY-startY;
     if(!isDragging&&Math.hypot(dx,dy)>8){
-      isDragging=true;
-      dragEl.classList.remove('pinned','hovered');
-      dragEl.classList.add('drag-source-hidden');
-      document.body.classList.add('dragging-joker');
-      ghost=document.createElement('img');
-      ghost.className='joker-drag-ghost';
-      ghost.draggable=false;
-      ghost.alt='';
-      ghost.src=dragEl.currentSrc||dragEl.src||IMG.j[dragId]||'';
-      hi(ghost,dragId);
-      ghost.style.transform=`translate3d(${e.clientX.toFixed(2)}px, ${e.clientY.toFixed(2)}px, 0) translate(-50%, -50%) scale(1)`;
-      document.body.appendChild(ghost);
-      loop.start(e.clientX,e.clientY,1,1.08);
+      startGhost(e.clientX,e.clientY);
     }
     if(isDragging&&ghost){
       loop.move(e.clientX,e.clientY);
