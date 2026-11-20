@@ -2587,6 +2587,7 @@ function toggleLang(){
 let setTab='gameplay',prevVM=0.6,prevVS=0.8;
 function settings(tab){
   if(tab)setTab=tab;
+  if(setTab==='controls')setTab='gameplay';
   const inGame=$('#menu').hidden&&!!G;
   const isMuted=(VM<=0&&VS<=0);
   const langVal=isEn()?'English':'Türkçe';
@@ -2595,7 +2596,6 @@ function settings(tab){
     <button type="button" class="set-tab${setTab==='gameplay'?' act':''}" data-stab="gameplay">${tr('Oynanış','Gameplay')}</button>
     <button type="button" class="set-tab${setTab==='audio'?' act':''}" data-stab="audio">${tr('Ses','Audio')}</button>
     <button type="button" class="set-tab${setTab==='display'?' act':''}" data-stab="display">${tr('Görünüm','Display')}</button>
-    <button type="button" class="set-tab${setTab==='controls'?' act':''}" data-stab="controls">${tr('Kontroller','Controls')}</button>
   </div>`;
   let bodyHtml='';
   if(setTab==='gameplay'){
@@ -2640,7 +2640,7 @@ function settings(tab){
         <input type="checkbox" id="smute" ${isMuted?'checked':''}>
       </label>
     </div>`;
-  }else if(setTab==='display'){
+  }else{
     bodyHtml=`<div class="set-panel">
       <div class="set-sec-title">${tr('Görünüm & Erişilebilirlik','Display & Accessibility')}</div>
       <label class="set-item set-toggle">
@@ -2651,16 +2651,6 @@ function settings(tab){
         <div class="set-item-txt"><b>${tr('Renk Körü Modu','Color-blind Mode')}</b><small>${tr('Kırmızı-yeşil yerine Mavi / Turuncu paleti','Blue / Orange palette for red-green clarity')}</small></div>
         <input type="checkbox" id="scb" ${CB?'checked':''}>
       </label>
-    </div>`;
-  }else{
-    bodyHtml=`<div class="set-panel set-ctrl">
-      <div class="set-sec-title">${tr('Oynanış Kontrolleri','Gameplay Controls')}</div>
-      <div class="set-item ctrl-row"><b>${tr('Deste','Deck')}</b><span>${tr('Tıkla veya sürükle → Kart çek','Click or drag → Draw card')}</span></div>
-      <div class="set-item ctrl-row"><b>${tr('Kapalı Kart','Hidden Card')}</b><span>${tr('Dokun → Gizlice bak / kapat','Tap → Peek / hide secretly')}</span></div>
-      <div class="set-item ctrl-row"><b>${tr('Jokerler','Jokers')}</b><span>${tr('Tıkla veya sürükle → Oyna','Click or drag → Play')}</span></div>
-      <div class="set-item ctrl-row"><b>${tr('Kullanılmış','Used Jokers')}</b><span>${tr('Üzerine gel (mobilde dokun)','Hover (tap on mobile)')}</span></div>
-      <div class="set-item ctrl-row"><b>${tr('Portren','Portrait')}</b><span>${tr('Dokun → İfade gönder','Tap → Send emote')}</span></div>
-      <div class="set-item ctrl-row"><b>ESC</b><span>${tr('Menüyü aç / kapat','Open / close menu')}</span></div>
     </div>`;
   }
   const footBtn=`<div class="set-footer"><button type="button" class="btn set-close-btn" id="pc">${inGame?tr('Oyuna Dön','Resume'):tr('Kapat','Close')}</button></div>`;

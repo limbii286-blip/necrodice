@@ -803,10 +803,11 @@ main.arena-enter {
   100% { opacity: 1; transform: none; filter: none; }
 }
 #splash b, .veil b {
-  font: 700 28px/1 var(--hf) !important;
+  font: 600 30px/1 'Cormorant Garamond', Georgia, serif !important;
   letter-spacing: 3px !important;
   color: var(--bone) !important;
   text-transform: lowercase !important;
+  font-variant: normal !important;
 }
 #splash b::after, .veil b::after {
   display: none !important;
@@ -5428,7 +5429,7 @@ body, button, input, select, textarea {
 }
 .set-tabs {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 7px;
   margin: 0 0 12px;
 }
