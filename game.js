@@ -272,7 +272,7 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
           spectators.forEach(s=>{try{if(s.open)s.send({k:'tie_roll'})}catch(e){}});
         }
       }
-      if(btn)btn.remove();
+      if(btn){btn.disabled=true;btn.classList.add('used')}
       const d0El=tb.querySelector('#tie-d0'),d1El=tb.querySelector('#tie-d1');
       if(d0El)d0El.classList.add('roll');
       if(d1El)d1El.classList.add('roll');
@@ -300,7 +300,7 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
     };
     window._triggerTieRoll=()=>goRoll(true);
     if(MODE==='spectator'){
-      if(btn)btn.remove();
+      if(btn){btn.disabled=true;btn.classList.add('used')}
       if(sides)sides.style.cursor='default';
     }else{
       if(btn)btn.onclick=e=>{e.stopPropagation();goRoll(false)};
@@ -544,12 +544,13 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
   const rl=document.querySelector('#rl');
   if(rl&&isMe) {
     rl.onclick=()=>{
-      rl.remove();
+      rl.disabled=true;
+      rl.classList.add('used');
       snd('heart');
       setTimeout(runRoll, 300);
     };
   } else {
-    if(rl) rl.remove();
+    if(rl){rl.disabled=true;rl.classList.add('used')}
     snd('heart');
     setTimeout(runRoll, 1000);
   }
@@ -732,16 +733,43 @@ function listC(S,p,prm){
   });
   return out;
 }
-function world(S,p,prm){ // bilinmeyenleri rastgele doldurulmuş bir "olası dünya"
+function oppCardWeights(S,p,prm,pool){
+  const q=1-p,Tg=tg(S),low=lowW(S),base=total(S,q,false);
+  const stood=!!(S.pa&&S.pa[q]>0);
+  const Lr=!!(prm&&prm.learn&&PROF.n>=6);
+  const beta=(prm&&prm.beta)||0,gap=(prm&&prm.gap)||6;
+  return pool.map(n=>{
+    const t=base+n;
+    let wt=1;
+    if(stood&&beta){
+      if(low){
+        wt=n<=4?(1+beta*1.15):(n>=8?0.45:0.85);
+      }else if(Lr){
+        wt=PROF.p[Math.max(-6,Math.min(12,Tg-t))+6]+0.55;
+      }else{
+        if(t>Tg)wt=0.35; // pas geçen rakip genelde patlamamış olur
+        else if(t>=Tg-3)wt=1+beta*1.35;
+        else if(t>=Tg-gap)wt=1+beta*0.75;
+        else wt=0.8;
+      }
+    }
+    return Math.max(0.15,wt);
+  });
+}
+function world(S,p,prm,stratIdx){ // bilinmeyenleri rastgele/katmanlı doldurulmuş bir "olası dünya"
   const T=clone(S),q=1-p;T.log=[];T.jdeck=[];
   let pool=shuf(unk(S,p));const cl=T.pl[q].closed[0];
   if(!pool.length)return T;
   if(prm&&prm.hero&&p===1&&S.botPeekVal!=null){
     cl.n=S.botPeekVal;
     pool=pool.filter(n=>n!==S.botPeekVal);
-  }else{
-    if(prm&&prm.beta&&S.pa&&S.pa[q]>0){const Tg=tg(S),base=total(S,q,false),Lr=prm.learn&&PROF.n>=6,w=pool.map(n=>{const t=base+n;if(Lr)return PROF.p[Math.max(-6,Math.min(12,Tg-t))+6]+.7;return t<=Tg&&t>=Tg-prm.gap?1+prm.beta:1}),sm=w.reduce((a,b)=>a+b,0);let r=Math.random()*sm,i=0;while(i<w.length-1&&(r-=w[i])>0)i++;pool=[pool[i],...pool.filter((_,j)=>j!=i)]}
-    cl.n=pool[0];pool=pool.slice(1);
+  }else if(cl&&cl.o==null){
+    const w=oppCardWeights(S,p,prm,pool);
+    const sm=w.reduce((a,b)=>a+b,0);
+    let r=(stratIdx!=null?((stratIdx%16)+Math.random())/16:Math.random())*sm,i=0;
+    while(i<w.length-1&&(r-=w[i])>0)i++;
+    cl.n=pool[i];
+    pool.splice(i,1);
   }
   if(prm&&prm.hero&&p===1&&S.botScry&&S.botScry.length){
     const scry=S.botScry.filter(n=>pool.includes(n));
@@ -758,20 +786,32 @@ function world(S,p,prm){ // bilinmeyenleri rastgele doldurulmuş bir "olası dü
   T.hand[q]=oppHand;
   return T;
 }
-function bo3v(T,p,r){ // tur sonucu r (p açısından) -> düelloyu kazanma değeri [-1,1]; kahraman güçlerini ve joker eşitlik kuralını hesaba katar
+function deathProb(T,who){
+  const th=TH[Math.min(T.bo||0,3)];
+  const mod=(avKey(T,who)==='m'?2:0)+(avKey(T,1-who)==='n'?-2:0);
+  const need=th-mod; // rawRoll >= need ise kurtulur
+  const deadFaces=Math.max(0,Math.min(20,need-1));
+  return deadFaces/20;
+}
+function bo3v(T,p,r){ // tur sonucu r (p açısından) -> düelloyu kazanma değeri [-1.25,1.25]; D20 ölüm olasılığı, kahraman güçleri ve joker eşitlik kuralı dahil
   const q=1-p,np=T.pts[p]+(r>0?1:r==0?.5:0),nq=T.pts[q]+(r<0?1:r==0?.5:0);
   if(np>=2||nq>=2||T.rounds+1>=3){
     let w;if(np>nq)w=1;else if(np<nq)w=0;else{const a=T.hand[p].length,b=T.hand[q].length;w=a>b?1:a<b?0:.5}
     let val=2*w-1;
-    if(avKey(T,1-p)==='n'&&val<0)val*=1.12; // Kara Şövalye karşısında düello kaybetmek çok tehlikeli
-    if(avKey(T,p)==='m'&&val<0)val*=0.9;   // Ölümün Efendisi (+2 zar) biraz daha dayanıklı
-    if(p===1&&avKey(T,1)==='u'&&!T.rigDone&&val<0)val*=0.72; // Bilinmeyen ilk ölümden döner
-    return Math.max(-1.12,Math.min(1,val));
+    if(val<0){
+      const dp=deathProb(T,p);
+      val*=0.78+0.62*dp; // yüksek D20 eşiğinde (13/16) düello kaybetmek ölümcül
+      if(p===1&&avKey(T,1)==='u'&&!T.rigDone)val*=0.68; // Bilinmeyen ilk ölümden döner
+    }else if(val>0){
+      const dpOpp=deathProb(T,q);
+      val*=0.85+0.42*dpOpp; // rakibin ölüm riski yüksekken düelloyu bitirmek çok değerli
+    }
+    return Math.max(-1.25,Math.min(1.25,val));
   }
   let cBonus=0;
-  if(avKey(T,p)==='c'&&T.cWins){const cw=(T.cWins[p]||0)+(r>0?1:0);if(cw>=4)cBonus+=0.06}
-  if(avKey(T,q)==='c'&&T.cWins){const cw=(T.cWins[q]||0)+(r<0?1:0);if(cw>=4)cBonus-=0.06}
-  return Math.max(-.9,Math.min(.9,.55*(np-nq)+.03*(T.hand[p].length-T.hand[q].length)+cBonus));
+  if(avKey(T,p)==='c'&&T.cWins){const cw=(T.cWins[p]||0)+(r>0?1:0);if(cw>=4)cBonus+=0.07}
+  if(avKey(T,q)==='c'&&T.cWins){const cw=(T.cWins[q]||0)+(r<0?1:0);if(cw>=4)cBonus-=0.07}
+  return Math.max(-.92,Math.min(.92,.56*(np-nq)+.035*(T.hand[p].length-T.hand[q].length)+cBonus));
 }
 function rollout(T,p,a,pol){
   let actor=p,n=0;
@@ -819,13 +859,41 @@ function decideHA(S,p,prm,done,budCap){ // zaman dilimli Monte-Carlo: ekranı do
   const matchPoint=S.rounds>=2||(S.pts&&(S.pts[0]>=1.5||S.pts[1]>=1.5));
   const rawCost=matchPoint&&prm.deepRoll?0.015:(S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc);
   const cost=prm.bo3?(matchPoint?rawCost*0.2:rawCost*0.45):rawCost;
-  const sum=top.map(()=>0),RP={...ROLL,...(prm.rjp!=null?{jp:prm.rjp}:{}),...(prm.deepRoll?{depth:1,jc:0.08,jl:0.04,jp:1}:{}),bo3:prm.bo3,hm:prm.learn&&LRN.ht>=15};
+  const sum=top.map(()=>0),cnt=top.map(()=>0),alive=top.map(()=>true);
+  const RP={...ROLL,...(prm.rjp!=null?{jp:prm.rjp}:{}),...(prm.deepRoll?{depth:1,jc:0.06,jl:0.03,jp:1,beta:0.55}:{}),bo3:prm.bo3,hm:prm.learn&&LRN.ht>=15};
   const clkMs=S.clocks&&S.clocks[p]!=null?Math.max(1000,Math.round(S.clocks[p]*220)):99999;
   const K=prm.K||40,bud=Math.min(prm.ms||0,clkMs,budCap||99999),t0=now();let k=0;
   if(prm.pf&&pass){top.splice(top.indexOf(pass),1);top.unshift(pass)} // eşitlikte paslamak öncelikli
-  const fin=()=>{const sc=sum.map((v,i)=>v/Math.max(1,k)+(prm.w||0)*top[i].v);let bi=0;sc.forEach((v,i)=>{if(v>sc[bi]+1e-9)bi=i});done(top[bi].a)};
+  const prune=()=>{
+    if(!prm.deepRoll||top.length<=3)return;
+    const means=top.map((_,i)=>alive[i]?(sum[i]/Math.max(1,cnt[i])):-99);
+    const bestM=Math.max(...means);
+    if(k===36){
+      let kept=0;
+      for(let i=0;i<top.length;i++)if(alive[i]&&means[i]>=bestM-0.34)kept++;
+      if(kept>=2)for(let i=0;i<top.length;i++)if(alive[i]&&means[i]<bestM-0.34)alive[i]=false;
+    }else if(k===96){
+      const ord=top.map((_,i)=>i).filter(i=>alive[i]).sort((a,b)=>means[b]-means[a]);
+      if(ord.length>4)ord.slice(4).forEach(i=>{alive[i]=false});
+    }
+  };
+  const fin=()=>{
+    const sc=top.map((c,i)=>alive[i]?(sum[i]/Math.max(1,cnt[i])+(prm.w||0)*c.v):-99);
+    let bi=0;sc.forEach((v,i)=>{if(v>sc[bi]+1e-9)bi=i});
+    done(top[bi].a);
+  };
   const tick=()=>{const t1=now();
-    while(k<K&&now()-t1<20){const W=world(S,p,prm);top.forEach((c,i)=>{const T=clone(W),j0=[jCnt(T,0),jCnt(T,1)],r=rollout(T,p,c.a,RP);sum[i]+=r-cost*((jCnt(T,p)-j0[p])-.5*(jCnt(T,1-p)-j0[1-p]))});k++}
+    while(k<K&&now()-t1<22){
+      const W=world(S,p,prm,prm.deepRoll?k:null);
+      for(let i=0;i<top.length;i++){
+        if(!alive[i])continue;
+        const T=clone(W),j0=[jCnt(T,0),jCnt(T,1)],r=rollout(T,p,top[i].a,RP);
+        sum[i]+=r-cost*((jCnt(T,p)-j0[p])-.5*(jCnt(T,1-p)-j0[1-p]));
+        cnt[i]++;
+      }
+      k++;
+      if(k===36||k===96)prune();
+    }
     if(k>=K||(bud&&k>=8&&now()-t0>bud))return fin();setTimeout(tick,0)};
   tick();
 }
@@ -851,8 +919,12 @@ function bot(){
     thinkOn=false;
     if(S.hpUsed&&!S.hpUsed[1]){
       const bh=avKey(S,1),bt=total(S,1),bT=tg(S),low=lowW(S);
-      if(bh==='c'&&S.cWins&&S.cWins[1]>=4&&!low&&((bt>bT&&evalS(clone(S),1)<0.2)||(prm.hero&&evalS(clone(S),1)<-0.35))){
-        execRewind(S,1);return think(AFTER[DIFF]);
+      if(bh==='c'&&S.cWins&&S.cWins[1]>=4&&!low){
+        const curEv=evalS(clone(S),1),dp1=deathProb(S,1);
+        const rwThr=prm.deepRoll?-(0.18+(1-dp1)*0.16):-0.35;
+        if((bt>bT&&curEv<0.22)||(prm.hero&&curEv<rwThr)){
+          execRewind(S,1);return think(AFTER[DIFF]);
+        }
       }
       if(bh==='w'&&prm.hero&&S.pl[0].closed.length){
         S.hpUsed[1]=true;S.botPeekVal=S.pl[0].closed[0].n;
@@ -861,8 +933,20 @@ function bot(){
       }
       if(bh==='a'&&prm.hero&&S.deck.length>=2){
         const dn=S.deck.length,c1=S.deck[dn-1],c2=S.deck[dn-2];
-        const good1=!low?bt+c1.n<=bT:c1.n<=c2.n,good2=!low?bt+c2.n<=bT:c2.n<=c1.n;
-        const swap=(!low&&bt<=bT-2)?(good2&&(!good1||c2.n>c1.n)):(!low&&bt>=bT-1)?(c1.n<c2.n):(c1.n<c2.n);
+        let swap=false;
+        if(prm.deepRoll){
+          CUR=prm;
+          const evOrd=(topC,secC)=>{
+            const T1=clone(S);T1.log=[];T1.deck.pop();T1.pl[1].open.push({id:++T1.u,n:topC.n});
+            const drawEv=look(T1,1,1);
+            const standEv=evalS(clone(S),1)+( !low&&total(S,0,false)+topC.n>bT ? 0.14 : 0 );
+            return Math.max(drawEv,standEv)+( !low&&total(S,0,false)+secC.n>bT ? 0.04 : 0 );
+          };
+          swap=evOrd(c2,c1)>evOrd(c1,c2)+1e-4;
+        }else{
+          const good1=!low?bt+c1.n<=bT:c1.n<=c2.n,good2=!low?bt+c2.n<=bT:c2.n<=c1.n;
+          swap=(!low&&bt<=bT-2)?(good2&&(!good1||c2.n>c1.n)):(!low&&bt>=bT-1)?(c1.n<c2.n):(c1.n<c2.n);
+        }
         if(swap){S.deck[dn-1]=c2;S.deck[dn-2]=c1}
         S.botScry=[S.deck[dn-1].n,S.deck[dn-2].n];
         S.hpUsed[1]=true;S.log.push({p:1,t:'Yitik Yazgı kullandı (destenin üstünü düzenledi)'});
@@ -884,10 +968,11 @@ function bot(){
       }
       if(bh==='l'&&(S.pl[0].open.length||S.pl[0].closed.length)&&(S.pl[1].open.length||S.pl[1].closed.length)){
         let useW=false;
-        if(prm.hero){
+        const oppVisBust=!low&&total(S,0,false)>bT&&!act(S,20);
+        if(prm.hero&&!(oppVisBust&&bt<=bT)){
           CUR=prm;
           const before=evalS(clone(S),1);
-          let sumA=0;const K=28;
+          let sumA=0;const K=prm.deepRoll?48:28;
           for(let k=0;k<K;k++){
             const T=clone(S);T.log=[];
             const p0=T.pl[0].open.length?T.pl[0].open:T.pl[0].closed,p1=T.pl[1].open.length?T.pl[1].open:T.pl[1].closed;
@@ -896,8 +981,8 @@ function bot(){
             sumA+=evalS(T,1);
           }
           const avgA=sumA/K;
-          if((!low&&bt>bT&&avgA>before)||(avgA>before+0.14))useW=true;
-        }else if((!low&&bt>bT)||(total(S,0,false)>=bT-2)){
+          if((!low&&bt>bT&&avgA>before+0.02)||(avgA>before+0.12))useW=true;
+        }else if(!oppVisBust&&((!low&&bt>bT)||(total(S,0,false)>=bT-2))){
           useW=true;
         }
         if(useW){execWolf(S,1,()=>think(AFTER[DIFF]));return}
@@ -1404,7 +1489,7 @@ function endRound(){
           <canvas id="d20cv" class="d20-canvas" width="280" height="280"></canvas>
         </div>
         ${(rawOv==null&&(hpB||execPen))?`<div class="d20-hp-mod">${hpB?`<span class="d20-mod-pill bg3-bonus-card pos" data-val="${hpB}"><span class="mod-ic">${HP_IC.m}</span><b>${blessingName}</b><i>+${hpB}</i></span>`:''}${execPen?`<span class="d20-mod-pill bg3-bonus-card neg" data-val="-2"><span class="mod-ic">${HP_IC.n}</span><b>${decreeName}</b><i>−2</i></span>`:''}</div>`:''}
-        ${L==v?`<button id="rl" class="btn d20-btn">${tr('ÖLÜM ZARINI AT','ROLL DEATH DICE')}</button>`:''}
+        ${L==v?`<button id="rl" class="btn d20-btn">${tr('ÖLÜM ZARINI AT','ROLL DEATH DICE')}</button>`:`<button id="rl" class="btn d20-btn used" disabled aria-hidden="true">${tr('ÖLÜM ZARINI AT','ROLL DEATH DICE')}</button>`}
       </div>
     </div><div class="after"><div class="after-roll"><b>${tr('Zar Sonucu','Roll Result')}: ${roll}${(hpB||execPen)&&rawOv==null?` (${rr}${hpB?`+${hpB} ${blessingName}`:''}${execPen?`−2 ${decreeName}`:''})`:''}</b></div><div class="after-msg">`+(surv?(L==v?`${tr('Kurtuldun!','You survived!')}<span class="after-sub">${tr('Hayatta kaldın.','You live to fight on.')}</span>`:tr('Rakip hayatta kaldı.','Opponent survived.')):(`<b>${L==v?`${tr('Öldün.','You died.')}<span class="after-sub">${tr('Oyunu rakip kazandı.','Opponent won the game.')}</span>`:`${tr('Rakip öldü.','Opponent died.')}<span class="after-sub">${tr('Oyunu sen kazandın!','You won the game!')}</span>`}</b>`))+'</div></div>'};
     const openDeathModal=()=>{
@@ -2155,17 +2240,14 @@ function buildEndScreenHtml(S,v,L,roll,th){
   const sec=Math.max(1,Math.round((Date.now()-(st.startAt||Date.now()))/1000));
   const durTxt=`${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
   const titleTxt=isSpec?tr('Maç Bitti!','Match Over!'):(won?tr('Zafer!','Victory!'):tr('Yenilgi!','Defeat!'));
-  const bannerFill=won?'url(#hsBanBlue)':'url(#hsBanRed)';
-  const bannerStroke=won?'#f0c453':'#b83232';
-  const crestBgSvg=`<svg class="hs-crest-svg" viewBox="0 0 420 330" fill="none" xmlns="http://www.w3.org/2000/svg">
+  const winCrestSvg=`<svg class="hs-crest-svg" viewBox="0 0 420 330" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="hsGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fff0a8"/><stop offset="45%" stop-color="#d4a038"/><stop offset="100%" stop-color="#7c5215"/></linearGradient>
       <linearGradient id="hsBanBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3b5fc0"/><stop offset="55%" stop-color="#223a82"/><stop offset="100%" stop-color="#142352"/></linearGradient>
-      <linearGradient id="hsBanRed" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#9b1c26"/><stop offset="55%" stop-color="#5c0d14"/><stop offset="100%" stop-color="#2b0609"/></linearGradient>
     </defs>
     <!-- Hanging Banners -->
-    <path d="M84 128 L138 148 L138 294 L111 278 L84 294 Z" fill="${bannerFill}" stroke="${bannerStroke}" stroke-width="4" stroke-linejoin="round"/>
-    <path d="M336 128 L282 148 L282 294 L309 278 L336 294 Z" fill="${bannerFill}" stroke="${bannerStroke}" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M84 128 L138 148 L138 294 L111 278 L84 294 Z" fill="url(#hsBanBlue)" stroke="#f0c453" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M336 128 L282 148 L282 294 L309 278 L336 294 Z" fill="url(#hsBanBlue)" stroke="#f0c453" stroke-width="4" stroke-linejoin="round"/>
     <!-- Crossed Golden Horns / Trumpets -->
     <path d="M52 102 L268 256 L260 268 L44 114 Z" fill="url(#hsGold)" stroke="#3d2608" stroke-width="2"/>
     <path d="M368 102 L152 256 L160 268 L376 114 Z" fill="url(#hsGold)" stroke="#3d2608" stroke-width="2"/>
@@ -2184,6 +2266,45 @@ function buildEndScreenHtml(S,v,L,roll,th){
     <path d="M162 68 L152 28 L184 44 L210 14 L236 44 L268 28 L258 68 Z" fill="url(#hsGold)" stroke="#3d2608" stroke-width="2.5" stroke-linejoin="round"/>
     <rect x="160" y="64" width="100" height="14" rx="4" fill="url(#hsGold)" stroke="#3d2608" stroke-width="2"/>
   </svg>`;
+  const defeatCrestSvg=`<svg class="hs-crest-svg hs-defeat-svg" viewBox="0 0 420 330" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="hsDullGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#e5c46b"/><stop offset="50%" stop-color="#a88032"/><stop offset="100%" stop-color="#5c4215"/></linearGradient>
+      <linearGradient id="hsTornBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4e62b5"/><stop offset="55%" stop-color="#2c3a7a"/><stop offset="100%" stop-color="#192047"/></linearGradient>
+      <linearGradient id="hsStarG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff4a3"/><stop offset="55%" stop-color="#eab308"/><stop offset="100%" stop-color="#9a6708"/></linearGradient>
+      <linearGradient id="hsHalo" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#9ca3af"/><stop offset="50%" stop-color="#e5e7eb"/><stop offset="100%" stop-color="#6b7280"/></linearGradient>
+    </defs>
+    <!-- Bent Left Trumpet with Bandage -->
+    <path d="M62 110 C96 130, 118 156, 152 174 L146 186 C110 166, 86 140, 54 122 Z" fill="url(#hsDullGold)" stroke="#2e1e08" stroke-width="2.2"/>
+    <ellipse cx="52" cy="112" rx="16" ry="25" transform="rotate(-28 52 112)" fill="url(#hsDullGold)" stroke="#2e1e08" stroke-width="2.4"/>
+    <path d="M88 122 L100 132 L92 146 L82 135 Z" fill="#e7dcc8" stroke="#6b5c46" stroke-width="1.6"/>
+    <path d="M95 128 L104 118 L108 124 L98 134 Z" fill="#d8cbb4" stroke="#6b5c46" stroke-width="1.2"/>
+    <!-- Drooping Right Trumpet -->
+    <path d="M268 154 C304 134, 336 126, 360 152 L350 162 C330 142, 304 148, 274 166 Z" fill="url(#hsDullGold)" stroke="#2e1e08" stroke-width="2.2"/>
+    <ellipse cx="364" cy="162" rx="16" ry="24" transform="rotate(42 364 162)" fill="url(#hsDullGold)" stroke="#2e1e08" stroke-width="2.4"/>
+    <!-- Tattered Left Banner (draped & holed) -->
+    <path d="M74 132 C84 176, 80 224, 96 278 L112 296 L128 282 C130 248, 138 214, 134 162 L114 150 L98 164 Z" fill="url(#hsTornBlue)" stroke="#c49a3f" stroke-width="3.2" stroke-linejoin="round"/>
+    <path d="M104 206 C110 202, 118 208, 115 216 C112 222, 102 220, 104 206 Z" fill="#0d0b10" stroke="#c49a3f" stroke-width="1.4"/>
+    <path d="M92 246 C104 242, 118 248, 124 268 L108 294 L88 274 Z" fill="url(#hsTornBlue)" stroke="#c49a3f" stroke-width="2.5" stroke-linejoin="round"/>
+    <!-- Tattered Long Right Banner -->
+    <path d="M286 156 C294 202, 290 256, 294 316 L310 304 L322 318 C326 266, 326 212, 314 156 Z" fill="url(#hsTornBlue)" stroke="#c49a3f" stroke-width="3.2" stroke-linejoin="round"/>
+    <path d="M332 162 L344 174 L338 194 L328 184 Z" fill="url(#hsTornBlue)" stroke="#c49a3f" stroke-width="2" stroke-linejoin="round"/>
+    <!-- Cracked Stone Backing Behind Plaque -->
+    <path d="M102 224 L132 214 L288 214 L318 224 L310 244 L110 244 Z" fill="#4b4744" stroke="#1e1b1a" stroke-width="2"/>
+    <!-- Dizzy Stars Halo (NO Crown!) -->
+    <g class="hs-dizzy-halo">
+      <ellipse cx="210" cy="48" rx="54" ry="12" transform="rotate(-7 210 48)" stroke="url(#hsHalo)" stroke-width="5.5" fill="none"/>
+      <ellipse cx="210" cy="48" rx="54" ry="12" transform="rotate(-7 210 48)" stroke="#374151" stroke-width="1.5" fill="none"/>
+      <!-- Star 1 (Left) -->
+      <polygon points="154,32 159,45 173,45 162,53 166,66 154,58 142,66 146,53 135,45 149,45" fill="url(#hsStarG)" stroke="#5c3d06" stroke-width="2" stroke-linejoin="round"/>
+      <!-- Star 2 (Back-center small) -->
+      <polygon points="204,16 208,26 218,26 210,32 213,42 204,36 195,42 198,32 190,26 200,26" fill="url(#hsStarG)" stroke="#5c3d06" stroke-width="1.8" stroke-linejoin="round"/>
+      <!-- Star 3 (Front-center big) -->
+      <polygon points="222,34 228,50 245,50 231,60 236,76 222,66 208,76 213,60 199,50 216,50" fill="url(#hsStarG)" stroke="#5c3d06" stroke-width="2.2" stroke-linejoin="round"/>
+      <!-- Star 4 (Right) -->
+      <polygon points="268,24 273,37 286,37 275,45 279,58 268,50 257,58 261,45 250,37 263,37" fill="url(#hsStarG)" stroke="#5c3d06" stroke-width="2" stroke-linejoin="round"/>
+    </g>
+  </svg>`;
+  const crestBgSvg=(won||isSpec)?winCrestSvg:defeatCrestSvg;
   return `<div class="end-screen hs-victory ${isSpec?'spec':won?'win':'lose'}">
     <div class="end-glow"></div>
     <div class="hs-crest-stage">
@@ -4149,7 +4270,7 @@ function fmtAct(a,S){
   if(a.id===22&&a.pk&&a.pk.length)return `${nm} (${a.pk[0]>0?'+':'−'})`;
   return `${tr('Joker','Joker')}: ${nm}`;
 }
-function worldForPlayer(S){ // Oyuncunun o an bildiği bilgilere göre adil olasılık dünyası (sonradan bilmişlik yok)
+function worldForPlayer(S,stratIdx){ // Oyuncunun o an bildiği bilgilere göre katmanlı Bayesian olasılık dünyası
   const T=clone(S);T.log=[];T.jdeck=[];
   const cl=T.pl[1]&&T.pl[1].closed&&T.pl[1].closed[0];
   const peeked=!!(cl&&((S.oppPeek&&S.oppPeek.includes(cl.id))||cl.o!=null));
@@ -4157,17 +4278,12 @@ function worldForPlayer(S){ // Oyuncunun o an bildiği bilgilere göre adil olas
   if(peeked&&cl.n>0)seenN.add(cl.n);
   let pool=shuf(range(11).filter(n=>!seenN.has(n)));
   if(cl&&!peeked&&pool.length){
-    if(S.pa&&S.pa[1]>0){
-      const Tg=tg(S),base=total(S,1,false);
-      const w=pool.map(n=>{const t=base+n;return (t<=Tg&&t>=Tg-6)?1.8:1});
-      const sm=w.reduce((a,b)=>a+b,0);
-      let r=Math.random()*sm,i=0;
-      while(i<w.length-1&&(r-=w[i])>0)i++;
-      cl.n=pool[i];
-      pool.splice(i,1);
-    }else{
-      cl.n=pool.shift();
-    }
+    const w=oppCardWeights(S,0,{beta:0.7,gap:6},pool);
+    const sm=w.reduce((a,b)=>a+b,0);
+    let r=(stratIdx!=null?((stratIdx%16)+Math.random())/16:Math.random())*sm,i=0;
+    while(i<w.length-1&&(r-=w[i])>0)i++;
+    cl.n=pool[i];
+    pool.splice(i,1);
   }
   T.deck=pool.slice(0,(S.deck||[]).length).map(n=>({id:++T.u,n}));
   const knownJ=new Set([...(S.hand[0]||[]),...(S.dj||[])]);
@@ -4179,29 +4295,54 @@ function worldForPlayer(S){ // Oyuncunun o an bildiği bilgilere göre adil olas
   T.hand[1]=oppHand;
   return T;
 }
-function classifyMove(loss,isSame){
-  if(isSame||loss<=3)return {cls:'best',sym:'!!',name:tr('En İyi','Best')};
-  if(loss<=10)return {cls:'good',sym:'✓',name:tr('İyi','Good')};
-  if(loss<=20)return {cls:'inacc',sym:'?!',name:tr('Şüpheli','Inaccuracy')};
-  if(loss<=34)return {cls:'mistake',sym:'?',name:tr('Hata','Mistake')};
+function classifyMove(loss,isSame,brilliant){
+  if(isSame&&brilliant)return {cls:'brill',sym:'!!',name:tr('Harika','Brilliant')};
+  if(isSame||loss<=3)return {cls:'best',sym:'★',name:tr('En İyi','Best')};
+  if(loss<=9)return {cls:'good',sym:'✓',name:tr('İyi','Good')};
+  if(loss<=18)return {cls:'inacc',sym:'?!',name:tr('Şüpheli','Inaccuracy')};
+  if(loss<=30)return {cls:'mistake',sym:'?',name:tr('Hata','Mistake')};
   return {cls:'blunder',sym:'??',name:tr('Vahim Hata','Blunder')};
+}
+function explainMove(S,played,best,loss){
+  if(loss<=3)return '';
+  const low=lowW(S),Tg=tg(S),myT=total(S,0,true),oppOpen=total(S,1,false);
+  const pool=unk(S,0);
+  const bustCnt=pool.filter(n=>myT+n>Tg).length;
+  const bustPct=pool.length?Math.round((bustCnt/pool.length)*100):0;
+  const safePct=100-bustPct;
+  if(!best&&!low&&oppOpen>Tg&&!act(S,20)){
+    return tr('Rakip açıktan hedefi aşmışken kaynak harcamadan pas geçmek en güvenliydi.','Opponent was already visibly busted; passing without spending resources was safest.');
+  }
+  if(played&&played.t==='d'&&!best){
+    return tr(`Patlama riski yüksekti (%${bustPct}); pas geçmek daha avantajlıydı.`,`Bust risk was high (${bustPct}%); standing gave higher EV.`);
+  }
+  if(!played&&best&&best.t==='d'){
+    return tr(`Güvenli çekim oranı yüksekti (%${safePct}); kart çekerek üstünlük kurulabilirdi.`,`Safe draw odds were strong (${safePct}%); drawing improved winning chances.`);
+  }
+  if(best&&best.t==='j'){
+    return tr('Bu joker tur veya hedef dengesini lehine çeviriyordu.','This joker shifted the round or target balance in your favor.');
+  }
+  if(played&&played.t==='j'&&!best){
+    return tr('Joker harcamak yerine pas geçip kaynağı sonraki tura saklamak daha kârlıydı.','Saving the joker for a later round had higher expected value.');
+  }
+  return tr('Alternatif hamle düello kazanma olasılığını belirgin biçimde artırıyordu.','The alternative line significantly increased your duel win probability.');
 }
 function evalOneMove(h){
   const S=h.snap;
-  const AN_PRM={rand:0,noise:0,jc:.1,jl:.04,jp:1,dm:.01,depth:1,beta:.6,gap:6,hero:1,bo3:1};
-  const AN_RP={rand:0,noise:0,jc:.12,jl:.05,jp:.9,dm:.01,depth:0,beta:0,gap:6,hero:1,bo3:1};
+  const AN_PRM={rand:0,noise:0,jc:.08,jl:.03,jp:1,dm:.01,depth:1,beta:.7,gap:6,hero:1,bo3:1,deepRoll:1};
+  const AN_RP={rand:0,noise:0,jc:.1,jl:.04,jp:.95,dm:.01,depth:1,beta:.45,gap:6,hero:1,bo3:1};
   let all=listC(S,0,AN_PRM).sort((x,y)=>y.v-x.v);
-  const cands=all.slice(0,7);
+  const cands=all.slice(0,8);
   const ensure=a=>{if(!cands.some(c=>sameAct(c.a,a)))cands.push({a,v:0})};
   ensure(null);
   if(canDraw(S,0)&&!lowW(S)&&total(S,0,true)<tg(S))ensure({t:'d'});
   ensure(h.action);
-  const K=isMobilePerf()?95:155;
+  const K=isMobilePerf()?125:200;
   const sums=cands.map(()=>0);
   const matchPoint=S.rounds>=2||(S.pts&&(S.pts[0]>=1.5||S.pts[1]>=1.5));
-  const jCost=matchPoint?0.015:0.04;
+  const jCost=matchPoint?0.012:0.036;
   for(let k=0;k<K;k++){
-    const W=worldForPlayer(S);
+    const W=worldForPlayer(S,k);
     for(let i=0;i<cands.length;i++){
       const T=clone(W);
       const j0=[jCnt(T,0),jCnt(T,1)];
@@ -4211,15 +4352,20 @@ function evalOneMove(h){
     }
   }
   const evs=sums.map(s=>s/K);
-  let bi=0;
+  let bi=0,si=-1;
   for(let i=1;i<evs.length;i++){if(evs[i]>evs[bi]+1e-6)bi=i}
+  for(let i=0;i<evs.length;i++){if(i!==bi&&(si<0||evs[i]>evs[si]))si=i}
   let pi=cands.findIndex(c=>sameAct(c.a,h.action));
   if(pi<0)pi=0;
-  const toWp=v=>Math.max(0,Math.min(100,Math.round(((v+1)/2)*100)));
+  const toWp=v=>Math.max(0,Math.min(100,Math.round(((Math.max(-1,Math.min(1,v))+1)/2)*100)));
   const wpBest=toWp(evs[bi]),wpPlayed=toWp(evs[pi]);
+  const wpSecond=si>=0?toWp(evs[si]):wpBest;
   const loss=Math.max(0,wpBest-wpPlayed);
-  const grade=classifyMove(loss,sameAct(cands[pi].a,cands[bi].a));
+  const isSame=sameAct(cands[pi].a,cands[bi].a);
+  const brilliant=isSame&&cands.length>=2&&(wpBest-wpSecond>=12)&&!!(cands[bi].a&&(cands[bi].a.t==='j'||cands[bi].a.t==='d'));
+  const grade=classifyMove(loss,isSame,brilliant);
   const acc=100*Math.exp(-0.032*loss);
+  const reason=isSame?'' : explainMove(S,h.action,cands[bi].a,loss);
   return {
     ...h,
     wpPlayed,
@@ -4227,21 +4373,47 @@ function evalOneMove(h){
     loss,
     acc,
     grade,
+    reason,
     bestLabel:fmtAct(cands[bi].a,S),
-    isSame:sameAct(cands[pi].a,cands[bi].a)
+    isSame
   };
+}
+function buildWinGraphSvg(results){
+  if(!results.length)return '';
+  const W=460,H=76,padX=14,padY=10;
+  const n=results.length;
+  const xOf=i=>n===1?W/2:padX+(i/(n-1))*(W-padX*2);
+  const yOf=wp=>padY+((100-wp)/100)*(H-padY*2);
+  const pts=results.map((r,i)=>`${xOf(i).toFixed(1)},${yOf(r.wpPlayed).toFixed(1)}`).join(' ');
+  const area=`${xOf(0).toFixed(1)},${H-padY} ${pts} ${xOf(n-1).toFixed(1)},${H-padY}`;
+  const colMap={brill:'#38bdf8',best:'#fde68a',good:'#4ade80',inacc:'#fbbf24',mistake:'#fb923c',blunder:'#f87171'};
+  const dots=results.map((r,i)=>{
+    const c=colMap[r.grade.cls]||'#fde68a';
+    const rad=(r.grade.cls==='blunder'||r.grade.cls==='brill')?4.2:2.8;
+    return `<circle cx="${xOf(i).toFixed(1)}" cy="${yOf(r.wpPlayed).toFixed(1)}" r="${rad}" fill="${c}" stroke="#0b0809" stroke-width="1.2"/>`;
+  }).join('');
+  return `<div class="an-graph-wrap">
+    <div class="an-graph-lbl"><span>${tr('Kazanma Olasılığı Eğrisi','Win Probability Curve')}</span><b>50%</b></div>
+    <svg class="an-graph" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <defs><linearGradient id="anFillG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fde68a" stop-opacity="0.34"/><stop offset="100%" stop-color="#fde68a" stop-opacity="0.02"/></linearGradient></defs>
+      <line x1="${padX}" y1="${(H/2).toFixed(1)}" x2="${W-padX}" y2="${(H/2).toFixed(1)}" stroke="rgba(255,255,255,0.18)" stroke-dasharray="4 4" stroke-width="1"/>
+      <polygon points="${area}" fill="url(#anFillG)"/>
+      <polyline points="${pts}" fill="none" stroke="#f5d07a" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+      ${dots}
+    </svg>
+  </div>`;
 }
 function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
   const mb=$('#mb');
   if(!mb||!LAST_MATCH_HIST.length)return;
   const hist=[...LAST_MATCH_HIST];
   const results=[];
-  let idx=0,cancelled=false;
+  let idx=0,cancelled=false,anFilter='all';
   mb.classList.remove('end-mode');
   mb.classList.add('an-mode');
   mb.innerHTML=`<div class="an-loading">
-    <h3>${tr('NecroEngine Maç Analizi','NecroEngine Match Analysis')}</h3>
-    <p class="an-sub">${tr('Hamlelerin olasılık dünyalarında simüle ediliyor…','Simulating your moves across probability worlds…')}</p>
+    <h3>${tr('NecroEngine v2 Maç Analizi','NecroEngine v2 Match Analysis')}</h3>
+    <p class="an-sub">${tr('Hamlelerin Bayesian olasılık dünyalarında simüle ediliyor…','Simulating your moves across Bayesian probability worlds…')}</p>
     <div class="an-pbar"><i id="an-fill"></i></div>
     <div id="an-stat" class="an-stat">0 / ${hist.length}</div>
   </div>`;
@@ -4261,6 +4433,67 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
       if(mxBtn){mxBtn.style.visibility='';row.appendChild(mxBtn)}
     }
   };
+  const renderReport=()=>{
+    const avgAcc=Math.round(results.reduce((a,r)=>a+r.acc,0)/Math.max(1,results.length));
+    const avgLoss=(results.reduce((a,r)=>a+r.loss,0)/Math.max(1,results.length)).toFixed(1);
+    const rank=avgAcc>=93?{g:'S+',t:tr('Efsane','Grandmaster'),c:'brill'}:avgAcc>=85?{g:'A',t:tr('Usta','Master'),c:'best'}:avgAcc>=75?{g:'B',t:tr('İyi','Strong'),c:'good'}:avgAcc>=62?{g:'C',t:tr('Orta','Solid'),c:'inacc'}:{g:'D',t:tr('Gelişmeli','Needs Work'),c:'blunder'};
+    const cnt={brill:0,best:0,good:0,inacc:0,mistake:0,blunder:0};
+    results.forEach(r=>{if(cnt[r.grade.cls]!=null)cnt[r.grade.cls]++});
+    const shown=results.map((r,i)=>({r,i})).filter(({r})=>{
+      if(anFilter==='crit')return r.grade.cls==='blunder'||r.grade.cls==='mistake'||r.grade.cls==='inacc';
+      if(anFilter==='best')return r.grade.cls==='brill'||r.grade.cls==='best';
+      return true;
+    });
+    const rowsHtml=shown.length?shown.map(({r,i})=>{
+      const ctx=`D${r.duel}·T${r.round} · ${tr('Toplam','Tot')} ${r.myTot}/${r.low?tr('En Az','Low'):r.tg}`;
+      const rec=r.isSame||r.loss<=3
+        ?`<span class="an-ok">${r.grade.cls==='brill'?tr('Harika hamle! Tek kazandıran yol.','Brilliant move! Unique winning line.'):tr('En iyi hamle!','Best move!')}</span>`
+        :`<span class="an-rec">${tr('Öneri','Best')}: <b>${r.bestLabel}</b> <i>(%${r.wpBest})</i> · −%${r.loss}</span>${r.reason?`<div class="an-why">${r.reason}</div>`:''}`;
+      return `<div class="an-row ${r.grade.cls}">
+        <div class="an-badge ${r.grade.cls}">${r.grade.sym}</div>
+        <div class="an-body">
+          <div class="an-top"><span class="an-ctx">#${i+1} · ${ctx}</span><span class="an-gname ${r.grade.cls}">${r.grade.name}</span></div>
+          <div class="an-move"><b>${r.label}</b> <i>(%${r.wpPlayed})</i></div>
+          <div class="an-bot">${rec}</div>
+        </div>
+      </div>`;
+    }).join(''):`<div class="an-empty">${tr('Bu filtrede hamle yok.','No moves in this filter.')}</div>`;
+    mb.innerHTML=`<div class="an-report">
+      <div class="an-hdr">
+        <div>
+          <h3>${tr('NecroEngine Analizi','NecroEngine Analysis')}</h3>
+          <div class="an-meta">${tr('Ort. Kayıp','Avg Loss')}: <b>−%${avgLoss}</b> · ${results.length} ${tr('hamle','moves')}</div>
+        </div>
+        <div class="an-hdr-r">
+          <div class="an-rank-box ${rank.c}"><b>${rank.g}</b><span>${rank.t}</span></div>
+          <div class="an-acc-box"><span>${tr('Doğruluk','Accuracy')}</span><b>%${avgAcc}</b></div>
+        </div>
+      </div>
+      ${buildWinGraphSvg(results)}
+      <div class="an-pills">
+        ${cnt.brill?`<span class="an-p brill">!! ${cnt.brill}</span>`:''}
+        <span class="an-p best">★ ${cnt.best}</span>
+        <span class="an-p good">✓ ${cnt.good}</span>
+        <span class="an-p inacc">?! ${cnt.inacc}</span>
+        <span class="an-p mistake">? ${cnt.mistake}</span>
+        <span class="an-p blunder">?? ${cnt.blunder}</span>
+      </div>
+      <div class="an-filters">
+        <button type="button" class="an-flt${anFilter==='all'?' act':''}" data-af="all">${tr('Tümü','All')} (${results.length})</button>
+        <button type="button" class="an-flt${anFilter==='crit'?' act':''}" data-af="crit">${tr('Kritik Hatalar','Mistakes')} (${cnt.inacc+cnt.mistake+cnt.blunder})</button>
+        <button type="button" class="an-flt${anFilter==='best'?' act':''}" data-af="best">${tr('En İyiler','Best')} (${cnt.brill+cnt.best})</button>
+      </div>
+      <div class="an-list">${rowsHtml}</div>
+      <div class="row an-acts">
+        <button id="an-back" class="btn alt sm">${tr('← Sonuçlara Dön','← Back to Results')}</button>
+        <button id="an-menu" class="btn sm">${tr('Ana Menü','Main Menu')}</button>
+      </div>
+    </div>`;
+    mb.querySelectorAll('.an-flt').forEach(b=>b.onclick=()=>{snd('click');anFilter=b.dataset.af;renderReport()});
+    const bk=$('#an-back'),mn=$('#an-menu');
+    if(bk)bk.onclick=()=>{snd('click');restoreEnd()};
+    if(mn)mn.onclick=()=>{snd('click');exitGame()};
+  };
   const step=()=>{
     if(cancelled||!mb.isConnected)return;
     if(idx<hist.length){
@@ -4272,44 +4505,7 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
       setTimeout(step,0);
       return;
     }
-    const avgAcc=Math.round(results.reduce((a,r)=>a+r.acc,0)/Math.max(1,results.length));
-    const cnt={best:0,good:0,inacc:0,mistake:0,blunder:0};
-    results.forEach(r=>cnt[r.grade.cls]++);
-    const rowsHtml=results.map((r,i)=>{
-      const ctx=`D${r.duel}·T${r.round} · ${tr('Toplam','Tot')} ${r.myTot}/${r.low?tr('En Az','Low'):r.tg}`;
-      const rec=r.isSame||r.loss<=3
-        ?`<span class="an-ok">${tr('En iyi hamle!','Best move!')}</span>`
-        :`<span class="an-rec">${tr('Öneri','Best')}: <b>${r.bestLabel}</b> <i>(%${r.wpBest})</i> · −%${r.loss}</span>`;
-      return `<div class="an-row ${r.grade.cls}">
-        <div class="an-badge ${r.grade.cls}">${r.grade.sym}</div>
-        <div class="an-body">
-          <div class="an-top"><span class="an-ctx">#${i+1} · ${ctx}</span><span class="an-gname ${r.grade.cls}">${r.grade.name}</span></div>
-          <div class="an-move"><b>${r.label}</b> <i>(%${r.wpPlayed})</i></div>
-          <div class="an-bot">${rec}</div>
-        </div>
-      </div>`;
-    }).join('');
-    mb.innerHTML=`<div class="an-report">
-      <div class="an-hdr">
-        <h3>${tr('NecroEngine Analizi','NecroEngine Analysis')}</h3>
-        <div class="an-acc-box"><span>${tr('Doğruluk','Accuracy')}</span><b>%${avgAcc}</b></div>
-      </div>
-      <div class="an-pills">
-        <span class="an-p best">!! ${cnt.best}</span>
-        <span class="an-p good">✓ ${cnt.good}</span>
-        <span class="an-p inacc">?! ${cnt.inacc}</span>
-        <span class="an-p mistake">? ${cnt.mistake}</span>
-        <span class="an-p blunder">?? ${cnt.blunder}</span>
-      </div>
-      <div class="an-list">${rowsHtml}</div>
-      <div class="row an-acts">
-        <button id="an-back" class="btn alt sm">${tr('← Sonuçlara Dön','← Back to Results')}</button>
-        <button id="an-menu" class="btn sm">${tr('Ana Menü','Main Menu')}</button>
-      </div>
-    </div>`;
-    const bk=$('#an-back'),mn=$('#an-menu');
-    if(bk)bk.onclick=()=>{snd('click');restoreEnd()};
-    if(mn)mn.onclick=()=>{snd('click');exitGame()};
+    renderReport();
     snd('ok');
   };
   setTimeout(step,30);
