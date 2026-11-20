@@ -425,6 +425,13 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
                 mb.innerHTML=tpl.innerHTML;
                 const row=mb.querySelector('.end-acts');
                 if(row){
+                  if(LAST_MATCH_HIST&&LAST_MATCH_HIST.length){
+                    const ab=document.createElement('button');
+                    ab.id='btn-analyze';ab.className='btn alt';
+                    ab.textContent=tr('Maçı Analiz Et','Analyze Match');
+                    ab.onclick=()=>openMatchAnalysis(tpl.innerHTML,mo,mx);
+                    row.appendChild(ab);
+                  }
                   if(mo){mo.style.visibility='';row.appendChild(mo)}
                   if(mx){mx.style.visibility='';row.appendChild(mx)}
                 }
@@ -928,7 +935,7 @@ function next(){
   if(MODE=='tutorial'&&G&&G.turn==1&&!lock&&!G.over){setTimeout(()=>{if(MODE=='tutorial'&&G&&G.turn==1&&!lock&&!G.over)pass()},650);return}
   if(MODE=='bot'&&G.turn==1&&!lock&&!G.over)bot()
 }
-function M(html,btn,cb,end){lock=true;const mb=$('#mb');mb.classList.remove('end-mode');mb.innerHTML=html+(btn?`<br><br><button id="mo" class="btn">${btn}</button>`:end?'':`<br><i>${tr('Oda sahibinin devam etmesi bekleniyor…','Waiting for the host to continue…')}</i>`)+(end?`<br><br><button id="mx" class="btn alt">${tr('Ana menüye dön','Return to Main Menu')}</button>`:'');$('#m').hidden=false;
+function M(html,btn,cb,end){lock=true;const mb=$('#mb');mb.classList.remove('end-mode','an-mode');mb.innerHTML=html+(btn?`<br><br><button id="mo" class="btn">${btn}</button>`:end?'':`<br><i>${tr('Oda sahibinin devam etmesi bekleniyor…','Waiting for the host to continue…')}</i>`)+(end?`<br><br><button id="mx" class="btn alt">${tr('Ana menüye dön','Return to Main Menu')}</button>`:'');$('#m').hidden=false;
   if(end&&$('#mb .dice'))$('#mx').style.visibility='hidden'; // zar atılmadan sonuç sızmasın
   anim();
   let done=false;
@@ -1462,7 +1469,7 @@ const HP_IC={
   v:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14M7 4l2 8 2-8M13 4l2 8 2-8"/><path d="M12 13.5s-3.5 3.6-3.5 5.6a3.5 3.5 0 007 0c0-2-3.5-5.6-3.5-5.6z"/></svg>',
   u:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 21l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>'
 };
-function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}rematchReady=[false,false];rematchHeroes=[null,null];deathContReady=[false,false];deathContGo=null;const botPool=HEROES.filter(h=>(!h.bossOnly||DIFF==='imp')&&!(MY_HERO==='v'&&h.id==='v')).map(h=>h.id),oppH=MODE=='bot'?botPool[Math.floor(Math.random()*botPool.length)]:(OPP_HERO||'n');G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],vampUsed:[false,false],cWins:[0,0],vampWinSide:-1,mast:[0,0]};prevAv[0]=prevAv[1]=undefined;prevHpAnim=[false,false];newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
+function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}LAST_MATCH_HIST=[];rematchReady=[false,false];rematchHeroes=[null,null];deathContReady=[false,false];deathContGo=null;const botPool=HEROES.filter(h=>(!h.bossOnly||DIFF==='imp')&&!(MY_HERO==='v'&&h.id==='v')).map(h=>h.id),oppH=MODE=='bot'?botPool[Math.floor(Math.random()*botPool.length)]:(OPP_HERO||'n');G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],vampUsed:[false,false],cWins:[0,0],vampWinSide:-1,mast:[0,0]};prevAv[0]=prevAv[1]=undefined;prevHpAnim=[false,false];newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();next()}
 
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
@@ -1936,7 +1943,7 @@ function playHeroPowerAnim(hId,side,hObj){
   else if(hId==='w'&&side===0)spawnBoard('hp-fx-witch',document.querySelector('#opp .cards .c.bk'));
   else if(hId==='l')spawnBoard('hp-fx-wolf',document.querySelector('#fx'));
 }
-function doPlay(id,pk){const S=G;P=null;if(MODE=='guest'){conn.send({k:'play',id,pk});return R()}S.graceLeft=0;lrnAct(S,'j',id);play(S,0,id,pk);S.acted=true;S.log.push({p:0,t:`joker oynadı: ${J[id]}`});note(0,id,()=>{if(MODE=='bot')talk('react',1,.5);R();if(MODE==='tutorial'&&tutStep===3)tutAdvance('joker')})}
+function doPlay(id,pk){const S=G;P=null;recMove(S,{t:'j',id,pk:[...(pk||[])]},`${tr('Joker','Joker')}: ${J[id]||id}`);if(MODE=='guest'){conn.send({k:'play',id,pk});return R()}S.graceLeft=0;lrnAct(S,'j',id);play(S,0,id,pk);S.acted=true;S.log.push({p:0,t:`joker oynadı: ${J[id]}`});note(0,id,()=>{if(MODE=='bot')talk('react',1,.5);R();if(MODE==='tutorial'&&tutStep===3)tutAdvance('joker')})}
 function execAlchSwap(cid){
   const S=G;if(!S||!S.deck.length)return;
   if(MODE==='guest'){snd('flip');return conn.send({k:'hp_alch',cid})}
@@ -2170,7 +2177,7 @@ function buildEndScreenHtml(S,v,L,roll,th){
     <div class="end-acts row"></div>
   </div>`;
 }
-function box(html,close=true){lock=true;$('#mb').classList.remove('end-mode');$('#mb').innerHTML=html+(close?`<div class="row"><button id="pc" class="btn">${tr('Kapat','Close')}</button></div>`:'');$('#m').hidden=false;if(close)$('#pc').onclick=()=>{$('#m').hidden=true;lock=false;if(G)R()}}
+function box(html,close=true){lock=true;$('#mb').classList.remove('end-mode','an-mode');$('#mb').innerHTML=html+(close?`<div class="row"><button id="pc" class="btn">${tr('Kapat','Close')}</button></div>`:'');$('#m').hidden=false;if(close)$('#pc').onclick=()=>{$('#m').hidden=true;lock=false;if(G)R()}}
 /* ---------- BÜYÜK GÖRÜNÜM: karakter, sayı kartı, kapalı kart ---------- */
 const HQ={};
 function hq(key,cs,cb){let i=HQ[key];if(!i){i=HQ[key]=new Image();i._i=0;i.onerror=()=>{if(++i._i<cs.length)i.src=cs[i._i];else i._f=1};i.src=cs[0]}
@@ -2523,8 +2530,8 @@ document.addEventListener('click',e=>{
     return;
   }
 });
-function drawFromDeck(){const S=G;if(!S||S.turn||lock||P||!canDraw(S,0))return;if(MODE==='tutorial'&&tutStep!==2)return;snd('draw');if(MODE=='guest')return conn.send({k:'draw'});S.graceLeft=0;lrnAct(S,'d');if(S.botScry&&S.botScry.length)S.botScry.shift();const c=S.deck.pop();S.pl[0].open.push(c);if(S.stats&&S.stats.draws)S.stats.draws[0]++;S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R();if(MODE==='tutorial'&&tutStep===2)tutAdvance('draw')}
-$('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE==='tutorial'&&tutStep!==7)return;if(MODE=='guest')conn.send({k:'pass'});else{lrnAct(G,'p');pass();if(MODE==='tutorial'&&tutStep===7)tutClearHighlights()}}};
+function drawFromDeck(){const S=G;if(!S||S.turn||lock||P||!canDraw(S,0))return;if(MODE==='tutorial'&&tutStep!==2)return;recMove(S,{t:'d'},tr('Kart Çek','Draw Card'));snd('draw');if(MODE=='guest')return conn.send({k:'draw'});S.graceLeft=0;lrnAct(S,'d');if(S.botScry&&S.botScry.length)S.botScry.shift();const c=S.deck.pop();S.pl[0].open.push(c);if(S.stats&&S.stats.draws)S.stats.draws[0]++;S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R();if(MODE==='tutorial'&&tutStep===2)tutAdvance('draw')}
+$('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE==='tutorial'&&tutStep!==7)return;recMove(G,null,$('#pass').textContent||tr('Pas','Pass'));if(MODE=='guest')conn.send({k:'pass'});else{lrnAct(G,'p');pass();if(MODE==='tutorial'&&tutStep===7)tutClearHighlights()}}};
 
 /* ---------- ONLINE (PeerJS) ---------- */
 let MODE='bot',peer,conn,spectators=[],specCount=0,waitM=false,rematchReady=[false,false],rematchHeroes=[null,null],deathContReady=[false,false],deathContGo=null;
@@ -2774,6 +2781,7 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
   if(m.k=='s'){
     if(m.specCount!=null)specCount=m.specCount;
     const prevRev=G&&G.rev,prevWin=G?G.winSide:null;
+    if(!G||(G.over&&!m.v.over))LAST_MATCH_HIST=[];
     G=m.v;if(!G.over){try{document.body.classList.remove('dead')}catch(e){}}
     if(G.rev&&!prevRev)snd('flip');
     if(G.winSide!=null&&prevWin==null){
@@ -4044,4 +4052,204 @@ function startTutorial(){
   tutStep=0;
   R();
   tutRender();
+}
+
+/* ---------- NECROENGINE: MAÇ SONU BEKLENEN DEĞER (EV) HAMLE ANALİZ MOTORU ---------- */
+let LAST_MATCH_HIST=[];
+function recMove(S,action,label){
+  if(!S||S.over||MODE==='tutorial'||MODE==='spectator')return;
+  const snap=clone(S);
+  snap.log=[];snap.stats=null;
+  LAST_MATCH_HIST.push({
+    duel:(S.bo||0)+1,
+    round:(S.rounds||0)+1,
+    myTot:total(S,0,true),
+    oppOpen:total(S,1,false),
+    tg:tg(S),
+    low:lowW(S),
+    action:action?clone(action):null,
+    label:label||(action&&action.t==='d'?tr('Kart Çek','Draw Card'):tr('Pas','Pass')),
+    snap
+  });
+}
+function sameAct(a,b){
+  if(!a&&!b)return true;
+  if(!a||!b)return false;
+  if(a.t!==b.t)return false;
+  if(a.t==='d')return true;
+  if(a.id!==b.id)return false;
+  const pa=a.pk||[],pb=b.pk||[];
+  return pa.length===pb.length&&pa.every((x,i)=>x===pb[i]);
+}
+function fmtAct(a,S){
+  if(!a)return (S&&S.turns>0&&!S.acted)?tr('Turu Bitir','End Round'):tr('Pas','Pass');
+  if(a.t==='d')return tr('Kart Çek','Draw Card');
+  const nm=J[a.id]||`#${a.id}`;
+  if(a.id===22&&a.pk&&a.pk.length)return `${nm} (${a.pk[0]>0?'+':'−'})`;
+  return `${tr('Joker','Joker')}: ${nm}`;
+}
+function worldForPlayer(S){ // Oyuncunun o an bildiği bilgilere göre adil olasılık dünyası (sonradan bilmişlik yok)
+  const T=clone(S);T.log=[];T.jdeck=[];
+  const cl=T.pl[1]&&T.pl[1].closed&&T.pl[1].closed[0];
+  const peeked=!!(cl&&((S.oppPeek&&S.oppPeek.includes(cl.id))||cl.o!=null));
+  const seenN=new Set([...(S.pl[0].open||[]),...(S.pl[0].closed||[]),...(S.pl[1].open||[]),...(S.dead||[])].map(c=>c.n).filter(n=>n>0));
+  if(peeked&&cl.n>0)seenN.add(cl.n);
+  let pool=shuf(range(11).filter(n=>!seenN.has(n)));
+  if(cl&&!peeked&&pool.length){
+    if(S.pa&&S.pa[1]>0){
+      const Tg=tg(S),base=total(S,1,false);
+      const w=pool.map(n=>{const t=base+n;return (t<=Tg&&t>=Tg-6)?1.8:1});
+      const sm=w.reduce((a,b)=>a+b,0);
+      let r=Math.random()*sm,i=0;
+      while(i<w.length-1&&(r-=w[i])>0)i++;
+      cl.n=pool[i];
+      pool.splice(i,1);
+    }else{
+      cl.n=pool.shift();
+    }
+  }
+  T.deck=pool.slice(0,(S.deck||[]).length).map(n=>({id:++T.u,n}));
+  const knownJ=new Set([...(S.hand[0]||[]),...(S.dj||[])]);
+  const oppLen=(S.hand[1]||[]).length;
+  let oppHand=shuf(range(24).filter(x=>!knownJ.has(x))).slice(0,oppLen);
+  if(avKey(S,1)==='s'&&oppLen&&!(S.dj&&S.dj.includes(25))&&!oppHand.includes(25)){
+    oppHand[oppHand.length-1]=25;
+  }
+  T.hand[1]=oppHand;
+  return T;
+}
+function classifyMove(loss,isSame){
+  if(isSame||loss<=3)return {cls:'best',sym:'!!',name:tr('En İyi','Best')};
+  if(loss<=10)return {cls:'good',sym:'✓',name:tr('İyi','Good')};
+  if(loss<=20)return {cls:'inacc',sym:'?!',name:tr('Şüpheli','Inaccuracy')};
+  if(loss<=34)return {cls:'mistake',sym:'?',name:tr('Hata','Mistake')};
+  return {cls:'blunder',sym:'??',name:tr('Vahim Hata','Blunder')};
+}
+function evalOneMove(h){
+  const S=h.snap;
+  const AN_PRM={rand:0,noise:0,jc:.1,jl:.04,jp:1,dm:.01,depth:1,beta:.6,gap:6,hero:1,bo3:1};
+  const AN_RP={rand:0,noise:0,jc:.12,jl:.05,jp:.9,dm:.01,depth:0,beta:0,gap:6,hero:1,bo3:1};
+  let all=listC(S,0,AN_PRM).sort((x,y)=>y.v-x.v);
+  const cands=all.slice(0,7);
+  const ensure=a=>{if(!cands.some(c=>sameAct(c.a,a)))cands.push({a,v:0})};
+  ensure(null);
+  if(canDraw(S,0)&&!lowW(S)&&total(S,0,true)<tg(S))ensure({t:'d'});
+  ensure(h.action);
+  const K=isMobilePerf()?95:155;
+  const sums=cands.map(()=>0);
+  const matchPoint=S.rounds>=2||(S.pts&&(S.pts[0]>=1.5||S.pts[1]>=1.5));
+  const jCost=matchPoint?0.015:0.04;
+  for(let k=0;k<K;k++){
+    const W=worldForPlayer(S);
+    for(let i=0;i<cands.length;i++){
+      const T=clone(W);
+      const j0=[jCnt(T,0),jCnt(T,1)];
+      let r=0;
+      try{r=rollout(T,0,cands[i].a,AN_RP)}catch(e){r=0}
+      sums[i]+=r-jCost*((jCnt(T,0)-j0[0])-0.5*(jCnt(T,1)-j0[1]));
+    }
+  }
+  const evs=sums.map(s=>s/K);
+  let bi=0;
+  for(let i=1;i<evs.length;i++){if(evs[i]>evs[bi]+1e-6)bi=i}
+  let pi=cands.findIndex(c=>sameAct(c.a,h.action));
+  if(pi<0)pi=0;
+  const toWp=v=>Math.max(0,Math.min(100,Math.round(((v+1)/2)*100)));
+  const wpBest=toWp(evs[bi]),wpPlayed=toWp(evs[pi]);
+  const loss=Math.max(0,wpBest-wpPlayed);
+  const grade=classifyMove(loss,sameAct(cands[pi].a,cands[bi].a));
+  const acc=100*Math.exp(-0.032*loss);
+  return {
+    ...h,
+    wpPlayed,
+    wpBest,
+    loss,
+    acc,
+    grade,
+    bestLabel:fmtAct(cands[bi].a,S),
+    isSame:sameAct(cands[pi].a,cands[bi].a)
+  };
+}
+function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
+  const mb=$('#mb');
+  if(!mb||!LAST_MATCH_HIST.length)return;
+  const hist=[...LAST_MATCH_HIST];
+  const results=[];
+  let idx=0,cancelled=false;
+  mb.classList.remove('end-mode');
+  mb.classList.add('an-mode');
+  mb.innerHTML=`<div class="an-loading">
+    <h3>${tr('NecroEngine Maç Analizi','NecroEngine Match Analysis')}</h3>
+    <p class="an-sub">${tr('Hamlelerin olasılık dünyalarında simüle ediliyor…','Simulating your moves across probability worlds…')}</p>
+    <div class="an-pbar"><i id="an-fill"></i></div>
+    <div id="an-stat" class="an-stat">0 / ${hist.length}</div>
+  </div>`;
+  const restoreEnd=()=>{
+    cancelled=true;
+    mb.classList.remove('an-mode');
+    mb.classList.add('end-mode');
+    mb.innerHTML=endTplHtml;
+    const row=mb.querySelector('.end-acts');
+    if(row){
+      const ab=document.createElement('button');
+      ab.id='btn-analyze';ab.className='btn alt';
+      ab.textContent=tr('Maçı Analiz Et','Analyze Match');
+      ab.onclick=()=>openMatchAnalysis(endTplHtml,moBtn,mxBtn);
+      row.appendChild(ab);
+      if(moBtn){moBtn.style.visibility='';row.appendChild(moBtn)}
+      if(mxBtn){mxBtn.style.visibility='';row.appendChild(mxBtn)}
+    }
+  };
+  const step=()=>{
+    if(cancelled||!mb.isConnected)return;
+    if(idx<hist.length){
+      results.push(evalOneMove(hist[idx]));
+      idx++;
+      const fill=$('#an-fill'),stEl=$('#an-stat');
+      if(fill)fill.style.width=Math.round((idx/hist.length)*100)+'%';
+      if(stEl)stEl.textContent=`${idx} / ${hist.length}`;
+      setTimeout(step,0);
+      return;
+    }
+    const avgAcc=Math.round(results.reduce((a,r)=>a+r.acc,0)/Math.max(1,results.length));
+    const cnt={best:0,good:0,inacc:0,mistake:0,blunder:0};
+    results.forEach(r=>cnt[r.grade.cls]++);
+    const rowsHtml=results.map((r,i)=>{
+      const ctx=`D${r.duel}·T${r.round} · ${tr('Toplam','Tot')} ${r.myTot}/${r.low?tr('En Az','Low'):r.tg}`;
+      const rec=r.isSame||r.loss<=3
+        ?`<span class="an-ok">${tr('En iyi hamle!','Best move!')}</span>`
+        :`<span class="an-rec">${tr('Öneri','Best')}: <b>${r.bestLabel}</b> <i>(%${r.wpBest})</i> · −%${r.loss}</span>`;
+      return `<div class="an-row ${r.grade.cls}">
+        <div class="an-badge ${r.grade.cls}">${r.grade.sym}</div>
+        <div class="an-body">
+          <div class="an-top"><span class="an-ctx">#${i+1} · ${ctx}</span><span class="an-gname ${r.grade.cls}">${r.grade.name}</span></div>
+          <div class="an-move"><b>${r.label}</b> <i>(%${r.wpPlayed})</i></div>
+          <div class="an-bot">${rec}</div>
+        </div>
+      </div>`;
+    }).join('');
+    mb.innerHTML=`<div class="an-report">
+      <div class="an-hdr">
+        <h3>${tr('NecroEngine Analizi','NecroEngine Analysis')}</h3>
+        <div class="an-acc-box"><span>${tr('Doğruluk','Accuracy')}</span><b>%${avgAcc}</b></div>
+      </div>
+      <div class="an-pills">
+        <span class="an-p best">!! ${cnt.best}</span>
+        <span class="an-p good">✓ ${cnt.good}</span>
+        <span class="an-p inacc">?! ${cnt.inacc}</span>
+        <span class="an-p mistake">? ${cnt.mistake}</span>
+        <span class="an-p blunder">?? ${cnt.blunder}</span>
+      </div>
+      <div class="an-list">${rowsHtml}</div>
+      <div class="row an-acts">
+        <button id="an-back" class="btn alt sm">${tr('← Sonuçlara Dön','← Back to Results')}</button>
+        <button id="an-menu" class="btn sm">${tr('Ana Menü','Main Menu')}</button>
+      </div>
+    </div>`;
+    const bk=$('#an-back'),mn=$('#an-menu');
+    if(bk)bk.onclick=()=>{snd('click');restoreEnd()};
+    if(mn)mn.onclick=()=>{snd('click');exitGame()};
+    snd('ok');
+  };
+  setTimeout(step,30);
 }
