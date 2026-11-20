@@ -348,9 +348,9 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
     snd('dice');vib([100,50,100]);
 
     const startTime = performance.now();
-    const duration = 2050; // Dengeli, doğal ve akıcı yavaşlama
+    const duration = 2850; // +0.8s uzatılmış gerilimli, doğal ve akıcı yavaşlama
 
-    const totalRevX = 2;
+    const totalRevX = 3;
     const totalRevY = 2;
     const totalRevZ = 1;
 
