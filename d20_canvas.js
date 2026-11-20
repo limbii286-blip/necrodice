@@ -47,7 +47,7 @@
     return FACE_ANGLES[fi >= 0 ? fi : 0];
   };
 
-  window.draw3DD20 = function(cv, rx, ry, rz, targetNum, isRolling, isCrit, isFail, scaleMult, textPopMult) {
+  window.draw3DD20 = function(cv, rx, ry, rz, targetNum, isRolling, isCrit, isFail, scaleMult, textPopMult, overrideNum) {
     if (!cv) return;
     const ctx = cv.getContext('2d');
     const w = cv.width, h = cv.height;
@@ -171,7 +171,7 @@
         const f_cx = (s0[0] + s1[0] + s2[0]) / 3;
         const f_cy = (s0[1] + s1[1] + s2[1]) / 3;
         const isTargetFace = (fi === targetFi);
-        const numStr = (isQuestion && fi === 0) ? '?' : String(FACE_NUMS[fi]);
+        const numStr = (isQuestion && fi === 0) ? '?' : (isTargetFace && overrideNum != null ? String(overrideNum) : String(FACE_NUMS[fi]));
 
         ctx.save();
         ctx.translate(f_cx, f_cy);
@@ -183,7 +183,7 @@
         ctx.rotate(Math.sin(ang) * 0.28); // continuous periodic perspective tilt (no atan2 wrap snap)
 
         const fontSz = Math.max(16, baseScale * (numStr.length > 1 ? 0.36 : 0.42) * norm[2] * (isTargetFace ? textPop : 1.0));
-        ctx.font = `900 ${fontSz|0}px 'MedievalSharp', 'Almendra', Georgia, serif`;
+        ctx.font = `900 ${fontSz|0}px 'Cinzel', Georgia, serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 

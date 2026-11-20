@@ -326,9 +326,9 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
   let rolling = false, finished = false;
   let animId = null;
 
-  const render = (num, isCrit, isFail, scale, textPop) => {
+  const render = (num, isCrit, isFail, scale, textPop, ovNum) => {
     if(typeof draw3DD20=='function'){
-      draw3DD20(cv, rx, ry, rz, num, rolling, isCrit, isFail, scale, textPop);
+      draw3DD20(cv, rx, ry, rz, num, rolling, isCrit, isFail, scale, textPop, ovNum);
     }
   };
 
@@ -343,13 +343,11 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
     snd('dice');vib([100,50,100]);
 
     const startTime = performance.now();
-    const duration = 2800; // Akıcı, tatmin edici ve doğal yavaşlama
+    const duration = 2050; // Dengeli, doğal ve akıcı yavaşlama
 
-    // Hedeflenen yüzün tam iniş açıları
-    // Zarın dönüşü tam hedef açıda bitecek şekilde toplam devir sayısı hesaplanır
-    const totalRevX = 2; // 2 tam devir
-    const totalRevY = 3; // 3 tam devir
-    const totalRevZ = 1; // 1 tam devir
+    const totalRevX = 2;
+    const totalRevY = 2;
+    const totalRevZ = 1;
 
     const startRx = rx;
     const startRy = ry;
@@ -365,15 +363,15 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
       const progress = Math.min(1.0, elapsed / duration);
 
       if(progress < 1.0) {
-        // Yumuşak kübik yavaşlama (cubic ease-out: başlangıçta hızlı, sonra gittikçe süzülerek hedefe kilitlenir)
-        const t = 1.0 - Math.pow(1.0 - progress, 3.0);
+        // Quartic ease-out: başlangıçta dinamik dönüş, sonda net ve kararlı duruş
+        const t = 1.0 - Math.pow(1.0 - progress, 4.0);
         rx = startRx + (endRx - startRx) * t;
         ry = startRy + (endRy - startRy) * t;
         rz = startRz + (endRz - startRz) * t;
 
-        // Hafif zıplama efekti
-        const bounce = 1.0 + Math.sin(progress * Math.PI) * 0.08 * (1.0 - progress);
-        render(target, false, false, bounce);
+        // Doğal havalanma ve masaya iniş ölçeği
+        const lift = 1.0 + Math.sin(progress * Math.PI) * 0.13 * (1.0 - progress * 0.35);
+        render(target, false, false, lift);
         animId = requestAnimationFrame(frame);
       } else {
         // Landing & Slam
@@ -390,23 +388,22 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
           d.classList.add('finished');
           const isCrit = num >= 20;
           const isFail = num == 1 || res == 'death';
+          const ov = (num !== rawTarget) ? num : null;
           let popStep = 0;
           const popSeq = [
-            { s: 1.15, p: 1.35 },
-            { s: 1.12, p: 1.42 },
-            { s: 1.05, p: 1.30 },
-            { s: 0.96, p: 1.15 },
-            { s: 1.02, p: 1.08 },
+            { s: 1.12, p: 1.28 },
+            { s: 1.06, p: 1.18 },
+            { s: 0.98, p: 1.04 },
             { s: 1.0,  p: 1.0 }
           ];
           const doPop = () => {
             if(!d.isConnected) return;
             if(popStep < popSeq.length) {
               const fr = popSeq[popStep++];
-              render(num, isCrit, isFail, fr.s, fr.p);
-              setTimeout(doPop, 45);
+              render(rawTarget, isCrit, isFail, fr.s, fr.p, ov);
+              setTimeout(doPop, 48);
             } else {
-              render(num, isCrit, isFail, 1.0, 1.0);
+              render(rawTarget, isCrit, isFail, 1.0, 1.0, ov);
             }
           };
           doPop();
@@ -443,14 +440,13 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
 
         const pills = [...d.querySelectorAll('.d20-mod-pill[data-val]')];
         if(pills.length > 0){
-          render(rawTarget, false, false, 1.08, 1.18);
-          setTimeout(()=>{ if(d.isConnected) render(rawTarget, false, false, 1.0, 1.0); }, 220);
+          render(rawTarget, false, false, 1.08, 1.16);
+          setTimeout(()=>{ if(d.isConnected) render(rawTarget, false, false, 1.0, 1.0); }, 200);
           let curNum = rawTarget;
           const stageEl = d.querySelector('.d20-stage');
           const applyNext = idx => {
             if(!d.isConnected) return;
             if(idx >= pills.length){
-              rx = finalAng.rx; ry = finalAng.ry; rz = finalAng.rz;
               finishFinal(finalTarget, true);
               return;
             }
@@ -460,11 +456,10 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
             const steps = Math.abs(delta);
             const stepSign = isPos ? 1 : -1;
             const nextNum = Math.max(1, Math.min(20, curNum + delta));
-            const nextAng = (typeof getD20FaceAngles === 'function') ? getD20FaceAngles(nextNum) : finalAng;
             pill.classList.add('igniting');
             try{
-              if(isPos) tone(494, .22, 'triangle', .14, 0, 180);
-              else tone(220, .24, 'sawtooth', .12, 0, -65);
+              if(isPos) tone(494, .20, 'triangle', .13, 0, 160);
+              else tone(220, .22, 'sawtooth', .11, 0, -55);
             }catch(e){}
             if(stageEl){
               const pr = pill.getBoundingClientRect(), sr = stageEl.getBoundingClientRect();
@@ -478,7 +473,7 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
               fly.style.setProperty('--dx', (tx - sx) + 'px');
               fly.style.setProperty('--dy', (ty - sy) + 'px');
               document.body.appendChild(fly);
-              setTimeout(() => fly.remove(), 620);
+              setTimeout(() => fly.remove(), 520);
             }
             setTimeout(() => {
               if(!d.isConnected) return;
@@ -488,51 +483,42 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
                 const ring = document.createElement('div');
                 ring.className = 'bg3-impact-ring ' + (isPos ? 'pos' : 'neg');
                 stageEl.appendChild(ring);
-                setTimeout(() => ring.remove(), 680);
-                const burst = document.createElement('div');
-                burst.className = 'bg3-sunburst ' + (isPos ? 'pos' : 'neg');
-                stageEl.appendChild(burst);
-                setTimeout(() => burst.remove(), 620);
+                setTimeout(() => ring.remove(), 620);
               }
               let stepDone = 0;
               const tickStep = () => {
                 if(!d.isConnected) return;
                 stepDone++;
                 const valNow = Math.max(1, Math.min(20, curNum + stepSign * stepDone));
-                const angNow = (typeof getD20FaceAngles === 'function') ? getD20FaceAngles(valNow) : nextAng;
                 try{
-                  if(isPos) tone(587 + stepDone * 110, .28, 'triangle', .16);
-                  else tone(210 - stepDone * 35, .28, 'sawtooth', .14, 0, -40);
+                  if(isPos) tone(587 + stepDone * 110, .24, 'triangle', .15);
+                  else tone(210 - stepDone * 35, .24, 'sawtooth', .13, 0, -35);
                 }catch(e){}
-                const mStart = performance.now(), mDur = 260;
-                const sRx = rx, sRy = ry, sRz = rz;
+                // Zar ters yüzlere savrulmadan sabit kalır; sadece üzerindeki sayı pürüzsüz nabızla güncellenir
+                const mStart = performance.now(), mDur = 220;
                 const modFrame = tNow => {
                   if(!d.isConnected) return;
                   const p = Math.min(1, (tNow - mStart) / mDur);
-                  const e = 1 - Math.pow(1 - p, 3);
-                  rx = sRx + (angNow.rx - sRx) * e;
-                  ry = sRy + (angNow.ry - sRy) * e;
-                  rz = sRz + (angNow.rz - sRz) * e;
-                  const sc = 1 + Math.sin(p * Math.PI) * 0.16;
-                  const tp = 1 + Math.sin(p * Math.PI) * 0.38;
-                  render(valNow, false, false, sc, tp);
+                  const pulse = Math.sin(p * Math.PI);
+                  const sc = 1 + pulse * 0.11;
+                  const tp = 1 + pulse * 0.34;
+                  render(rawTarget, isPos && valNow >= 20, !isPos && valNow <= 1, sc, tp, valNow);
                   if(p < 1) requestAnimationFrame(modFrame);
                   else {
-                    rx = angNow.rx; ry = angNow.ry; rz = angNow.rz;
-                    render(valNow, false, false, 1.0, 1.0);
-                    if(stepDone < steps) setTimeout(tickStep, 170);
+                    render(rawTarget, isPos && valNow >= 20, !isPos && valNow <= 1, 1.0, 1.0, valNow);
+                    if(stepDone < steps) setTimeout(tickStep, 130);
                     else {
                       curNum = nextNum;
-                      setTimeout(() => applyNext(idx + 1), 460);
+                      setTimeout(() => applyNext(idx + 1), 360);
                     }
                   }
                 };
                 requestAnimationFrame(modFrame);
               };
               tickStep();
-            }, 520);
+            }, 440);
           };
-          setTimeout(() => applyNext(0), 720);
+          setTimeout(() => applyNext(0), 520);
         } else {
           finishFinal(finalTarget, true);
         }
@@ -2291,69 +2277,64 @@ function buildEndScreenHtml(S,v,L,roll,th){
   const mj=st.jokers[vi]||0,oj=st.jokers[1-vi]||0;
   const sec=Math.max(1,Math.round((Date.now()-(st.startAt||Date.now()))/1000));
   const durTxt=`${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
-  const titleTxt=isSpec?tr('Maç Bitti!','Match Over!'):(won?tr('Zafer!','Victory!'):tr('Yenilgi!','Defeat!'));
-  const winCrestSvg=`<svg class="hs-crest-svg" viewBox="0 0 420 330" fill="none" xmlns="http://www.w3.org/2000/svg">
+  const titleTxt=isSpec?tr('Maç Bitti!','Match Over!'):(won?tr('Zafer!','Victory!'):tr('Mağlubiyet!','Defeat!'));
+  const winCrestSvg=`<svg class="hs-crest-svg nd-win-svg" viewBox="0 0 420 330" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <linearGradient id="hsGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fff0a8"/><stop offset="45%" stop-color="#d4a038"/><stop offset="100%" stop-color="#7c5215"/></linearGradient>
-      <linearGradient id="hsBanBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3b5fc0"/><stop offset="55%" stop-color="#223a82"/><stop offset="100%" stop-color="#142352"/></linearGradient>
+      <linearGradient id="ndGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fff4bf"/><stop offset="48%" stop-color="#d8a53c"/><stop offset="100%" stop-color="#7a4f12"/></linearGradient>
+      <linearGradient id="ndSteel" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f3f4f6"/><stop offset="50%" stop-color="#9ca3af"/><stop offset="100%" stop-color="#374151"/></linearGradient>
+      <linearGradient id="ndCrim" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8b1a26"/><stop offset="55%" stop-color="#4e0c14"/><stop offset="100%" stop-color="#210508"/></linearGradient>
     </defs>
-    <!-- Hanging Banners -->
-    <path d="M84 128 L138 148 L138 294 L111 278 L84 294 Z" fill="url(#hsBanBlue)" stroke="#f0c453" stroke-width="4" stroke-linejoin="round"/>
-    <path d="M336 128 L282 148 L282 294 L309 278 L336 294 Z" fill="url(#hsBanBlue)" stroke="#f0c453" stroke-width="4" stroke-linejoin="round"/>
-    <!-- Crossed Golden Horns / Trumpets -->
-    <path d="M52 102 L268 256 L260 268 L44 114 Z" fill="url(#hsGold)" stroke="#3d2608" stroke-width="2"/>
-    <path d="M368 102 L152 256 L160 268 L376 114 Z" fill="url(#hsGold)" stroke="#3d2608" stroke-width="2"/>
-    <ellipse cx="44" cy="104" rx="18" ry="26" transform="rotate(-34 44 104)" fill="url(#hsGold)" stroke="#3d2608" stroke-width="2.5"/>
-    <ellipse cx="376" cy="104" rx="18" ry="26" transform="rotate(34 376 104)" fill="url(#hsGold)" stroke="#3d2608" stroke-width="2.5"/>
-    <!-- Golden Laurel Branches -->
-    <path d="M126 226 C92 184, 92 116, 144 64" stroke="url(#hsGold)" stroke-width="7" stroke-linecap="round"/>
-    <path d="M294 226 C328 184, 328 116, 276 64" stroke="url(#hsGold)" stroke-width="7" stroke-linecap="round"/>
-    <path d="M114 196 C82 190, 74 166, 98 158 C108 172, 114 182, 114 196 Z" fill="url(#hsGold)" stroke="#3d2608" stroke-width="1.5"/>
-    <path d="M106 150 C74 140, 72 112, 98 108 C104 122, 108 134, 106 150 Z" fill="url(#hsGold)" stroke="#3d2608" stroke-width="1.5"/>
-    <path d="M120 104 C94 86, 98 58, 126 62 C126 78, 124 90, 120 104 Z" fill="url(#hsGold)" stroke="#3d2608" stroke-width="1.5"/>
-    <path d="M306 196 C338 190, 346 166, 322 158 C312 172, 306 182, 306 196 Z" fill="url(#hsGold)" stroke="#3d2608" stroke-width="1.5"/>
-    <path d="M314 150 C346 140, 348 112, 322 108 C316 122, 312 134, 314 150 Z" fill="url(#hsGold)" stroke="#3d2608" stroke-width="1.5"/>
-    <path d="M300 104 C326 86, 322 58, 294 62 C294 78, 296 90, 300 104 Z" fill="url(#hsGold)" stroke="#3d2608" stroke-width="1.5"/>
-    <!-- Crown on Top -->
-    <path d="M162 68 L152 28 L184 44 L210 14 L236 44 L268 28 L258 68 Z" fill="url(#hsGold)" stroke="#3d2608" stroke-width="2.5" stroke-linejoin="round"/>
-    <rect x="160" y="64" width="100" height="14" rx="4" fill="url(#hsGold)" stroke="#3d2608" stroke-width="2"/>
+    <!-- Gothic Runic Sunburst Halo (Original Necrodice) -->
+    <g class="nd-halo-spin">
+      <circle cx="210" cy="154" r="118" stroke="url(#ndGold)" stroke-width="1.5" stroke-dasharray="6 7" opacity="0.72"/>
+      <circle cx="210" cy="154" r="102" stroke="url(#ndGold)" stroke-width="2.2" opacity="0.82"/>
+      <path d="M210 22 L218 62 L202 62 Z M210 286 L218 246 L202 246 Z M78 154 L118 146 L118 162 Z M342 154 L302 146 L302 162 Z" fill="url(#ndGold)" opacity="0.88"/>
+      <path d="M116 60 L148 84 L138 94 Z M304 60 L272 84 L282 94 Z M116 248 L148 224 L138 214 Z M304 248 L272 224 L282 214 Z" fill="url(#ndGold)" opacity="0.72"/>
+    </g>
+    <!-- Crossed Gothic Greatswords -->
+    <g stroke="#1b1208" stroke-width="1.8" stroke-linejoin="round">
+      <path d="M68 58 L286 244 L276 254 L58 68 L52 46 Z" fill="url(#ndSteel)"/>
+      <path d="M352 58 L134 244 L144 254 L362 68 L368 46 Z" fill="url(#ndSteel)"/>
+      <rect x="64" y="64" width="32" height="7" rx="2" transform="rotate(-48 64 64)" fill="url(#ndGold)"/>
+      <rect x="334" y="88" width="32" height="7" rx="2" transform="rotate(48 334 88)" fill="url(#ndGold)"/>
+    </g>
+    <!-- Twin Crimson-Velvet Gothic Swallowtail Pennants -->
+    <path d="M84 124 L132 140 L132 288 L108 266 L84 288 Z" fill="url(#ndCrim)" stroke="url(#ndGold)" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M336 124 L288 140 L288 288 L312 266 L336 288 Z" fill="url(#ndCrim)" stroke="url(#ndGold)" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M98 142 L98 258 M118 148 L118 258 M302 148 L302 258 M322 142 L322 258" stroke="#f0c453" stroke-width="1" opacity="0.45"/>
+    <!-- Apex Golden D20 Gem Crest (Signature Necrodice!) -->
+    <g class="nd-d20-apex">
+      <polygon points="210,14 238,32 238,62 210,78 182,62 182,32" fill="url(#ndGold)" stroke="#2b1905" stroke-width="2.4" stroke-linejoin="round"/>
+      <polygon points="210,20 232,48 188,48" fill="#fff4bf" opacity="0.55"/>
+      <path d="M210 14 L232 48 L210 78 L188 48 Z M182 32 L232 48 M238 32 L188 48 M182 62 L238 62" stroke="#5c3a0b" stroke-width="1.3" opacity="0.8"/>
+    </g>
   </svg>`;
-  const defeatCrestSvg=`<svg class="hs-crest-svg hs-defeat-svg" viewBox="0 0 420 330" fill="none" xmlns="http://www.w3.org/2000/svg">
+  const defeatCrestSvg=`<svg class="hs-crest-svg nd-lose-svg" viewBox="0 0 420 330" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <linearGradient id="hsDullGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#e5c46b"/><stop offset="50%" stop-color="#a88032"/><stop offset="100%" stop-color="#5c4215"/></linearGradient>
-      <linearGradient id="hsTornBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4e62b5"/><stop offset="55%" stop-color="#2c3a7a"/><stop offset="100%" stop-color="#192047"/></linearGradient>
-      <linearGradient id="hsStarG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff4a3"/><stop offset="55%" stop-color="#eab308"/><stop offset="100%" stop-color="#9a6708"/></linearGradient>
-      <linearGradient id="hsHalo" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#9ca3af"/><stop offset="50%" stop-color="#e5e7eb"/><stop offset="100%" stop-color="#6b7280"/></linearGradient>
+      <linearGradient id="ndIron" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#9ca3af"/><stop offset="50%" stop-color="#52525b"/><stop offset="100%" stop-color="#27272a"/></linearGradient>
+      <linearGradient id="ndAsh" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3f3f46"/><stop offset="55%" stop-color="#27272a"/><stop offset="100%" stop-color="#121215"/></linearGradient>
     </defs>
-    <!-- Bent Left Trumpet with Bandage -->
-    <path d="M62 110 C96 130, 118 156, 152 174 L146 186 C110 166, 86 140, 54 122 Z" fill="url(#hsDullGold)" stroke="#2e1e08" stroke-width="2.2"/>
-    <ellipse cx="52" cy="112" rx="16" ry="25" transform="rotate(-28 52 112)" fill="url(#hsDullGold)" stroke="#2e1e08" stroke-width="2.4"/>
-    <path d="M88 122 L100 132 L92 146 L82 135 Z" fill="#e7dcc8" stroke="#6b5c46" stroke-width="1.6"/>
-    <path d="M95 128 L104 118 L108 124 L98 134 Z" fill="#d8cbb4" stroke="#6b5c46" stroke-width="1.2"/>
-    <!-- Drooping Right Trumpet -->
-    <path d="M268 154 C304 134, 336 126, 360 152 L350 162 C330 142, 304 148, 274 166 Z" fill="url(#hsDullGold)" stroke="#2e1e08" stroke-width="2.2"/>
-    <ellipse cx="364" cy="162" rx="16" ry="24" transform="rotate(42 364 162)" fill="url(#hsDullGold)" stroke="#2e1e08" stroke-width="2.4"/>
-    <!-- Tattered Left Banner (draped & holed) -->
-    <path d="M74 132 C84 176, 80 224, 96 278 L112 296 L128 282 C130 248, 138 214, 134 162 L114 150 L98 164 Z" fill="url(#hsTornBlue)" stroke="#c49a3f" stroke-width="3.2" stroke-linejoin="round"/>
-    <path d="M104 206 C110 202, 118 208, 115 216 C112 222, 102 220, 104 206 Z" fill="#0d0b10" stroke="#c49a3f" stroke-width="1.4"/>
-    <path d="M92 246 C104 242, 118 248, 124 268 L108 294 L88 274 Z" fill="url(#hsTornBlue)" stroke="#c49a3f" stroke-width="2.5" stroke-linejoin="round"/>
-    <!-- Tattered Long Right Banner -->
-    <path d="M286 156 C294 202, 290 256, 294 316 L310 304 L322 318 C326 266, 326 212, 314 156 Z" fill="url(#hsTornBlue)" stroke="#c49a3f" stroke-width="3.2" stroke-linejoin="round"/>
-    <path d="M332 162 L344 174 L338 194 L328 184 Z" fill="url(#hsTornBlue)" stroke="#c49a3f" stroke-width="2" stroke-linejoin="round"/>
-    <!-- Cracked Stone Backing Behind Plaque -->
-    <path d="M102 224 L132 214 L288 214 L318 224 L310 244 L110 244 Z" fill="#4b4744" stroke="#1e1b1a" stroke-width="2"/>
-    <!-- Dizzy Stars Halo (NO Crown!) -->
-    <g class="hs-dizzy-halo">
-      <ellipse cx="210" cy="48" rx="54" ry="12" transform="rotate(-7 210 48)" stroke="url(#hsHalo)" stroke-width="5.5" fill="none"/>
-      <ellipse cx="210" cy="48" rx="54" ry="12" transform="rotate(-7 210 48)" stroke="#374151" stroke-width="1.5" fill="none"/>
-      <!-- Star 1 (Left) -->
-      <polygon points="154,32 159,45 173,45 162,53 166,66 154,58 142,66 146,53 135,45 149,45" fill="url(#hsStarG)" stroke="#5c3d06" stroke-width="2" stroke-linejoin="round"/>
-      <!-- Star 2 (Back-center small) -->
-      <polygon points="204,16 208,26 218,26 210,32 213,42 204,36 195,42 198,32 190,26 200,26" fill="url(#hsStarG)" stroke="#5c3d06" stroke-width="1.8" stroke-linejoin="round"/>
-      <!-- Star 3 (Front-center big) -->
-      <polygon points="222,34 228,50 245,50 231,60 236,76 222,66 208,76 213,60 199,50 216,50" fill="url(#hsStarG)" stroke="#5c3d06" stroke-width="2.2" stroke-linejoin="round"/>
-      <!-- Star 4 (Right) -->
-      <polygon points="268,24 273,37 286,37 275,45 279,58 268,50 257,58 261,45 250,37 263,37" fill="url(#hsStarG)" stroke="#5c3d06" stroke-width="2" stroke-linejoin="round"/>
+    <!-- Shattered Obsidian Runic Ring (No Crown, No Red Box) -->
+    <g opacity="0.72">
+      <path d="M118 96 A108 108 0 0 1 286 78" stroke="#71717a" stroke-width="2.4" stroke-dasharray="18 8"/>
+      <path d="M312 132 A108 108 0 0 1 258 250" stroke="#52525b" stroke-width="2.2" stroke-dasharray="14 10"/>
+      <path d="M164 252 A108 108 0 0 1 104 148" stroke="#71717a" stroke-width="2.2" stroke-dasharray="12 9"/>
+    </g>
+    <!-- Broken Crossed Blades -->
+    <g stroke="#0e0e11" stroke-width="1.8" stroke-linejoin="round">
+      <path d="M76 74 L168 152 L158 164 L66 84 L74 64 Z" fill="url(#ndIron)"/>
+      <path d="M254 222 L286 248 L276 258 L242 232 Z" fill="url(#ndIron)"/>
+      <path d="M346 82 L252 162 L262 174 L356 92 L348 70 Z" fill="url(#ndIron)"/>
+      <path d="M168 228 L138 252 L148 262 L178 238 Z" fill="url(#ndIron)"/>
+    </g>
+    <!-- Torn Charcoal-Ash Pennants -->
+    <path d="M88 134 L132 146 L132 276 L116 252 L104 282 L88 262 Z" fill="url(#ndAsh)" stroke="#71717a" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M332 134 L288 146 L288 280 L306 258 L318 286 L332 264 Z" fill="url(#ndAsh)" stroke="#71717a" stroke-width="2.5" stroke-linejoin="round"/>
+    <!-- Shattered Dark D20 Shard at Apex (Signature Necrodice!) -->
+    <g class="nd-d20-broken">
+      <polygon points="205,18 182,34 184,60 206,74 202,48" fill="url(#ndIron)" stroke="#18181b" stroke-width="2.2" stroke-linejoin="round"/>
+      <polygon points="216,20 238,36 236,62 214,76 218,50" fill="url(#ndIron)" stroke="#18181b" stroke-width="2.2" stroke-linejoin="round"/>
+      <path d="M208 16 L204 46 L213 54 L208 78" stroke="#09090b" stroke-width="3" stroke-linecap="round"/>
     </g>
   </svg>`;
   const crestBgSvg=(won||isSpec)?winCrestSvg:defeatCrestSvg;
