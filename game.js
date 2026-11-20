@@ -1922,16 +1922,16 @@ function fly(){ // yeni kartlar desteden teker teker, yumuşak yay çizerek uça
   void d.offsetWidth;
   const rects=ordered.map(el=>el.getBoundingClientRect());
   const isBatch=ordered.length>=2;
-  const stepMs=isBatch?300:0;
+  const stepMs=isBatch?260:0;
   // Geçiş perdesi (.veil) tamamen açıldıktan sonra ilk kart hem görsel hem sesli olarak aynı milisaniyede çıkar
-  const baseMs=entering?1180:(isBatch?160:0);
-  const totalMs=isBatch?(baseMs+(ordered.length-1)*stepMs+540):0;
+  const baseMs=entering?1180:(isBatch?140:0);
+  // Son kartın uçuşu (580ms) tamamen bittikten sonra kilit açılsın (yarıda kesilip lag yapmasın)
+  const totalMs=isBatch?(baseMs+(ordered.length-1)*stepMs+660):0;
   if(totalMs>0)dealAnimUntil=performance.now()+totalMs;
   const pulseDeck=()=>{
     if(!d.isConnected)return;
     d.classList.remove('pull');
-    void d.offsetWidth;
-    d.classList.add('pull');
+    requestAnimationFrame(()=>{if(d.isConnected)d.classList.add('pull')});
   };
   ordered.forEach((el,idx)=>{
     const r=rects[idx];
@@ -1955,7 +1955,7 @@ function fly(){ // yeni kartlar desteden teker teker, yumuşak yay çizerek uça
       setTimeout(launch,delayMs);
     }
   });
-  setTimeout(()=>{if(d.isConnected)d.classList.remove('pull')},baseMs+(ordered.length-1)*stepMs+520);
+  setTimeout(()=>{if(d.isConnected)d.classList.remove('pull')},baseMs+(ordered.length-1)*stepMs+640);
   return totalMs;
 }
 function runAfterDeal(S){
