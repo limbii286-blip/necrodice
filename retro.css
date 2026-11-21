@@ -3628,7 +3628,7 @@ body.dragging-joker #fx::after {
     0 0 14px rgba(250, 204, 21, 0.65),
     0 7px 18px rgba(0, 0, 0, 0.92);
 }
-.who .hp-btn:disabled:not(.used):not(.passive),
+.who .hp-btn[aria-disabled="true"]:not(.used):not(.passive),
 .who .hp-btn.opp-hp.locked {
   opacity: 0.68;
   filter: saturate(0.45) brightness(0.6);
@@ -7605,15 +7605,29 @@ html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, 
 .cos-chip {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   padding: 6px 8px;
   border-radius: 9px;
   background: rgba(14, 10, 12, 0.78);
   border: 1px solid rgba(212, 168, 85, 0.28);
   color: #f1e2c4;
-  font: 600 12px/1.2 var(--mf);
+  font: 600 11.5px/1.2 var(--mf);
   cursor: pointer;
   text-align: left;
+  min-width: 0;
+  overflow: hidden;
+}
+.cos-chip span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cos-chip small {
+  flex-shrink: 0;
+  font-size: 10px;
+  color: #b8a58b;
 }
 .cos-chip.sel {
   border-color: #fde047;
@@ -7781,8 +7795,12 @@ body[data-cardback="sovereign"] .c.back {
     gap: 6px;
   }
   .hs-online-row .btn {
-    font-size: 13.5px !important;
-    padding-left: 6px !important;
-    padding-right: 6px !important;
+    font-size: clamp(11.5px, 3.2vw, 13.5px) !important;
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+    letter-spacing: 0 !important;
+  }
+  .streak-toast {
+    top: max(58px, calc(env(safe-area-inset-top, 10px) + 50px)) !important;
   }
 }

@@ -2277,7 +2277,7 @@ function R(){
   const cProg=(myHId==='c'&&!hpUsed0)?`<i class="hp-prog">${Math.min(4,cWins0)}/4</i>`:'';
   const cProg1=(oppHId==='c'&&!hpUsed1)?`<i class="hp-prog">${Math.min(4,cWins1)}/4</i>`:'';
   const isMob=window.matchMedia&&window.matchMedia('(max-width: 760px), (hover: none) and (pointer: coarse)').matches;
-  const hpBtn0=isSpec?'':`<button id="hp-btn" class="hp-btn${hpObj0.passive?' passive':''}${hpUsed0?' used':canHp?' ready':''}" data-hp="1" data-hp-id="${myHId}" data-hp-side="0"${(canHp||isMob)?'':' disabled'}>${HP_IC[myHId]||HP_IC.c}${cProg}</button>`;
+  const hpBtn0=isSpec?'':`<button id="hp-btn" class="hp-btn${hpObj0.passive?' passive':''}${hpUsed0?' used':canHp?' ready':''}" data-hp="1" data-hp-id="${myHId}" data-hp-side="0" aria-disabled="${!canHp}">${HP_IC[myHId]||HP_IC.c}${cProg}</button>`;
   const hpBtn1=`<span class="hp-btn opp-hp${hpObj1.passive?' passive':''}${hpUsed1?' used':!cReady1?' locked':''}${(oppHId==='w'||oppHId==='a')?' secret-hp':''}" data-hp-id="${oppHId}" data-hp-side="1">${HP_IC[oppHId]||HP_IC.c}${cProg1}</span>`;
   const myElo=Math.round((typeof USER_ACC!=='undefined'&&USER_ACC&&typeof USER_ACC.elo==='number')?USER_ACC.elo:1200);
   const myBaseName=(typeof USER_ACC!=='undefined'&&USER_ACC&&!USER_ACC.isGuest&&USER_ACC.username)?escHtml(USER_ACC.username):tr('Misafir','Guest');
