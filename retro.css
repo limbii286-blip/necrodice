@@ -4202,62 +4202,72 @@ body.dragging-joker #fx::after {
     max-width: calc(100vw - 12px);
   }
   #mb:has(.d20-box) {
-    width: min(92vw, 410px) !important;
-    padding: 18px 16px 16px !important;
-    font-size: 16px !important;
-    line-height: 1.38 !important;
-    max-height: 92dvh !important;
+    width: min(94vw, 410px) !important;
+    padding: clamp(10px, 1.6dvh, 14px) 14px clamp(10px, 1.5dvh, 14px) !important;
+    font-size: clamp(14.5px, 2dvh, 16px) !important;
+    line-height: 1.32 !important;
+    max-height: 94dvh !important;
+    overflow: hidden !important;
     display: block !important;
   }
   #mb:has(.d20-box)::before {
-    margin: -18px -16px 12px !important;
-    padding: 7px 14px !important;
+    margin: calc(clamp(10px, 1.6dvh, 14px) * -1) -14px clamp(8px, 1.2dvh, 12px) !important;
+    padding: 6px 12px !important;
     border-radius: 0 !important;
-    font-size: 14px !important;
+    font-size: 13.5px !important;
   }
   #mb:has(.d20-box) .d20-box {
-    margin: 10px auto !important;
+    margin: clamp(6px, 1dvh, 10px) auto 0 !important;
   }
   #mb:has(.d20-box) .bg3-roll-card {
     width: min(275px, 78vw) !important;
-    min-height: 315px !important;
-    padding: 14px 14px 16px !important;
-    justify-content: space-between;
+    min-height: 0 !important;
+    padding: clamp(8px, 1.2dvh, 12px) 12px !important;
+    justify-content: center;
   }
   #mb:has(.d20-box) .bg3-dc-arch {
-    padding: 2px 0 8px !important;
+    padding: 0 0 4px !important;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
   }
   #mb:has(.d20-box) .bg3-dc-arch .lbl {
-    font-size: 12px !important;
-    margin-bottom: 2px !important;
+    font-size: 11.5px !important;
+    margin-bottom: 1px !important;
   }
   #mb:has(.d20-box) .bg3-dc-arch .val {
-    font-size: 34px !important;
+    font-size: clamp(26px, 4dvh, 34px) !important;
     line-height: 1 !important;
     margin-top: 0 !important;
   }
   #mb:has(.d20-box) .d20-stage {
-    width: 184px !important;
-    height: 184px !important;
-    margin: 6px 0 !important;
+    width: clamp(116px, 18.5dvh, 162px) !important;
+    height: clamp(116px, 18.5dvh, 162px) !important;
+    margin: 2px 0 !important;
   }
   .d20-canvas {
-    width: 178px !important;
-    height: 178px !important;
+    width: clamp(110px, 17.5dvh, 156px) !important;
+    height: clamp(110px, 17.5dvh, 156px) !important;
+  }
+  #mb:has(.d20-box) .d20-hp-mod {
+    margin: 4px 0 !important;
+    gap: 6px !important;
+  }
+  #mb:has(.d20-box) .bg3-bonus-card {
+    min-width: 78px !important;
+    padding: 5px 8px !important;
+    gap: 2px !important;
   }
   #mb:has(.d20-box) .d20-btn {
-    margin: 6px auto 0 !important;
-    padding: 11px 22px !important;
+    margin: 4px auto 0 !important;
+    padding: 9px 18px !important;
     font-size: 14px !important;
   }
   #mb:has(.d20-box) .after {
-    margin: 18px auto 14px !important;
-    font-size: 17.5px !important;
-    line-height: 1.4 !important;
+    margin: clamp(10px, 1.6dvh, 16px) auto clamp(8px, 1.3dvh, 12px) !important;
+    font-size: clamp(15px, 2.1dvh, 17.5px) !important;
+    line-height: 1.35 !important;
   }
   #mb:has(.d20-box) .after-roll {
     font-size: 19px !important;
@@ -4839,40 +4849,50 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
 }
 @media (min-width: 761px) {
   #mb:has(.d20-box) {
-    max-height: 96dvh !important;
+    max-height: 94dvh !important;
     overflow: hidden !important;
-    padding: 20px 30px 22px !important;
+    padding: clamp(12px, 2dvh, 18px) 28px clamp(12px, 2dvh, 18px) !important;
     width: min(92vw, 540px) !important;
     max-width: 540px !important;
-    font-size: 17px !important;
-    line-height: 1.45 !important;
+    font-size: clamp(15px, 2.1dvh, 17px) !important;
+    line-height: 1.38 !important;
   }
   #mb:has(.d20-box)::before {
-    margin: -20px -30px 14px !important;
-    padding: 7px 14px !important;
+    margin: calc(clamp(12px, 2dvh, 18px) * -1) -28px clamp(8px, 1.4dvh, 14px) !important;
+    padding: 6px 14px !important;
   }
   #mb:has(.d20-box) .d20-box {
-    margin: 12px auto 0 !important;
+    margin: clamp(6px, 1.2dvh, 12px) auto 0 !important;
   }
   #mb:has(.d20-box) .bg3-roll-card {
     width: 316px !important;
-    padding: 14px 18px 16px !important;
+    min-height: 0 !important;
+    padding: clamp(10px, 1.5dvh, 14px) 18px clamp(10px, 1.6dvh, 16px) !important;
   }
   #mb:has(.d20-box) .d20-stage {
-    width: clamp(134px, 21dvh, 168px) !important;
-    height: clamp(134px, 21dvh, 168px) !important;
-    margin: 6px 0 !important;
+    width: clamp(118px, 19dvh, 164px) !important;
+    height: clamp(118px, 19dvh, 164px) !important;
+    margin: 4px 0 !important;
   }
   #mb:has(.d20-box) .d20-canvas {
-    width: clamp(126px, 20dvh, 158px) !important;
-    height: clamp(126px, 20dvh, 158px) !important;
+    width: clamp(112px, 18dvh, 156px) !important;
+    height: clamp(112px, 18dvh, 156px) !important;
+  }
+  #mb:has(.d20-box) .d20-hp-mod {
+    margin: 4px 0 !important;
+  }
+  #mb:has(.d20-box) .bg3-bonus-card {
+    padding: 5px 10px !important;
+  }
+  #mb:has(.d20-box) .after {
+    margin: clamp(10px, 1.8dvh, 18px) auto clamp(8px, 1.4dvh, 14px) !important;
   }
   #mb:has(.d20-box) .after ~ br {
     display: none;
   }
   #mb:has(.d20-box) #mo,
   #mb:has(.d20-box) #mx {
-    margin-top: 4px !important;
+    margin-top: 2px !important;
   }
 }
 
