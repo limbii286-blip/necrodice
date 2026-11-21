@@ -3048,6 +3048,7 @@ function exitGame(){ // limbigames perdesi, sonra ilk ekrana dön
     try{if(peer)peer.destroy()}catch(e){}
     conn=null;spectators=[];peer=null;waitM=false;specCount=0;CURRENT_HOST_CODE='';LAST_JOIN_CODE='';
     if(typeof clearReconnectGrace==='function')clearReconnectGrace();
+    if(typeof clearActiveMatchSnapshot==='function')clearActiveMatchSnapshot();
     if(typeof cancelQuickMatch==='function')cancelQuickMatch(true);
     if(G)G.over=true;G=null;MODE='bot';sayT='';try{document.body.classList.remove('dead')}catch(e){}
     st('');$('#menu').hidden=false;lock=false;setMusic('menu');
@@ -3499,13 +3500,132 @@ function clearReconnectGrace(){
   if(RECONN_IV){clearInterval(RECONN_IV);RECONN_IV=null}
   const b=document.getElementById('reconn-bar');if(b)b.remove();
 }
+const ACTIVE_MATCH_KEY='nd_active_match_v1';
+const ABANDON_GRACE_MS=30000;
+function clearActiveMatchSnapshot(){
+  try{localStorage.removeItem(ACTIVE_MATCH_KEY)}catch(e){}
+}
+function saveActiveMatchSnapshot(){
+  try{
+    if(!G||G.over||leaving||MODE==='tutorial'||MODE==='spectator'){
+      clearActiveMatchSnapshot();
+      return;
+    }
+    const menuEl=$('#menu');
+    if(menuEl&&!menuEl.hidden)return;
+    const lossDelta=(typeof peekLossElo==='function')?peekLossElo(G):0;
+    const snap={
+      ts:Date.now(),
+      mode:MODE,
+      diff:DIFF,
+      roomCode:MODE==='guest'?LAST_JOIN_CODE:(MODE==='host'?CURRENT_HOST_CODE:''),
+      myHero:MY_HERO,
+      oppHero:OPP_HERO,
+      oppLabel:(typeof getOppLabel==='function')?getOppLabel():'',
+      lossDelta,
+      userKey:(USER_ACC&&!USER_ACC.isGuest&&USER_ACC.key)?USER_ACC.key:'',
+      state:MODE==='bot'?G:null
+    };
+    localStorage.setItem(ACTIVE_MATCH_KEY,JSON.stringify(snap));
+  }catch(e){}
+}
+function applyAbandonLoss(snap){
+  if(!snap)return;
+  if(!USER_ACC)createGuestAccount();
+  const acc=USER_ACC;
+  const before=Math.round(acc.elo||1200);
+  const delta=snap.lossDelta<0?snap.lossDelta:0;
+  const isUnranked=(snap.mode==='bot'&&(snap.diff==='easy'||snap.diff==='med'))||delta===0;
+  const oppTxt=(snap.oppLabel||tr('Rakip','Opponent'))+` (${tr('Ayrıldı','Abandoned')})`;
+  if(isUnranked){
+    acc.unrankedMatches=(acc.unrankedMatches||0)+1;
+    acc.unrankedLosses=(acc.unrankedLosses||0)+1;
+    acc.winStreak=0;
+    acc.history=acc.history||[];
+    acc.history.unshift({ts:Date.now(),opp:oppTxt,won:false,delta:0,elo:before,unranked:true,mode:snap.mode,diff:snap.diff,score:'',myHero:snap.myHero||'',oppHero:snap.oppHero||''});
+    if(acc.history.length>AUTH_HIST_MAX)acc.history.length=AUTH_HIST_MAX;
+    saveSession(acc);
+    showUnlockToast('!',tr('Maçtan Ayrıldın (30sn Doldu)','Match Abandoned (30s Expired)'),tr('30 saniye içinde dönmediğin için mağlubiyet sayıldı.','Counted as a loss because you did not return within 30s.'));
+    return;
+  }
+  const after=Math.max(400,before+delta);
+  acc.elo=after;
+  acc.matches=(acc.matches||0)+1;
+  acc.losses=(acc.losses||0)+1;
+  acc.winStreak=0;
+  if(snap.myHero){
+    acc.heroStats=acc.heroStats||{};
+    if(!acc.heroStats[snap.myHero])acc.heroStats[snap.myHero]={w:0,l:0};
+    acc.heroStats[snap.myHero].l++;
+  }
+  acc.history=acc.history||[];
+  acc.history.unshift({ts:Date.now(),opp:oppTxt,won:false,delta,elo:after,unranked:false,mode:snap.mode,diff:snap.mode==='bot'?snap.diff:'pvp',score:'',myHero:snap.myHero||'',oppHero:snap.oppHero||''});
+  if(acc.history.length>AUTH_HIST_MAX)acc.history.length=AUTH_HIST_MAX;
+  saveSession(acc);
+  showUnlockToast('!',tr('Maçtan Ayrıldın (30sn Doldu)','Match Abandoned (30s Expired)'),tr(`30 saniye içinde dönmediğin için mağlubiyet sayıldı (${delta} ELO).`,`Counted as a defeat for not returning within 30s (${delta} ELO).`));
+}
+function checkAbandonedOrResumeMatch(){
+  try{
+    const raw=localStorage.getItem(ACTIVE_MATCH_KEY);
+    if(!raw)return;
+    const snap=JSON.parse(raw);
+    clearActiveMatchSnapshot();
+    if(!snap||!snap.ts)return;
+    const elapsed=Date.now()-snap.ts;
+    if(elapsed>ABANDON_GRACE_MS){
+      applyAbandonLoss(snap);
+      return;
+    }
+    // 30 saniye içinde geri dönüldü -> maça devam et!
+    if(snap.mode==='bot'&&snap.state){
+      MODE='bot';
+      DIFF=snap.diff||'hard';
+      MY_HERO=snap.myHero||'c';
+      OPP_HERO=snap.oppHero||'n';
+      G=snap.state;
+      G.wait=false;
+      G.graceLeft=0;
+      leaving=false;
+      $('#menu').hidden=true;
+      $('#m').hidden=true;
+      lock=false;
+      setMusic('game');
+      R();
+      next();
+      showUnlockToast('✦',tr('Maça Geri Dönüldü','Rejoined Match'),tr('30 saniye içinde döndüğün için maç kaldığı yerden devam ediyor.','Returned within 30s — match resumed.'));
+    }else if(snap.mode==='guest'&&snap.roomCode){
+      LAST_JOIN_CODE=snap.roomCode;
+      MY_HERO=snap.myHero||'c';
+      OPP_HERO=snap.oppHero||'n';
+      MODE='guest';
+      leaving=false;
+      peer=new Peer();
+      peer.on('open',()=>{
+        conn=peer.connect('necrodice-'+snap.roomCode,{reliable:true});
+        conn.on('data',onHost);
+        conn.on('open',()=>{
+          conn.send({k:'reconnect'});
+          showUnlockToast('✦',tr('Online Maça Geri Dönüldü','Reconnected to Online Match'),tr('Bağlantı yenilendi, maç devam ediyor.','Connection restored, match resumed.'));
+        });
+        conn.on('close',()=>startReconnectGrace(false,tr('Oda sahibi oyundan ayrıldı.','Room host left the game.')));
+      });
+      peer.on('error',()=>applyAbandonLoss(snap));
+    }else{
+      // Host sekmeyi kapattıysa oda kapandığı için 30sn içinde dönse bile devam edilemezse ceza verilir
+      applyAbandonLoss(snap);
+    }
+  }catch(e){clearActiveMatchSnapshot()}
+}
+window.addEventListener('pagehide',()=>saveActiveMatchSnapshot());
+window.addEventListener('beforeunload',()=>saveActiveMatchSnapshot());
+
 function startReconnectGrace(isHost,fallbackMsg){
   if(leaving||!G||G.over||MODE==='spectator'||MODE==='bot'){
     peerLeft(fallbackMsg);
     return;
   }
   clearReconnectGrace();
-  RECONN_LEFT=15;
+  RECONN_LEFT=30;
   const showBar=()=>{
     let b=document.getElementById('reconn-bar');
     if(!b){
@@ -3514,13 +3634,23 @@ function startReconnectGrace(isHost,fallbackMsg){
       b.className='reconn-bar';
       document.body.appendChild(b);
     }
-    b.innerHTML=`<span>${isHost?tr(`Rakibin bağlantısı koptu — geri bağlanması bekleniyor (${RECONN_LEFT}s)…`,`Opponent disconnected — waiting to reconnect (${RECONN_LEFT}s)…`):tr(`Bağlantı koptu — yeniden bağlanılıyor (${RECONN_LEFT}s)…`,`Connection lost — reconnecting (${RECONN_LEFT}s)…`)}</span>`;
+    b.innerHTML=`<span>${isHost?tr(`Rakibin bağlantısı koptu — geri dönmesi için ${RECONN_LEFT}sn bekleniyor…`,`Opponent disconnected — waiting ${RECONN_LEFT}s to return…`):tr(`Bağlantı koptu — yeniden bağlanılıyor (${RECONN_LEFT}sn)…`,`Connection lost — reconnecting (${RECONN_LEFT}s)…`)}</span>`;
   };
   showBar();
   RECONN_TIMER=setInterval(()=>{
     RECONN_LEFT--;
     if(RECONN_LEFT<=0){
       clearReconnectGrace();
+      if(G&&!G.over){
+        G.over=true;
+        clearActiveMatchSnapshot();
+        if(isHost&&typeof recordMatchElo==='function'){
+          const eRes=recordMatchElo(G,true);
+          const eloMsg=(eRes&&!eRes.unranked)?` (+${eRes.delta} ELO)`:'';
+          peerLeft(tr(`Rakip 30 saniye içinde dönmedi — Hükmen Galip sayıldın!${eloMsg}`,`Opponent did not return within 30s — You win by forfeit!${eloMsg}`));
+          return;
+        }
+      }
       peerLeft(fallbackMsg);
     }else{
       showBar();
@@ -5894,6 +6024,7 @@ function peekLossElo(S){
   return calcEloDelta(Math.round(acc.elo||1200),acc.matches||0,false);
 }
 function recordMatchElo(S,won){
+  if(typeof clearActiveMatchSnapshot==='function')clearActiveMatchSnapshot();
   if(!S||MODE==='tutorial'||MODE==='spectator')return null;
   if(S._eloRes)return S._eloRes;
   if(!USER_ACC)createGuestAccount();
@@ -6958,6 +7089,9 @@ function openAuthModal(initialTab='login',isUpgrade=false){
   renderAuthBar();
   if(USER_ACC)applyCosmetics(USER_ACC);
   if(fbDb)startLobbyPresence();
+  if(USER_ACC&&typeof checkAbandonedOrResumeMatch==='function'){
+    setTimeout(()=>checkAbandonedOrResumeMatch(),sp?2200:250);
+  }
   if(sp)setTimeout(()=>{if(sp.isConnected)sp.remove()},2350);
   // Kahraman portrelerini açılıştan sonra arka planda çöz ki Kahraman Seç modalı 0ms takılmayla açılsın
   setTimeout(()=>{
