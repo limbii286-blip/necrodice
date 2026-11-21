@@ -3072,7 +3072,7 @@ document.addEventListener('click',e=>{
       if(!h)return;
       const isUsed=t.classList.contains('used'),isReady=t.classList.contains('ready');
       const cw=hid==='c'?Math.min(4,(S.cWins&&S.cWins[side])||0):0;
-      const tagTxt=hid==='c'?tr(`Aktif · Galibiyet: ${cw}/4`,`Active · Wins: ${cw}/4`):(h.passive?(isUsed?tr('Pasif · Tükendi','Passive · Spent'):tr('Pasif','Passive')):(isUsed?tr('Aktif, Kullanıldı','Active, Used'):tr('Aktif','Active')));
+      const tagTxt=hid==='c'?tr(`Aktif · Galibiyet: ${cw}/4`,`Active · Wins: ${cw}/4`):(h.passive?tr('Pasif','Passive'):tr('Aktif','Active'));
       const canUse=side===0&&!h.passive&&isReady&&S.turn===0&&!S.wait&&MODE!=='spectator'&&!P;
       const thiefCard=hid==='s'&&IMG.j[25]?`<img class="hp-mc-jcard" src="${IMG.j[25]}" alt="${tr('Hırsız','Thief')}">`:'';
       box(`<div class="hp-mobile-card ${side===1?'opp':'mine'}${h.passive?' passive':''}${isUsed?' used':''}"><div class="hp-mc-ic">${HP_IC[hid]||HP_IC.c}</div><div class="hp-tip-title">${h.hpName}</div><div class="hp-tip-tag">${tagTxt}</div><p class="hp-tip-desc">${h.desc}</p>${thiefCard}${canUse?`<div class="row"><button id="hp-mob-use" class="btn alt">${tr('Kullan','Use')}</button><button id="pc" class="btn">${tr('Kapat','Close')}</button></div>`:''}</div>`, !canUse);
@@ -4417,7 +4417,7 @@ function createSmoothDragLoop(onFrame){
     if(!h)return;
     const isUsed=btn.classList.contains('used');
     const cw=(hid==='c'&&G&&G.cWins)?Math.min(4,G.cWins[side]||0):0;
-    const tagTxt=hid==='c'?tr(`Aktif · Galibiyet: ${cw}/4`,`Active · Wins: ${cw}/4`):(h.passive?(isUsed?tr('Pasif · Tükendi','Passive · Spent'):tr('Pasif','Passive')):(isUsed?tr('Aktif, Kullanıldı','Active, Used'):tr('Aktif','Active')));
+    const tagTxt=hid==='c'?tr(`Aktif · Galibiyet: ${cw}/4`,`Active · Wins: ${cw}/4`):(h.passive?tr('Pasif','Passive'):tr('Aktif','Active'));
     let tip=document.getElementById('hp-tip');
     if(!tip){
       tip=document.createElement('div');
