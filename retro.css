@@ -7014,13 +7014,69 @@ html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, 
   color: #fca5a5 !important;
 }
 
-/* Sıra Sıra Tek Zar Beraberlik Ekranı */
+/* Sıra Sıra D20 Beraberlik Ekranı — Tek Ekran (Zero-Scroll) Masaüstü & Mobil */
+#mb:has(.tie-box) {
+  overflow: hidden !important;
+  max-height: min(94dvh, 720px) !important;
+  padding: clamp(10px, 1.8dvh, 18px) clamp(12px, 2.5vw, 22px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+#mb:has(.tie-box) h3 {
+  margin: 0 0 2px !important;
+  font-size: clamp(19px, 2.8dvh, 24px) !important;
+}
+#mb:has(.tie-box) .tie-sub {
+  margin: 0 0 clamp(4px, 1dvh, 8px) !important;
+  font-size: clamp(12.5px, 1.75dvh, 14.5px) !important;
+  line-height: 1.3 !important;
+}
+.tie-box {
+  width: 100%;
+  gap: clamp(6px, 1dvh, 10px) !important;
+  margin: 0 !important;
+}
+.tie-d20-card {
+  width: min(100%, 400px);
+  padding: clamp(10px, 1.6dvh, 16px) clamp(12px, 2vw, 18px) clamp(12px, 1.8dvh, 16px) !important;
+  gap: clamp(6px, 1dvh, 10px) !important;
+}
+.tie-d20-stage {
+  width: clamp(132px, 23dvh, 210px) !important;
+  height: clamp(132px, 23dvh, 210px) !important;
+  margin: 0 auto !important;
+}
+.tie-d20-stage .d20-canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+.tie-box .tie-sides {
+  gap: 10px;
+  cursor: default;
+  margin-top: 2px;
+}
+.tie-box .tie-side {
+  padding: clamp(6px, 1dvh, 9px) 10px;
+  gap: 3px;
+}
+.tie-box .tie-sum {
+  font-size: clamp(20px, 3dvh, 26px);
+  line-height: 1.1;
+  min-height: 24px;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), color 0.2s ease;
+}
+.tie-sum.shown {
+  color: #fde68a;
+  transform: scale(1.12);
+}
 .tie-turn {
-  min-height: 22px;
-  font-size: 15.5px;
+  min-height: 20px;
+  font-size: clamp(13.5px, 1.9dvh, 16px);
   font-weight: 700;
   color: #fde68a;
-  margin-bottom: 8px;
+  margin: 0;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
 }
 .tie-side.turn-now {
@@ -7028,12 +7084,12 @@ html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, 
   box-shadow: 0 0 20px rgba(250, 204, 21, 0.38), inset 0 0 12px rgba(250, 204, 21, 0.14) !important;
   transition: border-color 0.22s ease, box-shadow 0.22s ease;
 }
-.tie-sum {
-  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), color 0.2s ease;
+#mb:has(.tie-box) .tie-after {
+  font-size: clamp(13.5px, 1.9dvh, 15.5px) !important;
+  line-height: 1.3 !important;
 }
-.tie-sum.shown {
-  color: #fde68a;
-  transform: scale(1.12);
+#mb:has(.tie-box) #mo {
+  margin-top: clamp(6px, 1dvh, 10px) !important;
 }
 
 /* ==========================================================================

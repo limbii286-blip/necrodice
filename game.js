@@ -265,30 +265,40 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
   if(tb){
     const d0=+tb.dataset.d0,d1=+tb.dataset.d1,win=+tb.dataset.win,first=+tb.dataset.first,isBot=tb.dataset.bot==='1';
     const btn=tb.querySelector('#tie-rl'),turnLbl=tb.querySelector('#tie-turn'),mo=document.querySelector('#mo');
+    const cv=tb.querySelector('#tie-d20cv'),stage=tb.querySelector('.tie-d20-stage');
     if(mo)mo.style.visibility='hidden';
-    const d0El=tb.querySelector('#tie-d0'),d1El=tb.querySelector('#tie-d1');
     const s0=tb.querySelector('#tie-s0'),s1=tb.querySelector('#tie-s1');
     const c0=tb.querySelector('.tie-side.me'),c1=tb.querySelector('.tie-side.opp');
     let curSide=first,doneCount=0,rollingSide=false;
+
+    const initAng=(typeof getD20FaceAngles==='function')?getD20FaceAngles(20):{rx:Math.atan(1/Math.sqrt(2)),ry:Math.PI/4,rz:0};
+    let rx=initAng.rx,ry=initAng.ry,rz=initAng.rz;
+    const renderTieD20=(num,rolling,isCrit,isFail,scale,textPop)=>{
+      if(cv&&typeof draw3DD20==='function'){
+        draw3DD20(cv,rx,ry,rz,num,rolling,isCrit,isFail,scale,textPop);
+      }
+    };
+    renderTieD20('?',false,false,false,1.0,1.0);
 
     const updateUi=()=>{
       if(!tb.isConnected)return;
       if(c0)c0.classList.toggle('turn-now',doneCount<2&&curSide===0);
       if(c1)c1.classList.toggle('turn-now',doneCount<2&&curSide===1);
+      if(stage)stage.style.cursor=(doneCount<2&&curSide===0&&!rollingSide&&MODE!=='spectator')?'pointer':'default';
       if(doneCount>=2){
         if(btn){btn.disabled=true;btn.classList.add('used')}
-        if(turnLbl)turnLbl.textContent='';
+        if(turnLbl)turnLbl.textContent=win===0?tr('Beraberlik Zarı Kazanıldı!','Tiebreaker Won!'):tr('Beraberlik Zarı Kaybedildi!','Tiebreaker Lost!');
         return;
       }
       if(MODE==='spectator'){
         if(btn){btn.disabled=true;btn.classList.add('used')}
-        if(turnLbl)turnLbl.textContent=curSide===0?tr('1. Oyuncu zar atıyor…','Player 1 is rolling…'):tr('2. Oyuncu zar atıyor…','Player 2 is rolling…');
+        if(turnLbl)turnLbl.textContent=curSide===0?tr('1. Oyuncu D20 atıyor…','Player 1 is rolling D20…'):tr('2. Oyuncu D20 atıyor…','Player 2 is rolling D20…');
       }else if(curSide===0){
-        if(btn){btn.disabled=false;btn.classList.remove('used');btn.textContent=tr('ZAR AT','ROLL DICE')}
-        if(turnLbl)turnLbl.textContent=tr('Sıra sende! Zarını at.','Your turn! Roll your die.');
+        if(btn){btn.disabled=false;btn.classList.remove('used');btn.textContent=tr('D20 AT','ROLL D20')}
+        if(turnLbl)turnLbl.textContent=tr('Sıra sende! D20 zarını at.','Your turn! Roll the D20.');
       }else{
         if(btn){btn.disabled=true;btn.classList.add('used')}
-        if(turnLbl)turnLbl.textContent=isBot?tr('Rakip zar atıyor…','Opponent is rolling…'):tr('Rakibin zar atması bekleniyor…','Waiting for opponent to roll…');
+        if(turnLbl)turnLbl.textContent=isBot?tr('Bot D20 atıyor…','Bot is rolling D20…'):tr('Rakibin D20 atması bekleniyor…','Waiting for opponent to roll D20…');
       }
     };
 
@@ -312,42 +322,66 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
         }
       }
       if(btn){btn.disabled=true;btn.classList.add('used')}
-      const el=side===0?d0El:d1El;
+      if(stage)stage.style.cursor='default';
+      tb.classList.add('rolling');
       const sumEl=side===0?s0:s1;
       const targetVal=side===0?d0:d1;
-      if(el)el.classList.add('roll');
-      snd('dice');
-      const iv=setInterval(()=>{
-        if(!tb.isConnected){clearInterval(iv);return}
-        if(el)el.innerHTML=die(d6());
-      },85);
-      setTimeout(()=>{
-        clearInterval(iv);
+      const tAng=(typeof getD20FaceAngles==='function')?getD20FaceAngles(targetVal):initAng;
+      const startRx=rx,startRy=ry,startRz=rz;
+      const endRx=tAng.rx+3*Math.PI*2,endRy=tAng.ry+2*Math.PI*2,endRz=tAng.rz+1*Math.PI*2;
+      const startTime=performance.now(),duration=1850;
+      snd('dice');vib([80,40,80]);
+
+      const frame=now=>{
         if(!tb.isConnected)return;
-        if(el){el.classList.remove('roll');el.classList.add('fin');el.innerHTML=die(targetVal)}
-        if(sumEl){sumEl.textContent=String(targetVal);sumEl.classList.add('shown')}
-        doneCount++;
-        rollingSide=false;
-        if(doneCount>=2){
-          updateUi();
-          setTimeout(finishTie,320);
+        const progress=Math.min(1,(now-startTime)/duration);
+        if(progress<1){
+          const t=1-Math.pow(1-progress,4);
+          rx=startRx+(endRx-startRx)*t;
+          ry=startRy+(endRy-startRy)*t;
+          rz=startRz+(endRz-startRz)*t;
+          const lift=1+Math.sin(progress*Math.PI)*0.12*(1-progress*0.35);
+          renderTieD20(targetVal,true,false,false,lift,1.0);
+          requestAnimationFrame(frame);
         }else{
-          curSide=1-curSide;
-          updateUi();
-          if(isBot&&curSide===1){
-            setTimeout(()=>rollSide(1,true),700);
+          tb.classList.remove('rolling');
+          rx=tAng.rx;ry=tAng.ry;rz=tAng.rz;
+          const popT0=performance.now();
+          const settle=tNow=>{
+            if(!tb.isConnected)return;
+            const p=Math.min(1,(tNow-popT0)/260);
+            const sc=1+0.07*Math.sin(p*Math.PI);
+            const tp=0.88+0.12*(1-Math.pow(1-p,3));
+            renderTieD20(targetVal,false,targetVal===20,targetVal===1,sc,tp);
+            if(p<1)requestAnimationFrame(settle);
+          };
+          requestAnimationFrame(settle);
+          if(sumEl){sumEl.textContent=String(targetVal);sumEl.classList.add('shown')}
+          snd('ok');
+          doneCount++;
+          rollingSide=false;
+          if(doneCount>=2){
+            updateUi();
+            setTimeout(finishTie,420);
+          }else{
+            curSide=1-curSide;
+            updateUi();
+            if(isBot&&curSide===1){
+              setTimeout(()=>rollSide(1,true),780);
+            }
           }
         }
-      },780);
+      };
+      requestAnimationFrame(frame);
     };
 
     window._triggerTieRoll=()=>rollSide(curSide,true);
-    if(btn){
-      btn.onclick=e=>{e.stopPropagation();if(curSide===0&&!rollingSide)rollSide(0,false)};
-    }
+    const triggerMine=e=>{if(e)e.stopPropagation();if(curSide===0&&!rollingSide&&MODE!=='spectator')rollSide(0,false)};
+    if(btn)btn.onclick=triggerMine;
+    if(stage)stage.onclick=triggerMine;
     updateUi();
     if(isBot&&curSide===1){
-      setTimeout(()=>rollSide(1,true),700);
+      setTimeout(()=>rollSide(1,true),780);
     }
     return;
   }
@@ -1684,7 +1718,7 @@ function endRound(){
     if(L<0){
       const j=S.hand.map(h=>h.length);
       if(j[0]!=j[1]){L=j[0]<j[1]?0:1;how='joker'}
-      else{let x,y;do{x=d6();y=d6()}while(x==y);L=x<y?0:1;hx=[x,y];tieFirst=MODE==='bot'?0:(Math.random()<0.5?0:1);how='zar'}
+      else{let x,y;do{x=d20();y=d20()}while(x==y);L=x<y?0:1;hx=[x,y];tieFirst=MODE==='bot'?0:(Math.random()<0.5?0:1);how='zar'}
     }
     const th=TH[Math.min(S.bo,3)],rawRoll=d20(),hpB=avKey(S,L)==='m'?2:0,execPen=avKey(S,1-L)==='n'?-2:0,roll=Math.max(1,Math.min(20,rawRoll+hpB+execPen)),surv=roll>=th;
     const mk=(v,roll,surv,rawOv)=>{const rr=rawOv!=null?rawOv:rawRoll;
@@ -1723,10 +1757,10 @@ function endRound(){
       const tieFn=v=>{
         const vi=v===2?0:v,w=L===vi?1:0;
         const firstForV=tieFirst===vi?0:1;
-        const myLbl=v===2?tr('1. Oyuncu','Player 1'):tr('Senin Zarın','Your Die');
-        const opLbl=v===2?tr('2. Oyuncu','Player 2'):tr('Rakibin Zarı','Opponent\'s Die');
+        const myLbl=v===2?tr('1. Oyuncu','Player 1'):tr('Senin Zarın','Your Roll');
+        const opLbl=v===2?tr('2. Oyuncu','Player 2'):(MODE==='bot'?tr('Botun Zarı','Bot\'s Roll'):tr('Rakibin Zarı','Opponent\'s Roll'));
         const resTxt=v===2?(w===0?tr('1. Oyuncu düelloyu kazandı!','Player 1 won the duel!'):tr('2. Oyuncu düelloyu kazandı!','Player 2 won the duel!')):(w===0?tr('Düelloyu sen kazandın!<br>Rakip Ölüm Zarı atacak.','You won the duel!<br>Opponent will roll the Death Dice.'):tr('Düelloyu rakip kazandı!<br>Ölüm Zarını sen atacaksın.','Opponent won the duel!<br>You will roll the Death Dice.'));
-        return `<h3>${tr('Düello Berabere!','Duel Tied!')}</h3><p class="tie-sub">${tr('Puanlar ve kalan jokerler eşit.<br>Sırayla tek zar atılır, yüksek atan kazanır!','Points and remaining jokers are tied.<br>Roll one die each in turn, higher wins!')}</p><div class="tie-box" data-d0="${hx[vi]}" data-d1="${hx[1-vi]}" data-win="${w}" data-first="${firstForV}" data-bot="${MODE==='bot'?1:0}"><div id="tie-turn" class="tie-turn"></div><div class="tie-sides"><div class="tie-side me"><span class="tie-lbl">${myLbl}</span><div id="tie-d0" class="dice tie-dice">${die(1)}</div><b id="tie-s0" class="tie-sum">—</b></div><div class="tie-vs">VS</div><div class="tie-side opp"><span class="tie-lbl">${opLbl}</span><div id="tie-d1" class="dice tie-dice">${die(6)}</div><b id="tie-s1" class="tie-sum">—</b></div></div><button id="tie-rl" class="btn d20-btn">${tr('ZAR AT','ROLL DICE')}</button><div class="tie-after"><b>${hx[vi]} – ${hx[1-vi]}</b><br>${resTxt}</div></div>`;
+        return `<h3>${tr('Düello Berabere!','Duel Tied!')}</h3><p class="tie-sub">${tr('Puanlar ve kalan jokerler eşit. Sırayla D20 atılır, yüksek atan kazanır!','Points and remaining jokers are tied. Roll D20 in turn, higher wins!')}</p><div class="tie-box" data-d0="${hx[vi]}" data-d1="${hx[1-vi]}" data-win="${w}" data-first="${firstForV}" data-bot="${MODE==='bot'?1:0}"><div class="bg3-roll-card tie-d20-card"><div class="bg3-card-border"></div><i class="bg3-corner tl"></i><i class="bg3-corner tr"></i><i class="bg3-corner bl"></i><i class="bg3-corner br"></i><div id="tie-turn" class="tie-turn"></div><div class="d20-stage tie-d20-stage"><div class="d20-glow"></div><canvas id="tie-d20cv" class="d20-canvas" width="280" height="280"></canvas></div><div class="tie-sides"><div class="tie-side me"><span class="tie-lbl">${myLbl}</span><b id="tie-s0" class="tie-sum">—</b></div><div class="tie-vs">VS</div><div class="tie-side opp"><span class="tie-lbl">${opLbl}</span><b id="tie-s1" class="tie-sum">—</b></div></div><button id="tie-rl" class="btn d20-btn">${tr('D20 AT','ROLL D20')}</button></div><div class="tie-after"><b>${hx[vi]} – ${hx[1-vi]}</b><br>${resTxt}</div></div>`;
       };
       MM(tieFn,tr('Ölüm Zarına Geç','Proceed to Death Dice'),openDeathModal);
     }else{
