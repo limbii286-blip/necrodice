@@ -1209,7 +1209,7 @@ function bot(){
         }
         if(bIdx>=0){execPlague(S,1,bIdx);R();return think(AFTER[DIFF])}
       }
-      if(bh==='l'&&(S.pl[0].open.length||S.pl[0].closed.length)&&(S.pl[1].open.length||S.pl[1].closed.length)){
+      if(bh==='l'&&(S.pl[0].open.length||S.pl[1].open.length)){
         let useW=false;
         const oppVisBust=!low&&total(S,0,false)>bT&&!act(S,20);
         if(prm.hero&&!(oppVisBust&&bt<=bT)){
@@ -1218,9 +1218,8 @@ function bot(){
           let sumA=0;const K=prm.deepRoll?48:28;
           for(let k=0;k<K;k++){
             const T=clone(S);T.log=[];
-            const p0=T.pl[0].open.length?T.pl[0].open:T.pl[0].closed,p1=T.pl[1].open.length?T.pl[1].open:T.pl[1].closed;
-            p0.splice(Math.floor(Math.random()*p0.length),1);
-            p1.splice(Math.floor(Math.random()*p1.length),1);
+            if(T.pl[0].open.length)T.pl[0].open.splice(Math.floor(Math.random()*T.pl[0].open.length),1);
+            if(T.pl[1].open.length)T.pl[1].open.splice(Math.floor(Math.random()*T.pl[1].open.length),1);
             sumA+=evalS(T,1);
           }
           const avgA=sumA/K;
@@ -1821,7 +1820,7 @@ const HEROES_TR=[
   {id:'e',name:'Buz Devi',passive:true,hpName:'Kadim Direnç',desc:'Kaybettiğin her turda %18 ihtimalle gelen hasarı tamamen savuşturur ve turu beraberliğe dönüştürür.'},
   {id:'m',name:'Ölümün Efendisi',passive:true,hpName:'Ölümün Takdiri',desc:'Attığın her Ölüm Zarı sonucuna +2 bonus kazan.'},
   {id:'w',name:'Cadı',hpName:'Kuzgunun Kehaneti',desc:'Rakibinin kapalı sayı kartını gizlice incele.'},
-  {id:'l',name:'Kurt Adam',hpName:'Kanlı Dolunay',desc:'Her iki oyuncunun da masadaki rastgele 1 sayı kartını imha et.'},
+  {id:'l',name:'Kurt Adam',hpName:'Kanlı Dolunay',desc:'Her iki oyuncunun da masadaki rastgele 1 açık sayı kartını imha et.'},
   {id:'v',name:'Vampir',passive:true,hpName:'Kanla Mühürlenen Kader',desc:'İlk beraberlikte turu kazanmış sayılırsın. Bu güç oyun boyunca yalnızca 1 kez kullanılabilir.'},
   {id:'u',name:'Bilinmeyen',passive:true,bossOnly:true,hpName:'Hiçlikten Dönüş',desc:'Ölüm zarında hedef sayının altında atarsan, ölümden bir kereliğine geri dönersin.'}
 ];
@@ -1834,7 +1833,7 @@ const HEROES_EN=[
   {id:'e',name:'Frost Giant',passive:true,hpName:'Ancient Resilience',desc:'Each time you lose a round, you have an 18% chance to deflect the damage and turn the round into a tie.'},
   {id:'m',name:'Lord of Death',passive:true,hpName:'Death\'s Favor',desc:'Gain a +2 bonus to every Death Dice roll you make.'},
   {id:'w',name:'Witch',hpName:'Raven\'s Prophecy',desc:'Secretly inspect your opponent\'s hidden number card.'},
-  {id:'l',name:'Werewolf',hpName:'Blood Full Moon',desc:'Destroy 1 random number card on the table from both players.'},
+  {id:'l',name:'Werewolf',hpName:'Blood Full Moon',desc:'Destroy 1 random face-up number card on the table from both players.'},
   {id:'v',name:'Vampire',passive:true,hpName:'Blood-Sealed Fate',desc:'On your first tied round, you win the round instead. Triggers once per match.'},
   {id:'u',name:'The Unknown',passive:true,bossOnly:true,hpName:'Return from the Void',desc:'If you roll below the target on the Death Dice, return from death once per match.'}
 ];
@@ -2514,24 +2513,29 @@ function playWolfClawFx(ids){
   });
 }
 function execWolf(S,p,afterCb){
-  const pickRand=side=>{const pool=S.pl[side].open.length?S.pl[side].open:S.pl[side].closed;if(!pool.length)return null;const i=Math.floor(Math.random()*pool.length);return{pool,i,c:pool[i]}};
+  const pickRand=side=>{const pool=S.pl[side].open;if(!pool.length)return null;const i=Math.floor(Math.random()*pool.length);return{pool,i,c:pool[i]}};
   const r0=pickRand(0),r1=pickRand(1);
   const ids=[r0&&r0.c.id,r1&&r1.c.id].filter(Boolean);
-  playWolfClawFx(ids);
-  if(MODE==='host'){
-    if(conn&&conn.open)conn.send({k:'wolf_claw',ids});
-    spectators.forEach(s=>{try{if(s.open)s.send({k:'wolf_claw',ids})}catch(e){}});
+  if(ids.length){
+    playWolfClawFx(ids);
+    if(MODE==='host'){
+      if(conn&&conn.open)conn.send({k:'wolf_claw',ids});
+      spectators.forEach(s=>{try{if(s.open)s.send({k:'wolf_claw',ids})}catch(e){}});
+    }
+  }else{
+    snd('play');
   }
   const finish=()=>{
     if(S!==G)return;
     if(r0){const i=r0.pool.findIndex(x=>x.id===r0.c.id);if(i>=0)r0.pool.splice(i,1)}
     if(r1){const i=r1.pool.findIndex(x=>x.id===r1.c.id);if(i>=0)r1.pool.splice(i,1)}
     S.hpUsed=S.hpUsed||[false,false];S.hpUsed[p]=true;S.acted=true;S.graceLeft=0;
-    S.log.push({p,t:'Kanlı Dolunay kullandı (İki taraftan 1\'er kart imha edildi)'});
+    const msg=ids.length===2?'Kanlı Dolunay kullandı (İki taraftan 1\'er açık kart imha edildi)':ids.length===1?'Kanlı Dolunay kullandı (1 açık kart imha edildi)':'Kanlı Dolunay kullandı (Masada açık sayı kartı yoktu)';
+    S.log.push({p,t:msg});
     R();
     if(afterCb)afterCb();
   };
-  setTimeout(finish,360);
+  setTimeout(finish,ids.length?360:120);
 }
 function useHeroPower(){
   const S=G;if(!S||S.over||S.wait||S.turn!==0||lock||P||(S.hpUsed&&S.hpUsed[0])||MODE==='tutorial')return;
@@ -2563,7 +2567,6 @@ function useHeroPower(){
     S.hpUsed[0]=true;
     snd('flip');R();
   }else if(hid==='l'){
-    if(!(S.pl[0].open.length||S.pl[0].closed.length)||!(S.pl[1].open.length||S.pl[1].closed.length))return box(`<h3>${tr('Kanlı Dolunay','Blood Full Moon')}</h3><p>${tr('İmha edilecek yeterli kart yok.','Not enough cards on the table to destroy.')}</p>`);
     if(MODE==='guest'){S.hpUsed[0]=true;snd('play');R();return conn.send({k:'hp_wolf'})}
     execWolf(S,0);
   }else{
@@ -5251,7 +5254,7 @@ function analyzeHeroPowerOpp(S,played,wpPlayed,wpBest,odds,loss){
         msg:tr(`${h.hpName} hazırdı: Destenin üstündeki 2 kartı önceden görüp sırasını değiştirerek patlama riskini (%${odds.bustPct}) yönetebilirdin.`,`${h.hpName} was ready: Scrying and reordering the top 2 cards would let you control the ${odds.bustPct}% bust risk.`)
       };
     }
-  }else if(hid==='l'&&(S.pl[0].open.length||S.pl[0].closed.length)&&(S.pl[1].open.length||S.pl[1].closed.length)){
+  }else if(hid==='l'&&(S.pl[0].open.length||S.pl[1].open.length)){
     if(wpPlayed<=40&&(loss>=6||matchPoint)){
       return {
         hid,name:h.hpName,
