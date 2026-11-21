@@ -1246,12 +1246,15 @@ function pass(fromTimeout=false){
   S.log.push({p:S.turn,t:fromTimeout?'süresi bitti — sıra rakibe geçti':'pas dedi'});
   if(S.turn==1&&!fromTimeout)talk('pass',0,.35);
   const opp=1-S.turn;
+  if(fromTimeout){
+    if(S.turn==1){botGen++;thinkOn=false;}
+    S.acted=false;S.turn=opp;(S.jTurn=S.jTurn||[0,0])[S.turn]=0;
+    S.clocks=S.clocks||[initClockSec(),initClockSec()];S.clocks[opp]=initClockSec();
+    S.timeOut=S.timeOut||[false,false];S.timeOut[opp]=false;
+    R();next();
+    return;
+  }
   if(S.turns>0&&!S.acted){
-    if(fromTimeout){
-      S.wait=true;lock=true;R();
-      setTimeout(()=>{if(S===G)endRound()},1000);
-      return;
-    }
     return endRound();
   }
   (S.pa=S.pa||[0,0])[S.turn]++;S.turns++;S.acted=false;S.turn=opp;(S.jTurn=S.jTurn||[0,0])[S.turn]=0;
