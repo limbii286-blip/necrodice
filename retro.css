@@ -7004,3 +7004,205 @@ html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, 
   color: #fde68a;
   transform: scale(1.12);
 }
+
+/* ==========================================================================
+   ÜYE ELO SIRALAMASI (LEADERBOARD) BUTONU & MODALI
+   ========================================================================== */
+.auth-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.auth-lb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 13px;
+  border-radius: 999px;
+  border: 1px solid rgba(212, 168, 85, 0.55);
+  background: linear-gradient(180deg, rgba(32, 22, 16, 0.92), rgba(15, 10, 11, 0.96));
+  color: #fde68a;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(255, 232, 175, 0.18);
+  transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+}
+.auth-lb-btn:hover {
+  transform: translateY(-1px);
+  border-color: #f5d78e;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.82), 0 0 16px rgba(212, 168, 85, 0.28);
+}
+#mb.lb-mode {
+  width: min(95vw, 490px) !important;
+  max-width: 490px !important;
+  height: min(84dvh, 640px) !important;
+  max-height: 88dvh !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden !important;
+}
+.lb-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  text-align: left;
+}
+.lb-head {
+  flex-shrink: 0;
+  text-align: center;
+}
+.lb-head h3 {
+  margin: 0 0 2px;
+  color: #fef0c7;
+}
+.lb-sub {
+  margin: 0;
+  font-size: 14px;
+  color: #cbbba2;
+}
+.lb-loading,
+.lb-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #cbbba2;
+  font-size: 15.5px;
+  padding: 20px 10px;
+}
+.lb-list {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 2px 5px 4px 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 168, 85, 0.55) rgba(0, 0, 0, 0.25);
+}
+.lb-list::-webkit-scrollbar { width: 6px; }
+.lb-list::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.25); border-radius: 999px; }
+.lb-list::-webkit-scrollbar-thumb { background: rgba(212, 168, 85, 0.55); border-radius: 999px; }
+.lb-row {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 11px;
+  border-radius: 10px;
+  background: rgba(16, 12, 14, 0.82);
+  border: 1px solid rgba(212, 168, 85, 0.22);
+}
+.lb-row.top1 {
+  background: linear-gradient(135deg, rgba(120, 82, 18, 0.36), rgba(20, 14, 12, 0.9));
+  border-color: rgba(250, 204, 21, 0.62);
+}
+.lb-row.top2 {
+  background: linear-gradient(135deg, rgba(100, 116, 139, 0.26), rgba(18, 14, 16, 0.9));
+  border-color: rgba(203, 213, 225, 0.45);
+}
+.lb-row.top3 {
+  background: linear-gradient(135deg, rgba(146, 64, 14, 0.28), rgba(18, 13, 12, 0.9));
+  border-color: rgba(217, 119, 6, 0.48);
+}
+.lb-row.me {
+  box-shadow: inset 0 0 0 1px rgba(253, 224, 138, 0.65), 0 0 14px rgba(212, 168, 85, 0.2);
+}
+.lb-pos {
+  min-width: 30px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 800;
+  color: #d6c3a4;
+}
+.lb-rk {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  background: rgba(212, 168, 85, 0.16);
+  border: 1px solid rgba(212, 168, 85, 0.42);
+  color: #fde68a;
+  flex-shrink: 0;
+}
+.lb-u {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.lb-u b {
+  font-size: 15.5px;
+  color: #fbf2de;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lb-u b em {
+  font-style: normal;
+  font-size: 12px;
+  color: #fde68a;
+  font-weight: 600;
+}
+.lb-u small {
+  font-size: 12.5px;
+  color: #b8a58b;
+}
+.lb-elo {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(212, 168, 85, 0.15);
+  border: 1px solid rgba(212, 168, 85, 0.38);
+  color: #fde68a;
+  font-size: 15px;
+  font-weight: 800;
+}
+.lb-elo i {
+  font-style: normal;
+  font-size: 10.5px;
+  opacity: 0.85;
+  margin-left: 2px;
+}
+.lb-my-bar {
+  flex-shrink: 0;
+  text-align: center;
+  padding: 7px 12px;
+  border-radius: 9px;
+  background: rgba(212, 168, 85, 0.14);
+  border: 1px solid rgba(212, 168, 85, 0.4);
+  color: #f4e6c8;
+  font-size: 14.5px;
+}
+.lb-my-bar.guest {
+  color: #d6c3a4;
+}
+.lb-acts {
+  flex-shrink: 0;
+  justify-content: center;
+  gap: 8px;
+}
+@media (max-width: 600px) {
+  .auth-lb-btn {
+    height: 36px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+  .auth-lb-btn span {
+    display: none;
+  }
+}

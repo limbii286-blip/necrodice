@@ -5545,18 +5545,20 @@ function recordMatchElo(S,won){
 function renderAuthBar(){
   const bar=$('#auth-bar');
   if(!bar)return;
+  const lbBtnHtml=`<button type="button" class="auth-lb-btn" id="ab-lb" title="${tr('Üye ELO Sıralaması','Member ELO Leaderboard')}">🏆 <span>${tr('Sıralama','Ranks')}</span></button>`;
   if(!USER_ACC){
     bar.hidden=false;
-    bar.innerHTML=`<button type="button" class="auth-pill auth-pill-empty" id="ab-login"><span>${tr('Giriş Yap / Kayıt Ol','Sign In / Register')}</span></button>`;
-    const btn=$('#ab-login');
+    bar.innerHTML=`${lbBtnHtml}<button type="button" class="auth-pill auth-pill-empty" id="ab-login"><span>${tr('Giriş Yap / Kayıt Ol','Sign In / Register')}</span></button>`;
+    const btn=$('#ab-login'),lb=$('#ab-lb');
     if(btn)btn.onclick=()=>{snd('click');openAuthModal('login',false)};
+    if(lb)lb.onclick=()=>{snd('click');openLeaderboardModal()};
     return;
   }
   const rk=eloRank(USER_ACC.elo);
   const nm=USER_ACC.isGuest?tr('Misafir','Guest'):escHtml(USER_ACC.username);
   const stDays=Math.max(1,USER_ACC.streak||1);
   bar.hidden=false;
-  bar.innerHTML=`<button type="button" class="auth-pill ${rk.cls}" id="ab-prof" title="${tr('Profil, ELO & Günlük Seri','Profile, ELO & Daily Streak')}">
+  bar.innerHTML=`${lbBtnHtml}<button type="button" class="auth-pill ${rk.cls}" id="ab-prof" title="${tr('Profil, ELO & Günlük Seri','Profile, ELO & Daily Streak')}">
     <span class="ap-ic">${rk.ic}</span>
     <span class="ap-info">
       <b>${nm}</b>
@@ -5565,8 +5567,90 @@ function renderAuthBar(){
     <span class="ap-streak" title="${tr(`${stDays} Günlük Seri`,`${stDays}-Day Streak`)}">🔥 ${stDays}</span>
     <span class="ap-elo">${Math.round(USER_ACC.elo||1200)} <i>ELO</i></span>
   </button>`;
-  const pb=$('#ab-prof');
+  const pb=$('#ab-prof'),lb=$('#ab-lb');
   if(pb)pb.onclick=()=>{snd('click');openProfileModal()};
+  if(lb)lb.onclick=()=>{snd('click');openLeaderboardModal()};
+}
+async function openLeaderboardModal(){
+  const mb=$('#mb');
+  if(!mb)return;
+  lock=true;
+  mb.classList.remove('end-mode','an-mode','set-mode');
+  mb.classList.add('auth-mode','lb-mode');
+  mb.innerHTML=`<div class="lb-wrap">
+    <div class="lb-head">
+      <h3>🏆 ${tr('ELO Sıralaması','ELO Leaderboard')}</h3>
+      <p class="lb-sub">${tr('Kayıtlı üyelerin güncel dereceli sıralaması','Live ranked standings of registered members')}</p>
+    </div>
+    <div class="lb-loading">${tr('Sıralama yükleniyor…','Loading leaderboard…')}</div>
+    <div class="row lb-acts"><button type="button" id="lb-close" class="btn alt sm">${tr('Kapat','Close')}</button></div>
+  </div>`;
+  $('#m').hidden=false;
+  const close=()=>{mb.classList.remove('auth-mode','lb-mode');$('#m').hidden=true;lock=false};
+  if($('#lb-close'))$('#lb-close').onclick=()=>{snd('click');close()};
+
+  const byKey=new Map();
+  // Yerel kayıtlı üyeleri baz olarak al
+  try{
+    const localMap=loadLocalUsers();
+    Object.values(localMap).forEach(u=>{
+      if(u&&u.username&&!u.isGuest){
+        const k=u.key||normUserKey(u.username);
+        if(k)byKey.set(k,{key:k,username:u.username,elo:Math.round(u.elo||1200),wins:u.wins||0,losses:u.losses||0,streak:u.streak||1});
+      }
+    });
+  }catch(e){}
+  // Firestore'dan tüm kayıtlı üyelerin güncel ELO sıralamasını çek
+  if(fbDb){
+    try{
+      const snap=await fbDb.collection('users').orderBy('elo','desc').limit(50).get();
+      snap.forEach(doc=>{
+        const u=doc.data();
+        if(u&&u.username&&!u.isGuest){
+          const k=u.key||doc.id||normUserKey(u.username);
+          byKey.set(k,{key:k,username:u.username,elo:Math.round(u.elo||1200),wins:u.wins||0,losses:u.losses||0,streak:u.streak||1});
+        }
+      });
+    }catch(e){}
+  }
+  if(!mb.classList.contains('lb-mode'))return;
+  const list=[...byKey.values()].sort((a,b)=>(b.elo-a.elo)||(b.wins-a.wins)||a.username.localeCompare(b.username));
+  const myKey=(USER_ACC&&!USER_ACC.isGuest)?(USER_ACC.key||normUserKey(USER_ACC.username)):'';
+  const myIdx=myKey?list.findIndex(u=>u.key===myKey):-1;
+  const rowsHtml=list.length?list.map((u,i)=>{
+    const pos=i+1;
+    const rk=eloRank(u.elo);
+    const isMe=!!(myKey&&u.key===myKey);
+    const med=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':`#${pos}`;
+    return `<div class="lb-row${pos<=3?' top'+pos:''}${isMe?' me':''}">
+      <span class="lb-pos">${med}</span>
+      <span class="lb-rk" title="${rk.name}">${rk.ic}</span>
+      <div class="lb-u">
+        <b>${escHtml(u.username)}${isMe?` <em>(${tr('Sen','You')})</em>`:''}</b>
+        <small>${rk.name} · ${u.wins}${tr('G','W')} / ${u.losses}${tr('M','L')} · 🔥${Math.max(1,u.streak||1)}</small>
+      </div>
+      <span class="lb-elo">${u.elo} <i>ELO</i></span>
+    </div>`;
+  }).join(''):`<div class="lb-empty">${tr('Henüz kayıtlı üye bulunmuyor. İlk sırayı almak için üye ol!','No registered members yet. Register to claim #1!')}</div>`;
+
+  const myBarHtml=myIdx>=0
+    ?`<div class="lb-my-bar">${tr('Senin Sıran','Your Rank')}: <b>#${myIdx+1}</b> / ${list.length} · <b>${list[myIdx].elo} ELO</b></div>`
+    :(USER_ACC&&USER_ACC.isGuest?`<div class="lb-my-bar guest">${tr('Sıralamaya girmek için üye ol!','Register to appear on the leaderboard!')}</div>`:'');
+
+  mb.innerHTML=`<div class="lb-wrap">
+    <div class="lb-head">
+      <h3>🏆 ${tr('ELO Sıralaması','ELO Leaderboard')}</h3>
+      <p class="lb-sub">${tr(`Toplam ${list.length} kayıtlı üye · Canlı dereceli sıralama`,`${list.length} registered members · Live standings`)}</p>
+    </div>
+    <div class="lb-list">${rowsHtml}</div>
+    ${myBarHtml}
+    <div class="row lb-acts">
+      ${(USER_ACC&&USER_ACC.isGuest)?`<button type="button" id="lb-reg" class="btn alt sm">${tr('Üye Ol','Register')}</button>`:''}
+      <button type="button" id="lb-close" class="btn sm">${tr('Kapat','Close')}</button>
+    </div>
+  </div>`;
+  if($('#lb-close'))$('#lb-close').onclick=()=>{snd('click');close()};
+  if($('#lb-reg'))$('#lb-reg').onclick=()=>{snd('click');mb.classList.remove('lb-mode');openAuthModal('register',true)};
 }
 function openProfileModal(){
   if(!USER_ACC)return openAuthModal('login',false);
@@ -5604,8 +5688,9 @@ function openProfileModal(){
     <div class="pr-sec-lbl">${tr('Son Maçlar','Recent Matches')}</div>
     <div class="pr-hist">${histHtml}</div>
     <div class="row pr-acts">
+      <button type="button" id="pr-lb" class="btn alt sm">🏆 ${tr('Sıralama','Ranks')}</button>
       ${acc.isGuest
-        ?`<button type="button" id="pr-upg" class="btn alt sm">${tr('Üye Ol (ELO’nu Kaydet)','Register (Save ELO)')}</button>
+        ?`<button type="button" id="pr-upg" class="btn alt sm">${tr('Üye Ol','Register')}</button>
           <button type="button" id="pr-sw" class="btn sm">${tr('Giriş Yap','Sign In')}</button>`
         :`<button type="button" id="pr-out" class="btn sm">${tr('Çıkış Yap','Sign Out')}</button>`}
       <button type="button" id="pr-close" class="btn alt sm">${tr('Kapat','Close')}</button>
@@ -5614,6 +5699,7 @@ function openProfileModal(){
   $('#m').hidden=false;
   const close=()=>{mb.classList.remove('auth-mode');$('#m').hidden=true;lock=false};
   if($('#pr-close'))$('#pr-close').onclick=()=>{snd('click');close()};
+  if($('#pr-lb'))$('#pr-lb').onclick=()=>{snd('click');openLeaderboardModal()};
   if($('#pr-upg'))$('#pr-upg').onclick=()=>{snd('click');openAuthModal('register',true)};
   if($('#pr-sw'))$('#pr-sw').onclick=()=>{snd('click');openAuthModal('login',false)};
   if($('#pr-out'))$('#pr-out').onclick=()=>{snd('click');saveSession(null);openAuthModal('login',false)};
