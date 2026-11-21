@@ -265,12 +265,13 @@ body:has(#menu:not([hidden])) #fl {
   height: auto;
   display: block;
   pointer-events: none;
-  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 18px rgba(255, 190, 80, 0.38));
-  animation: hsLogoGlow 4.2s ease-in-out infinite;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.88));
+  will-change: transform;
+  animation: hsLogoGlow 4.4s ease-in-out infinite;
 }
 @keyframes hsLogoGlow {
-  0%, 100% { filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 14px rgba(255, 190, 80, 0.28)); }
-  50% { filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 26px rgba(255, 200, 95, 0.55)); }
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(0, -2px, 0) scale(1.015); }
 }
 .rm .hs-logo-img {
   animation: none !important;
@@ -799,12 +800,18 @@ body:has(#menu:not([hidden])) #fl {
   100% { opacity: 0; transform: translate3d(0, 0, 0) scale(1.03); }
 }
 /* Modal Açılış Geçişleri — Saf GPU Opacity + Transform */
-#m:not([hidden]) {
-  animation: modalBgIn 0.2s ease-out both;
+#m:not([hidden]),
+#prompt:not([hidden]) {
+  animation: modalBgIn 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 #mb {
   will-change: transform, opacity;
+  backface-visibility: hidden;
   animation: modalPopSmooth 0.24s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+}
+#prompt:not([hidden]) > * {
+  will-change: transform, opacity;
+  animation: modalPopSmooth 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @keyframes modalBgIn {
   from { opacity: 0; }
@@ -831,15 +838,19 @@ body:has(#menu:not([hidden])) #fl {
   border-radius: 4px;
   padding: 1px;
   background: #0c080a;
+  overflow: hidden;
 }
 .ldb i {
   display: block;
   height: 100%;
-  width: 0;
+  width: 100%;
+  transform-origin: left center;
+  transform: scaleX(0);
+  will-change: transform;
   background: linear-gradient(90deg, #8f1620, #d4a855);
-  animation: ldfill var(--ms, 2s) ease-out forwards;
+  animation: ldfill var(--ms, 2s) cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
-@keyframes ldfill { to { width: 100%; } }
+@keyframes ldfill { to { transform: scaleX(1); } }
 
 /* ============================================================
    3. D20 ÖLÜM ZARI PANELİ & LOBİ / ODA MODALLARI
@@ -1909,12 +1920,13 @@ body.dragging-joker #fx::after {
 
 /* Kart Çekme Animasyonu */
 .deck.pull {
-  animation: deckDrawPulse 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+  animation: deckDrawPulse 0.34s cubic-bezier(0.22, 1, 0.36, 1);
 }
 @keyframes deckDrawPulse {
-  0% { transform: scale(1); }
-  38% { transform: scale(1.14) translateY(-3px); box-shadow: 0 0 24px var(--gold); }
-  100% { transform: scale(1); }
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  38%  { transform: translate3d(0, -3px, 0) scale(1.12); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
 }
 .cards .c.fresh {
   will-change: transform, opacity;
@@ -2032,10 +2044,6 @@ body.dragging-joker #fx::after {
 }
 #fx .deck.draw-locked:hover {
   transform: none !important;
-}
-@keyframes deckDrawPulse {
-  0%, 100% { filter: brightness(1); }
-  50% { filter: brightness(1.16); }
 }
 #fx .deck b {
   position: absolute !important;
@@ -4900,9 +4908,9 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
    OYUN SONU: HEARTHSTONE TARZI YÜZEN ZAFER / YENİLGİ ARMASI & İSTATİSTİKLER
    ========================================================================== */
 #m:has(#mb.end-mode) {
-  background: rgba(6, 5, 8, 0.72) !important;
-  backdrop-filter: blur(8px) grayscale(0.75) !important;
-  -webkit-backdrop-filter: blur(8px) grayscale(0.75) !important;
+  background: radial-gradient(circle at 50% 44%, rgba(16, 12, 18, 0.86) 0%, rgba(5, 4, 7, 0.95) 100%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 #mb.end-mode {
   width: min(96vw, 520px) !important;
@@ -4913,14 +4921,14 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  animation: endCardIn 0.52s cubic-bezier(0.2, 1.15, 0.3, 1) both !important;
+  animation: endCardIn 0.44s cubic-bezier(0.22, 1, 0.36, 1) both !important;
 }
 #mb.end-mode::before {
   display: none !important;
 }
 @keyframes endCardIn {
-  from { opacity: 0; transform: scale(0.72) translateY(22px); }
-  to   { opacity: 1; transform: none; }
+  from { opacity: 0; transform: translate3d(0, 18px, 0) scale(0.84); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
 .hs-crest-stage {
   position: relative;
@@ -5568,7 +5576,7 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   color: #cbb58d;
   font: 700 11.5px/1 var(--mf);
   cursor: pointer;
-  transition: all 0.14s ease;
+  transition: transform 0.14s ease, background-color 0.14s ease, border-color 0.14s ease, color 0.14s ease;
 }
 .an-flt.act {
   color: #fff6dc;
@@ -5608,7 +5616,7 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   color: #cbb58d;
   font: 700 13px/1 var(--mf);
   cursor: pointer;
-  transition: all 0.14s ease;
+  transition: transform 0.14s ease, background-color 0.14s ease, border-color 0.14s ease, color 0.14s ease;
 }
 .an-vtab.act {
   color: #fde68a;
@@ -6220,7 +6228,7 @@ body, button, input, select, textarea {
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 .auth-tab.act {
   background: linear-gradient(180deg, rgba(160, 116, 48, 0.38), rgba(92, 62, 22, 0.42));
@@ -6817,7 +6825,7 @@ html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, 
   font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.14s ease;
+  transition: transform 0.14s ease, background-color 0.14s ease, border-color 0.14s ease, color 0.14s ease;
 }
 .an-db-pill i {
   font-style: normal;

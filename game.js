@@ -4152,7 +4152,9 @@ function createSmoothDragLoop(onFrame){
   let lastRender=0;
   function render(now){
     requestAnimationFrame(render);
-    if(entering||document.hidden)return;
+    if(entering||leaving||document.hidden)return;
+    const mEl=document.getElementById('m');
+    if(mEl&&!mEl.hidden)return;
     const mob=isMobilePerf();
     const mn=document.getElementById('menu');
     const menuOpen=mn&&!mn.hidden;
@@ -4251,7 +4253,9 @@ function createSmoothDragLoop(onFrame){
   let lastMenuDraw=0;
   function render(now){
     requestAnimationFrame(render);
-    if(entering||document.hidden)return;
+    if(entering||leaving||document.hidden)return;
+    const mEl=document.getElementById('m');
+    if(mEl&&!mEl.hidden)return;
     const menuEl=document.getElementById('menu');
     const rm=document.body.classList.contains('rm');
     // Hareketi azalt: kül/kıvılcım yok, titreşen ışık yok; normalde akıcı 30fps GPU tasarrufu
