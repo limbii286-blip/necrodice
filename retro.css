@@ -7286,11 +7286,8 @@ html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, 
 @media (max-width: 600px) {
   .auth-lb-btn {
     height: 36px;
-    padding: 0 9px;
+    padding: 0 11px;
     font-size: 13px;
-  }
-  .auth-lb-btn span {
-    display: none;
   }
 }
 

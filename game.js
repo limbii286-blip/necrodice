@@ -3510,7 +3510,7 @@ function startReconnectGrace(isHost,fallbackMsg){
       b.className='reconn-bar';
       document.body.appendChild(b);
     }
-    b.innerHTML=`<span>⚡ ${isHost?tr(`Rakibin bağlantısı koptu — geri bağlanması bekleniyor (${RECONN_LEFT}s)…`,`Opponent disconnected — waiting to reconnect (${RECONN_LEFT}s)…`):tr(`Bağlantı koptu — yeniden bağlanılıyor (${RECONN_LEFT}s)…`,`Connection lost — reconnecting (${RECONN_LEFT}s)…`)}</span>`;
+    b.innerHTML=`<span>${isHost?tr(`Rakibin bağlantısı koptu — geri bağlanması bekleniyor (${RECONN_LEFT}s)…`,`Opponent disconnected — waiting to reconnect (${RECONN_LEFT}s)…`):tr(`Bağlantı koptu — yeniden bağlanılıyor (${RECONN_LEFT}s)…`,`Connection lost — reconnecting (${RECONN_LEFT}s)…`)}</span>`;
   };
   showBar();
   RECONN_TIMER=setInterval(()=>{
@@ -3564,7 +3564,7 @@ function hostRoom(inviteTarget,onCodeReady){
     if(inviteTarget){
       box(`
         <div class="lobby-box">
-          <h3 style="margin-bottom:8px">⚔ ${tr('Düello Daveti Gönderildi','Duel Invite Sent')}</h3>
+          <h3 style="margin-bottom:8px">${tr('Düello Daveti Gönderildi','Duel Invite Sent')}</h3>
           <p style="color:var(--bone);font-size:17px;margin-bottom:10px">${tr(`<b>${escHtml(inviteTarget.name)}</b> (${Math.round(inviteTarget.elo||1200)} ELO) yanıtı bekleniyor…`,`Waiting for <b>${escHtml(inviteTarget.name)}</b> (${Math.round(inviteTarget.elo||1200)} ELO)…`)}</p>
           <div class="lobby-spinner"><i></i><i></i><i></i></div>
           <p id="lobbyStatus" style="font-size:15px;color:#a0b8a4;margin-top:12px">${tr('Kabul ettiğinde düello otomatik başlayacak.','The duel will start automatically once accepted.')}</p>
@@ -5393,7 +5393,7 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
       const duelsHtml=st.duels.map(d=>`<button type="button" class="an-duel-chip clickable" data-duel="${d.duel}"><span>${tr('Düello','Duel')} ${d.duel}</span><b>%${d.acc}</b><small>${d.moves} ${tr('hamle','moves')}</small></button>`).join('');
       const hpMissedHtml=st.hpMissed&&st.hpMissed.length
         ?`<div class="an-sec-lbl">${tr('Kahraman Gücü Fırsatları','Hero Power Opportunities')} (${st.hpMissed.length})</div>
-          <div class="an-hp-list">${st.hpMissed.slice(0,4).map(m=>`<button type="button" class="an-hp-chip ${m.sev}" data-jump="${m.idx}"><b>⚡ ${m.name} · #${m.idx+1}</b><span>${m.msg}</span></button>`).join('')}</div>`
+          <div class="an-hp-list">${st.hpMissed.slice(0,4).map(m=>`<button type="button" class="an-hp-chip ${m.sev}" data-jump="${m.idx}"><b>${m.name} · #${m.idx+1}</b><span>${m.msg}</span></button>`).join('')}</div>`
         :'';
       bodyContent=`<div class="an-summary-scroll">
         <div class="an-sec-lbl">${tr('Yetenek Karnesi','Skill Breakdown')}</div>
@@ -5417,7 +5417,7 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
         return `<button type="button" class="an-duel-card" data-duel="${d.duel}">
           <div class="an-dc-l">
             <b>${tr('Düello','Duel')} ${d.duel}</b>
-            <small>${d.moves} ${tr('hamle','moves')} · ★ ${dBests} ${tr('en iyi','best')}${dErrs?` · ⚠ ${dErrs} ${tr('hata','slips')}`:''}</small>
+            <small>${d.moves} ${tr('hamle','moves')} · ★ ${dBests} ${tr('en iyi','best')}${dErrs?` · ! ${dErrs} ${tr('hata','slips')}`:''}</small>
           </div>
           <div class="an-dc-r">
             <span class="an-dc-acc ${accCls}">%${d.acc}</span>
@@ -5441,7 +5441,7 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
         const isOpen=i===openMoveIdx;
         const ctx=`D${r.duel}·T${r.round} · ${tr('Toplam','Tot')} ${r.myTot}/${r.low?tr('En Az','Low'):r.tg}`;
         const exactTag=r.exactUsed?`<span class="an-exact-tag" title="${tr('Kesin Matematiksel Çözüm (%0 varyans)','Exact Combinatorial Solution (0% variance)')}">∑ ${tr('Kesin','Exact')}</span>`:'';
-        const hpTag=r.hpOpp?`<span class="an-hp-tag" title="${r.hpOpp.name}">⚡ ${tr('Güç','Power')}</span>`:'';
+        const hpTag=r.hpOpp?`<span class="an-hp-tag" title="${r.hpOpp.name}">${tr('Güç','Power')}</span>`:'';
         const rec=r.isSame||r.loss<=3
           ?`<span class="an-ok">${r.grade.cls==='brill'?tr('Harika hamle! Tek kazandıran yol.','Brilliant move! Unique winning line.'):tr('En iyi hamle!','Best move!')}</span>`
           :`<span class="an-rec">${tr('Öneri','Best')}: <b>${r.bestLabel}</b> <i>(%${r.wpBest})</i> · −%${r.loss}</span>`;
@@ -5466,7 +5466,7 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
             <div class="an-odds-line">${oddsTxt}${r.exactUsed?` · <b>∑ ${tr('Kesin Matematiksel Çözüm','Exact Endgame Solver')}</b>`:''}</div>
             <div class="an-pv-title">${tr('Motorun En İyi 3 Hattı (Multi-PV)','Top 3 Engine Lines (Multi-PV)')}</div>
             <div class="an-pvs">${pvHtml}</div>
-            ${r.hpOpp?`<div class="an-hp-alert"><b>⚡ ${tr('Kahraman Gücü Fırsatı','Hero Power Opportunity')} (${r.hpOpp.name}):</b> ${r.hpOpp.msg}</div>`:''}
+            ${r.hpOpp?`<div class="an-hp-alert"><b>${tr('Kahraman Gücü Fırsatı','Hero Power Opportunity')} (${r.hpOpp.name}):</b> ${r.hpOpp.msg}</div>`:''}
             ${r.reason?`<div class="an-why">${r.reason}</div>`:''}
           </div>`;
         }
@@ -5593,9 +5593,9 @@ function eloRank(elo){
   if(e>=1800)return {ic:'♛',name:tr('Ölümsüz Hükümdar','Undying Sovereign'),cls:'rk-sov'};
   if(e>=1600)return {ic:'✦',name:tr('Ölüm Büyücüsü','Necromancer'),cls:'rk-nec'};
   if(e>=1400)return {ic:'◈',name:tr('Kan Efendisi','Blood Lord'),cls:'rk-bld'};
-  if(e>=1200)return {ic:'⚔',name:tr('Kara Şövalye','Dark Knight'),cls:'rk-knt'};
+  if(e>=1200)return {ic:'❖',name:tr('Kara Şövalye','Dark Knight'),cls:'rk-knt'};
   if(e>=1000)return {ic:'☾',name:tr('Gölge Gezgini','Shadow Walker'),cls:'rk-shd'};
-  return {ic:'☠',name:tr('Kemik Çırağı','Bone Initiate'),cls:'rk-bon'};
+  return {ic:'†',name:tr('Kemik Çırağı','Bone Initiate'),cls:'rk-bon'};
 }
 function loadLocalUsers(){
   try{return JSON.parse(localStorage.getItem(AUTH_LOCAL_KEY)||'{}')||{}}catch(e){return {}}
@@ -5741,7 +5741,7 @@ function showStreakToast(streak,continued){
   const sub=continued
     ?tr('Her gün gelmeye devam et, serini büyüt!','Keep coming back daily to grow your streak!')
     :tr('Yarın tekrar girerek serini 2 güne çıkar.','Return tomorrow to reach a 2-day streak.');
-  el.innerHTML=`<span class="st-fire">🔥</span><div class="st-txt"><b>${title}</b><small>${sub}</small></div>`;
+  el.innerHTML=`<span class="st-fire">✦</span><div class="st-txt"><b>${title}</b><small>${sub}</small></div>`;
   document.body.appendChild(el);
   setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),420)},3600);
 }
@@ -6001,7 +6001,7 @@ function showIncomingInviteBanner(inv){
   el.className='lob-inv-toast';
   el.dataset.invId=inv.id;
   el.innerHTML=`<div class="lit-top">
-      <span class="lit-ic">⚔</span>
+      <span class="lit-ic">◈</span>
       <div class="lit-txt">
         <b>${tr('Düello Daveti!','Duel Invite!')}</b>
         <small><em>${escHtml(inv.fromName||tr('Oyuncu','Player'))}</em> (${Math.round(inv.fromElo||1200)} ELO) ${tr('seni düelloya davet ediyor.','challenges you to a duel.')}</small>
@@ -6109,7 +6109,7 @@ function startQuickMatch(){
     let secs=0;
     const renderWait=(msg)=>{
       box(`<div class="lobby-box">
-        <h3 style="margin-bottom:8px">⚡ ${tr('Dereceli Rakip Aranıyor','Searching for Ranked Match')}</h3>
+        <h3 style="margin-bottom:8px">${tr('Dereceli Rakip Aranıyor','Searching for Ranked Match')}</h3>
         <p style="color:var(--bone);font-size:16px;margin-bottom:8px">${tr(`Senin ELO: <b>${myElo}</b> · En yakın rakip aranıyor…`,`Your ELO: <b>${myElo}</b> · Finding closest opponent…`)}</p>
         <div class="lobby-spinner"><i></i><i></i><i></i></div>
         <p id="lobbyStatus" style="font-size:15px;color:#a0b8a4;margin-top:10px">${msg||`${tr('Geçen süre','Elapsed')}: ${secs}s`}</p>
@@ -6196,9 +6196,9 @@ function renderLobbyModalBody(){
       ?`<span class="lob-me-tag">${tr('Sen','You')}</span>`
       :(inGame
         ?(u.roomCode
-          ?`<button type="button" class="btn sm lob-spec-btn" data-code="${escHtml(u.roomCode)}">👁 ${tr('İzle','Watch')}</button>`
+          ?`<button type="button" class="btn sm lob-spec-btn" data-code="${escHtml(u.roomCode)}">${tr('İzle','Watch')}</button>`
           :`<span class="lob-busy-tag">${tr('Maçta','In Match')}</span>`)
-        :`<button type="button" class="btn alt sm lob-inv-btn" data-pid="${escHtml(u.pid)}">⚔ ${tr('Davet Et','Challenge')}</button>`);
+        :`<button type="button" class="btn alt sm lob-inv-btn" data-pid="${escHtml(u.pid)}">${tr('Davet Et','Challenge')}</button>`);
     return `<div class="lob-row${isMe?' me':''}${inGame?' busy':''}">
       <span class="lob-dot ${inGame?'busy':'free'}" title="${inGame?tr('Maçta','In Match'):tr('Müsait','Available')}"></span>
       <span class="lb-rk" title="${rk.name}">${rk.ic}</span>
@@ -6249,10 +6249,10 @@ function openLobbyModal(){
   mb.classList.add('auth-mode','lob-mode');
   mb.innerHTML=`<div class="lb-wrap">
     <div class="lb-head">
-      <h3>🌐 ${tr('Çevrim İçi Lobi','Online Lobby')}</h3>
+      <h3>${tr('Çevrim İçi Lobi','Online Lobby')}</h3>
       <p class="lb-sub">${tr('Çevrim içi oyuncular yükleniyor…','Loading online players…')}</p>
     </div>
-    <button type="button" id="lob-qm" class="btn alt lob-qm-btn">⚡ ${tr('Hızlı Dereceli Rakip Bul','Quick Ranked Match')}</button>
+    <button type="button" id="lob-qm" class="btn alt lob-qm-btn">${tr('Hızlı Dereceli Rakip Bul','Quick Ranked Match')}</button>
     <div class="lb-list lob-list"></div>
     <div class="row lb-acts">
       <button type="button" id="lob-ref" class="btn alt sm">↻ ${tr('Yenile','Refresh')}</button>
@@ -6269,7 +6269,7 @@ function openLobbyModal(){
 function renderAuthBar(){
   const bar=$('#auth-bar');
   if(!bar)return;
-  const lbBtnHtml=`<button type="button" class="auth-lb-btn" id="ab-lb" title="${tr('Üye ELO Sıralaması','Member ELO Leaderboard')}">🏆 <span>${tr('Sıralama','Ranks')}</span></button>`;
+  const lbBtnHtml=`<button type="button" class="auth-lb-btn" id="ab-lb" title="${tr('Üye ELO Sıralaması','Member ELO Leaderboard')}"><span>${tr('Sıralama','Ranks')}</span></button>`;
   if(!USER_ACC){
     bar.hidden=false;
     bar.innerHTML=`${lbBtnHtml}<button type="button" class="auth-pill auth-pill-empty" id="ab-login"><span>${tr('Giriş Yap / Kayıt Ol','Sign In / Register')}</span></button>`;
@@ -6288,7 +6288,7 @@ function renderAuthBar(){
       <b>${nm}</b>
       <small>${rk.name}</small>
     </span>
-    <span class="ap-streak" title="${tr(`${stDays} Günlük Seri`,`${stDays}-Day Streak`)}">🔥 ${stDays}</span>
+    <span class="ap-streak" title="${tr(`${stDays} Günlük Seri`,`${stDays}-Day Streak`)}">${stDays}${tr('g','d')}</span>
     <span class="ap-elo">${Math.round(USER_ACC.elo||1200)} <i>ELO</i></span>
   </button>`;
   const pb=$('#ab-prof'),lb=$('#ab-lb');
@@ -6297,16 +6297,16 @@ function renderAuthBar(){
 }
 /* ---------- BAŞARIMLAR, UNVANLAR, GÜNLÜK GÖREVLER, KOZMETİKLER & SEZONLAR ---------- */
 const ACHIEVEMENTS=[
-  {id:'first_blood',ic:'🩸',trN:'İlk Zafer',enN:'First Victory',trD:'İlk maçını kazan',enD:'Win your first match',trT:'Kan Yemini',enT:'Blood Oath'},
-  {id:'nat20',ic:'🎲',trN:'Nat 20 Mucizesi',enN:'Nat 20 Miracle',trD:'Ölüm Zarında 20 atarak hayatta kal',enD:'Survive Death Dice with a Natural 20',trT:'Kader Kıran',enT:'Fatebreaker'},
-  {id:'imp_slayer',ic:'👑',trN:'İmkansızı Yenen',enN:'Impossible Slayer',trD:'İmkansız botu mağlup et',enD:'Defeat the Impossible AI',trT:'Hiçlik Avcısı',enT:'Void Hunter'},
-  {id:'clean_win',ic:'⚖',trN:'Kusursuz Zafer',enN:'Flawless Victory',trD:'Joker kullanmadan bir maç kazan',enD:'Win a match without playing any Jokers',trT:'Saf Stratejist',enT:'Pure Strategist'},
-  {id:'survivor',ic:'🛡',trN:'Ölümsüz İrade',enN:'Undying Will',trD:'Tek maçta 2 kez Ölüm Zarından sağ çık',enD:'Survive Death Dice twice in one match',trT:'Ölümü Aldatan',enT:'Death Defier'},
-  {id:'win_streak3',ic:'🔥',trN:'Durdurulamaz',enN:'Unstoppable',trD:'Üst üste 3 maç kazan',enD:'Win 3 matches in a row',trT:'Kızıl Fırtına',enT:'Crimson Storm'},
-  {id:'veteran10',ic:'⚔',trN:'Arena Gazisi',enN:'Arena Veteran',trD:'Toplam 10 maç tamamla',enD:'Complete 10 total matches',trT:'Gölge Ustası',enT:'Shadow Master'},
+  {id:'first_blood',ic:'◈',trN:'İlk Zafer',enN:'First Victory',trD:'İlk maçını kazan',enD:'Win your first match',trT:'Kan Yemini',enT:'Blood Oath'},
+  {id:'nat20',ic:'✦',trN:'Nat 20 Mucizesi',enN:'Nat 20 Miracle',trD:'Ölüm Zarında 20 atarak hayatta kal',enD:'Survive Death Dice with a Natural 20',trT:'Kader Kıran',enT:'Fatebreaker'},
+  {id:'imp_slayer',ic:'♛',trN:'İmkansızı Yenen',enN:'Impossible Slayer',trD:'İmkansız botu mağlup et',enD:'Defeat the Impossible AI',trT:'Hiçlik Avcısı',enT:'Void Hunter'},
+  {id:'clean_win',ic:'❖',trN:'Kusursuz Zafer',enN:'Flawless Victory',trD:'Joker kullanmadan bir maç kazan',enD:'Win a match without playing any Jokers',trT:'Saf Stratejist',enT:'Pure Strategist'},
+  {id:'survivor',ic:'†',trN:'Ölümsüz İrade',enN:'Undying Will',trD:'Tek maçta 2 kez Ölüm Zarından sağ çık',enD:'Survive Death Dice twice in one match',trT:'Ölümü Aldatan',enT:'Death Defier'},
+  {id:'win_streak3',ic:'★',trN:'Durdurulamaz',enN:'Unstoppable',trD:'Üst üste 3 maç kazan',enD:'Win 3 matches in a row',trT:'Kızıl Fırtına',enT:'Crimson Storm'},
+  {id:'veteran10',ic:'❖',trN:'Arena Gazisi',enN:'Arena Veteran',trD:'Toplam 10 maç tamamla',enD:'Complete 10 total matches',trT:'Gölge Ustası',enT:'Shadow Master'},
   {id:'blood_lord',ic:'◈',trN:'Kan Efendisi',enN:'Blood Lord',trD:'1400 ELO puanına ulaş',enD:'Reach 1400 ELO rating',trT:'Kan Efendisi',enT:'Blood Lord'},
   {id:'necromancer',ic:'✦',trN:'Ölüm Büyücüsü',enN:'Necromancer',trD:'1600 ELO puanına ulaş',enD:'Reach 1600 ELO rating',trT:'Ölüm Büyücüsü',enT:'Necromancer'},
-  {id:'daily3',ic:'🕯',trN:'Sadık Düellocu',enN:'Devoted Duelist',trD:'3 günlük giriş serisine ulaş',enD:'Reach a 3-day login streak',trT:'Ebedi Nöbetçi',enT:'Eternal Sentinel'}
+  {id:'daily3',ic:'☾',trN:'Sadık Düellocu',enN:'Devoted Duelist',trD:'3 günlük giriş serisine ulaş',enD:'Reach a 3-day login streak',trT:'Ebedi Nöbetçi',enT:'Eternal Sentinel'}
 ];
 const CARD_BACKS=[
   {id:'classic',trN:'Klasik Kemik',enN:'Classic Bone',req:()=>true,trR:'Varsayılan',enR:'Default'},
@@ -6322,10 +6322,10 @@ const PROFILE_FRAMES=[
   {id:'void',trN:'Hiçlik Aurası',enN:'Void Aura',req:a=>(a.achievements||[]).includes('imp_slayer')||(a.peakElo||1200)>=1550,trR:'İmkansız Bot Zaferi / 1550 ELO',enR:'Beat Impossible AI / 1550 ELO'}
 ];
 const DAILY_QUEST_POOL=[
-  {id:'play2',trN:'2 Maç Tamamla',enN:'Complete 2 Matches',goal:2,ic:'⚔'},
-  {id:'win1',trN:'1 Maç Kazan',enN:'Win 1 Match',goal:1,ic:'🏆'},
-  {id:'jokers4',trN:'4 Joker Oyna',enN:'Play 4 Jokers',goal:4,ic:'🃏'},
-  {id:'survive1',trN:'Ölüm Zarından 1 Kez Sağ Çık',enN:'Survive Death Dice Once',goal:1,ic:'🎲'},
+  {id:'play2',trN:'2 Maç Tamamla',enN:'Complete 2 Matches',goal:2,ic:'❖'},
+  {id:'win1',trN:'1 Maç Kazan',enN:'Win 1 Match',goal:1,ic:'★'},
+  {id:'jokers4',trN:'4 Joker Oyna',enN:'Play 4 Jokers',goal:4,ic:'◈'},
+  {id:'survive1',trN:'Ölüm Zarından 1 Kez Sağ Çık',enN:'Survive Death Dice Once',goal:1,ic:'†'},
   {id:'ranked1',trN:'1 Dereceli Maç Oyna',enN:'Play 1 Ranked Match',goal:1,ic:'✦'}
 ];
 function getTitleLabel(id){
@@ -6381,7 +6381,7 @@ function progressQuest(qid,amt=1,deferSave=false){
       if(it.cur>=it.goal){
         it.done=true;
         const meta=DAILY_QUEST_POOL.find(x=>x.id===qid);
-        if(meta)showUnlockToast('✨',tr('Günlük Görev Tamamlandı!','Daily Quest Completed!'),isEn()?meta.enN:meta.trN);
+        if(meta)showUnlockToast('✦',tr('Günlük Görev Tamamlandı!','Daily Quest Completed!'),isEn()?meta.enN:meta.trN);
       }
     }
   }
@@ -6420,7 +6420,7 @@ function evaluateAchievements(acc,ctx={}){
     }
   }
   if(firstNew){
-    showUnlockToast('🏅',tr('Başarım Açıldı!','Achievement Unlocked!'),`${isEn()?firstNew.enN:firstNew.trN} · ${tr('Unvan','Title')}: ${isEn()?firstNew.enT:firstNew.trT}`);
+    showUnlockToast('★',tr('Başarım Açıldı!','Achievement Unlocked!'),`${isEn()?firstNew.enN:firstNew.trN} · ${tr('Unvan','Title')}: ${isEn()?firstNew.enT:firstNew.trT}`);
   }
 }
 function getCurrentSeason(){
@@ -6442,7 +6442,7 @@ async function openLeaderboardModal(activeTab='rank'){
   const season=getCurrentSeason();
   mb.innerHTML=`<div class="lb-wrap">
     <div class="lb-head">
-      <h3>🏆 ${tr('ELO Sıralaması','ELO Leaderboard')}</h3>
+      <h3>${tr('ELO Sıralaması','ELO Leaderboard')}</h3>
       <p class="lb-sub">${season.label} · ${tr(`${season.daysLeft} gün kaldı`,`${season.daysLeft}d left`)}</p>
     </div>
     <div class="lb-loading">${tr('Sıralama yükleniyor…','Loading leaderboard…')}</div>
@@ -6487,8 +6487,8 @@ async function openLeaderboardModal(activeTab='rank'){
   let curTab=activeTab;
   const renderLb=()=>{
     const tabsHtml=`<div class="pr-tabs lb-tabs">
-      <button type="button" class="pr-tab${curTab==='rank'?' act':''}" data-lt="rank">🏆 ${tr('Sezon Sıralaması','Season Standings')}</button>
-      <button type="button" class="pr-tab${curTab==='hof'?' act':''}" data-lt="hof">👑 ${tr('Onur Listesi','Hall of Fame')}</button>
+      <button type="button" class="pr-tab${curTab==='rank'?' act':''}" data-lt="rank">${tr('Sezon Sıralaması','Season Standings')}</button>
+      <button type="button" class="pr-tab${curTab==='hof'?' act':''}" data-lt="hof">${tr('Onur Listesi','Hall of Fame')}</button>
     </div>`;
     let bodyHtml='';
     if(curTab==='rank'){
@@ -6496,14 +6496,14 @@ async function openLeaderboardModal(activeTab='rank'){
         const pos=i+1;
         const rk=eloRank(u.elo);
         const isMe=!!(myKey&&u.key===myKey);
-        const med=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':`#${pos}`;
+        const med=`#${pos}`;
         const tTag=u.title?` · <span class="lb-title-tag">${escHtml(getTitleLabel(u.title))}</span>`:'';
         return `<div class="lb-row${pos<=3?' top'+pos:''}${isMe?' me':''}">
           <span class="lb-pos">${med}</span>
           <span class="lb-rk" title="${rk.name}">${rk.ic}</span>
           <div class="lb-u">
             <b>${escHtml(u.username)}${isMe?` <em>(${tr('Sen','You')})</em>`:''}</b>
-            <small>${rk.name}${tTag} · ${u.wins}${tr('G','W')} / ${u.losses}${tr('M','L')} · 🔥${Math.max(1,u.streak||1)}</small>
+            <small>${rk.name}${tTag} · ${u.wins}${tr('G','W')} / ${u.losses}${tr('M','L')} · ${Math.max(1,u.streak||1)}${tr('g seri','d streak')}</small>
           </div>
           <span class="lb-elo">${u.elo} <i>ELO</i></span>
         </div>`;
@@ -6517,20 +6517,20 @@ async function openLeaderboardModal(activeTab='rank'){
       const liveChamp=leader
         ?`<div class="hof-card live">
             <div class="hof-s">${season.label} · <span>${tr('Güncel Lider','Current Leader')}</span></div>
-            <div class="hof-name">👑 ${escHtml(leader.username)}</div>
+            <div class="hof-name">♛ ${escHtml(leader.username)}</div>
             <div class="hof-meta">${leader.elo} ELO · ${leader.wins}${tr('G','W')} / ${leader.losses}${tr('M','L')} · ${tr(`${season.daysLeft} gün sonra taçlanır`,`crowned in ${season.daysLeft}d`)}</div>
           </div>`
         :`<div class="lb-empty">${tr('Bu sezon henüz lider yok.','No season leader yet.')}</div>`;
       const pastHtml=hofList.map(h=>`<div class="hof-card">
         <div class="hof-s">${escHtml(h.label||(`Sezon ${h.seasonNum}`))}</div>
-        <div class="hof-name">🏆 ${escHtml(h.champion)}</div>
+        <div class="hof-name">♛ ${escHtml(h.champion)}</div>
         <div class="hof-meta">${Math.round(h.elo||1200)} ELO</div>
       </div>`).join('');
       bodyHtml=`<div class="lb-list">${liveChamp}${pastHtml}</div>`;
     }
     mb.innerHTML=`<div class="lb-wrap">
       <div class="lb-head">
-        <h3>🏆 ${tr('ELO Sıralaması','ELO Leaderboard')}</h3>
+        <h3>${tr('ELO Sıralaması','ELO Leaderboard')}</h3>
         <p class="lb-sub">${season.label} · ${tr(`${list.length} üye · ${season.daysLeft} gün kaldı`,`${list.length} members · ${season.daysLeft}d left`)}</p>
       </div>
       ${tabsHtml}
@@ -6606,7 +6606,7 @@ function openProfileModal(initialTab='overview'){
         <div class="pr-stat"><span>${tr('Zirve ELO','Peak ELO')}</span><b>${Math.round(acc.peakElo||acc.elo||1200)}</b></div>
         <div class="pr-stat"><span>${tr('Galibiyet / Mağlubiyet','Wins / Losses')}</span><b>${totWins} / ${totLosses}</b></div>
         <div class="pr-stat"><span>${tr('Kazanma Oranı','Win Rate')}</span><b>%${wr}</b></div>
-        <div class="pr-stat pr-stat-fire"><span>${tr('Günlük Seri','Daily Streak')}</span><b>🔥 ${stCur} ${tr('Gün','Days')}</b></div>
+        <div class="pr-stat pr-stat-fire"><span>${tr('Günlük Seri','Daily Streak')}</span><b>${stCur} ${tr('Gün','Days')}</b></div>
         <div class="pr-stat"><span>${tr('En İyi Seri','Best Streak')}</span><b>${stBest} ${tr('Gün','Days')}</b></div>
       </div>
       <div class="pr-sec-lbl">${tr('Son Maçlar','Recent Matches')} (${hist.length})${subGames}</div>
@@ -6653,13 +6653,13 @@ function openProfileModal(initialTab='overview'){
       const cbHtml=CARD_BACKS.map(cb=>{
         const ok=cb.req(acc),sel=(acc.cardBack||'classic')===cb.id;
         return `<button type="button" class="cos-chip${sel?' sel':''}${ok?'':' lock'}" data-cb="${cb.id}" ${ok?'':'disabled'} title="${isEn()?cb.enR:cb.trR}">
-          <i class="cb-sw cb-${cb.id}"></i><span>${isEn()?cb.enN:cb.trN}</span>${ok?'':'<small>🔒</small>'}
+          <i class="cb-sw cb-${cb.id}"></i><span>${isEn()?cb.enN:cb.trN}</span>${ok?'':`<small>${tr('Kilitli','Locked')}</small>`}
         </button>`;
       }).join('');
       const frHtml=PROFILE_FRAMES.map(fr=>{
         const ok=fr.req(acc),sel=(acc.frame||'classic')===fr.id;
         return `<button type="button" class="cos-chip${sel?' sel':''}${ok?'':' lock'}" data-fr="${fr.id}" ${ok?'':'disabled'} title="${isEn()?fr.enR:fr.trR}">
-          <i class="fr-sw fr-${fr.id}"></i><span>${isEn()?fr.enN:fr.trN}</span>${ok?'':'<small>🔒</small>'}
+          <i class="fr-sw fr-${fr.id}"></i><span>${isEn()?fr.enN:fr.trN}</span>${ok?'':`<small>${tr('Kilitli','Locked')}</small>`}
         </button>`;
       }).join('');
       const achHtml=ACHIEVEMENTS.map(a=>{
@@ -6670,7 +6670,7 @@ function openProfileModal(initialTab='overview'){
             <b>${isEn()?a.enN:a.trN}</b>
             <small>${isEn()?a.enD:a.trD} · <em>${isEn()?a.enT:a.trT}</em></small>
           </div>
-          ${ok?`<button type="button" class="btn sm ach-eq${eq?' alt':''}" data-title="${eq?'':a.id}">${eq?tr('Takılı','Equipped'):tr('Unvanı Tak','Equip')}</button>`:`<span class="ach-lk">🔒</span>`}
+          ${ok?`<button type="button" class="btn sm ach-eq${eq?' alt':''}" data-title="${eq?'':a.id}">${eq?tr('Takılı','Equipped'):tr('Unvanı Tak','Equip')}</button>`:`<span class="ach-lk">${tr('Kilitli','Locked')}</span>`}
         </div>`;
       }).join('');
       tabBody=`<div class="pr-scroll-box pr-cos-scroll">
@@ -6688,7 +6688,7 @@ function openProfileModal(initialTab='overview'){
         <div class="pr-badge ${rk.cls} ${frCls}">${rk.ic}</div>
         <div class="pr-titles">
           <h3>${nm}${eqTitle?` <span class="pr-eq-title">«${escHtml(eqTitle)}»</span>`:''}</h3>
-          <div class="pr-rank">${rk.name} · <b>${Math.round(acc.elo||1200)} ELO</b> · <span class="pr-st-tag">🔥 ${stCur} ${tr('Gün','Day')}</span></div>
+          <div class="pr-rank">${rk.name} · <b>${Math.round(acc.elo||1200)} ELO</b> · <span class="pr-st-tag">${stCur} ${tr('Gün Seri','Day Streak')}</span></div>
         </div>
       </div>
       <div class="pr-tabs">
@@ -6699,7 +6699,7 @@ function openProfileModal(initialTab='overview'){
       </div>
       ${tabBody}
       <div class="row pr-acts">
-        <button type="button" id="pr-lb" class="btn alt sm">🏆 ${tr('Sıralama','Ranks')}</button>
+        <button type="button" id="pr-lb" class="btn alt sm">${tr('Sıralama','Ranks')}</button>
         ${acc.isGuest
           ?`<button type="button" id="pr-upg" class="btn alt sm">${tr('Üye Ol','Register')}</button>
             <button type="button" id="pr-sw" class="btn sm">${tr('Giriş Yap','Sign In')}</button>`
