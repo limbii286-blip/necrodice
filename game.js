@@ -5586,7 +5586,7 @@ function createGuestAccount(){
 function getOppElo(){
   if(MODE==='bot'){
     if(DIFF==='hard')return 1320;
-    if(DIFF==='imp')return 1750;
+    if(DIFF==='imp')return 1550;
     return 0; // Kolay ve Orta bot derecesizdir (0 ELO)
   }
   return (OPP_PROFILE&&typeof OPP_PROFILE.elo==='number'&&OPP_PROFILE.elo>=400)?Math.round(OPP_PROFILE.elo):1200;
@@ -5601,19 +5601,27 @@ function getOppLabel(){
   if(OPP_PROFILE&&OPP_PROFILE.name)return `${OPP_PROFILE.name} (${Math.round(OPP_PROFILE.elo||1200)})`;
   return tr('Çevrim İçi Rakip','Online Opponent');
 }
+function calcEloDelta(before,matches,won){
+  const oppElo=getOppElo();
+  const expected=1/(1+Math.pow(10,(oppElo-before)/400));
+  let K=(matches||0)<15?32:24;
+  if(MODE==='bot'&&DIFF==='hard')K=14;      // Zor bot: düşük K
+  else if(MODE==='bot'&&DIFF==='imp')K=20;  // İmkansız bot: dengeli anti-farm K
+  let delta=Math.round(K*((won?1:0)-expected));
+  if(won){
+    const minGain=(MODE==='bot'&&DIFF==='hard')?3:4;
+    if(delta<minGain)delta=minGain;
+  }else{
+    const minLoss=(MODE==='bot'&&DIFF==='imp')?-6:(MODE==='bot'&&DIFF==='hard')?-5:-4;
+    if(delta>minLoss)delta=minLoss;
+  }
+  return delta;
+}
 function peekLossElo(S){
   if(!S||S._eloRes||MODE==='tutorial'||MODE==='spectator')return 0;
   if(MODE==='bot'&&(DIFF==='easy'||DIFF==='med'))return 0;
   const acc=USER_ACC||{elo:1200,matches:0};
-  const before=Math.round(acc.elo||1200);
-  const oppElo=getOppElo();
-  const expected=1/(1+Math.pow(10,(oppElo-before)/400));
-  let K=(acc.matches||0)<15?32:24;
-  if(MODE==='bot'&&DIFF==='hard')K=14;
-  else if(MODE==='bot'&&DIFF==='imp')K=22;
-  let delta=Math.round(K*(0-expected));
-  if(delta>-4)delta=-4;
-  return delta;
+  return calcEloDelta(Math.round(acc.elo||1200),acc.matches||0,false);
 }
 function recordMatchElo(S,won){
   if(!S||MODE==='tutorial'||MODE==='spectator')return null;
@@ -5644,18 +5652,7 @@ function recordMatchElo(S,won){
     S._eloRes={before,after:before,delta:0,rank:eloRank(before),unranked:true};
     return S._eloRes;
   }
-  const oppElo=getOppElo();
-  const expected=1/(1+Math.pow(10,(oppElo-before)/400));
-  let K=(acc.matches||0)<15?32:24;
-  if(MODE==='bot'&&DIFF==='hard')K=14;      // Zor bot: az puan
-  else if(MODE==='bot'&&DIFF==='imp')K=22;  // İmkansız bot: daha yüksek ödül
-  let delta=Math.round(K*((won?1:0)-expected));
-  if(won){
-    const minGain=(MODE==='bot'&&DIFF==='hard')?3:(MODE==='bot'&&DIFF==='imp')?6:4;
-    if(delta<minGain)delta=minGain;
-  }else{
-    if(delta>-4)delta=-4;
-  }
+  const delta=calcEloDelta(before,acc.matches||0,won);
   const after=Math.max(400,before+delta);
   acc.elo=after;
   acc.peakElo=Math.max(acc.peakElo||before,after);
