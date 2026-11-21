@@ -875,16 +875,34 @@ function decideH(S,p,prm){
   let bi=0;sc.forEach((s,i)=>{if(s>sc[bi]+1e-9)bi=i});
   return top[bi].a;
 }
+const EXACT_JOKERS=new Set([1,2,3,4,6,7,8,9,10,11,12,13,14,15,19,20,21,22]);
+const HI_TIER_J=new Set([8,9,10,11,12,19,20,23,24,25]);
 function exactEndgameEvalBot(S,p,action,prm){
   if(!S||!prm||!prm.deepRoll)return null;
-  if(action&&action.t!=='d')return null;
+  if(action&&action.t==='j'&&!EXACT_JOKERS.has(action.id))return null;
   const q=1-p,oppPassed=S.turns>0&&!S.acted;
-  const pool=unk(S,p);
+  let Sx=S;
+  if(action&&action.t==='j'){
+    // Sadece kesin sonuçlu jokerleri (kart çekmeyen / rastgele olmayan) kesin çözücüyle değerlendir
+    if(!oppPassed&&unk(S,p).length>6)return null;
+    Sx=clone(S);Sx.log=[];
+    try{play(Sx,p,action.id,action.pk||[])}catch(e){return null}
+    // Joker oynayınca sıra bizde kalır; en iyi devamı (Pas vs 1 kart çek) kesin hesapla
+    const eStand=exactEndgameEvalBot(Sx,p,null,prm);
+    if(eStand===null)return null;
+    let eBest=eStand;
+    if(canDraw(Sx,p)&&!lowW(Sx)&&total(Sx,p,true)<tg(Sx)){
+      const eDraw=exactEndgameEvalBot(Sx,p,{t:'d'},prm);
+      if(eDraw!==null&&eDraw>eBest)eBest=eDraw;
+    }
+    return eBest;
+  }
+  const pool=unk(Sx,p);
   if(!oppPassed&&pool.length>6)return null;
-  const Tg=tg(S),low=lowW(S),noBust=act(S,20);
-  const myBase=total(S,p,true),oppOpenBase=total(S,q,false);
-  const cl=S.pl[q]&&S.pl[q].closed&&S.pl[q].closed[0];
-  const peekVal=(p===1&&S.botPeekVal!=null)?S.botPeekVal:(cl&&cl.o!=null?cl.o:null);
+  const Tg=tg(Sx),low=lowW(Sx),noBust=act(Sx,20);
+  const myBase=total(Sx,p,true),oppOpenBase=total(Sx,q,false);
+  const cl=Sx.pl[q]&&Sx.pl[q].closed&&Sx.pl[q].closed[0];
+  const peekVal=(p===1&&Sx.botPeekVal!=null)?Sx.botPeekVal:(cl&&cl.o!=null?cl.o:null);
   const cmp=(m,o)=>{
     let r=0;
     if(low)r=m<o?1:(m>o?-1:0);
@@ -895,7 +913,7 @@ function exactEndgameEvalBot(S,p,action,prm){
       else if(ob)r=1;
       else r=m>o?1:(m<o?-1:0);
     }
-    return prm.bo3?bo3v(S,p,r):r;
+    return prm.bo3?bo3v(Sx,p,r):r;
   };
   const oppDist=[];
   if(!cl){
@@ -903,7 +921,7 @@ function exactEndgameEvalBot(S,p,action,prm){
   }else if(peekVal!=null){
     oppDist.push({cOpp:peekVal,w:1,rem:pool});
   }else if(pool.length){
-    const ws=oppCardWeights(S,p,prm,pool);
+    const ws=oppCardWeights(Sx,p,prm,pool);
     const sm=ws.reduce((a,b)=>a+b,0)||1;
     for(let i=0;i<pool.length;i++){
       const rem=pool.slice();rem.splice(i,1);
@@ -929,7 +947,7 @@ function exactEndgameEvalBot(S,p,action,prm){
     return ev;
   }
   // Kart Çek: Scry biliniyorsa üst kartı doğrudan kullan, değilse tam kombinatoryal ağırlıklı ortalama
-  const scryTop=(p===1&&S.botScry&&S.botScry.length)?S.botScry[0]:null;
+  const scryTop=(p===1&&Sx.botScry&&Sx.botScry.length)?Sx.botScry[0]:null;
   let ev=0;
   for(const d of oppDist){
     const oT=oppT(d.cOpp);
@@ -963,7 +981,7 @@ function exactEndgameEvalBot(S,p,action,prm){
   }
   return ev;
 }
-function decideHA(S,p,prm,done,budCap){ // zaman dilimli Monte-Carlo + Exact Endgame Solver + Match-Point All-In
+function decideHA(S,p,prm,done,budCap){ // zaman dilimli Monte-Carlo + Exact Endgame Solver + Sıkı Joker Disiplini
   const now=()=>(typeof performance!='undefined'?performance:Date).now();
   const low=lowW(S),Tg=tg(S),myT=total(S,p,true);
   // Rakip pas geçtiyse ve rakip açıktan hedefi aşıp patladıysa (ve biz patlamadıysak) hiç kaynak harcamadan pas geç
@@ -976,13 +994,12 @@ function decideHA(S,p,prm,done,budCap){ // zaman dilimli Monte-Carlo + Exact End
   TACTICAL.forEach(tid=>{const bestT=all.find(c=>c.a&&c.a.id===tid&&!top.includes(c));if(bestT)top.push(bestT)});
   if(top.length==1)return done(top[0].a);
   const matchPoint=S.rounds>=2||(S.pts&&(S.pts[0]>=1.5||S.pts[1]>=1.5));
-  const highStakes=matchPoint||(S.bo>=2);
-  // Maç Puanı Acımasızlığı (Match-Point All-In): İmkansız bot kritik turlarda joker saklama maliyetini neredeyse sıfırlar
-  const rawCost=(highStakes&&prm.deepRoll)?0.004:(S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc);
-  const cost=prm.bo3?(highStakes&&prm.deepRoll?0.002:(matchPoint?rawCost*0.2:rawCost*0.45)):rawCost;
+  // Gerçekçi joker koruma maliyeti: 1. ve 2. turlarda gereksiz joker yakmayı engeller; sadece düello bitiren son turda agresifleşir
+  const rawCost=matchPoint?(prm.deepRoll?0.028:(prm.jl!=null?prm.jl:0.04)):(prm.deepRoll?0.095:prm.jc);
+  const cost=prm.bo3?(matchPoint?rawCost*0.75:rawCost*0.92):rawCost;
   const exactVals=top.map(c=>exactEndgameEvalBot(S,p,c.a,prm));
   const sum=top.map(()=>0),cnt=top.map(()=>0),alive=top.map((_,i)=>exactVals[i]===null);
-  const RP={...ROLL,...(prm.rjp!=null?{jp:prm.rjp}:{}),...(prm.deepRoll?{depth:1,jc:0.05,jl:0.02,jp:1,beta:0.65}:{}),bo3:prm.bo3,hm:prm.learn&&LRN.ht>=15};
+  const RP={...ROLL,...(prm.rjp!=null?{jp:prm.rjp}:{}),...(prm.deepRoll?{depth:1,jc:0.08,jl:0.03,jp:1,beta:0.68}:{}),bo3:prm.bo3,hm:prm.learn&&LRN.ht>=15};
   const clkMs=S.clocks&&S.clocks[p]!=null?Math.max(1000,Math.round(S.clocks[p]*220)):99999;
   const K=alive.some(Boolean)?(prm.K||40):0,bud=Math.min(prm.ms||0,clkMs,budCap||99999),t0=now();let k=0;
   if(prm.pf&&pass){
@@ -1007,8 +1024,32 @@ function decideHA(S,p,prm,done,budCap){ // zaman dilimli Monte-Carlo + Exact End
     }
   };
   const fin=()=>{
-    const sc=top.map((c,i)=>exactVals[i]!==null?exactVals[i]:(alive[i]?(sum[i]/Math.max(1,cnt[i])+(prm.w||0)*c.v):-99));
-    let bi=0;sc.forEach((v,i)=>{if(v>sc[bi]+1e-9)bi=i});
+    const rawSc=top.map((c,i)=>{
+      if(exactVals[i]!==null){
+        const jPen=(c.a&&c.a.t==='j')?cost*(HI_TIER_J.has(c.a.id)?1.3:1.0):0;
+        return exactVals[i]-jPen;
+      }
+      return alive[i]?(sum[i]/Math.max(1,cnt[i])+(prm.w||0)*c.v):-99;
+    });
+    // Overkill & Minimum Kazanç Kapısı: En iyi bedava hamle (Pas / Kart Çek) zaten kazanıyorsa veya joker yeterince EV katmıyorsa boşuna joker yakma
+    let bestFreeIdx=-1,bestFreeVal=-99;
+    top.forEach((c,i)=>{
+      if(!c.a||c.a.t==='d'){
+        if(rawSc[i]>bestFreeVal){bestFreeVal=rawSc[i];bestFreeIdx=i}
+      }
+    });
+    let bi=bestFreeIdx>=0?bestFreeIdx:0,bestVal=bestFreeIdx>=0?bestFreeVal:rawSc[0];
+    top.forEach((c,i)=>{
+      const v=rawSc[i];
+      if(c.a&&c.a.t==='j'){
+        const tier=HI_TIER_J.has(c.a.id)?1.28:1.0;
+        const overkill=(bestFreeVal>=0.58)?(matchPoint?0.14:0.24):0;
+        const minGain=overkill>0?overkill:((matchPoint?0.045:0.11)*tier);
+        if(v>bestFreeVal+minGain&&v>bestVal+1e-9){bestVal=v;bi=i}
+      }else if(v>bestVal+1e-9){
+        bestVal=v;bi=i;
+      }
+    });
     done(top[bi].a);
   };
   if(K===0)return fin();
