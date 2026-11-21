@@ -6968,3 +6968,17 @@ html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, 
     display: none !important;
   }
 }
+
+.leave-elo-warn {
+  margin: 10px 0 4px !important;
+  padding: 9px 12px;
+  border-radius: 9px;
+  background: rgba(153, 27, 27, 0.24);
+  border: 1px solid rgba(248, 113, 113, 0.5);
+  color: #fecaca !important;
+  font-size: 15px !important;
+  line-height: 1.4;
+}
+.leave-elo-warn b {
+  color: #fca5a5 !important;
+}

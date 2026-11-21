@@ -2903,10 +2903,33 @@ function settings(tab){
   if($('#sv'))$('#sv').onchange=e=>{VB=e.target.checked;LS('vb',VB?1:0)};
   if($('#slang'))$('#slang').onclick=()=>{toggleLang();settings('gameplay')};
   if($('#sk'))$('#sk').onclick=codex;if($('#sg'))$('#sg').onclick=guide;
-  if($('#sa'))$('#sa').onclick=()=>{
+  const confirmLeaveMatch=(onYes)=>{
+    if(!G||G.over||MODE==='tutorial'||MODE==='spectator'){onYes();return}
+    const loss=(typeof peekLossElo==='function')?peekLossElo(G):0;
+    const eloWarn=loss<0
+      ?`<p class="leave-elo-warn">${tr(`Bu dereceli bir maç. Şimdi ayrılırsan mağlubiyet sayılacak ve <b>${loss} ELO</b> kaybedeceksin.`,`This is a ranked match. Leaving now counts as a defeat and you will lose <b>${loss} ELO</b>.`)}</p>`
+      :'';
+    box(`<h3>${tr('Aktif Oyundan Ayrıl','Leave Active Match')}</h3>
+      <p>${tr('Aktif bir oyundasın. Ayrılmak istediğine emin misin?','You are currently in an active match. Are you sure you want to leave?')}</p>
+      ${eloWarn}
+      <div class="row" style="margin-top:12px">
+        <button type="button" id="lv-stay" class="btn alt">${tr('Oyuna Dön','Return to Match')}</button>
+        <button type="button" id="lv-go" class="btn">${tr('Ayrıl','Leave')}</button>
+      </div>`, false);
+    if($('#lv-stay'))$('#lv-stay').onclick=()=>{snd('click');$('#m').hidden=true;lock=false;if(G)R()};
+    if($('#lv-go'))$('#lv-go').onclick=()=>{
+      snd('click');
+      if(G&&!G.over&&loss<0&&typeof recordMatchElo==='function'){
+        recordMatchElo(G,false);
+      }
+      onYes();
+    };
+  };
+  if($('#sa'))$('#sa').onclick=()=>confirmLeaveMatch(()=>{
     botGen++;thinkOn=false;const c=$('#cast');if(c)c.remove();$('#mb').classList.remove('set-mode');$('#m').hidden=true;lock=false;P=null;
-    G.over=true;chooseHero(hid=>{MY_HERO=hid;start()},()=>settings('gameplay'))};
-  if($('#sx'))$('#sx').onclick=exitGame;
+    if(G)G.over=true;chooseHero(hid=>{MY_HERO=hid;start()},()=>settings('gameplay'));
+  });
+  if($('#sx'))$('#sx').onclick=()=>confirmLeaveMatch(exitGame);
 }
 let leaving=false;
 function peerLeft(msg){ // rakip çıktı: ana menüye ASLA doğrudan atma, yalnızca "Ana menüye dön" ile limbigames perdesi üzerinden gidilir
@@ -5429,6 +5452,20 @@ function getOppLabel(){
   }
   if(OPP_PROFILE&&OPP_PROFILE.name)return `${OPP_PROFILE.name} (${Math.round(OPP_PROFILE.elo||1200)})`;
   return tr('Çevrim İçi Rakip','Online Opponent');
+}
+function peekLossElo(S){
+  if(!S||S._eloRes||MODE==='tutorial'||MODE==='spectator')return 0;
+  if(MODE==='bot'&&(DIFF==='easy'||DIFF==='med'))return 0;
+  const acc=USER_ACC||{elo:1200,matches:0};
+  const before=Math.round(acc.elo||1200);
+  const oppElo=getOppElo();
+  const expected=1/(1+Math.pow(10,(oppElo-before)/400));
+  let K=(acc.matches||0)<15?32:24;
+  if(MODE==='bot'&&DIFF==='hard')K=14;
+  else if(MODE==='bot'&&DIFF==='imp')K=22;
+  let delta=Math.round(K*(0-expected));
+  if(delta>-4)delta=-4;
+  return delta;
 }
 function recordMatchElo(S,won){
   if(!S||MODE==='tutorial'||MODE==='spectator')return null;
