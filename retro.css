@@ -6520,13 +6520,25 @@ html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, 
 #mb2 .hs-plaque > span {
   font-size: 18px !important;
 }
-#mb2 .d.btn,
+#mb2 .d.btn {
+  font-size: 17.5px !important;
+}
 #mb2 #b2,
+#mb2 #bqm,
 #mb2 #b3 {
-  font-size: 18px !important;
+  font-size: 16.5px !important;
+  min-height: 44px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+#mb2 .hs-join-row {
+  align-items: stretch !important;
 }
 #mb2 #code {
-  font-size: 17px !important;
+  font-size: 16px !important;
+  min-height: 44px !important;
+  height: auto !important;
 }
 #mb2 .hs-drawer .btn.sm {
   font-size: 15.5px !important;
@@ -7794,11 +7806,41 @@ body[data-cardback="sovereign"] .c.back {
   .hs-online-row {
     gap: 6px;
   }
-  .hs-online-row .btn {
-    font-size: clamp(11.5px, 3.2vw, 13.5px) !important;
-    padding-left: 5px !important;
-    padding-right: 5px !important;
+  #menu #mb2 .hs-plaque > span {
+    font-size: 16px !important;
+  }
+  #menu #mb2 #b2,
+  #menu #mb2 #bqm,
+  #menu #mb2 #b3,
+  #menu #mb2 .d.btn {
+    font-size: clamp(13px, 3.6vw, 15px) !important;
+    min-height: 42px !important;
+    padding: 8px 6px !important;
     letter-spacing: 0 !important;
+    white-space: nowrap !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  #menu #mb2 .hs-join-row {
+    gap: 6px !important;
+    align-items: stretch !important;
+  }
+  #menu #mb2 #code {
+    min-height: 42px !important;
+    height: auto !important;
+    font-size: 14px !important;
+    flex: 0 0 42% !important;
+    width: auto !important;
+    padding: 6px 8px !important;
+  }
+  #menu #mb2 #b3 {
+    flex: 1 1 0 !important;
+  }
+  #menu #mb2 .hs-drawer .btn.sm {
+    font-size: 14px !important;
+    min-height: 38px !important;
+    padding: 7px 8px !important;
   }
   .streak-toast {
     top: max(58px, calc(env(safe-area-inset-top, 10px) + 50px)) !important;
