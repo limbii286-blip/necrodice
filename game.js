@@ -5934,24 +5934,35 @@ function openAuthModal(initialTab='login',isUpgrade=false){
       if(btn){btn.disabled=true;btn.textContent=tr('Kontrol ediliyor…','Checking…')}
       try{
         let cloudDoc=null;
+        let cloudErr=false;
         if(fbDb){
           try{
             const snap=await fbDb.collection('users').doc(key).get();
             if(snap.exists)cloudDoc=snap.data();
-          }catch(fe){}
+          }catch(fe){cloudErr=true}
         }
         const localMap=loadLocalUsers();
-        const existing=mergeAccountData(localMap[key]||null,cloudDoc||null);
+        const localMatch=localMap[key]||Object.values(localMap).find(u=>u&&normUserKey(u.username)===key)||null;
+        const existing=mergeAccountData(localMatch,cloudDoc||null);
         if(isReg){
           if(existing){
-            errEl.textContent=tr('Bu kullanıcı adı zaten alınmış.','This username is already taken.');
+            snd('err');
+            errEl.textContent=tr('Bu kullanıcı adı daha önce alınmış. Lütfen farklı bir kullanıcı adı seç.','This username is already taken. Please choose a different username.');
+            if(btn){btn.disabled=false;btn.textContent=tr('Hesap Oluştur','Create Account')}
+            const ui=$('#auth-u');if(ui){ui.focus();ui.select()}
+            return;
+          }
+          if(fbDb&&cloudErr){
+            snd('err');
+            errEl.textContent=tr('Sunucuya bağlanılamadı, kullanıcı adı kontrol edilemedi. Tekrar dene.','Could not verify username with server. Please try again.');
             if(btn){btn.disabled=false;btn.textContent=tr('Hesap Oluştur','Create Account')}
             return;
           }
           const base=(isUpgrade&&USER_ACC&&USER_ACC.isGuest)?USER_ACC:null;
           const today=dayKey(0);
+          const nowTs=Date.now();
           const newAcc={
-            uid:'u_'+key+'_'+Date.now().toString(36),
+            uid:'u_'+key+'_'+nowTs.toString(36),
             key,
             username:rawU,
             passHash:pHash,
@@ -5968,10 +5979,48 @@ function openAuthModal(initialTab='login',isUpgrade=false){
             bestStreak:base?Math.max(1,base.bestStreak||base.streak||1):1,
             lastStreakDay:(base&&base.lastStreakDay)||today,
             history:base?mergeMatchHistory(base.history,[]):[],
-            createdAt:Date.now(),
-            updatedAt:Date.now()
+            createdAt:nowTs,
+            updatedAt:nowTs
           };
-          saveSession(newAcc);
+          if(fbDb){
+            try{
+              const ref=fbDb.collection('users').doc(key);
+              await fbDb.runTransaction(async tx=>{
+                const doc=await tx.get(ref);
+                if(doc.exists)throw new Error('USERNAME_TAKEN');
+                tx.set(ref,{
+                  key:newAcc.key,
+                  username:newAcc.username,
+                  passHash:newAcc.passHash,
+                  elo:newAcc.elo,
+                  peakElo:newAcc.peakElo,
+                  wins:newAcc.wins,
+                  losses:newAcc.losses,
+                  matches:newAcc.matches,
+                  unrankedWins:newAcc.unrankedWins,
+                  unrankedLosses:newAcc.unrankedLosses,
+                  unrankedMatches:newAcc.unrankedMatches,
+                  streak:newAcc.streak,
+                  bestStreak:newAcc.bestStreak,
+                  lastStreakDay:newAcc.lastStreakDay,
+                  history:newAcc.history.slice(0,AUTH_HIST_MAX),
+                  createdAt:newAcc.createdAt,
+                  updatedAt:newAcc.updatedAt
+                });
+              });
+            }catch(txErr){
+              snd('err');
+              if(txErr&&txErr.message==='USERNAME_TAKEN'){
+                errEl.textContent=tr('Bu kullanıcı adı daha önce alınmış. Lütfen farklı bir kullanıcı adı seç.','This username is already taken. Please choose a different username.');
+                const ui=$('#auth-u');if(ui){ui.focus();ui.select()}
+              }else{
+                errEl.textContent=tr('Kayıt sırasında bağlantı hatası oluştu, tekrar dene.','Connection error during registration, please try again.');
+              }
+              if(btn){btn.disabled=false;btn.textContent=tr('Hesap Oluştur','Create Account')}
+              return;
+            }
+          }
+          saveSession(newAcc,!fbDb);
           if(!base)showStreakToast(1,false);
           snd('ok');
           mb.classList.remove('auth-mode');
