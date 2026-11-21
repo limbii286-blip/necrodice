@@ -1840,19 +1840,20 @@ const HEROES_EN=[
 ];
 let HEROES=[...HEROES_TR];
 let HERO_MAP=Object.fromEntries(HEROES.map(h=>[h.id,h]));
+const hpImg=id=>`<img class="hp-art" src="hp_icons/${id}.jpg?v=20261121_hp1" alt="" decoding="async">`;
 const HP_IC={
-  c:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10M7 21h10M8 3c0 4 4 6 4 9s-4 5-4 9M16 3c0 4-4 6-4 9s4 5 4 9"/><path d="M4.5 9.5a8 8 0 0112-4.8M4.5 6v3.5H8" stroke-width="1.6"/></svg>',
-  p:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="11" rx="1.5"/><rect x="13" y="9" width="8" height="11" rx="1.5"/><path d="M14 4l3-1.5L15.5 6M10 20l-3 1.5L8.5 18"/><path d="M7 8v3m-1.5-1.5h3"/></svg>',
+  c:hpImg('c'),
+  p:hpImg('p'),
   k:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18h18l-2-10-4.5 4L12 5l-2.5 7L5 8l-2 10z"/></svg>',
-  n:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5v15M8.5 13.5h7M9.5 20.5h5M12 2.5l-2.5 3.5h5L12 2.5z"/></svg>',
-  a:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-9.5"/><path d="M12 16c-2.6 0-4.2-1.4-4.2-3.3 1.8 0 3.2.8 4.2 2.1"/><path d="M12 11.5c-2.4-.9-3.6-3-2.6-5.3.8-1.9 3.6-2.4 5.2-.9 1.6 1.5 1.1 4.2-1 5.4"/><path d="M13.6 9.5c2 .6 3 2.3 2.2 4-.6 1.3-2 1.8-3.8 1.3"/><path d="M9.5 5.2c1.2 1.1 3.1 1.2 4.3.1"/></svg>',
-  s:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11c2.5-3 6-3 9-1 3-2 6.5-2 9 1-1.5 4-4.5 5-9 3-4.5 2-7.5 1-9-3z"/><circle cx="8" cy="11.5" r="1.2" fill="currentColor"/><circle cx="16" cy="11.5" r="1.2" fill="currentColor"/><path d="M9 17.5h6l-1 3h-4z"/></svg>',
-  e:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M4.5 6.3l15 11.4M19.5 6.3l-15 11.4"/><path d="M9.5 4.2L12 6.5l2.5-2.3M9.5 19.8L12 17.5l2.5 2.3"/></svg>',
-  m:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 20.5 7 20.5 17 12 22 3.5 17 3.5 7"/><polygon points="12 6.5 17 15.5 7 15.5"/><path d="M12 2v4.5M3.5 7l3.5 8.5M20.5 7l-3.5 8.5"/></svg>',
-  w:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18c1-7 4.5-12 9.5-13 2 0 4.5 1 6.5 3l-3 1.5c1 2.5.5 5.5-2 8.5H4z"/><circle cx="13.5" cy="9.5" r="1.3" fill="currentColor"/><path d="M2 12s3-4 7.5-4"/></svg>',
-  l:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M7.5 6.5l3 11M12 5.5l1 13M16.5 6.5l-3 11"/></svg>',
-  v:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14M7 4l2 8 2-8M13 4l2 8 2-8"/><path d="M12 13.5s-3.5 3.6-3.5 5.6a3.5 3.5 0 007 0c0-2-3.5-5.6-3.5-5.6z"/></svg>',
-  u:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 21l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>'
+  n:hpImg('n'),
+  a:hpImg('a'),
+  s:hpImg('s'),
+  e:hpImg('e'),
+  m:hpImg('m'),
+  w:hpImg('w'),
+  l:hpImg('l'),
+  v:hpImg('v'),
+  u:hpImg('u')
 };
 function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}LAST_MATCH_HIST=[];rematchReady=[false,false];rematchHeroes=[null,null];deathContReady=[false,false];deathContGo=null;const botPool=HEROES.filter(h=>(!h.bossOnly||DIFF==='imp')&&!(MY_HERO==='v'&&h.id==='v')).map(h=>h.id),oppH=MODE=='bot'?botPool[Math.floor(Math.random()*botPool.length)]:(OPP_HERO||'n');G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],vampUsed:[false,false],cWins:[0,0],vampWinSide:-1,mast:[0,0]};prevAv[0]=prevAv[1]=undefined;prevHpAnim=[false,false];newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();runAfterDeal(G)}
 
@@ -7100,6 +7101,8 @@ function openAuthModal(initialTab='login',isUpgrade=false){
         setTimeout(()=>{
           const im=new Image();im.decoding='async';im.src=avSrc(h.id);
           if(im.decode)im.decode().catch(()=>{});
+          const hi=new Image();hi.decoding='async';hi.src=`hp_icons/${h.id}.jpg?v=20261121_hp1`;
+          if(hi.decode)hi.decode().catch(()=>{});
         },i*90);
       });
     }catch(e){}

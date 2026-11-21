@@ -3585,6 +3585,44 @@ body.dragging-joker #fx::after {
   pointer-events: none;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.85));
 }
+.hp-art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+  pointer-events: none;
+  clip-path: circle(48.5% at 50% 50%);
+  transform: scale(1.05);
+}
+.who .hp-btn:has(.hp-art)::before {
+  display: none;
+}
+.hpc-ic:has(.hp-art) {
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  flex-shrink: 0;
+}
+.hp-mc-ic:has(.hp-art) {
+  width: 82px !important;
+  height: 82px !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+.d20-mod-pill .mod-ic:has(.hp-art) {
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
 .who .hp-btn.ready {
   background:
     radial-gradient(circle at 36% 28%, rgba(255, 226, 165, 0.22), transparent 44%),
