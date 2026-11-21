@@ -2607,7 +2607,7 @@ function buildEndScreenHtml(S,v,L,roll,th){
       <span class="end-elo-val">${eloRes.before} → <b>${eloRes.after}</b></span>
       <span class="end-elo-d">${eloRes.delta>=0?'+':''}${eloRes.delta} ELO</span>
     </div>`):'';
-  return `<div class="end-screen hs-victory ${isSpec?'spec':won?'win':'lose'}">
+  return `<div class="end-screen hs-victory ${isSpec?'spec':won?'win':'lose'}" data-res="${isSpec?'spec':won?'win':'lose'}">
     <div class="end-glow"></div>
     <div class="hs-crest-stage">
       ${crestBgSvg}
@@ -3377,7 +3377,7 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
     if(m.end&&MODE==='guest'){
       let endHtml=m.html;
       if(G&&typeof recordMatchElo==='function'){
-        const guestWon=/data-s="win"/.test(endHtml);
+        const guestWon=/data-res="win"|hs-victory\s+win/.test(endHtml);
         const eRes=recordMatchElo(G,guestWon);
         if(eRes&&!eRes.unranked){
           const eloBar=`<div class="end-elo-bar ${eRes.delta>=0?'pos':'neg'}"><span class="end-elo-rk">${eRes.rank.ic} ${eRes.rank.name}</span><span class="end-elo-val">${eRes.before} → <b>${eRes.after}</b></span><span class="end-elo-d">${eRes.delta>=0?'+':''}${eRes.delta} ELO</span></div>`;
@@ -5338,6 +5338,7 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
 /* ---------- ELO & ÜYELİK SİSTEMİ (KAYIT / GİRİŞ / MİSAFİR) ---------- */
 const AUTH_SESS_KEY='nd_session_v1';
 const AUTH_LOCAL_KEY='nd_users_local_v1';
+const AUTH_HIST_MAX=50;
 let USER_ACC=null;
 
 function escHtml(s){
@@ -5380,7 +5381,64 @@ function loadSession(){
   }catch(e){}
   return null;
 }
-function saveSession(acc){
+function mergeMatchHistory(h1,h2){
+  const out=[];
+  const all=[...(Array.isArray(h1)?h1:[]),...(Array.isArray(h2)?h2:[])].filter(x=>x&&typeof x==='object');
+  all.sort((a,b)=>(b.ts||0)-(a.ts||0));
+  for(const item of all){
+    const dup=out.some(e=>e.ts===item.ts||(Math.abs((e.ts||0)-(item.ts||0))<1500&&e.opp===item.opp&&!!e.won===!!item.won&&e.delta===item.delta));
+    if(!dup)out.push(item);
+    if(out.length>=AUTH_HIST_MAX)break;
+  }
+  return out;
+}
+function mergeAccountData(localAcc,cloudAcc){
+  if(!localAcc&&!cloudAcc)return null;
+  if(!localAcc)return {...cloudAcc,history:mergeMatchHistory(cloudAcc.history,[])};
+  if(!cloudAcc)return {...localAcc,history:mergeMatchHistory(localAcc.history,[])};
+  const lTot=(localAcc.matches||0)+(localAcc.unrankedMatches||0);
+  const cTot=(cloudAcc.matches||0)+(cloudAcc.unrankedMatches||0);
+  const lUp=localAcc.updatedAt||0,cUp=cloudAcc.updatedAt||0;
+  const preferLocal=(lTot>cTot)||(lTot===cTot&&lUp>=cUp);
+  const pri=preferLocal?localAcc:cloudAcc;
+  const sec=preferLocal?cloudAcc:localAcc;
+  const wins=Math.max(localAcc.wins||0,cloudAcc.wins||0);
+  const losses=Math.max(localAcc.losses||0,cloudAcc.losses||0);
+  const matches=Math.max(localAcc.matches||0,cloudAcc.matches||0,wins+losses);
+  const uWins=Math.max(localAcc.unrankedWins||0,cloudAcc.unrankedWins||0);
+  const uLosses=Math.max(localAcc.unrankedLosses||0,cloudAcc.unrankedLosses||0);
+  const uMatches=Math.max(localAcc.unrankedMatches||0,cloudAcc.unrankedMatches||0,uWins+uLosses);
+  const elo=typeof pri.elo==='number'?Math.round(pri.elo):(typeof sec.elo==='number'?Math.round(sec.elo):1200);
+  const peakElo=Math.max(localAcc.peakElo||localAcc.elo||1200,cloudAcc.peakElo||cloudAcc.elo||1200,elo);
+  const lDay=localAcc.lastStreakDay||'',cDay=cloudAcc.lastStreakDay||'';
+  const lastStreakDay=lDay>=cDay?lDay:cDay;
+  const streak=lDay>cDay?(localAcc.streak||1):(cDay>lDay?(cloudAcc.streak||1):Math.max(localAcc.streak||1,cloudAcc.streak||1));
+  const bestStreak=Math.max(localAcc.bestStreak||0,cloudAcc.bestStreak||0,streak);
+  const history=mergeMatchHistory(localAcc.history,cloudAcc.history);
+  return {
+    uid:pri.uid||sec.uid||('u_'+(pri.key||sec.key||'')),
+    key:pri.key||sec.key||'',
+    username:pri.username||sec.username||'',
+    passHash:pri.passHash||sec.passHash||'',
+    isGuest:false,
+    elo,
+    peakElo,
+    wins,
+    losses,
+    matches,
+    unrankedWins:uWins,
+    unrankedLosses:uLosses,
+    unrankedMatches:uMatches,
+    streak,
+    bestStreak,
+    lastStreakDay,
+    history,
+    createdAt:Math.min(localAcc.createdAt||Date.now(),cloudAcc.createdAt||Date.now()),
+    updatedAt:Math.max(lUp,cUp,Date.now())
+  };
+}
+function saveSession(acc,syncCloud=true){
+  if(acc)acc.updatedAt=Date.now();
   USER_ACC=acc;
   try{
     if(acc)localStorage.setItem(AUTH_SESS_KEY,JSON.stringify(acc));
@@ -5390,7 +5448,7 @@ function saveSession(acc){
     const map=loadLocalUsers();
     map[acc.key]={...(map[acc.key]||{}),...acc};
     saveLocalUsers(map);
-    syncAccountToCloud(acc);
+    if(syncCloud)syncAccountToCloud(acc);
   }
   renderAuthBar();
 }
@@ -5439,18 +5497,52 @@ function syncAccountToCloud(acc){
       key:acc.key,
       username:acc.username,
       passHash:acc.passHash||'',
-      elo:acc.elo,
-      peakElo:acc.peakElo||acc.elo,
+      elo:Math.round(acc.elo||1200),
+      peakElo:Math.round(acc.peakElo||acc.elo||1200),
       wins:acc.wins||0,
       losses:acc.losses||0,
       matches:acc.matches||0,
+      unrankedWins:acc.unrankedWins||0,
+      unrankedLosses:acc.unrankedLosses||0,
+      unrankedMatches:acc.unrankedMatches||0,
       streak:acc.streak||1,
       bestStreak:acc.bestStreak||acc.streak||1,
       lastStreakDay:acc.lastStreakDay||dayKey(0),
-      history:(acc.history||[]).slice(0,12),
-      updatedAt:Date.now()
-    },{merge:true}).catch(()=>{});
-  }catch(e){}
+      history:(acc.history||[]).slice(0,AUTH_HIST_MAX),
+      createdAt:acc.createdAt||Date.now(),
+      updatedAt:acc.updatedAt||Date.now()
+    },{merge:true}).catch(e=>console.warn('Account cloud sync error:',e));
+  }catch(e){console.warn('Account cloud sync error:',e)}
+}
+async function pullAccountFromCloud(key){
+  if(!fbDb||!key)return null;
+  try{
+    const snap=await fbDb.collection('users').doc(key).get();
+    const cloudDoc=snap.exists?snap.data():null;
+    const localMap=loadLocalUsers();
+    const localBase=(USER_ACC&&!USER_ACC.isGuest&&USER_ACC.key===key)
+      ?mergeAccountData(USER_ACC,localMap[key]||null)
+      :(localMap[key]||null);
+    if(!cloudDoc){
+      if(localBase)syncAccountToCloud(localBase);
+      return localBase;
+    }
+    const merged=mergeAccountData(localBase,cloudDoc);
+    if(!merged)return null;
+    const needPush=!cloudDoc.history||(merged.history.length>(cloudDoc.history||[]).length)||((merged.matches||0)>(cloudDoc.matches||0))||((merged.unrankedMatches||0)>(cloudDoc.unrankedMatches||0));
+    localMap[key]=merged;
+    saveLocalUsers(localMap);
+    if(USER_ACC&&!USER_ACC.isGuest&&USER_ACC.key===key){
+      USER_ACC=merged;
+      try{localStorage.setItem(AUTH_SESS_KEY,JSON.stringify(merged))}catch(e){}
+      renderAuthBar();
+    }
+    if(needPush)syncAccountToCloud(merged);
+    return merged;
+  }catch(e){
+    console.warn('Account cloud pull error:',e);
+    return null;
+  }
 }
 function createGuestAccount(){
   const today=dayKey(0);
@@ -5464,11 +5556,15 @@ function createGuestAccount(){
     wins:0,
     losses:0,
     matches:0,
+    unrankedWins:0,
+    unrankedLosses:0,
+    unrankedMatches:0,
     streak:1,
     bestStreak:1,
     lastStreakDay:today,
     history:[],
-    createdAt:Date.now()
+    createdAt:Date.now(),
+    updatedAt:Date.now()
   };
   saveSession(acc);
   showStreakToast(1,false);
@@ -5512,8 +5608,26 @@ function recordMatchElo(S,won){
   if(!USER_ACC)createGuestAccount();
   const acc=USER_ACC;
   const before=Math.round(acc.elo||1200);
-  // Kolay ve Orta bot puan vermez / düşürmez (derecesiz antrenman)
+  let rw=0,rl=0;
+  if(S.stats&&Array.isArray(S.stats.rounds)){
+    rw=S.stats.rounds[0]||0;
+    rl=S.stats.rounds[1]||0;
+  }else if(Array.isArray(S.res)){
+    rw=S.res.filter(x=>x>0).length;
+    rl=S.res.filter(x=>x<0).length;
+  }
+  const score=(rw||rl)?`${rw}-${rl}`:'';
+  const myHero=(S.hero&&S.hero[0])||MY_HERO||'';
+  const oppHero=(S.hero&&S.hero[1])||'';
+  // Kolay ve Orta bot puan vermez / düşürmez (derecesiz antrenman) ama maç geçmişine ve istatistiklere kaydedilir
   if(MODE==='bot'&&(DIFF==='easy'||DIFF==='med')){
+    acc.unrankedMatches=(acc.unrankedMatches||0)+1;
+    if(won)acc.unrankedWins=(acc.unrankedWins||0)+1;
+    else acc.unrankedLosses=(acc.unrankedLosses||0)+1;
+    acc.history=acc.history||[];
+    acc.history.unshift({ts:Date.now(),opp:getOppLabel(),won:!!won,delta:0,elo:before,unranked:true,mode:MODE,diff:DIFF,score,myHero,oppHero});
+    if(acc.history.length>AUTH_HIST_MAX)acc.history.length=AUTH_HIST_MAX;
+    saveSession(acc);
     S._eloRes={before,after:before,delta:0,rank:eloRank(before),unranked:true};
     return S._eloRes;
   }
@@ -5536,8 +5650,8 @@ function recordMatchElo(S,won){
   if(won)acc.wins=(acc.wins||0)+1;
   else acc.losses=(acc.losses||0)+1;
   acc.history=acc.history||[];
-  acc.history.unshift({ts:Date.now(),opp:getOppLabel(),won:!!won,delta,elo:after});
-  if(acc.history.length>12)acc.history.length=12;
+  acc.history.unshift({ts:Date.now(),opp:getOppLabel(),won:!!won,delta,elo:after,unranked:false,mode:MODE,diff:MODE==='bot'?DIFF:'pvp',score,myHero,oppHero});
+  if(acc.history.length>AUTH_HIST_MAX)acc.history.length=AUTH_HIST_MAX;
   saveSession(acc);
   S._eloRes={before,after,delta,rank:eloRank(after),unranked:false};
   return S._eloRes;
@@ -5652,57 +5766,98 @@ async function openLeaderboardModal(){
   if($('#lb-close'))$('#lb-close').onclick=()=>{snd('click');close()};
   if($('#lb-reg'))$('#lb-reg').onclick=()=>{snd('click');mb.classList.remove('lb-mode');openAuthModal('register',true)};
 }
+function fmtMatchTime(ts){
+  if(!ts)return '';
+  try{
+    const d=new Date(ts);
+    const dk=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const hm=`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    if(dk===dayKey(0))return `${tr('Bugün','Today')} ${hm}`;
+    if(dk===dayKey(-1))return `${tr('Dün','Yesterday')} ${hm}`;
+    const mo=tr('Oca,Şub,Mar,Nis,May,Haz,Tem,Ağu,Eyl,Eki,Kas,Ara','Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec').split(',');
+    return `${d.getDate()} ${mo[d.getMonth()]} ${hm}`;
+  }catch(e){return ''}
+}
 function openProfileModal(){
   if(!USER_ACC)return openAuthModal('login',false);
-  const acc=USER_ACC;
-  const rk=eloRank(acc.elo);
-  const nm=acc.isGuest?tr('Misafir Oyuncu','Guest Player'):escHtml(acc.username);
-  const wr=acc.matches?Math.round(((acc.wins||0)/acc.matches)*100):0;
-  const stCur=Math.max(1,acc.streak||1),stBest=Math.max(stCur,acc.bestStreak||1);
-  const histHtml=(acc.history&&acc.history.length)
-    ?acc.history.slice(0,6).map(h=>`<div class="pr-hrow ${h.won?'w':'l'}">
-        <span>${h.won?tr('Zafer','Win'):tr('Mağlubiyet','Loss')} · ${escHtml(h.opp)}</span>
-        <b>${h.delta>=0?'+':''}${h.delta} ELO <i>(${h.elo})</i></b>
-      </div>`).join('')
-    :`<div class="pr-hempty">${tr('Henüz dereceli maç oynanmadı.','No ranked matches played yet.')}</div>`;
   const mb=$('#mb');
+  if(!mb)return;
   lock=true;
-  mb.classList.remove('end-mode','an-mode','set-mode');
-  mb.classList.add('auth-mode');
-  mb.innerHTML=`<div class="pr-wrap">
-    <div class="pr-head">
-      <div class="pr-badge ${rk.cls}">${rk.ic}</div>
-      <div class="pr-titles">
-        <h3>${nm}</h3>
-        <div class="pr-rank">${rk.name} · <b>${Math.round(acc.elo||1200)} ELO</b> · <span class="pr-st-tag">🔥 ${stCur} ${tr('Gün','Day')}</span></div>
+  mb.classList.remove('end-mode','an-mode','set-mode','lb-mode');
+  mb.classList.add('auth-mode','pr-mode');
+  const close=()=>{mb.classList.remove('auth-mode','pr-mode');$('#m').hidden=true;lock=false};
+  const renderProf=(acc)=>{
+    const rk=eloRank(acc.elo);
+    const nm=acc.isGuest?tr('Misafir Oyuncu','Guest Player'):escHtml(acc.username);
+    const rWins=acc.wins||0,rLosses=acc.losses||0,rMatches=Math.max(acc.matches||0,rWins+rLosses);
+    const uWins=acc.unrankedWins||0,uLosses=acc.unrankedLosses||0,uMatches=Math.max(acc.unrankedMatches||0,uWins+uLosses);
+    const totWins=rWins+uWins,totLosses=rLosses+uLosses,totMatches=rMatches+uMatches;
+    const wr=totMatches?Math.round((totWins/totMatches)*100):0;
+    const stCur=Math.max(1,acc.streak||1),stBest=Math.max(stCur,acc.bestStreak||1);
+    const hist=Array.isArray(acc.history)?acc.history:[];
+    const histHtml=hist.length
+      ?hist.map(h=>{
+          const tm=fmtMatchTime(h.ts);
+          const sc=h.score?` · ${escHtml(h.score)}`:'';
+          const rightHtml=h.unranked
+            ?`<b class="pr-hunr">${tr('Antrenman','Unranked')} <i>(0 ELO)</i></b>`
+            :`<b>${h.delta>=0?'+':''}${h.delta} ELO <i>(${h.elo})</i></b>`;
+          return `<div class="pr-hrow ${h.won?'w':'l'}${h.unranked?' unr':''}">
+            <div class="pr-hl">
+              <span>${h.won?tr('Zafer','Win'):tr('Mağlubiyet','Loss')} · ${escHtml(h.opp)}${sc}</span>
+              ${tm?`<small class="pr-htm">${tm}</small>`:''}
+            </div>
+            ${rightHtml}
+          </div>`;
+        }).join('')
+      :`<div class="pr-hempty">${tr('Henüz kayıtlı maç bulunmuyor.','No recorded matches yet.')}</div>`;
+    const subGames=uMatches>0?` (${rMatches} ${tr('Dereceli','Ranked')} · ${uMatches} ${tr('Antrenman','Practice')})`:'';
+    mb.innerHTML=`<div class="pr-wrap">
+      <div class="pr-head">
+        <div class="pr-badge ${rk.cls}">${rk.ic}</div>
+        <div class="pr-titles">
+          <h3>${nm}</h3>
+          <div class="pr-rank">${rk.name} · <b>${Math.round(acc.elo||1200)} ELO</b> · <span class="pr-st-tag">🔥 ${stCur} ${tr('Gün','Day')}</span></div>
+        </div>
       </div>
-    </div>
-    <div class="pr-grid">
-      <div class="pr-stat"><span>${tr('Güncel ELO','Current ELO')}</span><b>${Math.round(acc.elo||1200)}</b></div>
-      <div class="pr-stat"><span>${tr('Zirve ELO','Peak ELO')}</span><b>${Math.round(acc.peakElo||acc.elo||1200)}</b></div>
-      <div class="pr-stat"><span>${tr('Galibiyet / Mağlubiyet','Wins / Losses')}</span><b>${acc.wins||0} / ${acc.losses||0}</b></div>
-      <div class="pr-stat"><span>${tr('Kazanma Oranı','Win Rate')}</span><b>%${wr}</b></div>
-      <div class="pr-stat pr-stat-fire"><span>${tr('Günlük Seri','Daily Streak')}</span><b>🔥 ${stCur} ${tr('Gün','Days')}</b></div>
-      <div class="pr-stat"><span>${tr('En İyi Seri','Best Streak')}</span><b>${stBest} ${tr('Gün','Days')}</b></div>
-    </div>
-    <div class="pr-sec-lbl">${tr('Son Maçlar','Recent Matches')}</div>
-    <div class="pr-hist">${histHtml}</div>
-    <div class="row pr-acts">
-      <button type="button" id="pr-lb" class="btn alt sm">🏆 ${tr('Sıralama','Ranks')}</button>
-      ${acc.isGuest
-        ?`<button type="button" id="pr-upg" class="btn alt sm">${tr('Üye Ol','Register')}</button>
-          <button type="button" id="pr-sw" class="btn sm">${tr('Giriş Yap','Sign In')}</button>`
-        :`<button type="button" id="pr-out" class="btn sm">${tr('Çıkış Yap','Sign Out')}</button>`}
-      <button type="button" id="pr-close" class="btn alt sm">${tr('Kapat','Close')}</button>
-    </div>
-  </div>`;
+      <div class="pr-grid">
+        <div class="pr-stat"><span>${tr('Güncel ELO','Current ELO')}</span><b>${Math.round(acc.elo||1200)}</b></div>
+        <div class="pr-stat"><span>${tr('Zirve ELO','Peak ELO')}</span><b>${Math.round(acc.peakElo||acc.elo||1200)}</b></div>
+        <div class="pr-stat"><span>${tr('Galibiyet / Mağlubiyet','Wins / Losses')}</span><b>${totWins} / ${totLosses}</b></div>
+        <div class="pr-stat"><span>${tr('Kazanma Oranı','Win Rate')}</span><b>%${wr}</b></div>
+        <div class="pr-stat pr-stat-fire"><span>${tr('Günlük Seri','Daily Streak')}</span><b>🔥 ${stCur} ${tr('Gün','Days')}</b></div>
+        <div class="pr-stat"><span>${tr('En İyi Seri','Best Streak')}</span><b>${stBest} ${tr('Gün','Days')}</b></div>
+      </div>
+      <div class="pr-sec-lbl">${tr('Son Maçlar','Recent Matches')} (${hist.length})${subGames}</div>
+      <div class="pr-hist">${histHtml}</div>
+      <div class="row pr-acts">
+        <button type="button" id="pr-lb" class="btn alt sm">🏆 ${tr('Sıralama','Ranks')}</button>
+        ${acc.isGuest
+          ?`<button type="button" id="pr-upg" class="btn alt sm">${tr('Üye Ol','Register')}</button>
+            <button type="button" id="pr-sw" class="btn sm">${tr('Giriş Yap','Sign In')}</button>`
+          :`<button type="button" id="pr-out" class="btn sm">${tr('Çıkış Yap','Sign Out')}</button>`}
+        <button type="button" id="pr-close" class="btn alt sm">${tr('Kapat','Close')}</button>
+      </div>
+    </div>`;
+    if($('#pr-close'))$('#pr-close').onclick=()=>{snd('click');close()};
+    if($('#pr-lb'))$('#pr-lb').onclick=()=>{snd('click');openLeaderboardModal()};
+    if($('#pr-upg'))$('#pr-upg').onclick=()=>{snd('click');mb.classList.remove('pr-mode');openAuthModal('register',true)};
+    if($('#pr-sw'))$('#pr-sw').onclick=()=>{snd('click');mb.classList.remove('pr-mode');openAuthModal('login',false)};
+    if($('#pr-out'))$('#pr-out').onclick=()=>{snd('click');mb.classList.remove('pr-mode');saveSession(null);openAuthModal('login',false)};
+  };
+  renderProf(USER_ACC);
   $('#m').hidden=false;
-  const close=()=>{mb.classList.remove('auth-mode');$('#m').hidden=true;lock=false};
-  if($('#pr-close'))$('#pr-close').onclick=()=>{snd('click');close()};
-  if($('#pr-lb'))$('#pr-lb').onclick=()=>{snd('click');openLeaderboardModal()};
-  if($('#pr-upg'))$('#pr-upg').onclick=()=>{snd('click');openAuthModal('register',true)};
-  if($('#pr-sw'))$('#pr-sw').onclick=()=>{snd('click');openAuthModal('login',false)};
-  if($('#pr-out'))$('#pr-out').onclick=()=>{snd('click');saveSession(null);openAuthModal('login',false)};
+  if(!USER_ACC.isGuest&&USER_ACC.key&&fbDb){
+    const prevLen=(USER_ACC.history||[]).length,prevElo=USER_ACC.elo,prevTot=(USER_ACC.matches||0)+(USER_ACC.unrankedMatches||0);
+    pullAccountFromCloud(USER_ACC.key).then(fresh=>{
+      if(fresh&&mb.classList.contains('pr-mode')&&!$('#m').hidden){
+        const newTot=(fresh.matches||0)+(fresh.unrankedMatches||0);
+        if((fresh.history||[]).length!==prevLen||fresh.elo!==prevElo||newTot!==prevTot){
+          renderProf(fresh);
+        }
+      }
+    }).catch(()=>{});
+  }
 }
 function openAuthModal(initialTab='login',isUpgrade=false){
   let tab=initialTab==='register'?'register':'login';
@@ -5772,7 +5927,7 @@ function openAuthModal(initialTab='login',isUpgrade=false){
           }catch(fe){}
         }
         const localMap=loadLocalUsers();
-        const existing=cloudDoc||localMap[key]||null;
+        const existing=mergeAccountData(localMap[key]||null,cloudDoc||null);
         if(isReg){
           if(existing){
             errEl.textContent=tr('Bu kullanıcı adı zaten alınmış.','This username is already taken.');
@@ -5792,11 +5947,15 @@ function openAuthModal(initialTab='login',isUpgrade=false){
             wins:base?(base.wins||0):0,
             losses:base?(base.losses||0):0,
             matches:base?(base.matches||0):0,
+            unrankedWins:base?(base.unrankedWins||0):0,
+            unrankedLosses:base?(base.unrankedLosses||0):0,
+            unrankedMatches:base?(base.unrankedMatches||0):0,
             streak:base?Math.max(1,base.streak||1):1,
             bestStreak:base?Math.max(1,base.bestStreak||base.streak||1):1,
             lastStreakDay:(base&&base.lastStreakDay)||today,
-            history:base?(base.history||[]):[],
-            createdAt:Date.now()
+            history:base?mergeMatchHistory(base.history,[]):[],
+            createdAt:Date.now(),
+            updatedAt:Date.now()
           };
           saveSession(newAcc);
           if(!base)showStreakToast(1,false);
@@ -5820,15 +5979,20 @@ function openAuthModal(initialTab='login',isUpgrade=false){
             username:existing.username||rawU,
             passHash:existing.passHash||pHash,
             isGuest:false,
-            elo:typeof existing.elo==='number'?existing.elo:1200,
-            peakElo:typeof existing.peakElo==='number'?existing.peakElo:(existing.elo||1200),
+            elo:typeof existing.elo==='number'?Math.round(existing.elo):1200,
+            peakElo:typeof existing.peakElo==='number'?Math.round(existing.peakElo):(existing.elo||1200),
             wins:existing.wins||0,
             losses:existing.losses||0,
             matches:existing.matches||0,
+            unrankedWins:existing.unrankedWins||0,
+            unrankedLosses:existing.unrankedLosses||0,
+            unrankedMatches:existing.unrankedMatches||0,
             streak:existing.streak||0,
             bestStreak:existing.bestStreak||existing.streak||0,
             lastStreakDay:existing.lastStreakDay||'',
-            history:Array.isArray(existing.history)?existing.history:[]
+            history:mergeMatchHistory(existing.history,[]),
+            createdAt:existing.createdAt||Date.now(),
+            updatedAt:Date.now()
           };
           saveSession(logged);
           updateDailyStreak(logged,false);
@@ -5849,10 +6013,20 @@ function openAuthModal(initialTab='login',isUpgrade=false){
   USER_ACC=loadSession();
   const sp=document.getElementById('splash');
   if(USER_ACC){
+    if(!USER_ACC.isGuest&&USER_ACC.key){
+      const localMap=loadLocalUsers();
+      if(localMap[USER_ACC.key]){
+        USER_ACC=mergeAccountData(USER_ACC,localMap[USER_ACC.key]);
+        try{localStorage.setItem(AUTH_SESS_KEY,JSON.stringify(USER_ACC))}catch(e){}
+      }
+    }
     const hadNewDay=updateDailyStreak(USER_ACC,true);
     if(hadNewDay){
       const stVal=USER_ACC.streak||1;
       setTimeout(()=>showStreakToast(stVal,stVal>1),sp?2250:400);
+    }
+    if(!USER_ACC.isGuest&&USER_ACC.key&&fbDb){
+      pullAccountFromCloud(USER_ACC.key);
     }
   }
   renderAuthBar();
