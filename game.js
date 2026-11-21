@@ -2278,10 +2278,14 @@ function R(){
   const isMob=window.matchMedia&&window.matchMedia('(max-width: 760px), (hover: none) and (pointer: coarse)').matches;
   const hpBtn0=isSpec?'':`<button id="hp-btn" class="hp-btn${hpObj0.passive?' passive':''}${hpUsed0?' used':canHp?' ready':''}" data-hp="1" data-hp-id="${myHId}" data-hp-side="0"${(canHp||isMob)?'':' disabled'}>${HP_IC[myHId]||HP_IC.c}${cProg}</button>`;
   const hpBtn1=`<span class="hp-btn opp-hp${hpObj1.passive?' passive':''}${hpUsed1?' used':!cReady1?' locked':''}" data-hp-id="${oppHId}" data-hp-side="1">${HP_IC[oppHId]||HP_IC.c}${cProg1}</span>`;
-  const myTitle=(typeof USER_ACC!=='undefined'&&USER_ACC&&USER_ACC.title&&typeof getTitleLabel==='function')?getTitleLabel(USER_ACC.title):'';
-  const myNick=((typeof USER_ACC!=='undefined'&&USER_ACC&&!USER_ACC.isGuest&&USER_ACC.username)?escHtml(USER_ACC.username):tr('Misafir','Guest'))+(myTitle?` · ${escHtml(myTitle)}`:'');
-  const oppBotSub=DIFF==='easy'?tr('Kolay Bot','Easy Bot'):DIFF==='med'?tr('Orta Bot','Medium Bot'):DIFF==='hard'?tr('Zor Bot','Hard Bot'):tr('İmkansız Bot','Impossible Bot');
-  const oppSub=MODE==='bot'?oppBotSub:(MODE==='tutorial'?tr('Eğitim','Tutorial'):(OPP_PROFILE&&OPP_PROFILE.name?`${escHtml(OPP_PROFILE.name)} · ${Math.round(OPP_PROFILE.elo||1200)} ELO`:tr('Çevrim İçi','Online')));
+  const myElo=Math.round((typeof USER_ACC!=='undefined'&&USER_ACC&&typeof USER_ACC.elo==='number')?USER_ACC.elo:1200);
+  const myBaseName=(typeof USER_ACC!=='undefined'&&USER_ACC&&!USER_ACC.isGuest&&USER_ACC.username)?escHtml(USER_ACC.username):tr('Misafir','Guest');
+  const myNick=`${myBaseName} · ${myElo} ELO`;
+  const oppBotElo=DIFF==='hard'?'1320 ELO':DIFF==='imp'?'1550 ELO':tr('Derecesiz','Unranked');
+  const oppBotSub=(DIFF==='easy'?tr('Kolay Bot','Easy Bot'):DIFF==='med'?tr('Orta Bot','Medium Bot'):DIFF==='hard'?tr('Zor Bot','Hard Bot'):tr('İmkansız Bot','Impossible Bot'))+` · ${oppBotElo}`;
+  const oppOnlineElo=Math.round((OPP_PROFILE&&typeof OPP_PROFILE.elo==='number')?OPP_PROFILE.elo:1200);
+  const oppOnlineName=(OPP_PROFILE&&OPP_PROFILE.name)?escHtml(OPP_PROFILE.name):tr('Çevrim İçi','Online');
+  const oppSub=MODE==='bot'?oppBotSub:(MODE==='tutorial'?tr('Eğitim','Tutorial'):`${oppOnlineName} · ${oppOnlineElo} ELO`);
   const cCnt1=S.pl[1].open.length+S.pl[1].closed.length;
   setH('#opp',`${oppHandHtml}<div class="who">${av1}${hpBtn1}<div class="nm"><b>${p1Name}</b><span class="meta nick">${oppSub}</span></div><div class="tot${obust?' bust':oexact?' exact':''}"><small>${tr('Toplam','Total')}</small><div class="tl"><b>${lastTot[1]}</b>${oppHidZero?'<i class="pq">+</i><i class="pq">0</i>':oppClosedKnown?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards${cCnt1>=6?' cards-2row':''}${cCnt1>=9?' cards-dense':''}">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!(S.rev||c.o!=null||(S.oppPeek&&S.oppPeek.includes(c.id))),S.rev)).join('')}</div>`);
   const activeTg=tgE(S);
