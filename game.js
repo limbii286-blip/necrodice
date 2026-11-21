@@ -5437,6 +5437,15 @@ function mergeAccountData(localAcc,cloudAcc){
     updatedAt:Math.max(lUp,cUp,Date.now())
   };
 }
+function isRegisteredMember(u){
+  if(!u||typeof u!=='object')return false;
+  if(u.isGuest)return false;
+  if(u.uid&&String(u.uid).startsWith('guest_'))return false;
+  const nm=normUserKey(u.username||'');
+  if(!nm||nm==='misafir'||nm==='guest')return false;
+  if(!u.passHash)return false;
+  return true;
+}
 function saveSession(acc,syncCloud=true){
   if(acc)acc.updatedAt=Date.now();
   USER_ACC=acc;
@@ -5444,7 +5453,7 @@ function saveSession(acc,syncCloud=true){
     if(acc)localStorage.setItem(AUTH_SESS_KEY,JSON.stringify(acc));
     else localStorage.removeItem(AUTH_SESS_KEY);
   }catch(e){}
-  if(acc&&!acc.isGuest&&acc.key){
+  if(isRegisteredMember(acc)&&acc.key){
     const map=loadLocalUsers();
     map[acc.key]={...(map[acc.key]||{}),...acc};
     saveLocalUsers(map);
@@ -5491,7 +5500,7 @@ function updateDailyStreak(acc,silent=false){
   return true;
 }
 function syncAccountToCloud(acc){
-  if(!fbDb||!acc||acc.isGuest||!acc.key)return;
+  if(!fbDb||!isRegisteredMember(acc)||!acc.key)return;
   try{
     fbDb.collection('users').doc(acc.key).set({
       key:acc.key,
@@ -5704,23 +5713,23 @@ async function openLeaderboardModal(){
   if($('#lb-close'))$('#lb-close').onclick=()=>{snd('click');close()};
 
   const byKey=new Map();
-  // Yerel kayıtlı üyeleri baz olarak al
+  // Yerel kayıtlı üyeleri baz olarak al (misafirler kesinlikle hariç)
   try{
     const localMap=loadLocalUsers();
     Object.values(localMap).forEach(u=>{
-      if(u&&u.username&&!u.isGuest){
+      if(isRegisteredMember(u)){
         const k=u.key||normUserKey(u.username);
         if(k)byKey.set(k,{key:k,username:u.username,elo:Math.round(u.elo||1200),wins:u.wins||0,losses:u.losses||0,streak:u.streak||1});
       }
     });
   }catch(e){}
-  // Firestore'dan tüm kayıtlı üyelerin güncel ELO sıralamasını çek
+  // Firestore'dan tüm kayıtlı üyelerin güncel ELO sıralamasını çek (misafirler hariç)
   if(fbDb){
     try{
       const snap=await fbDb.collection('users').orderBy('elo','desc').limit(50).get();
       snap.forEach(doc=>{
         const u=doc.data();
-        if(u&&u.username&&!u.isGuest){
+        if(isRegisteredMember(u)){
           const k=u.key||doc.id||normUserKey(u.username);
           byKey.set(k,{key:k,username:u.username,elo:Math.round(u.elo||1200),wins:u.wins||0,losses:u.losses||0,streak:u.streak||1});
         }
@@ -5729,7 +5738,7 @@ async function openLeaderboardModal(){
   }
   if(!mb.classList.contains('lb-mode'))return;
   const list=[...byKey.values()].sort((a,b)=>(b.elo-a.elo)||(b.wins-a.wins)||a.username.localeCompare(b.username));
-  const myKey=(USER_ACC&&!USER_ACC.isGuest)?(USER_ACC.key||normUserKey(USER_ACC.username)):'';
+  const myKey=isRegisteredMember(USER_ACC)?(USER_ACC.key||normUserKey(USER_ACC.username)):'';
   const myIdx=myKey?list.findIndex(u=>u.key===myKey):-1;
   const rowsHtml=list.length?list.map((u,i)=>{
     const pos=i+1;
@@ -5914,6 +5923,7 @@ function openAuthModal(initialTab='login',isUpgrade=false){
       const rawP=$('#auth-p').value||'';
       const key=normUserKey(rawU);
       if(key.length<3){errEl.textContent=tr('Kullanıcı adı en az 3 karakter olmalı.','Username must be at least 3 characters.');return}
+      if(isReg&&(key==='misafir'||key==='guest')){errEl.textContent=tr('Bu kullanıcı adı kullanılamaz.','This username is reserved.');return}
       if(rawP.length<4){errEl.textContent=tr('Şifre en az 4 karakter olmalı.','Password must be at least 4 characters.');return}
       const pHash=hashPass(rawP);
       errEl.textContent='';
