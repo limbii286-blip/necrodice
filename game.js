@@ -2866,8 +2866,8 @@ function applyLang(lang){
   hiPre=false;
   hiPreload();
   const spans=document.querySelectorAll('#mb2 .hs-plaque > span');
-  if(spans[0])spans[0].textContent=tr('Yapay Zekaya Karşı','VS AI');
-  if(spans[1])spans[1].textContent=tr('Çevrim İçi Düello','Online Duel');
+  if(spans[0])spans[0].textContent=tr('Çevrim İçi','Online');
+  if(spans[1])spans[1].textContent=tr('Yapay Zekaya Karşı','VS AI');
   const dEasy=$('#mb2 .d[data-d="easy"]'),dMed=$('#mb2 .d[data-d="med"]'),dHard=$('#mb2 .d[data-d="hard"]'),dImp=$('#mb2 .d[data-d="imp"]');
   if(dEasy)dEasy.textContent=tr('Kolay','Easy');
   if(dMed)dMed.textContent=tr('Orta','Medium');
