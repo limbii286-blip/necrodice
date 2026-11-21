@@ -6952,13 +6952,13 @@ html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, 
   }
 }
 
-/* Mobil Ana Menü: Üst ortada Profil/Misafir kutucuğu, altında alta dayalı scroll'suz Ana Pencere */
+/* Mobil Ana Menü: Üst ortada Profil/Misafir kutucuğu, altında dikey ortalanmış scroll'suz Ana Pencere */
 @media (max-width: 760px) {
   #menu {
     flex-direction: column !important;
-    justify-content: space-between !important;
+    justify-content: flex-start !important;
     align-items: center !important;
-    padding: max(8px, env(safe-area-inset-top, 8px)) 10px max(10px, env(safe-area-inset-bottom, 10px)) !important;
+    padding: max(10px, env(safe-area-inset-top, 10px)) 10px max(12px, env(safe-area-inset-bottom, 12px)) !important;
     gap: 8px !important;
     overflow: hidden !important;
   }
@@ -6972,7 +6972,7 @@ html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, 
     z-index: 25;
   }
   #menu #mb2 {
-    margin-top: auto !important;
+    margin: auto 0 !important;
     width: min(96vw, 430px) !important;
     max-height: calc(100dvh - 74px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
     padding: clamp(10px, 1.6dvh, 14px) 12px clamp(10px, 1.5dvh, 12px) !important;
