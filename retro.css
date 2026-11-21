@@ -2031,7 +2031,7 @@ body.dragging-joker #fx::after {
     6px 6px 0 #181420,
     0 0 22px rgba(243, 200, 107, 0.55),
     0 12px 26px rgba(0, 0, 0, 0.94) !important;
-  animation: deckDrawPulse 1.6s ease-in-out infinite;
+  animation: none;
 }
 #fx .deck.draw-locked {
   filter: brightness(0.42) saturate(0.35) !important;
