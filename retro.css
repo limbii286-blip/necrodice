@@ -7439,3 +7439,322 @@ html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, 
   justify-content: flex-end;
   gap: 8px;
 }
+
+/* ==========================================================================
+   HIZLI EŞLEŞTİRME, CANLI İZLEME, RECONNECT, GÖREVLER, BAŞARIMLAR & KOZMETİKLER
+   ========================================================================== */
+.lob-qm-btn {
+  width: 100%;
+  flex-shrink: 0;
+  padding: 10px 14px !important;
+  font-size: 15.5px !important;
+  letter-spacing: 0.3px;
+}
+.lob-spec-btn {
+  flex-shrink: 0;
+  padding: 6px 11px !important;
+  font-size: 13px !important;
+  border-color: rgba(147, 197, 253, 0.55) !important;
+  color: #dbeafe !important;
+}
+.reconn-bar {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top, 12px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 130;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: rgba(24, 14, 16, 0.96);
+  border: 1.5px solid rgba(245, 158, 11, 0.78);
+  color: #fde68a;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.85);
+  max-width: 92vw;
+  text-align: center;
+}
+
+/* Profil & Liderlik Sekmeleri */
+.pr-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.pr-tab {
+  flex: 1 1 auto;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(16, 12, 14, 0.72);
+  border: 1px solid rgba(212, 168, 85, 0.28);
+  color: #c9b596;
+  font: 700 13px/1.2 var(--mf);
+  cursor: pointer;
+  transition: background-color 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+}
+.pr-tab.act {
+  background: rgba(212, 168, 85, 0.22);
+  border-color: rgba(250, 204, 21, 0.72);
+  color: #fde68a;
+}
+.pr-eq-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f3c86b;
+  margin-left: 4px;
+}
+.lb-title-tag {
+  color: #f3c86b;
+  font-weight: 600;
+}
+.pr-scroll-box {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  max-height: 245px;
+  overflow-y: auto;
+  padding-right: 3px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 168, 85, 0.45) rgba(0, 0, 0, 0.25);
+}
+
+/* Günlük Görevler & Kahraman İstatistikleri */
+.q-card,
+.hs-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 11px;
+  border-radius: 10px;
+  background: rgba(14, 10, 12, 0.74);
+  border: 1px solid rgba(212, 168, 85, 0.24);
+  flex-shrink: 0;
+}
+.q-card.done {
+  border-color: rgba(74, 222, 128, 0.55);
+  background: rgba(20, 48, 32, 0.34);
+}
+.q-ic {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(212, 168, 85, 0.14);
+  border: 1px solid rgba(212, 168, 85, 0.38);
+  color: #fde68a;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.q-card.done .q-ic {
+  background: rgba(74, 222, 128, 0.2);
+  border-color: rgba(74, 222, 128, 0.6);
+  color: #86efac;
+}
+.q-body,
+.hs-stat-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.q-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: #f4e6c8;
+}
+.q-top span {
+  font-size: 12.5px;
+  color: #d6bc8b;
+  white-space: nowrap;
+}
+.q-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+.q-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #b45309, #facc15);
+}
+.q-card.done .q-bar i {
+  background: linear-gradient(90deg, #16a34a, #4ade80);
+}
+.hs-stat-row img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid rgba(212, 168, 85, 0.55);
+  flex-shrink: 0;
+}
+
+/* Kozmetikler (Kart Arkası & Çerçeve) + Başarımlar */
+.cos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 6px;
+}
+.cos-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 8px;
+  border-radius: 9px;
+  background: rgba(14, 10, 12, 0.78);
+  border: 1px solid rgba(212, 168, 85, 0.28);
+  color: #f1e2c4;
+  font: 600 12px/1.2 var(--mf);
+  cursor: pointer;
+  text-align: left;
+}
+.cos-chip.sel {
+  border-color: #fde047;
+  background: rgba(212, 168, 85, 0.22);
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.24);
+}
+.cos-chip.lock {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+.cb-sw,
+.fr-sw {
+  width: 18px;
+  height: 24px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+.fr-sw {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+}
+.cb-classic { background: linear-gradient(135deg, #2d2320, #7c5c34); }
+.cb-crimson { background: linear-gradient(135deg, #450a0a, #dc2626); }
+.cb-obsidian { background: linear-gradient(135deg, #09090b, #eab308); }
+.cb-moonlight { background: linear-gradient(135deg, #0f172a, #38bdf8); }
+.cb-sovereign { background: linear-gradient(135deg, #2e1065, #f59e0b); }
+
+.fr-classic { border-color: rgba(212, 168, 85, 0.65) !important; }
+.fr-crimson { border-color: #ef4444 !important; box-shadow: 0 0 14px rgba(239, 68, 68, 0.55) !important; }
+.fr-gold { border-color: #fde047 !important; box-shadow: 0 0 16px rgba(250, 204, 21, 0.65) !important; }
+.fr-void { border-color: #a855f7 !important; box-shadow: 0 0 16px rgba(168, 85, 247, 0.68) !important; }
+
+/* Oyun İçi Açılabilir Kart Arkası Temaları */
+body[data-cardback="crimson"] #fx .deck,
+body[data-cardback="crimson"] .c.back {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 14px rgba(220, 38, 38, 0.42), inset 0 0 16px rgba(185, 28, 28, 0.48) !important;
+}
+body[data-cardback="obsidian"] #fx .deck,
+body[data-cardback="obsidian"] .c.back {
+  border-color: #facc15 !important;
+  box-shadow: 0 0 16px rgba(234, 179, 8, 0.45), inset 0 0 18px rgba(10, 10, 14, 0.8) !important;
+}
+body[data-cardback="moonlight"] #fx .deck,
+body[data-cardback="moonlight"] .c.back {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.45), inset 0 0 18px rgba(15, 23, 42, 0.72) !important;
+}
+body[data-cardback="sovereign"] #fx .deck,
+body[data-cardback="sovereign"] .c.back {
+  border-color: #c084fc !important;
+  box-shadow: 0 0 18px rgba(168, 85, 247, 0.52), inset 0 0 18px rgba(59, 7, 100, 0.65) !important;
+}
+
+.ach-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ach-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  background: rgba(14, 10, 12, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  opacity: 0.56;
+}
+.ach-row.ok {
+  opacity: 1;
+  border-color: rgba(212, 168, 85, 0.42);
+  background: rgba(28, 20, 18, 0.78);
+}
+.ach-ic {
+  font-size: 18px;
+  width: 26px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.ach-txt {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.ach-txt b {
+  font-size: 13.5px;
+  color: #fbf2de;
+}
+.ach-txt small {
+  font-size: 11.5px;
+  color: #b8a58b;
+}
+.ach-txt em {
+  font-style: normal;
+  color: #f3c86b;
+}
+.ach-eq {
+  padding: 4px 9px !important;
+  font-size: 11.5px !important;
+  flex-shrink: 0;
+}
+.ach-lk {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+/* Sezon Onur Listesi (Hall of Fame) */
+.hof-card {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(18, 14, 16, 0.8);
+  border: 1px solid rgba(212, 168, 85, 0.35);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.hof-card.live {
+  background: linear-gradient(180deg, rgba(212, 168, 85, 0.2), rgba(20, 14, 14, 0.88));
+  border-color: rgba(250, 204, 21, 0.7);
+}
+.hof-s {
+  font-size: 12px;
+  color: #d6bc8b;
+  font-weight: 700;
+}
+.hof-s span {
+  color: #86efac;
+}
+.hof-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: #fde68a;
+}
+.hof-meta {
+  font-size: 13px;
+  color: #e6d8be;
+}

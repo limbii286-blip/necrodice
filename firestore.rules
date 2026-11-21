@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Kayıtlı Üyeler & ELO Koruması
+    match /users/{userKey} {
+      allow read: if true;
+
+      // Yeni hesap oluşturma: yalnızca başlangıç değerleriyle ve geçerli alanlarla
+      allow create: if request.resource.data.key == userKey
+        && request.resource.data.username is string
+        && request.resource.data.username.size() >= 3
+        && request.resource.data.username.size() <= 18
+        && request.resource.data.passHash is string
+        && request.resource.data.passHash.size() >= 8
+        && request.resource.data.elo is int
+        && request.resource.data.elo >= 400
+        && request.resource.data.elo <= 1350;
+
+      // Güncelleme: şifre özeti eşleşmeli, ELO tek seferde en fazla ±40 değişebilir
+      allow update: if resource.data.passHash == request.resource.data.passHash
+        && request.resource.data.key == resource.data.key
+        && request.resource.data.elo is int
+        && request.resource.data.elo >= 400
+        && request.resource.data.elo <= 3000
+        && (request.resource.data.elo - resource.data.elo) <= 40
+        && (resource.data.elo - request.resource.data.elo) <= 40;
+
+      allow delete: if false;
+    }
+
+    // Çevrim İçi Lobi Durumu (Presence)
+    match /lobby_presence/{pid} {
+      allow read, write: if true;
+    }
+
+    // Düello Davetleri
+    match /lobby_invites/{invId} {
+      allow read, write: if true;
+    }
+
+    // Hızlı Eşleştirme Kuyruğu (Quick Match)
+    match /lobby_queue/{qid} {
+      allow read, write: if true;
+    }
+
+    // Sezon Onur Listesi (Hall of Fame)
+    match /seasons_hof/{seasonId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // İmkansız Bot Global Hafızası
+    match /bot/{docId} {
+      allow read, write: if true;
+    }
+  }
+}

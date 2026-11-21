@@ -1750,6 +1750,7 @@ function endRound(){
       const uRev=(MODE==='host'?(L===0||L===1):L===0)&&avKey(S,L)==='u'&&!surv&&!(S.uRevived&&S.uRevived[L]);
       if(surv||rig||uRev){const n=S.bo+2;
         if(surv&&S.stats&&S.stats.d20Surv)S.stats.d20Surv[L]++;
+        if(surv&&L===0&&typeof onPlayerD20Survive==='function')onPlayerD20Survive(rawRoll,S);
         const lb=tr(`Düello ${n} ile Devam Et`,`Continue to Duel ${n}`),go=()=>{try{document.body.classList.remove('dead')}catch(e){}S.bo++;(S.mast=S.mast||[0,0])[L]=(S.mast[L]|0)+1;newBO3(S);deal(S);talk(L==0?'surv0':'surv1',2);R();runAfterDeal(S)};
         if(rig){S.rigDone=true;S.hpUsed[1]=true;impSave(mk(0,1,false,1),()=>M(mk(0,20,true,20),lb,go))}
         else if(uRev){S.uRevived=S.uRevived||[false,false];S.uRevived[L]=true;S.hpUsed[L]=true;impSave(mk(0,roll,false),()=>MM(v=>mk(v,20,true,20),lb,go),tr('Hiçlik seni geri çevirdi… Bir kez daha ölümden döndün!','The Void refused you… You have returned from death once more!'))}
@@ -2277,7 +2278,8 @@ function R(){
   const isMob=window.matchMedia&&window.matchMedia('(max-width: 760px), (hover: none) and (pointer: coarse)').matches;
   const hpBtn0=isSpec?'':`<button id="hp-btn" class="hp-btn${hpObj0.passive?' passive':''}${hpUsed0?' used':canHp?' ready':''}" data-hp="1" data-hp-id="${myHId}" data-hp-side="0"${(canHp||isMob)?'':' disabled'}>${HP_IC[myHId]||HP_IC.c}${cProg}</button>`;
   const hpBtn1=`<span class="hp-btn opp-hp${hpObj1.passive?' passive':''}${hpUsed1?' used':!cReady1?' locked':''}" data-hp-id="${oppHId}" data-hp-side="1">${HP_IC[oppHId]||HP_IC.c}${cProg1}</span>`;
-  const myNick=(typeof USER_ACC!=='undefined'&&USER_ACC&&!USER_ACC.isGuest&&USER_ACC.username)?escHtml(USER_ACC.username):tr('Misafir','Guest');
+  const myTitle=(typeof USER_ACC!=='undefined'&&USER_ACC&&USER_ACC.title&&typeof getTitleLabel==='function')?getTitleLabel(USER_ACC.title):'';
+  const myNick=((typeof USER_ACC!=='undefined'&&USER_ACC&&!USER_ACC.isGuest&&USER_ACC.username)?escHtml(USER_ACC.username):tr('Misafir','Guest'))+(myTitle?` · ${escHtml(myTitle)}`:'');
   const oppBotSub=DIFF==='easy'?tr('Kolay Bot','Easy Bot'):DIFF==='med'?tr('Orta Bot','Medium Bot'):DIFF==='hard'?tr('Zor Bot','Hard Bot'):tr('İmkansız Bot','Impossible Bot');
   const oppSub=MODE==='bot'?oppBotSub:(MODE==='tutorial'?tr('Eğitim','Tutorial'):(OPP_PROFILE&&OPP_PROFILE.name?`${escHtml(OPP_PROFILE.name)} · ${Math.round(OPP_PROFILE.elo||1200)} ELO`:tr('Çevrim İçi','Online')));
   const cCnt1=S.pl[1].open.length+S.pl[1].closed.length;
@@ -2386,7 +2388,7 @@ function playHeroPowerAnim(hId,side,hObj){
   else if(hId==='w'&&side===0)spawnBoard('hp-fx-witch',document.querySelector('#opp .cards .c.bk'));
   else if(hId==='l')spawnBoard('hp-fx-wolf',document.querySelector('#fx'));
 }
-function doPlay(id,pk){const S=G;P=null;recMove(S,{t:'j',id,pk:[...(pk||[])]},`${tr('Joker','Joker')}: ${J[id]||id}`);if(MODE=='guest'){conn.send({k:'play',id,pk});return R()}S.graceLeft=0;lrnAct(S,'j',id);play(S,0,id,pk);S.acted=true;S.log.push({p:0,t:`joker oynadı: ${J[id]}`});note(0,id,()=>{if(MODE=='bot')talk('react',1,.5);R();if(MODE==='tutorial'&&tutStep===3)tutAdvance('joker')})}
+function doPlay(id,pk){const S=G;P=null;if(typeof progressQuest==='function')progressQuest('jokers4',1);recMove(S,{t:'j',id,pk:[...(pk||[])]},`${tr('Joker','Joker')}: ${J[id]||id}`);if(MODE=='guest'){conn.send({k:'play',id,pk});return R()}S.graceLeft=0;lrnAct(S,'j',id);play(S,0,id,pk);S.acted=true;S.log.push({p:0,t:`joker oynadı: ${J[id]}`});note(0,id,()=>{if(MODE=='bot')talk('react',1,.5);R();if(MODE==='tutorial'&&tutStep===3)tutAdvance('joker')})}
 function execAlchSwap(cid){
   const S=G;if(!S||!S.deck.length)return;
   if(MODE==='guest'){snd('flip');return conn.send({k:'hp_alch',cid})}
@@ -3039,7 +3041,9 @@ function exitGame(){ // limbigames perdesi, sonra ilk ekrana dön
     try{if(conn)conn.close()}catch(e){}
     try{spectators.forEach(s=>{try{s.close()}catch(err){}})}catch(e){}
     try{if(peer)peer.destroy()}catch(e){}
-    conn=null;spectators=[];peer=null;waitM=false;specCount=0;
+    conn=null;spectators=[];peer=null;waitM=false;specCount=0;CURRENT_HOST_CODE='';LAST_JOIN_CODE='';
+    if(typeof clearReconnectGrace==='function')clearReconnectGrace();
+    if(typeof cancelQuickMatch==='function')cancelQuickMatch(true);
     if(G)G.over=true;G=null;MODE='bot';sayT='';try{document.body.classList.remove('dead')}catch(e){}
     st('');$('#menu').hidden=false;lock=false;setMusic('menu');
     if(typeof updateLobbyPresence==='function')updateLobbyPresence(false);
@@ -3200,6 +3204,18 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     });
     return;
   }
+  if(m.k=='reconnect'){
+    if(G&&!G.over&&MODE==='host'){
+      clearReconnectGrace();
+      conn=fromConn;
+      fromConn._role='player';
+      fromConn.on('close',()=>startReconnectGrace(true,tr('Rakip oyundan ayrıldı.','Opponent left the game.')));
+      fromConn.send({k:'role',role:'player'});
+      fromConn.send({k:'s',v:pub(G,1),specCount:spectators.length});
+      R();
+    }
+    return;
+  }
   if(m.k=='join_as'){
     if(m.role=='player'){
       if(!conn || !conn.open){
@@ -3212,7 +3228,7 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
           $('#m').hidden=true;lock=false;
           enter(start);
         },600);
-        fromConn.on('close',()=>peerLeft(tr('Rakip oyundan ayrıldı.','Opponent left the game.')));
+        fromConn.on('close',()=>startReconnectGrace(true,tr('Rakip oyundan ayrıldı.','Opponent left the game.')));
       }else{
         // Oyuncu slotu dolmuş, mecburen izleyiciye al veya bilgi ver
         fromConn.send({k:'slot_full'});
@@ -3471,6 +3487,60 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
 const st=t=>$('#st').textContent=t;
 const NETERR=e=>({'network':1,'server-error':1,'socket-error':1,'socket-closed':1})[e.type]?tr('Sunucuya ulaşılamadı. İnternet bağlantını kontrol et.','Could not reach the server. Check your internet connection.'):e.type=='peer-unavailable'?tr('Oda bulunamadı','Room not found'):tr('Hata: ','Error: ')+e.type;
 const noNet=()=>{if(typeof Peer=='undefined'||navigator.onLine===false){MODE='bot';st(tr('Online mod için internet bağlantısı gerekli. Bilgisayara karşı oynayabilirsin.','An internet connection is required for Online mode. You can play against the AI.'));return true}return false};
+let CURRENT_HOST_CODE='',LAST_JOIN_CODE='';
+let RECONN_TIMER=null,RECONN_IV=null,RECONN_LEFT=0;
+function clearReconnectGrace(){
+  if(RECONN_TIMER){clearInterval(RECONN_TIMER);RECONN_TIMER=null}
+  if(RECONN_IV){clearInterval(RECONN_IV);RECONN_IV=null}
+  const b=document.getElementById('reconn-bar');if(b)b.remove();
+}
+function startReconnectGrace(isHost,fallbackMsg){
+  if(leaving||!G||G.over||MODE==='spectator'||MODE==='bot'){
+    peerLeft(fallbackMsg);
+    return;
+  }
+  clearReconnectGrace();
+  RECONN_LEFT=15;
+  const showBar=()=>{
+    let b=document.getElementById('reconn-bar');
+    if(!b){
+      b=document.createElement('div');
+      b.id='reconn-bar';
+      b.className='reconn-bar';
+      document.body.appendChild(b);
+    }
+    b.innerHTML=`<span>⚡ ${isHost?tr(`Rakibin bağlantısı koptu — geri bağlanması bekleniyor (${RECONN_LEFT}s)…`,`Opponent disconnected — waiting to reconnect (${RECONN_LEFT}s)…`):tr(`Bağlantı koptu — yeniden bağlanılıyor (${RECONN_LEFT}s)…`,`Connection lost — reconnecting (${RECONN_LEFT}s)…`)}</span>`;
+  };
+  showBar();
+  RECONN_TIMER=setInterval(()=>{
+    RECONN_LEFT--;
+    if(RECONN_LEFT<=0){
+      clearReconnectGrace();
+      peerLeft(fallbackMsg);
+    }else{
+      showBar();
+    }
+  },1000);
+  if(!isHost&&LAST_JOIN_CODE){
+    const tryReconn=()=>{
+      if(leaving||!G||G.over||!LAST_JOIN_CODE)return;
+      try{
+        if(!peer||peer.destroyed)peer=new Peer();
+        const nc=peer.connect('necrodice-'+LAST_JOIN_CODE,{reliable:true});
+        nc.on('open',()=>{
+          clearReconnectGrace();
+          conn=nc;
+          conn.on('data',onHost);
+          conn.on('close',()=>startReconnectGrace(false,tr('Oda sahibi oyundan ayrıldı.','Room host left the game.')));
+          conn.send({k:'reconnect'});
+          snd('ok');
+        });
+      }catch(e){}
+    };
+    setTimeout(tryReconn,1200);
+    RECONN_IV=setInterval(tryReconn,2800);
+  }
+}
 let ACTIVE_OUT_INV_UNSUB=null,ACTIVE_OUT_INV_ID=null,ACTIVE_OUT_INV_TMR=null;
 function clearOutgoingInvite(newStatus){
   if(ACTIVE_OUT_INV_TMR){clearTimeout(ACTIVE_OUT_INV_TMR);ACTIVE_OUT_INV_TMR=null}
@@ -3481,10 +3551,11 @@ function clearOutgoingInvite(newStatus){
   }
   ACTIVE_OUT_INV_ID=null;
 }
-function hostRoom(inviteTarget){
+function hostRoom(inviteTarget,onCodeReady){
   if(noNet())return;
   clearOutgoingInvite('cancelled');
   MODE='host';leaving=false;sayT='';spectators=[];specCount=0;const code=Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random()*32|0]).join('');
+  CURRENT_HOST_CODE=code;
   st(inviteTarget?tr(`${inviteTarget.name} için düello daveti hazırlanıyor…`,`Preparing duel invite for ${inviteTarget.name}…`):tr('Oda oluşturuluyor…','Creating room…'));
   peer=new Peer('necrodice-'+code);
   
@@ -3547,6 +3618,10 @@ function hostRoom(inviteTarget){
   };
 
   peer.on('open',()=>{
+    if(typeof onCodeReady==='function'){
+      onCodeReady(code);
+      return;
+    }
     st(inviteTarget?tr(`${inviteTarget.name} bekleniyor…`,`Waiting for ${inviteTarget.name}…`):(tr('Oda kodu: ','Room code: ')+code+tr(' — rakip bekleniyor…',' — waiting for opponent…')));
     showLobby();
     if(inviteTarget&&fbDb&&typeof getMyPresenceId==='function'){
@@ -3688,6 +3763,7 @@ function joinRoom(directCode,fromInvite=false){
   if(noNet())return;
   const code=(typeof directCode==='string'&&directCode.trim())?directCode.trim().toUpperCase():($('#code')?$('#code').value.trim().toUpperCase():'');
   if(!code)return st(tr('Oda kodunu yaz','Enter room code'));
+  LAST_JOIN_CODE=code;
   PENDING_INVITE_JOIN=!!fromInvite;
   leaving=false;sayT='';st(tr('Odaya bağlanılıyor…','Connecting to room…'));peer=new Peer();
   peer.on('open',()=>{
@@ -3697,9 +3773,24 @@ function joinRoom(directCode,fromInvite=false){
       st(tr('Oda bulundu. Slot durumu alınıyor…','Room found. Fetching slots…'));
       conn.send({k:'query_slots'});
     });
-    conn.on('close',()=>peerLeft(tr('Oda sahibi oyundan ayrıldı.','Room host left the game.')));
+    conn.on('close',()=>startReconnectGrace(false,tr('Oda sahibi oyundan ayrıldı.','Room host left the game.')));
   });
   peer.on('error',e=>{PENDING_INVITE_JOIN=false;st(NETERR(e))});
+}
+function spectateRoom(code){
+  if(noNet()||!code)return;
+  const c=String(code).trim().toUpperCase();
+  leaving=false;sayT='';MODE='spectator';st(tr('Canlı maça izleyici olarak bağlanılıyor…','Connecting to live match as spectator…'));
+  peer=new Peer();
+  peer.on('open',()=>{
+    conn=peer.connect('necrodice-'+c,{reliable:true});
+    conn.on('data',onHost);
+    conn.on('open',()=>{
+      conn.send({k:'join_as',role:'spectator'});
+    });
+    conn.on('close',()=>peerLeft(tr('Canlı yayın sona erdi.','Live broadcast ended.')));
+  });
+  peer.on('error',e=>{MODE='bot';st(NETERR(e))});
 }
 const on=(id,f)=>{const e=document.querySelector(id);if(e)e.onclick=f}; // bir öğe yoksa diğer düğmeler yine de çalışır
 document.querySelectorAll('.d').forEach(b=>b.onclick=()=>{DIFF=b.dataset.d;MODE='bot';chooseHero(h=>{MY_HERO=h;enter(start)})});
@@ -5554,6 +5645,20 @@ function mergeAccountData(localAcc,cloudAcc){
   const streak=lDay>cDay?(localAcc.streak||1):(cDay>lDay?(cloudAcc.streak||1):Math.max(localAcc.streak||1,cloudAcc.streak||1));
   const bestStreak=Math.max(localAcc.bestStreak||0,cloudAcc.bestStreak||0,streak);
   const history=mergeMatchHistory(localAcc.history,cloudAcc.history);
+  const achSet=new Set([...(Array.isArray(localAcc.achievements)?localAcc.achievements:[]),...(Array.isArray(cloudAcc.achievements)?cloudAcc.achievements:[])]);
+  const hStats={};
+  const addHS=src=>{
+    if(!src||typeof src!=='object')return;
+    for(const [k,v] of Object.entries(src)){
+      if(!v)continue;
+      if(!hStats[k])hStats[k]={w:0,l:0};
+      hStats[k].w=Math.max(hStats[k].w,v.w||0);
+      hStats[k].l=Math.max(hStats[k].l,v.l||0);
+    }
+  };
+  addHS(localAcc.heroStats);addHS(cloudAcc.heroStats);
+  const lq=localAcc.quests,cq=cloudAcc.quests;
+  const quests=(lq&&cq&&lq.day===cq.day)?{day:lq.day,items:(lq.items||[]).map((it,i)=>({...it,cur:Math.max(it.cur||0,(cq.items&&cq.items[i]?cq.items[i].cur||0:0))}))}:((lq&&(!cq||(lq.day||'')>=(cq.day||'')))?lq:(cq||null));
   return {
     uid:pri.uid||sec.uid||('u_'+(pri.key||sec.key||'')),
     key:pri.key||sec.key||'',
@@ -5571,6 +5676,13 @@ function mergeAccountData(localAcc,cloudAcc){
     streak,
     bestStreak,
     lastStreakDay,
+    winStreak:Math.max(pri.winStreak||0,0),
+    achievements:[...achSet],
+    title:pri.title||sec.title||'',
+    cardBack:pri.cardBack||sec.cardBack||'classic',
+    frame:pri.frame||sec.frame||'classic',
+    heroStats:hStats,
+    quests,
     history,
     createdAt:Math.min(localAcc.createdAt||Date.now(),cloudAcc.createdAt||Date.now()),
     updatedAt:Math.max(lUp,cUp,Date.now())
@@ -5585,9 +5697,18 @@ function isRegisteredMember(u){
   if(!u.passHash)return false;
   return true;
 }
+function computeAccountSig(acc){
+  if(!acc)return '';
+  return hashPass(`${acc.key||''}:${Math.round(acc.elo||1200)}:${acc.wins||0}:${acc.losses||0}:${acc.matches||0}:${(acc.achievements||[]).length}`);
+}
 function saveSession(acc,syncCloud=true){
-  if(acc)acc.updatedAt=Date.now();
+  if(acc){
+    acc.updatedAt=Date.now();
+    acc.elo=Math.max(400,Math.min(3000,Math.round(acc.elo||1200)));
+    acc._sig=computeAccountSig(acc);
+  }
   USER_ACC=acc;
+  if(typeof applyCosmetics==='function')applyCosmetics(acc);
   try{
     if(acc)localStorage.setItem(AUTH_SESS_KEY,JSON.stringify(acc));
     else localStorage.removeItem(AUTH_SESS_KEY);
@@ -5657,6 +5778,14 @@ function syncAccountToCloud(acc){
       streak:acc.streak||1,
       bestStreak:acc.bestStreak||acc.streak||1,
       lastStreakDay:acc.lastStreakDay||dayKey(0),
+      winStreak:acc.winStreak||0,
+      achievements:Array.isArray(acc.achievements)?acc.achievements:[],
+      title:acc.title||'',
+      cardBack:acc.cardBack||'classic',
+      frame:acc.frame||'classic',
+      heroStats:acc.heroStats||{},
+      quests:acc.quests||null,
+      _sig:acc._sig||computeAccountSig(acc),
       history:(acc.history||[]).slice(0,AUTH_HIST_MAX),
       createdAt:acc.createdAt||Date.now(),
       updatedAt:acc.updatedAt||Date.now()
@@ -5776,6 +5905,15 @@ function recordMatchElo(S,won){
   const score=(rw||rl)?`${rw}-${rl}`:'';
   const myHero=(S.hero&&S.hero[0])||MY_HERO||'';
   const oppHero=(S.hero&&S.hero[1])||'';
+  if(myHero){
+    acc.heroStats=acc.heroStats||{};
+    if(!acc.heroStats[myHero])acc.heroStats[myHero]={w:0,l:0};
+    if(won)acc.heroStats[myHero].w++;
+    else acc.heroStats[myHero].l++;
+  }
+  acc.winStreak=won?((acc.winStreak||0)+1):0;
+  const myJokersUsed=(S.stats&&S.stats.jokers)?(S.stats.jokers[0]||0):0;
+  const myD20Surv=(S.stats&&S.stats.d20Surv)?(S.stats.d20Surv[0]||0):0;
   // Kolay ve Orta bot puan vermez / düşürmez (derecesiz antrenman) ama maç geçmişine ve istatistiklere kaydedilir
   if(MODE==='bot'&&(DIFF==='easy'||DIFF==='med')){
     acc.unrankedMatches=(acc.unrankedMatches||0)+1;
@@ -5784,6 +5922,8 @@ function recordMatchElo(S,won){
     acc.history=acc.history||[];
     acc.history.unshift({ts:Date.now(),opp:getOppLabel(),won:!!won,delta:0,elo:before,unranked:true,mode:MODE,diff:DIFF,score,myHero,oppHero});
     if(acc.history.length>AUTH_HIST_MAX)acc.history.length=AUTH_HIST_MAX;
+    if(typeof progressQuest==='function'){progressQuest('play2',1,true);if(won)progressQuest('win1',1,true)}
+    if(typeof evaluateAchievements==='function')evaluateAchievements(acc,{won,mode:MODE,diff:DIFF,myJokersUsed,myD20Surv});
     saveSession(acc);
     S._eloRes={before,after:before,delta:0,rank:eloRank(before),unranked:true};
     return S._eloRes;
@@ -5798,6 +5938,8 @@ function recordMatchElo(S,won){
   acc.history=acc.history||[];
   acc.history.unshift({ts:Date.now(),opp:getOppLabel(),won:!!won,delta,elo:after,unranked:false,mode:MODE,diff:MODE==='bot'?DIFF:'pvp',score,myHero,oppHero});
   if(acc.history.length>AUTH_HIST_MAX)acc.history.length=AUTH_HIST_MAX;
+  if(typeof progressQuest==='function'){progressQuest('play2',1,true);progressQuest('ranked1',1,true);if(won)progressQuest('win1',1,true)}
+  if(typeof evaluateAchievements==='function')evaluateAchievements(acc,{won,mode:MODE,diff:DIFF,myJokersUsed,myD20Surv});
   saveSession(acc);
   S._eloRes={before,after,delta,rank:eloRank(after),unranked:false};
   return S._eloRes;
@@ -5830,11 +5972,15 @@ function updateLobbyPresence(forceOffline=false){
   const name=(USER_ACC&&!USER_ACC.isGuest&&USER_ACC.username)?USER_ACC.username:tr('Misafir','Guest');
   const elo=Math.round((USER_ACC&&USER_ACC.elo)||1200);
   const isGuest=!(USER_ACC&&!USER_ACC.isGuest);
+  const roomCode=(inGame&&MODE==='host'&&CURRENT_HOST_CODE)?CURRENT_HOST_CODE:'';
+  const title=(USER_ACC&&USER_ACC.title)||'';
   ref.set({
     pid,
     name,
     elo,
     isGuest,
+    title,
+    roomCode,
     status:inGame?'ingame':'menu',
     lastSeen:Date.now()
   },{merge:true}).catch(()=>{});
@@ -5937,6 +6083,102 @@ function startLobbyPresence(){
     },()=>{});
   }
 }
+let QM_UNSUB=null,QM_TIMER=null,QM_DOC_ID=null;
+function cancelQuickMatch(silent=false){
+  if(QM_TIMER){clearInterval(QM_TIMER);QM_TIMER=null}
+  if(QM_UNSUB){try{QM_UNSUB()}catch(e){}QM_UNSUB=null}
+  if(QM_DOC_ID&&fbDb){
+    fbDb.collection('lobby_queue').doc(QM_DOC_ID).delete().catch(()=>{});
+    QM_DOC_ID=null;
+  }
+  if(!silent){
+    try{if(peer&&!conn)peer.destroy()}catch(e){}
+    if(!conn){peer=null;MODE='bot';CURRENT_HOST_CODE=''}
+  }
+}
+function startQuickMatch(){
+  if(noNet()||!fbDb)return;
+  if(!USER_ACC)createGuestAccount();
+  chooseHero(async h=>{
+    MY_HERO=h;
+    cancelQuickMatch(true);
+    const myPid=getMyPresenceId();
+    const myElo=Math.round((USER_ACC&&USER_ACC.elo)||1200);
+    const myName=(USER_ACC&&!USER_ACC.isGuest)?USER_ACC.username:tr('Misafir','Guest');
+    let secs=0;
+    const renderWait=(msg)=>{
+      box(`<div class="lobby-box">
+        <h3 style="margin-bottom:8px">⚡ ${tr('Dereceli Rakip Aranıyor','Searching for Ranked Match')}</h3>
+        <p style="color:var(--bone);font-size:16px;margin-bottom:8px">${tr(`Senin ELO: <b>${myElo}</b> · En yakın rakip aranıyor…`,`Your ELO: <b>${myElo}</b> · Finding closest opponent…`)}</p>
+        <div class="lobby-spinner"><i></i><i></i><i></i></div>
+        <p id="lobbyStatus" style="font-size:15px;color:#a0b8a4;margin-top:10px">${msg||`${tr('Geçen süre','Elapsed')}: ${secs}s`}</p>
+      </div>`,true);
+      const pc=$('#pc');
+      if(pc){
+        pc.textContent=tr('Aramayı İptal Et','Cancel Search');
+        pc.onclick=()=>{cancelQuickMatch(false);$('#m').hidden=true;lock=false;st('')};
+      }
+    };
+    renderWait();
+    try{
+      const snap=await fbDb.collection('lobby_queue').where('status','==','waiting').get();
+      const now=Date.now();
+      const cands=[];
+      snap.forEach(doc=>{
+        const d=doc.data();
+        if(d&&d.pid&&d.pid!==myPid&&d.roomCode&&d.createdAt&&(now-d.createdAt)<=90000){
+          cands.push({id:doc.id,...d});
+        }
+      });
+      cands.sort((a,b)=>Math.abs((a.elo||1200)-myElo)-Math.abs((b.elo||1200)-myElo));
+      for(const cand of cands){
+        try{
+          const ref=fbDb.collection('lobby_queue').doc(cand.id);
+          const claimed=await fbDb.runTransaction(async tx=>{
+            const doc=await tx.get(ref);
+            if(!doc.exists||doc.data().status!=='waiting')return false;
+            tx.update(ref,{status:'matched',matchedBy:myPid,matchedName:myName,matchedAt:Date.now()});
+            return true;
+          });
+          if(claimed){
+            const ls=$('#lobbyStatus');
+            if(ls)ls.textContent=tr(`Rakip bulundu: ${cand.name} (${cand.elo} ELO)! Bağlanılıyor…`,`Match found: ${cand.name} (${cand.elo} ELO)! Connecting…`);
+            joinRoom(cand.roomCode,true);
+            return;
+          }
+        }catch(ce){}
+      }
+      // Kuyrukta bekleyen yok: oda açıp kuyruğa gir
+      hostRoom(null,code=>{
+        QM_DOC_ID=myPid;
+        const qRef=fbDb.collection('lobby_queue').doc(myPid);
+        qRef.set({pid:myPid,name:myName,elo:myElo,roomCode:code,status:'waiting',createdAt:Date.now()}).catch(()=>{});
+        QM_TIMER=setInterval(()=>{
+          secs++;
+          const ls=$('#lobbyStatus');
+          if(ls&&!conn)ls.textContent=`${tr('Geçen süre','Elapsed')}: ${secs}s`;
+          if(secs%20===0&&QM_DOC_ID)qRef.update({createdAt:Date.now()}).catch(()=>{});
+          if(secs>=120&&!conn){
+            cancelQuickMatch(false);
+            box(`<h3>${tr('Rakip Bulunamadı','No Opponent Found')}</h3><p>${tr('Şu an kuyrukta başka oyuncu yok. Lobiden davet atabilir veya botla oynayabilirsin.','No other players in queue right now. You can invite from the Lobby or play vs AI.')}</p>`,true);
+          }
+        },1000);
+        QM_UNSUB=qRef.onSnapshot(s=>{
+          if(!s.exists)return;
+          const d=s.data();
+          if(d&&d.status==='matched'){
+            const ls=$('#lobbyStatus');
+            if(ls)ls.textContent=tr(`Rakip bulundu: ${d.matchedName||''}! Bağlanılıyor…`,`Opponent found: ${d.matchedName||''}! Connecting…`);
+            cancelQuickMatch(true);
+          }
+        },()=>{});
+      });
+    }catch(e){
+      cancelQuickMatch(false);
+      box(`<h3>${tr('Bağlantı Hatası','Connection Error')}</h3><p>${tr('Eşleştirme başlatılamadı, tekrar dene.','Could not start matchmaking, please try again.')}</p>`,true);
+    }
+  },()=>openLobbyModal());
+}
 function renderLobbyModalBody(){
   const mb=$('#mb');
   if(!mb||!mb.classList.contains('lob-mode'))return;
@@ -5948,17 +6190,20 @@ function renderLobbyModalBody(){
     const rk=eloRank(u.elo);
     const inGame=u.status==='ingame';
     const tag=u.isGuest?` <em>(${tr('Misafir','Guest')})</em>`:'';
+    const tLbl=(u.title&&typeof getTitleLabel==='function')?` · ${escHtml(getTitleLabel(u.title))}`:'';
     const actHtml=isMe
       ?`<span class="lob-me-tag">${tr('Sen','You')}</span>`
       :(inGame
-        ?`<span class="lob-busy-tag">${tr('Maçta','In Match')}</span>`
+        ?(u.roomCode
+          ?`<button type="button" class="btn sm lob-spec-btn" data-code="${escHtml(u.roomCode)}">👁 ${tr('İzle','Watch')}</button>`
+          :`<span class="lob-busy-tag">${tr('Maçta','In Match')}</span>`)
         :`<button type="button" class="btn alt sm lob-inv-btn" data-pid="${escHtml(u.pid)}">⚔ ${tr('Davet Et','Challenge')}</button>`);
     return `<div class="lob-row${isMe?' me':''}${inGame?' busy':''}">
       <span class="lob-dot ${inGame?'busy':'free'}" title="${inGame?tr('Maçta','In Match'):tr('Müsait','Available')}"></span>
       <span class="lb-rk" title="${rk.name}">${rk.ic}</span>
       <div class="lb-u">
         <b>${escHtml(u.name||tr('Oyuncu','Player'))}${tag}</b>
-        <small>${rk.name} · ${Math.round(u.elo||1200)} ELO · ${inGame?tr('Maçta','In Match'):tr('Müsait','Available')}</small>
+        <small>${rk.name} · ${Math.round(u.elo||1200)} ELO${tLbl} · ${inGame?tr('Maçta','In Match'):tr('Müsait','Available')}</small>
       </div>
       ${actHtml}
     </div>`;
@@ -5966,7 +6211,7 @@ function renderLobbyModalBody(){
 
   const listEl=mb.querySelector('.lob-list');
   const subEl=mb.querySelector('.lob-sub');
-  if(subEl)subEl.textContent=tr(`Şu an ${list.length} oyuncu çevrim içi · Anında düello daveti gönder`,`${list.length} players online now · Send instant duel invites`);
+  if(subEl)subEl.textContent=tr(`Şu an ${list.length} oyuncu çevrim içi · Anında düello daveti gönder veya canlı izle`,`${list.length} players online now · Challenge or spectate live`);
   if(listEl){
     listEl.innerHTML=rowsHtml;
     listEl.querySelectorAll('.lob-inv-btn').forEach(btn=>{
@@ -5978,6 +6223,16 @@ function renderLobbyModalBody(){
         $('#m').hidden=true;lock=false;
         if(noNet())return;
         chooseHero(h=>{MY_HERO=h;hostRoom(target)},()=>openLobbyModal());
+      };
+    });
+    listEl.querySelectorAll('.lob-spec-btn').forEach(btn=>{
+      btn.onclick=()=>{
+        const code=btn.dataset.code;
+        if(!code)return;
+        snd('click');
+        mb.classList.remove('auth-mode','lob-mode');
+        $('#m').hidden=true;lock=false;
+        spectateRoom(code);
       };
     });
   }
@@ -5994,8 +6249,9 @@ function openLobbyModal(){
   mb.innerHTML=`<div class="lb-wrap">
     <div class="lb-head">
       <h3>🌐 ${tr('Çevrim İçi Lobi','Online Lobby')}</h3>
-      <p class="lb-sub lob-sub">${tr('Çevrim içi oyuncular yükleniyor…','Loading online players…')}</p>
+      <p class="lb-sub">${tr('Çevrim içi oyuncular yükleniyor…','Loading online players…')}</p>
     </div>
+    <button type="button" id="lob-qm" class="btn alt lob-qm-btn">⚡ ${tr('Hızlı Dereceli Rakip Bul','Quick Ranked Match')}</button>
     <div class="lb-list lob-list"></div>
     <div class="row lb-acts">
       <button type="button" id="lob-ref" class="btn alt sm">↻ ${tr('Yenile','Refresh')}</button>
@@ -6006,6 +6262,7 @@ function openLobbyModal(){
   const close=()=>{mb.classList.remove('auth-mode','lob-mode');$('#m').hidden=true;lock=false};
   if($('#lob-close'))$('#lob-close').onclick=()=>{snd('click');close()};
   if($('#lob-ref'))$('#lob-ref').onclick=()=>{snd('click');updateLobbyPresence(false);renderLobbyModalBody()};
+  if($('#lob-qm'))$('#lob-qm').onclick=()=>{snd('click');mb.classList.remove('auth-mode','lob-mode');$('#m').hidden=true;lock=false;startQuickMatch()};
   renderLobbyModalBody();
 }
 function renderAuthBar(){
@@ -6040,16 +6297,155 @@ function renderAuthBar(){
   if(lb)lb.onclick=()=>{snd('click');openLeaderboardModal()};
   if(lob)lob.onclick=()=>{snd('click');openLobbyModal()};
 }
-async function openLeaderboardModal(){
+/* ---------- BAŞARIMLAR, UNVANLAR, GÜNLÜK GÖREVLER, KOZMETİKLER & SEZONLAR ---------- */
+const ACHIEVEMENTS=[
+  {id:'first_blood',ic:'🩸',trN:'İlk Zafer',enN:'First Victory',trD:'İlk maçını kazan',enD:'Win your first match',trT:'Kan Yemini',enT:'Blood Oath'},
+  {id:'nat20',ic:'🎲',trN:'Nat 20 Mucizesi',enN:'Nat 20 Miracle',trD:'Ölüm Zarında 20 atarak hayatta kal',enD:'Survive Death Dice with a Natural 20',trT:'Kader Kıran',enT:'Fatebreaker'},
+  {id:'imp_slayer',ic:'👑',trN:'İmkansızı Yenen',enN:'Impossible Slayer',trD:'İmkansız botu mağlup et',enD:'Defeat the Impossible AI',trT:'Hiçlik Avcısı',enT:'Void Hunter'},
+  {id:'clean_win',ic:'⚖',trN:'Kusursuz Zafer',enN:'Flawless Victory',trD:'Joker kullanmadan bir maç kazan',enD:'Win a match without playing any Jokers',trT:'Saf Stratejist',enT:'Pure Strategist'},
+  {id:'survivor',ic:'🛡',trN:'Ölümsüz İrade',enN:'Undying Will',trD:'Tek maçta 2 kez Ölüm Zarından sağ çık',enD:'Survive Death Dice twice in one match',trT:'Ölümü Aldatan',enT:'Death Defier'},
+  {id:'win_streak3',ic:'🔥',trN:'Durdurulamaz',enN:'Unstoppable',trD:'Üst üste 3 maç kazan',enD:'Win 3 matches in a row',trT:'Kızıl Fırtına',enT:'Crimson Storm'},
+  {id:'veteran10',ic:'⚔',trN:'Arena Gazisi',enN:'Arena Veteran',trD:'Toplam 10 maç tamamla',enD:'Complete 10 total matches',trT:'Gölge Ustası',enT:'Shadow Master'},
+  {id:'blood_lord',ic:'◈',trN:'Kan Efendisi',enN:'Blood Lord',trD:'1400 ELO puanına ulaş',enD:'Reach 1400 ELO rating',trT:'Kan Efendisi',enT:'Blood Lord'},
+  {id:'necromancer',ic:'✦',trN:'Ölüm Büyücüsü',enN:'Necromancer',trD:'1600 ELO puanına ulaş',enD:'Reach 1600 ELO rating',trT:'Ölüm Büyücüsü',enT:'Necromancer'},
+  {id:'daily3',ic:'🕯',trN:'Sadık Düellocu',enN:'Devoted Duelist',trD:'3 günlük giriş serisine ulaş',enD:'Reach a 3-day login streak',trT:'Ebedi Nöbetçi',enT:'Eternal Sentinel'}
+];
+const CARD_BACKS=[
+  {id:'classic',trN:'Klasik Kemik',enN:'Classic Bone',req:()=>true,trR:'Varsayılan',enR:'Default'},
+  {id:'crimson',trN:'Kızıl Mühür',enN:'Crimson Seal',req:a=>((a.wins||0)+(a.unrankedWins||0))>=3||(a.peakElo||1200)>=1250,trR:'3 Zafer veya 1250 ELO',enR:'3 Wins or 1250 ELO'},
+  {id:'obsidian',trN:'Obsidyen Altın',enN:'Obsidian Gold',req:a=>(a.peakElo||1200)>=1400,trR:'1400 ELO (Kan Efendisi)',enR:'1400 ELO (Blood Lord)'},
+  {id:'moonlight',trN:'Ay Işığı Rünü',enN:'Moonlight Rune',req:a=>(a.achievements||[]).includes('imp_slayer')||(a.peakElo||1200)>=1500,trR:'İmkansız Bot Zaferi / 1500 ELO',enR:'Beat Impossible AI / 1500 ELO'},
+  {id:'sovereign',trN:'Ölümsüz Hükümdar',enN:'Undying Sovereign',req:a=>(a.peakElo||1200)>=1600,trR:'1600 ELO (Ölüm Büyücüsü)',enR:'1600 ELO (Necromancer)'}
+];
+const PROFILE_FRAMES=[
+  {id:'classic',trN:'Antik Bronz',enN:'Ancient Bronze',req:()=>true,trR:'Varsayılan',enR:'Default'},
+  {id:'crimson',trN:'Kanlı Yakut',enN:'Blood Ruby',req:a=>((a.wins||0)+(a.unrankedWins||0))>=2,trR:'2 Zafer',enR:'2 Wins'},
+  {id:'gold',trN:'Kraliyet Altını',enN:'Royal Gold',req:a=>(a.peakElo||1200)>=1350,trR:'1350 ELO',enR:'1350 ELO'},
+  {id:'void',trN:'Hiçlik Aurası',enN:'Void Aura',req:a=>(a.achievements||[]).includes('imp_slayer')||(a.peakElo||1200)>=1550,trR:'İmkansız Bot Zaferi / 1550 ELO',enR:'Beat Impossible AI / 1550 ELO'}
+];
+const DAILY_QUEST_POOL=[
+  {id:'play2',trN:'2 Maç Tamamla',enN:'Complete 2 Matches',goal:2,ic:'⚔'},
+  {id:'win1',trN:'1 Maç Kazan',enN:'Win 1 Match',goal:1,ic:'🏆'},
+  {id:'jokers4',trN:'4 Joker Oyna',enN:'Play 4 Jokers',goal:4,ic:'🃏'},
+  {id:'survive1',trN:'Ölüm Zarından 1 Kez Sağ Çık',enN:'Survive Death Dice Once',goal:1,ic:'🎲'},
+  {id:'ranked1',trN:'1 Dereceli Maç Oyna',enN:'Play 1 Ranked Match',goal:1,ic:'✦'}
+];
+function getTitleLabel(id){
+  const a=ACHIEVEMENTS.find(x=>x.id===id);
+  return a?(isEn()?a.enT:a.trT):'';
+}
+function applyCosmetics(acc){
+  try{
+    const cb=(acc&&acc.cardBack)||'classic';
+    const fr=(acc&&acc.frame)||'classic';
+    document.body.dataset.cardback=cb;
+    document.body.dataset.frame=fr;
+  }catch(e){}
+}
+function showUnlockToast(ic,title,sub){
+  const old=document.getElementById('streak-toast');
+  if(old)old.remove();
+  const el=document.createElement('div');
+  el.id='streak-toast';
+  el.className='streak-toast';
+  el.innerHTML=`<span class="st-fire">${ic}</span><div class="st-txt"><b>${title}</b><small>${sub}</small></div>`;
+  document.body.appendChild(el);
+  setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),420)},3800);
+}
+function ensureDailyQuests(acc){
+  if(!acc)return null;
+  const today=dayKey(0);
+  if(acc.quests&&acc.quests.day===today&&Array.isArray(acc.quests.items)&&acc.quests.items.length===3){
+    return acc.quests;
+  }
+  let seed=0;
+  for(let i=0;i<today.length;i++)seed=(seed*31+today.charCodeAt(i))>>>0;
+  const pool=[...DAILY_QUEST_POOL];
+  const picked=[];
+  while(picked.length<3&&pool.length){
+    seed=(seed*1664525+1013904223)>>>0;
+    const idx=seed%pool.length;
+    const q=pool.splice(idx,1)[0];
+    picked.push({id:q.id,goal:q.goal,cur:0,done:false});
+  }
+  acc.quests={day:today,items:picked};
+  return acc.quests;
+}
+function progressQuest(qid,amt=1,deferSave=false){
+  if(!USER_ACC||MODE==='tutorial'||MODE==='spectator')return;
+  const qObj=ensureDailyQuests(USER_ACC);
+  if(!qObj||!Array.isArray(qObj.items))return;
+  let changed=false;
+  for(const it of qObj.items){
+    if(it.id===qid&&!it.done){
+      it.cur=Math.min(it.goal,(it.cur||0)+amt);
+      changed=true;
+      if(it.cur>=it.goal){
+        it.done=true;
+        const meta=DAILY_QUEST_POOL.find(x=>x.id===qid);
+        if(meta)showUnlockToast('✨',tr('Günlük Görev Tamamlandı!','Daily Quest Completed!'),isEn()?meta.enN:meta.trN);
+      }
+    }
+  }
+  if(changed&&!deferSave)saveSession(USER_ACC);
+}
+function onPlayerD20Survive(rawRoll,S){
+  if(!USER_ACC||MODE==='tutorial'||MODE==='spectator')return;
+  progressQuest('survive1',1,true);
+  if(rawRoll===20)evaluateAchievements(USER_ACC,{nat20:true});
+  saveSession(USER_ACC);
+}
+function evaluateAchievements(acc,ctx={}){
+  if(!acc)return;
+  acc.achievements=Array.isArray(acc.achievements)?acc.achievements:[];
+  const has=id=>acc.achievements.includes(id);
+  const totWins=(acc.wins||0)+(acc.unrankedWins||0);
+  const totMatches=(acc.matches||0)+(acc.unrankedMatches||0);
+  const peak=Math.max(acc.peakElo||1200,acc.elo||1200);
+  const checks=[
+    ['first_blood',totWins>=1],
+    ['nat20',!!ctx.nat20],
+    ['imp_slayer',!!(ctx.won&&ctx.mode==='bot'&&ctx.diff==='imp')],
+    ['clean_win',!!(ctx.won&&ctx.myJokersUsed===0)],
+    ['survivor',!!(ctx.myD20Surv>=2)],
+    ['win_streak3',(acc.winStreak||0)>=3],
+    ['veteran10',totMatches>=10],
+    ['blood_lord',peak>=1400],
+    ['necromancer',peak>=1600],
+    ['daily3',(acc.bestStreak||acc.streak||1)>=3]
+  ];
+  let firstNew=null;
+  for(const [id,ok] of checks){
+    if(ok&&!has(id)){
+      acc.achievements.push(id);
+      if(!firstNew)firstNew=ACHIEVEMENTS.find(a=>a.id===id);
+    }
+  }
+  if(firstNew){
+    showUnlockToast('🏅',tr('Başarım Açıldı!','Achievement Unlocked!'),`${isEn()?firstNew.enN:firstNew.trN} · ${tr('Unvan','Title')}: ${isEn()?firstNew.enT:firstNew.trT}`);
+  }
+}
+function getCurrentSeason(){
+  const now=new Date();
+  const y=now.getFullYear(),m=now.getMonth();
+  const num=(y-2026)*12+(m-10)+1; // Kasım 2026 = Sezon 1
+  const end=new Date(y,m+1,1,0,0,0);
+  const daysLeft=Math.max(1,Math.ceil((end-now)/86400000));
+  const mo=tr('Ocak,Şubat,Mart,Nisan,Mayıs,Haziran,Temmuz,Ağustos,Eylül,Ekim,Kasım,Aralık','January,February,March,April,May,June,July,August,September,October,November,December').split(',');
+  return {num:Math.max(1,num),label:`${tr('Sezon','Season')} ${Math.max(1,num)} · ${mo[m]} ${y}`,daysLeft};
+}
+
+async function openLeaderboardModal(activeTab='rank'){
   const mb=$('#mb');
   if(!mb)return;
   lock=true;
-  mb.classList.remove('end-mode','an-mode','set-mode');
+  mb.classList.remove('end-mode','an-mode','set-mode','lob-mode','pr-mode');
   mb.classList.add('auth-mode','lb-mode');
+  const season=getCurrentSeason();
   mb.innerHTML=`<div class="lb-wrap">
     <div class="lb-head">
       <h3>🏆 ${tr('ELO Sıralaması','ELO Leaderboard')}</h3>
-      <p class="lb-sub">${tr('Kayıtlı üyelerin güncel dereceli sıralaması','Live ranked standings of registered members')}</p>
+      <p class="lb-sub">${season.label} · ${tr(`${season.daysLeft} gün kaldı`,`${season.daysLeft}d left`)}</p>
     </div>
     <div class="lb-loading">${tr('Sıralama yükleniyor…','Loading leaderboard…')}</div>
     <div class="row lb-acts"><button type="button" id="lb-close" class="btn alt sm">${tr('Kapat','Close')}</button></div>
@@ -6059,17 +6455,16 @@ async function openLeaderboardModal(){
   if($('#lb-close'))$('#lb-close').onclick=()=>{snd('click');close()};
 
   const byKey=new Map();
-  // Yerel kayıtlı üyeleri baz olarak al (misafirler kesinlikle hariç)
   try{
     const localMap=loadLocalUsers();
     Object.values(localMap).forEach(u=>{
       if(isRegisteredMember(u)){
         const k=u.key||normUserKey(u.username);
-        if(k)byKey.set(k,{key:k,username:u.username,elo:Math.round(u.elo||1200),wins:u.wins||0,losses:u.losses||0,streak:u.streak||1});
+        if(k)byKey.set(k,{key:k,username:u.username,elo:Math.round(u.elo||1200),wins:u.wins||0,losses:u.losses||0,streak:u.streak||1,title:u.title||''});
       }
     });
   }catch(e){}
-  // Firestore'dan tüm kayıtlı üyelerin güncel ELO sıralamasını çek (misafirler hariç)
+  let hofList=[];
   if(fbDb){
     try{
       const snap=await fbDb.collection('users').orderBy('elo','desc').limit(50).get();
@@ -6077,49 +6472,81 @@ async function openLeaderboardModal(){
         const u=doc.data();
         if(isRegisteredMember(u)){
           const k=u.key||doc.id||normUserKey(u.username);
-          byKey.set(k,{key:k,username:u.username,elo:Math.round(u.elo||1200),wins:u.wins||0,losses:u.losses||0,streak:u.streak||1});
+          byKey.set(k,{key:k,username:u.username,elo:Math.round(u.elo||1200),wins:u.wins||0,losses:u.losses||0,streak:u.streak||1,title:u.title||''});
         }
       });
+    }catch(e){}
+    try{
+      const hSnap=await fbDb.collection('seasons_hof').orderBy('seasonNum','desc').limit(12).get();
+      hSnap.forEach(doc=>{const d=doc.data();if(d&&d.champion)hofList.push(d)});
     }catch(e){}
   }
   if(!mb.classList.contains('lb-mode'))return;
   const list=[...byKey.values()].sort((a,b)=>(b.elo-a.elo)||(b.wins-a.wins)||a.username.localeCompare(b.username));
   const myKey=isRegisteredMember(USER_ACC)?(USER_ACC.key||normUserKey(USER_ACC.username)):'';
   const myIdx=myKey?list.findIndex(u=>u.key===myKey):-1;
-  const rowsHtml=list.length?list.map((u,i)=>{
-    const pos=i+1;
-    const rk=eloRank(u.elo);
-    const isMe=!!(myKey&&u.key===myKey);
-    const med=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':`#${pos}`;
-    return `<div class="lb-row${pos<=3?' top'+pos:''}${isMe?' me':''}">
-      <span class="lb-pos">${med}</span>
-      <span class="lb-rk" title="${rk.name}">${rk.ic}</span>
-      <div class="lb-u">
-        <b>${escHtml(u.username)}${isMe?` <em>(${tr('Sen','You')})</em>`:''}</b>
-        <small>${rk.name} · ${u.wins}${tr('G','W')} / ${u.losses}${tr('M','L')} · 🔥${Math.max(1,u.streak||1)}</small>
-      </div>
-      <span class="lb-elo">${u.elo} <i>ELO</i></span>
+
+  let curTab=activeTab;
+  const renderLb=()=>{
+    const tabsHtml=`<div class="pr-tabs lb-tabs">
+      <button type="button" class="pr-tab${curTab==='rank'?' act':''}" data-lt="rank">🏆 ${tr('Sezon Sıralaması','Season Standings')}</button>
+      <button type="button" class="pr-tab${curTab==='hof'?' act':''}" data-lt="hof">👑 ${tr('Onur Listesi','Hall of Fame')}</button>
     </div>`;
-  }).join(''):`<div class="lb-empty">${tr('Henüz kayıtlı üye bulunmuyor. İlk sırayı almak için üye ol!','No registered members yet. Register to claim #1!')}</div>`;
-
-  const myBarHtml=myIdx>=0
-    ?`<div class="lb-my-bar">${tr('Senin Sıran','Your Rank')}: <b>#${myIdx+1}</b> / ${list.length} · <b>${list[myIdx].elo} ELO</b></div>`
-    :(USER_ACC&&USER_ACC.isGuest?`<div class="lb-my-bar guest">${tr('Sıralamaya girmek için üye ol!','Register to appear on the leaderboard!')}</div>`:'');
-
-  mb.innerHTML=`<div class="lb-wrap">
-    <div class="lb-head">
-      <h3>🏆 ${tr('ELO Sıralaması','ELO Leaderboard')}</h3>
-      <p class="lb-sub">${tr(`Toplam ${list.length} kayıtlı üye · Canlı dereceli sıralama`,`${list.length} registered members · Live standings`)}</p>
-    </div>
-    <div class="lb-list">${rowsHtml}</div>
-    ${myBarHtml}
-    <div class="row lb-acts">
-      ${(USER_ACC&&USER_ACC.isGuest)?`<button type="button" id="lb-reg" class="btn alt sm">${tr('Üye Ol','Register')}</button>`:''}
-      <button type="button" id="lb-close" class="btn sm">${tr('Kapat','Close')}</button>
-    </div>
-  </div>`;
-  if($('#lb-close'))$('#lb-close').onclick=()=>{snd('click');close()};
-  if($('#lb-reg'))$('#lb-reg').onclick=()=>{snd('click');mb.classList.remove('lb-mode');openAuthModal('register',true)};
+    let bodyHtml='';
+    if(curTab==='rank'){
+      const rowsHtml=list.length?list.map((u,i)=>{
+        const pos=i+1;
+        const rk=eloRank(u.elo);
+        const isMe=!!(myKey&&u.key===myKey);
+        const med=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':`#${pos}`;
+        const tTag=u.title?` · <span class="lb-title-tag">${escHtml(getTitleLabel(u.title))}</span>`:'';
+        return `<div class="lb-row${pos<=3?' top'+pos:''}${isMe?' me':''}">
+          <span class="lb-pos">${med}</span>
+          <span class="lb-rk" title="${rk.name}">${rk.ic}</span>
+          <div class="lb-u">
+            <b>${escHtml(u.username)}${isMe?` <em>(${tr('Sen','You')})</em>`:''}</b>
+            <small>${rk.name}${tTag} · ${u.wins}${tr('G','W')} / ${u.losses}${tr('M','L')} · 🔥${Math.max(1,u.streak||1)}</small>
+          </div>
+          <span class="lb-elo">${u.elo} <i>ELO</i></span>
+        </div>`;
+      }).join(''):`<div class="lb-empty">${tr('Henüz kayıtlı üye bulunmuyor. İlk sırayı almak için üye ol!','No registered members yet. Register to claim #1!')}</div>`;
+      const myBarHtml=myIdx>=0
+        ?`<div class="lb-my-bar">${tr('Senin Sıran','Your Rank')}: <b>#${myIdx+1}</b> / ${list.length} · <b>${list[myIdx].elo} ELO</b></div>`
+        :(USER_ACC&&USER_ACC.isGuest?`<div class="lb-my-bar guest">${tr('Sıralamaya girmek için üye ol!','Register to appear on the leaderboard!')}</div>`:'');
+      bodyHtml=`<div class="lb-list">${rowsHtml}</div>${myBarHtml}`;
+    }else{
+      const leader=list[0];
+      const liveChamp=leader
+        ?`<div class="hof-card live">
+            <div class="hof-s">${season.label} · <span>${tr('Güncel Lider','Current Leader')}</span></div>
+            <div class="hof-name">👑 ${escHtml(leader.username)}</div>
+            <div class="hof-meta">${leader.elo} ELO · ${leader.wins}${tr('G','W')} / ${leader.losses}${tr('M','L')} · ${tr(`${season.daysLeft} gün sonra taçlanır`,`crowned in ${season.daysLeft}d`)}</div>
+          </div>`
+        :`<div class="lb-empty">${tr('Bu sezon henüz lider yok.','No season leader yet.')}</div>`;
+      const pastHtml=hofList.map(h=>`<div class="hof-card">
+        <div class="hof-s">${escHtml(h.label||(`Sezon ${h.seasonNum}`))}</div>
+        <div class="hof-name">🏆 ${escHtml(h.champion)}</div>
+        <div class="hof-meta">${Math.round(h.elo||1200)} ELO</div>
+      </div>`).join('');
+      bodyHtml=`<div class="lb-list">${liveChamp}${pastHtml}</div>`;
+    }
+    mb.innerHTML=`<div class="lb-wrap">
+      <div class="lb-head">
+        <h3>🏆 ${tr('ELO Sıralaması','ELO Leaderboard')}</h3>
+        <p class="lb-sub">${season.label} · ${tr(`${list.length} üye · ${season.daysLeft} gün kaldı`,`${list.length} members · ${season.daysLeft}d left`)}</p>
+      </div>
+      ${tabsHtml}
+      ${bodyHtml}
+      <div class="row lb-acts">
+        ${(USER_ACC&&USER_ACC.isGuest)?`<button type="button" id="lb-reg" class="btn alt sm">${tr('Üye Ol','Register')}</button>`:''}
+        <button type="button" id="lb-close" class="btn sm">${tr('Kapat','Close')}</button>
+      </div>
+    </div>`;
+    mb.querySelectorAll('.lb-tabs .pr-tab').forEach(b=>b.onclick=()=>{snd('click');curTab=b.dataset.lt;renderLb()});
+    if($('#lb-close'))$('#lb-close').onclick=()=>{snd('click');close()};
+    if($('#lb-reg'))$('#lb-reg').onclick=()=>{snd('click');mb.classList.remove('lb-mode');openAuthModal('register',true)};
+  };
+  renderLb();
 }
 function fmtMatchTime(ts){
   if(!ts)return '';
@@ -6133,49 +6560,50 @@ function fmtMatchTime(ts){
     return `${d.getDate()} ${mo[d.getMonth()]} ${hm}`;
   }catch(e){return ''}
 }
-function openProfileModal(){
+function openProfileModal(initialTab='overview'){
   if(!USER_ACC)return openAuthModal('login',false);
   const mb=$('#mb');
   if(!mb)return;
   lock=true;
-  mb.classList.remove('end-mode','an-mode','set-mode','lb-mode');
+  mb.classList.remove('end-mode','an-mode','set-mode','lb-mode','lob-mode');
   mb.classList.add('auth-mode','pr-mode');
+  let curTab=initialTab;
   const close=()=>{mb.classList.remove('auth-mode','pr-mode');$('#m').hidden=true;lock=false};
   const renderProf=(acc)=>{
+    ensureDailyQuests(acc);
+    evaluateAchievements(acc,{});
     const rk=eloRank(acc.elo);
     const nm=acc.isGuest?tr('Misafir Oyuncu','Guest Player'):escHtml(acc.username);
+    const eqTitle=acc.title?getTitleLabel(acc.title):'';
+    const frCls='fr-'+(acc.frame||'classic');
     const rWins=acc.wins||0,rLosses=acc.losses||0,rMatches=Math.max(acc.matches||0,rWins+rLosses);
     const uWins=acc.unrankedWins||0,uLosses=acc.unrankedLosses||0,uMatches=Math.max(acc.unrankedMatches||0,uWins+uLosses);
     const totWins=rWins+uWins,totLosses=rLosses+uLosses,totMatches=rMatches+uMatches;
     const wr=totMatches?Math.round((totWins/totMatches)*100):0;
     const stCur=Math.max(1,acc.streak||1),stBest=Math.max(stCur,acc.bestStreak||1);
     const hist=Array.isArray(acc.history)?acc.history:[];
-    const histHtml=hist.length
-      ?hist.map(h=>{
-          const tm=fmtMatchTime(h.ts);
-          const sc=h.score?` · ${escHtml(h.score)}`:'';
-          const rightHtml=h.unranked
-            ?`<b class="pr-hunr">${tr('Antrenman','Unranked')} <i>(0 ELO)</i></b>`
-            :`<b>${h.delta>=0?'+':''}${h.delta} ELO <i>(${h.elo})</i></b>`;
-          return `<div class="pr-hrow ${h.won?'w':'l'}${h.unranked?' unr':''}">
-            <div class="pr-hl">
-              <span>${h.won?tr('Zafer','Win'):tr('Mağlubiyet','Loss')} · ${escHtml(h.opp)}${sc}</span>
-              ${tm?`<small class="pr-htm">${tm}</small>`:''}
-            </div>
-            ${rightHtml}
-          </div>`;
-        }).join('')
-      :`<div class="pr-hempty">${tr('Henüz kayıtlı maç bulunmuyor.','No recorded matches yet.')}</div>`;
-    const subGames=uMatches>0?` (${rMatches} ${tr('Dereceli','Ranked')} · ${uMatches} ${tr('Antrenman','Practice')})`:'';
-    mb.innerHTML=`<div class="pr-wrap">
-      <div class="pr-head">
-        <div class="pr-badge ${rk.cls}">${rk.ic}</div>
-        <div class="pr-titles">
-          <h3>${nm}</h3>
-          <div class="pr-rank">${rk.name} · <b>${Math.round(acc.elo||1200)} ELO</b> · <span class="pr-st-tag">🔥 ${stCur} ${tr('Gün','Day')}</span></div>
-        </div>
-      </div>
-      <div class="pr-grid">
+    const qDoneCnt=(acc.quests&&acc.quests.items)?acc.quests.items.filter(x=>x.done).length:0;
+
+    let tabBody='';
+    if(curTab==='overview'){
+      const histHtml=hist.length
+        ?hist.map(h=>{
+            const tm=fmtMatchTime(h.ts);
+            const sc=h.score?` · ${escHtml(h.score)}`:'';
+            const rightHtml=h.unranked
+              ?`<b class="pr-hunr">${tr('Antrenman','Unranked')} <i>(0 ELO)</i></b>`
+              :`<b>${h.delta>=0?'+':''}${h.delta} ELO <i>(${h.elo})</i></b>`;
+            return `<div class="pr-hrow ${h.won?'w':'l'}${h.unranked?' unr':''}">
+              <div class="pr-hl">
+                <span>${h.won?tr('Zafer','Win'):tr('Mağlubiyet','Loss')} · ${escHtml(h.opp)}${sc}</span>
+                ${tm?`<small class="pr-htm">${tm}</small>`:''}
+              </div>
+              ${rightHtml}
+            </div>`;
+          }).join('')
+        :`<div class="pr-hempty">${tr('Henüz kayıtlı maç bulunmuyor.','No recorded matches yet.')}</div>`;
+      const subGames=uMatches>0?` (${rMatches} ${tr('Dereceli','Ranked')} · ${uMatches} ${tr('Antrenman','Practice')})`:'';
+      tabBody=`<div class="pr-grid">
         <div class="pr-stat"><span>${tr('Güncel ELO','Current ELO')}</span><b>${Math.round(acc.elo||1200)}</b></div>
         <div class="pr-stat"><span>${tr('Zirve ELO','Peak ELO')}</span><b>${Math.round(acc.peakElo||acc.elo||1200)}</b></div>
         <div class="pr-stat"><span>${tr('Galibiyet / Mağlubiyet','Wins / Losses')}</span><b>${totWins} / ${totLosses}</b></div>
@@ -6184,7 +6612,94 @@ function openProfileModal(){
         <div class="pr-stat"><span>${tr('En İyi Seri','Best Streak')}</span><b>${stBest} ${tr('Gün','Days')}</b></div>
       </div>
       <div class="pr-sec-lbl">${tr('Son Maçlar','Recent Matches')} (${hist.length})${subGames}</div>
-      <div class="pr-hist">${histHtml}</div>
+      <div class="pr-hist">${histHtml}</div>`;
+    }else if(curTab==='quests'){
+      const items=(acc.quests&&acc.quests.items)||[];
+      tabBody=`<div class="pr-sec-lbl">${tr('Bugünün Görevleri','Today\'s Quests')} (${qDoneCnt}/3)</div>
+      <div class="pr-scroll-box">
+        ${items.map(it=>{
+          const meta=DAILY_QUEST_POOL.find(x=>x.id===it.id)||{ic:'✦',trN:it.id,enN:it.id};
+          const pct=Math.min(100,Math.round(((it.cur||0)/Math.max(1,it.goal))*100));
+          return `<div class="q-card${it.done?' done':''}">
+            <span class="q-ic">${it.done?'✔':meta.ic}</span>
+            <div class="q-body">
+              <div class="q-top"><b>${isEn()?meta.enN:meta.trN}</b><span>${it.cur||0} / ${it.goal}</span></div>
+              <div class="q-bar"><i style="width:${pct}%"></i></div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }else if(curTab==='heroes'){
+      const hs={...(acc.heroStats||{})};
+      if(!Object.keys(hs).length&&hist.length){
+        hist.forEach(h=>{if(h.myHero){if(!hs[h.myHero])hs[h.myHero]={w:0,l:0};if(h.won)hs[h.myHero].w++;else hs[h.myHero].l++}});
+      }
+      const rows=Object.entries(hs).map(([hid,st])=>({hid,w:st.w||0,l:st.l||0,tot:(st.w||0)+(st.l||0)})).filter(x=>x.tot>0).sort((a,b)=>b.tot-a.tot||b.w-a.w);
+      tabBody=`<div class="pr-sec-lbl">${tr('Kahraman Performansı','Hero Performance')}</div>
+      <div class="pr-scroll-box">
+        ${rows.length?rows.map(r=>{
+          const hObj=HERO_MAP[r.hid];
+          const hName=hObj?hObj.name:r.hid;
+          const hWr=Math.round((r.w/r.tot)*100);
+          return `<div class="hs-stat-row">
+            <img src="${avSrc(r.hid)}" alt="${escHtml(hName)}">
+            <div class="hs-stat-info">
+              <div class="q-top"><b>${escHtml(hName)}</b><span>%${hWr} (${r.w}${tr('G','W')} / ${r.l}${tr('M','L')})</span></div>
+              <div class="q-bar"><i style="width:${hWr}%"></i></div>
+            </div>
+          </div>`;
+        }).join(''):`<div class="pr-hempty">${tr('Kahraman istatistiği için en az 1 maç oyna.','Play at least 1 match to track hero stats.')}</div>`}
+      </div>`;
+    }else{
+      const unlocked=new Set(acc.achievements||[]);
+      const cbHtml=CARD_BACKS.map(cb=>{
+        const ok=cb.req(acc),sel=(acc.cardBack||'classic')===cb.id;
+        return `<button type="button" class="cos-chip${sel?' sel':''}${ok?'':' lock'}" data-cb="${cb.id}" ${ok?'':'disabled'} title="${isEn()?cb.enR:cb.trR}">
+          <i class="cb-sw cb-${cb.id}"></i><span>${isEn()?cb.enN:cb.trN}</span>${ok?'':'<small>🔒</small>'}
+        </button>`;
+      }).join('');
+      const frHtml=PROFILE_FRAMES.map(fr=>{
+        const ok=fr.req(acc),sel=(acc.frame||'classic')===fr.id;
+        return `<button type="button" class="cos-chip${sel?' sel':''}${ok?'':' lock'}" data-fr="${fr.id}" ${ok?'':'disabled'} title="${isEn()?fr.enR:fr.trR}">
+          <i class="fr-sw fr-${fr.id}"></i><span>${isEn()?fr.enN:fr.trN}</span>${ok?'':'<small>🔒</small>'}
+        </button>`;
+      }).join('');
+      const achHtml=ACHIEVEMENTS.map(a=>{
+        const ok=unlocked.has(a.id),eq=acc.title===a.id;
+        return `<div class="ach-row${ok?' ok':''}">
+          <span class="ach-ic">${a.ic}</span>
+          <div class="ach-txt">
+            <b>${isEn()?a.enN:a.trN}</b>
+            <small>${isEn()?a.enD:a.trD} · <em>${isEn()?a.enT:a.trT}</em></small>
+          </div>
+          ${ok?`<button type="button" class="btn sm ach-eq${eq?' alt':''}" data-title="${eq?'':a.id}">${eq?tr('Takılı','Equipped'):tr('Unvanı Tak','Equip')}</button>`:`<span class="ach-lk">🔒</span>`}
+        </div>`;
+      }).join('');
+      tabBody=`<div class="pr-scroll-box pr-cos-scroll">
+        <div class="pr-sec-lbl">${tr('Kart Arkası','Card Back')}</div>
+        <div class="cos-grid">${cbHtml}</div>
+        <div class="pr-sec-lbl" style="margin-top:8px">${tr('Profil Çerçevesi','Profile Frame')}</div>
+        <div class="cos-grid">${frHtml}</div>
+        <div class="pr-sec-lbl" style="margin-top:8px">${tr('Başarımlar & Unvanlar','Achievements & Titles')} (${unlocked.size}/${ACHIEVEMENTS.length})</div>
+        <div class="ach-list">${achHtml}</div>
+      </div>`;
+    }
+
+    mb.innerHTML=`<div class="pr-wrap">
+      <div class="pr-head">
+        <div class="pr-badge ${rk.cls} ${frCls}">${rk.ic}</div>
+        <div class="pr-titles">
+          <h3>${nm}${eqTitle?` <span class="pr-eq-title">«${escHtml(eqTitle)}»</span>`:''}</h3>
+          <div class="pr-rank">${rk.name} · <b>${Math.round(acc.elo||1200)} ELO</b> · <span class="pr-st-tag">🔥 ${stCur} ${tr('Gün','Day')}</span></div>
+        </div>
+      </div>
+      <div class="pr-tabs">
+        <button type="button" class="pr-tab${curTab==='overview'?' act':''}" data-pt="overview">${tr('Genel','Overview')}</button>
+        <button type="button" class="pr-tab${curTab==='quests'?' act':''}" data-pt="quests">${tr('Görevler','Quests')} ${qDoneCnt}/3</button>
+        <button type="button" class="pr-tab${curTab==='heroes'?' act':''}" data-pt="heroes">${tr('Kahramanlar','Heroes')}</button>
+        <button type="button" class="pr-tab${curTab==='style'?' act':''}" data-pt="style">${tr('Stil & Başarım','Style & Badges')}</button>
+      </div>
+      ${tabBody}
       <div class="row pr-acts">
         <button type="button" id="pr-lb" class="btn alt sm">🏆 ${tr('Sıralama','Ranks')}</button>
         ${acc.isGuest
@@ -6194,6 +6709,10 @@ function openProfileModal(){
         <button type="button" id="pr-close" class="btn alt sm">${tr('Kapat','Close')}</button>
       </div>
     </div>`;
+    mb.querySelectorAll('.pr-tabs .pr-tab').forEach(b=>b.onclick=()=>{snd('click');curTab=b.dataset.pt;renderProf(USER_ACC)});
+    mb.querySelectorAll('.cos-chip[data-cb]').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.cardBack=b.dataset.cb;saveSession(USER_ACC);renderProf(USER_ACC)});
+    mb.querySelectorAll('.cos-chip[data-fr]').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.frame=b.dataset.fr;saveSession(USER_ACC);renderProf(USER_ACC)});
+    mb.querySelectorAll('.ach-eq').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.title=b.dataset.title||'';saveSession(USER_ACC);renderProf(USER_ACC)});
     if($('#pr-close'))$('#pr-close').onclick=()=>{snd('click');close()};
     if($('#pr-lb'))$('#pr-lb').onclick=()=>{snd('click');openLeaderboardModal()};
     if($('#pr-upg'))$('#pr-upg').onclick=()=>{snd('click');mb.classList.remove('pr-mode');openAuthModal('register',true)};
@@ -6435,6 +6954,7 @@ function openAuthModal(initialTab='login',isUpgrade=false){
     }
   }
   renderAuthBar();
+  if(USER_ACC)applyCosmetics(USER_ACC);
   if(fbDb)startLobbyPresence();
   if(sp)setTimeout(()=>{if(sp.isConnected)sp.remove()},2350);
   // Kahraman portrelerini açılıştan sonra arka planda çöz ki Kahraman Seç modalı 0ms takılmayla açılsın
