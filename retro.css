@@ -6533,7 +6533,17 @@ html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, 
   justify-content: center !important;
 }
 #mb2 .hs-join-row {
+  display: flex !important;
+  gap: 8px !important;
+  width: 100% !important;
   align-items: stretch !important;
+}
+#mb2 #code,
+#mb2 #b3 {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  width: 0 !important;
+  max-width: none !important;
 }
 #mb2 #code {
   font-size: 16px !important;
@@ -7826,16 +7836,18 @@ body[data-cardback="sovereign"] .c.back {
     gap: 6px !important;
     align-items: stretch !important;
   }
+  #menu #mb2 #code,
+  #menu #mb2 #b3 {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    width: 0 !important;
+    max-width: none !important;
+  }
   #menu #mb2 #code {
     min-height: 42px !important;
     height: auto !important;
     font-size: 14px !important;
-    flex: 0 0 42% !important;
-    width: auto !important;
     padding: 6px 8px !important;
-  }
-  #menu #mb2 #b3 {
-    flex: 1 1 0 !important;
   }
   #menu #mb2 .hs-drawer .btn.sm {
     font-size: 14px !important;
