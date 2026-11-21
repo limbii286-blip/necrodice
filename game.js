@@ -2873,9 +2873,10 @@ function applyLang(lang){
   if(dMed)dMed.textContent=tr('Orta','Medium');
   if(dHard)dHard.textContent=tr('Zor','Hard');
   if(dImp)dImp.textContent=tr('İmkansız','Impossible');
-  if($('#b2'))$('#b2').textContent=tr('Oda Oluştur','Create Room');
+  if($('#b2'))$('#b2').textContent=tr('Özel Oyun Oluştur','Create Private Match');
+  if($('#bqm'))$('#bqm').textContent=tr('Hızlı Maç Ara','Find Quick Match');
   if($('#code'))$('#code').placeholder=tr('ODA KODU','ROOM CODE');
-  if($('#b3'))$('#b3').textContent=tr('Odaya Katıl','Join Room');
+  if($('#b3'))$('#b3').textContent=tr('Özel Oyuna Katıl','Join Private Match');
   if($('#b6'))$('#b6').textContent=tr('Ayarlar','Settings');
   if($('#btut'))$('#btut').textContent=tr('Eğitim (Karga Rehberi)','Tutorial (Raven Guide)');
   if($('#b4'))$('#b4').textContent=tr('Joker Kodeksi','Joker Codex');
@@ -3812,7 +3813,7 @@ document.addEventListener('keydown',e=>{
 });
 try{if(RM)document.body.classList.add('rm');if(CB)document.body.classList.add('cb');if(!CRT)document.documentElement.classList.add('nocrt')}catch(e){}
 try{$('#slogo').src='limbi_favicon.png?v=limbi4'}catch(e){}setTimeout(()=>{const s=$('#splash');s&&s.remove()},3550);
-on('#b2',()=>{if(noNet())return;chooseHero(h=>{MY_HERO=h;hostRoom()})});on('#b3',joinRoom);
+on('#b2',()=>{if(noNet())return;chooseHero(h=>{MY_HERO=h;hostRoom()})});on('#b3',joinRoom);on('#bqm',()=>{snd('click');startQuickMatch()});
 
 /* ---------- SÜRÜKLENEBİLİR KARTLAR İÇİN ORTAK SMOOTH LERP DÖNGÜSÜ ---------- */
 function createSmoothDragLoop(onFrame){
@@ -6177,7 +6178,7 @@ function startQuickMatch(){
       cancelQuickMatch(false);
       box(`<h3>${tr('Bağlantı Hatası','Connection Error')}</h3><p>${tr('Eşleştirme başlatılamadı, tekrar dene.','Could not start matchmaking, please try again.')}</p>`,true);
     }
-  },()=>openLobbyModal());
+  });
 }
 function renderLobbyModalBody(){
   const mb=$('#mb');
@@ -6268,22 +6269,20 @@ function openLobbyModal(){
 function renderAuthBar(){
   const bar=$('#auth-bar');
   if(!bar)return;
-  const lobBtnHtml=`<button type="button" class="auth-lb-btn auth-lob-btn" id="ab-lob" title="${tr('Çevrim İçi Lobi & Düello Daveti','Online Lobby & Duel Invites')}"><i class="lob-live-dot"></i><span>${tr('Lobi','Lobby')}</span><b id="ab-lob-cnt">${LOBBY_ONLINE_LIST.length}</b></button>`;
   const lbBtnHtml=`<button type="button" class="auth-lb-btn" id="ab-lb" title="${tr('Üye ELO Sıralaması','Member ELO Leaderboard')}">🏆 <span>${tr('Sıralama','Ranks')}</span></button>`;
   if(!USER_ACC){
     bar.hidden=false;
-    bar.innerHTML=`${lobBtnHtml}${lbBtnHtml}<button type="button" class="auth-pill auth-pill-empty" id="ab-login"><span>${tr('Giriş Yap / Kayıt Ol','Sign In / Register')}</span></button>`;
-    const btn=$('#ab-login'),lb=$('#ab-lb'),lob=$('#ab-lob');
+    bar.innerHTML=`${lbBtnHtml}<button type="button" class="auth-pill auth-pill-empty" id="ab-login"><span>${tr('Giriş Yap / Kayıt Ol','Sign In / Register')}</span></button>`;
+    const btn=$('#ab-login'),lb=$('#ab-lb');
     if(btn)btn.onclick=()=>{snd('click');openAuthModal('login',false)};
     if(lb)lb.onclick=()=>{snd('click');openLeaderboardModal()};
-    if(lob)lob.onclick=()=>{snd('click');openLobbyModal()};
     return;
   }
   const rk=eloRank(USER_ACC.elo);
   const nm=USER_ACC.isGuest?tr('Misafir','Guest'):escHtml(USER_ACC.username);
   const stDays=Math.max(1,USER_ACC.streak||1);
   bar.hidden=false;
-  bar.innerHTML=`${lobBtnHtml}${lbBtnHtml}<button type="button" class="auth-pill ${rk.cls}" id="ab-prof" title="${tr('Profil, ELO & Günlük Seri','Profile, ELO & Daily Streak')}">
+  bar.innerHTML=`${lbBtnHtml}<button type="button" class="auth-pill ${rk.cls}" id="ab-prof" title="${tr('Profil, ELO & Günlük Seri','Profile, ELO & Daily Streak')}">
     <span class="ap-ic">${rk.ic}</span>
     <span class="ap-info">
       <b>${nm}</b>
@@ -6292,10 +6291,9 @@ function renderAuthBar(){
     <span class="ap-streak" title="${tr(`${stDays} Günlük Seri`,`${stDays}-Day Streak`)}">🔥 ${stDays}</span>
     <span class="ap-elo">${Math.round(USER_ACC.elo||1200)} <i>ELO</i></span>
   </button>`;
-  const pb=$('#ab-prof'),lb=$('#ab-lb'),lob=$('#ab-lob');
+  const pb=$('#ab-prof'),lb=$('#ab-lb');
   if(pb)pb.onclick=()=>{snd('click');openProfileModal()};
   if(lb)lb.onclick=()=>{snd('click');openLeaderboardModal()};
-  if(lob)lob.onclick=()=>{snd('click');openLobbyModal()};
 }
 /* ---------- BAŞARIMLAR, UNVANLAR, GÜNLÜK GÖREVLER, KOZMETİKLER & SEZONLAR ---------- */
 const ACHIEVEMENTS=[

@@ -7758,3 +7758,32 @@ body[data-cardback="sovereign"] .c.back {
   font-size: 13px;
   color: #e6d8be;
 }
+
+/* Ana Menü — Çevrim İçi Düello: Özel Oyun Oluştur + Hızlı Maç Ara */
+.hs-online-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  justify-content: center;
+}
+.hs-online-row .btn {
+  flex: 1 1 0;
+  min-width: 0;
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+  white-space: nowrap;
+}
+.hs-online-row .qm-btn {
+  border-color: rgba(250, 204, 21, 0.72) !important;
+  box-shadow: 0 0 14px rgba(234, 179, 84, 0.24) !important;
+}
+@media (max-width: 600px) {
+  .hs-online-row {
+    gap: 6px;
+  }
+  .hs-online-row .btn {
+    font-size: 13.5px !important;
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+  }
+}
