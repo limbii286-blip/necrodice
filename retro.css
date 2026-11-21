@@ -3627,49 +3627,62 @@ body.dragging-joker #fx::after {
   border: none;
   cursor: pointer;
   filter: none;
-  box-shadow:
-    0 0 0 1.5px rgba(253, 224, 138, 0.85),
-    0 0 9px rgba(250, 204, 21, 0.46),
-    0 5px 14px rgba(0, 0, 0, 0.88);
+  opacity: 1;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.85);
 }
 .who .hp-btn.ready:hover {
-  transform: translateY(-50%) scale(1.07);
-  box-shadow:
-    0 0 0 2px rgba(254, 240, 138, 0.95),
-    0 0 14px rgba(250, 204, 21, 0.65),
-    0 7px 18px rgba(0, 0, 0, 0.92);
+  transform: translateY(-50%) scale(1.06);
+  box-shadow: 0 7px 18px rgba(0, 0, 0, 0.9);
 }
 .who .hp-btn[aria-disabled="true"]:not(.used):not(.passive),
-.who .hp-btn.opp-hp.locked {
-  opacity: 0.68;
-  filter: saturate(0.45) brightness(0.6);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.82);
-  cursor: default;
-}
+.who .hp-btn.opp-hp.locked,
 .who .hp-btn.passive,
 .who .hp-btn.opp-hp.passive,
-.who .hp-btn.opp-hp.secret-hp {
-  opacity: 1;
-  filter: none;
-  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.82);
-  cursor: default;
-}
+.who .hp-btn.opp-hp.secret-hp,
 .who .hp-btn.used,
-.who .hp-btn.opp-hp.used {
-  opacity: 0.62;
-  filter: grayscale(0.82) brightness(0.48);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.85);
-  cursor: default;
-}
+.who .hp-btn.opp-hp.used,
 .who .hp-btn.opp-hp:not(.passive):not(.used):not(.locked):not(.secret-hp) {
   width: clamp(56px, 8dvh, 72px);
   height: clamp(56px, 8dvh, 72px);
+  opacity: 1;
+  filter: none;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.85);
   pointer-events: auto;
   cursor: default;
-  box-shadow:
-    0 0 0 1.5px rgba(248, 113, 113, 0.48),
-    0 0 8px rgba(220, 38, 38, 0.28),
-    0 5px 12px rgba(0, 0, 0, 0.86);
+}
+
+/* Aktif Hero Power Sağ Alt Durum Noktası (Yeşil = Hazır, Renk Körü = Mavi, Kullanıldı = Boş Siyah) */
+.hp-dot {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  z-index: 6;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #120b07;
+  pointer-events: none;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+.hp-dot.on {
+  background: radial-gradient(circle at 34% 30%, #86efac, #16a34a 70%, #14532d 100%);
+  box-shadow: 0 0 0 1px rgba(212, 168, 85, 0.72), 0 2px 6px rgba(0, 0, 0, 0.9);
+}
+body.cb .hp-dot.on {
+  background: radial-gradient(circle at 34% 30%, #bae6fd, #0284c7 70%, #0c4a6e 100%);
+  box-shadow: 0 0 0 1px rgba(186, 230, 253, 0.78), 0 2px 6px rgba(0, 0, 0, 0.9);
+}
+.hp-dot.off {
+  background: #0d0907;
+  box-shadow: 0 0 0 1px rgba(154, 134, 106, 0.58), inset 0 2px 4px rgba(0, 0, 0, 0.95);
+}
+@media (max-width: 760px) {
+  .hp-dot {
+    width: 13px;
+    height: 13px;
+    right: -1px;
+    bottom: -1px;
+  }
 }
 .hp-cast-fx {
   position: fixed;
@@ -4345,10 +4358,6 @@ body.dragging-joker #fx::after {
     height: 44px !important;
     pointer-events: auto !important;
     cursor: pointer !important;
-  }
-  .who .hp-btn:not(.opp-hp):not(.ready):not(.passive):not(.used):not(.secret-hp) {
-    opacity: 0.68;
-    filter: saturate(0.45) brightness(0.6);
   }
   .who .hp-btn .hp-b {
     width: 15px;
