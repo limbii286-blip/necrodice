@@ -4335,7 +4335,7 @@ body.dragging-joker #fx::after {
     pointer-events: auto !important;
     cursor: pointer !important;
   }
-  .who .hp-btn:not(.ready):not(.passive):not(.used):not(.secret-hp) {
+  .who .hp-btn:not(.opp-hp):not(.ready):not(.passive):not(.used):not(.secret-hp) {
     opacity: 0.68;
     filter: saturate(0.45) brightness(0.6);
   }
