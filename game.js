@@ -1804,6 +1804,8 @@ function enter(fn){
   setTimeout(()=>setMusic('game'),320);
   setTimeout(()=>{
     $('#menu').hidden=true;
+    if(typeof dismissIncomingInviteBanner==='function')dismissIncomingInviteBanner();
+    if(typeof updateLobbyPresence==='function')updateLobbyPresence(false);
     fn();
   },460);
   setTimeout(()=>{entering=false},dur-120);
@@ -3040,6 +3042,7 @@ function exitGame(){ // limbigames perdesi, sonra ilk ekrana dön
     conn=null;spectators=[];peer=null;waitM=false;specCount=0;
     if(G)G.over=true;G=null;MODE='bot';sayT='';try{document.body.classList.remove('dead')}catch(e){}
     st('');$('#menu').hidden=false;lock=false;setMusic('menu');
+    if(typeof updateLobbyPresence==='function')updateLobbyPresence(false);
   },460);
   setTimeout(()=>{entering=false},1480);
 }
@@ -3346,8 +3349,25 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     R();
   }
 }
+let PENDING_INVITE_JOIN=false;
 function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
   if(m.k=='slots_info'){
+    if(PENDING_INVITE_JOIN&&m.slots&&m.slots.p1&&!m.slots.p1.busy){
+      PENDING_INVITE_JOIN=false;
+      chooseHero(h=>{
+        MY_HERO=h;
+        if(conn&&conn.open){
+          st(tr('Düelloya katılınıyor…','Joining duel…'));
+          conn.send({k:'join_as',role:'player',hero:h});
+        }
+      },()=>{
+        try{if(conn)conn.close()}catch(e){}
+        try{if(peer)peer.destroy()}catch(e){}
+        conn=null;peer=null;MODE='bot';$('#m').hidden=true;lock=false;st('');
+      });
+      return;
+    }
+    PENDING_INVITE_JOIN=false;
     showJoinModal(m.slots, m.specCount);
     return;
   }
@@ -3451,13 +3471,45 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
 const st=t=>$('#st').textContent=t;
 const NETERR=e=>({'network':1,'server-error':1,'socket-error':1,'socket-closed':1})[e.type]?tr('Sunucuya ulaşılamadı. İnternet bağlantını kontrol et.','Could not reach the server. Check your internet connection.'):e.type=='peer-unavailable'?tr('Oda bulunamadı','Room not found'):tr('Hata: ','Error: ')+e.type;
 const noNet=()=>{if(typeof Peer=='undefined'||navigator.onLine===false){MODE='bot';st(tr('Online mod için internet bağlantısı gerekli. Bilgisayara karşı oynayabilirsin.','An internet connection is required for Online mode. You can play against the AI.'));return true}return false};
-function hostRoom(){
+let ACTIVE_OUT_INV_UNSUB=null,ACTIVE_OUT_INV_ID=null,ACTIVE_OUT_INV_TMR=null;
+function clearOutgoingInvite(newStatus){
+  if(ACTIVE_OUT_INV_TMR){clearTimeout(ACTIVE_OUT_INV_TMR);ACTIVE_OUT_INV_TMR=null}
+  if(ACTIVE_OUT_INV_UNSUB){try{ACTIVE_OUT_INV_UNSUB()}catch(e){}ACTIVE_OUT_INV_UNSUB=null}
+  if(ACTIVE_OUT_INV_ID&&newStatus&&fbDb){
+    const id=ACTIVE_OUT_INV_ID;
+    fbDb.collection('lobby_invites').doc(id).update({status:newStatus}).catch(()=>{});
+  }
+  ACTIVE_OUT_INV_ID=null;
+}
+function hostRoom(inviteTarget){
   if(noNet())return;
+  clearOutgoingInvite('cancelled');
   MODE='host';leaving=false;sayT='';spectators=[];specCount=0;const code=Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random()*32|0]).join('');
-  st(tr('Oda oluşturuluyor…','Creating room…'));
+  st(inviteTarget?tr(`${inviteTarget.name} için düello daveti hazırlanıyor…`,`Preparing duel invite for ${inviteTarget.name}…`):tr('Oda oluşturuluyor…','Creating room…'));
   peer=new Peer('necrodice-'+code);
   
   const showLobby=()=>{
+    if(inviteTarget){
+      box(`
+        <div class="lobby-box">
+          <h3 style="margin-bottom:8px">⚔ ${tr('Düello Daveti Gönderildi','Duel Invite Sent')}</h3>
+          <p style="color:var(--bone);font-size:17px;margin-bottom:10px">${tr(`<b>${escHtml(inviteTarget.name)}</b> (${Math.round(inviteTarget.elo||1200)} ELO) yanıtı bekleniyor…`,`Waiting for <b>${escHtml(inviteTarget.name)}</b> (${Math.round(inviteTarget.elo||1200)} ELO)…`)}</p>
+          <div class="lobby-spinner"><i></i><i></i><i></i></div>
+          <p id="lobbyStatus" style="font-size:15px;color:#a0b8a4;margin-top:12px">${tr('Kabul ettiğinde düello otomatik başlayacak.','The duel will start automatically once accepted.')}</p>
+        </div>
+      `, true);
+      const pc=$('#pc');
+      if(pc){
+        pc.textContent=tr('Daveti İptal Et','Cancel Invite');
+        pc.onclick=()=>{
+          clearOutgoingInvite('cancelled');
+          try{if(peer)peer.destroy()}catch(e){}
+          peer=null;conn=null;spectators=[];MODE='bot';
+          $('#m').hidden=true;lock=false;st('');
+        };
+      }
+      return;
+    }
     box(`
       <div class="lobby-box">
         <h3 style="margin-bottom:8px">${tr('Çevrim İçi Lobi','Online Lobby')}</h3>
@@ -3495,21 +3547,65 @@ function hostRoom(){
   };
 
   peer.on('open',()=>{
-    st(tr('Oda kodu: ','Room code: ')+code+tr(' — rakip bekleniyor…',' — waiting for opponent…'));
+    st(inviteTarget?tr(`${inviteTarget.name} bekleniyor…`,`Waiting for ${inviteTarget.name}…`):(tr('Oda kodu: ','Room code: ')+code+tr(' — rakip bekleniyor…',' — waiting for opponent…')));
     showLobby();
+    if(inviteTarget&&fbDb&&typeof getMyPresenceId==='function'){
+      const invId='inv_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,6);
+      ACTIVE_OUT_INV_ID=invId;
+      const myName=(USER_ACC&&!USER_ACC.isGuest)?USER_ACC.username:tr('Misafir','Guest');
+      const myElo=Math.round((USER_ACC&&USER_ACC.elo)||1200);
+      const ref=fbDb.collection('lobby_invites').doc(invId);
+      ref.set({
+        id:invId,
+        fromId:getMyPresenceId(),
+        fromName:myName,
+        fromElo:myElo,
+        toId:inviteTarget.pid,
+        toName:inviteTarget.name||'',
+        roomCode:code,
+        status:'pending',
+        createdAt:Date.now()
+      }).catch(()=>{});
+      ACTIVE_OUT_INV_UNSUB=ref.onSnapshot(snap=>{
+        if(!snap.exists)return;
+        const d=snap.data();
+        if(!d)return;
+        if(d.status==='accepted'){
+          const ls=$('#lobbyStatus');
+          if(ls)ls.textContent=tr(`${inviteTarget.name} kabul etti! Kahramanını seçiyor…`,`${inviteTarget.name} accepted! Choosing hero…`);
+          clearOutgoingInvite(null);
+        }else if(d.status==='declined'){
+          clearOutgoingInvite(null);
+          try{if(peer)peer.destroy()}catch(e){}
+          peer=null;conn=null;spectators=[];MODE='bot';
+          snd('err');
+          box(`<h3>${tr('Davet Reddedildi','Invite Declined')}</h3><p>${tr(`<b>${escHtml(inviteTarget.name)}</b> düello davetini reddetti.`,`<b>${escHtml(inviteTarget.name)}</b> declined your duel invite.`)}</p>`,true);
+        }
+      },()=>{});
+      ACTIVE_OUT_INV_TMR=setTimeout(()=>{
+        if(ACTIVE_OUT_INV_ID===invId&&!conn){
+          clearOutgoingInvite('expired');
+          try{if(peer)peer.destroy()}catch(e){}
+          peer=null;conn=null;spectators=[];MODE='bot';
+          box(`<h3>${tr('Yanıt Alınamadı','No Response')}</h3><p>${tr(`<b>${escHtml(inviteTarget.name)}</b> davete zamanında yanıt vermedi.`,`<b>${escHtml(inviteTarget.name)}</b> did not respond in time.`)}</p>`,true);
+        }
+      },45000);
+    }
   });
 
   peer.on('error',e=>{
     if(e.type=='unavailable-id'){
       try{peer.destroy()}catch(err){}
-      hostRoom();
+      hostRoom(inviteTarget);
     }else{
+      clearOutgoingInvite('cancelled');
       st(NETERR(e));
       const ls=$('#lobbyStatus');if(ls)ls.textContent=NETERR(e);
     }
   });
 
   peer.on('connection',c=>{
+    clearOutgoingInvite(null);
     c.on('data', m => onGuest(m, c));
   });
 }
@@ -3588,9 +3684,11 @@ function showJoinModal(slots, specCount){
   }
 }
 
-function joinRoom(){
+function joinRoom(directCode,fromInvite=false){
   if(noNet())return;
-  const code=$('#code').value.trim().toUpperCase();if(!code)return st(tr('Oda kodunu yaz','Enter room code'));
+  const code=(typeof directCode==='string'&&directCode.trim())?directCode.trim().toUpperCase():($('#code')?$('#code').value.trim().toUpperCase():'');
+  if(!code)return st(tr('Oda kodunu yaz','Enter room code'));
+  PENDING_INVITE_JOIN=!!fromInvite;
   leaving=false;sayT='';st(tr('Odaya bağlanılıyor…','Connecting to room…'));peer=new Peer();
   peer.on('open',()=>{
     conn=peer.connect('necrodice-'+code,{reliable:true});
@@ -3601,7 +3699,7 @@ function joinRoom(){
     });
     conn.on('close',()=>peerLeft(tr('Oda sahibi oyundan ayrıldı.','Room host left the game.')));
   });
-  peer.on('error',e=>st(NETERR(e)));
+  peer.on('error',e=>{PENDING_INVITE_JOIN=false;st(NETERR(e))});
 }
 const on=(id,f)=>{const e=document.querySelector(id);if(e)e.onclick=f}; // bir öğe yoksa diğer düğmeler yine de çalışır
 document.querySelectorAll('.d').forEach(b=>b.onclick=()=>{DIFF=b.dataset.d;MODE='bot';chooseHero(h=>{MY_HERO=h;enter(start)})});
@@ -5501,6 +5599,7 @@ function saveSession(acc,syncCloud=true){
     if(syncCloud)syncAccountToCloud(acc);
   }
   renderAuthBar();
+  if(typeof startLobbyPresence==='function'&&fbDb)startLobbyPresence();
 }
 function dayKey(offsetDays=0){
   const d=new Date();
@@ -5703,23 +5802,231 @@ function recordMatchElo(S,won){
   S._eloRes={before,after,delta,rank:eloRank(after),unranked:false};
   return S._eloRes;
 }
+let LOBBY_ONLINE_LIST=[];
+let LOBBY_PRESENCE_UNSUB=null,LOBBY_INVITE_UNSUB=null,LOBBY_HB_TIMER=null,LOBBY_LISTEN_PID='';
+const LOBBY_FALLBACK_PID='g_'+Math.random().toString(36).slice(2,10);
+const LOBBY_TTL_MS=45000;
+
+function getMyPresenceId(){
+  if(isRegisteredMember(USER_ACC)&&USER_ACC.key)return 'm_'+USER_ACC.key;
+  if(USER_ACC&&USER_ACC.uid)return String(USER_ACC.uid);
+  return LOBBY_FALLBACK_PID;
+}
+function updateLobbyBadge(){
+  const c=document.getElementById('ab-lob-cnt');
+  if(c)c.textContent=String(LOBBY_ONLINE_LIST.length);
+}
+function updateLobbyPresence(forceOffline=false){
+  if(!fbDb)return;
+  const pid=getMyPresenceId();
+  if(!pid)return;
+  const ref=fbDb.collection('lobby_presence').doc(pid);
+  if(forceOffline){
+    ref.delete().catch(()=>{});
+    return;
+  }
+  const menuEl=$('#menu');
+  const inGame=!!(menuEl&&menuEl.hidden);
+  const name=(USER_ACC&&!USER_ACC.isGuest&&USER_ACC.username)?USER_ACC.username:tr('Misafir','Guest');
+  const elo=Math.round((USER_ACC&&USER_ACC.elo)||1200);
+  const isGuest=!(USER_ACC&&!USER_ACC.isGuest);
+  ref.set({
+    pid,
+    name,
+    elo,
+    isGuest,
+    status:inGame?'ingame':'menu',
+    lastSeen:Date.now()
+  },{merge:true}).catch(()=>{});
+}
+function dismissIncomingInviteBanner(){
+  const old=document.getElementById('lob-inv-toast');
+  if(old)old.remove();
+}
+function showIncomingInviteBanner(inv){
+  if(!inv||!inv.id||!inv.roomCode)return;
+  const menuEl=$('#menu');
+  if(menuEl&&menuEl.hidden)return; // Aktif maç içindeyken rahatsız etme
+  dismissIncomingInviteBanner();
+  snd('ok');
+  const el=document.createElement('div');
+  el.id='lob-inv-toast';
+  el.className='lob-inv-toast';
+  el.dataset.invId=inv.id;
+  el.innerHTML=`<div class="lit-top">
+      <span class="lit-ic">⚔</span>
+      <div class="lit-txt">
+        <b>${tr('Düello Daveti!','Duel Invite!')}</b>
+        <small><em>${escHtml(inv.fromName||tr('Oyuncu','Player'))}</em> (${Math.round(inv.fromElo||1200)} ELO) ${tr('seni düelloya davet ediyor.','challenges you to a duel.')}</small>
+      </div>
+    </div>
+    <div class="lit-acts">
+      <button type="button" class="btn alt sm" id="lit-acc">${tr('Kabul Et','Accept')}</button>
+      <button type="button" class="btn sm" id="lit-dec">${tr('Reddet','Decline')}</button>
+    </div>`;
+  document.body.appendChild(el);
+  const accBtn=el.querySelector('#lit-acc'),decBtn=el.querySelector('#lit-dec');
+  if(decBtn)decBtn.onclick=()=>{
+    snd('click');
+    if(fbDb)fbDb.collection('lobby_invites').doc(inv.id).update({status:'declined'}).catch(()=>{});
+    dismissIncomingInviteBanner();
+  };
+  if(accBtn)accBtn.onclick=()=>{
+    snd('click');
+    if(fbDb)fbDb.collection('lobby_invites').doc(inv.id).update({status:'accepted'}).catch(()=>{});
+    dismissIncomingInviteBanner();
+    const mb=$('#mb');
+    if(mb)mb.classList.remove('auth-mode','lb-mode','lob-mode','pr-mode');
+    if($('#m'))$('#m').hidden=true;
+    lock=false;
+    joinRoom(inv.roomCode,true);
+  };
+}
+function startLobbyPresence(){
+  if(!fbDb)return;
+  const myPid=getMyPresenceId();
+  updateLobbyPresence(false);
+  if(!LOBBY_HB_TIMER){
+    LOBBY_HB_TIMER=setInterval(()=>{
+      if(!document.hidden)updateLobbyPresence(false);
+    },15000);
+    window.addEventListener('pagehide',()=>updateLobbyPresence(true));
+    window.addEventListener('beforeunload',()=>updateLobbyPresence(true));
+  }
+  if(!LOBBY_PRESENCE_UNSUB){
+    LOBBY_PRESENCE_UNSUB=fbDb.collection('lobby_presence').onSnapshot(snap=>{
+      const now=Date.now();
+      const arr=[];
+      snap.forEach(doc=>{
+        const d=doc.data();
+        if(d&&d.pid&&d.lastSeen&&(now-d.lastSeen)<=LOBBY_TTL_MS){
+          arr.push(d);
+        }
+      });
+      arr.sort((a,b)=>{
+        const sa=a.status==='menu'?0:1,sb=b.status==='menu'?0:1;
+        if(sa!==sb)return sa-sb;
+        return (b.elo||1200)-(a.elo||1200);
+      });
+      LOBBY_ONLINE_LIST=arr;
+      updateLobbyBadge();
+      const mb=$('#mb');
+      if(mb&&mb.classList.contains('lob-mode')&&!$('#m').hidden){
+        renderLobbyModalBody();
+      }
+    },()=>{});
+  }
+  if(LOBBY_LISTEN_PID!==myPid){
+    if(LOBBY_INVITE_UNSUB){try{LOBBY_INVITE_UNSUB()}catch(e){}LOBBY_INVITE_UNSUB=null}
+    LOBBY_LISTEN_PID=myPid;
+    LOBBY_INVITE_UNSUB=fbDb.collection('lobby_invites').where('toId','==',myPid).onSnapshot(snap=>{
+      const now=Date.now();
+      let activeInv=null;
+      snap.forEach(doc=>{
+        const d=doc.data();
+        if(d&&d.status==='pending'&&d.createdAt&&(now-d.createdAt)<=55000){
+          if(!activeInv||d.createdAt>activeInv.createdAt)activeInv=d;
+        }
+      });
+      const curBanner=document.getElementById('lob-inv-toast');
+      if(!activeInv){
+        if(curBanner)dismissIncomingInviteBanner();
+      }else if(!curBanner||curBanner.dataset.invId!==activeInv.id){
+        showIncomingInviteBanner(activeInv);
+      }
+    },()=>{});
+  }
+}
+function renderLobbyModalBody(){
+  const mb=$('#mb');
+  if(!mb||!mb.classList.contains('lob-mode'))return;
+  const myPid=getMyPresenceId();
+  const now=Date.now();
+  const list=LOBBY_ONLINE_LIST.filter(u=>u&&u.lastSeen&&(now-u.lastSeen)<=LOBBY_TTL_MS);
+  const rowsHtml=list.length?list.map(u=>{
+    const isMe=u.pid===myPid;
+    const rk=eloRank(u.elo);
+    const inGame=u.status==='ingame';
+    const tag=u.isGuest?` <em>(${tr('Misafir','Guest')})</em>`:'';
+    const actHtml=isMe
+      ?`<span class="lob-me-tag">${tr('Sen','You')}</span>`
+      :(inGame
+        ?`<span class="lob-busy-tag">${tr('Maçta','In Match')}</span>`
+        :`<button type="button" class="btn alt sm lob-inv-btn" data-pid="${escHtml(u.pid)}">⚔ ${tr('Davet Et','Challenge')}</button>`);
+    return `<div class="lob-row${isMe?' me':''}${inGame?' busy':''}">
+      <span class="lob-dot ${inGame?'busy':'free'}" title="${inGame?tr('Maçta','In Match'):tr('Müsait','Available')}"></span>
+      <span class="lb-rk" title="${rk.name}">${rk.ic}</span>
+      <div class="lb-u">
+        <b>${escHtml(u.name||tr('Oyuncu','Player'))}${tag}</b>
+        <small>${rk.name} · ${Math.round(u.elo||1200)} ELO · ${inGame?tr('Maçta','In Match'):tr('Müsait','Available')}</small>
+      </div>
+      ${actHtml}
+    </div>`;
+  }).join(''):`<div class="lb-empty">${tr('Şu an lobide başka çevrim içi oyuncu yok.','No other players online in the lobby right now.')}</div>`;
+
+  const listEl=mb.querySelector('.lob-list');
+  const subEl=mb.querySelector('.lob-sub');
+  if(subEl)subEl.textContent=tr(`Şu an ${list.length} oyuncu çevrim içi · Anında düello daveti gönder`,`${list.length} players online now · Send instant duel invites`);
+  if(listEl){
+    listEl.innerHTML=rowsHtml;
+    listEl.querySelectorAll('.lob-inv-btn').forEach(btn=>{
+      btn.onclick=()=>{
+        const target=list.find(x=>x.pid===btn.dataset.pid);
+        if(!target)return;
+        snd('click');
+        mb.classList.remove('auth-mode','lob-mode');
+        $('#m').hidden=true;lock=false;
+        if(noNet())return;
+        chooseHero(h=>{MY_HERO=h;hostRoom(target)},()=>openLobbyModal());
+      };
+    });
+  }
+}
+function openLobbyModal(){
+  if(noNet())return;
+  const mb=$('#mb');
+  if(!mb)return;
+  if(!USER_ACC)createGuestAccount();
+  startLobbyPresence();
+  lock=true;
+  mb.classList.remove('end-mode','an-mode','set-mode','lb-mode','pr-mode');
+  mb.classList.add('auth-mode','lob-mode');
+  mb.innerHTML=`<div class="lb-wrap">
+    <div class="lb-head">
+      <h3>🌐 ${tr('Çevrim İçi Lobi','Online Lobby')}</h3>
+      <p class="lb-sub lob-sub">${tr('Çevrim içi oyuncular yükleniyor…','Loading online players…')}</p>
+    </div>
+    <div class="lb-list lob-list"></div>
+    <div class="row lb-acts">
+      <button type="button" id="lob-ref" class="btn alt sm">↻ ${tr('Yenile','Refresh')}</button>
+      <button type="button" id="lob-close" class="btn sm">${tr('Kapat','Close')}</button>
+    </div>
+  </div>`;
+  $('#m').hidden=false;
+  const close=()=>{mb.classList.remove('auth-mode','lob-mode');$('#m').hidden=true;lock=false};
+  if($('#lob-close'))$('#lob-close').onclick=()=>{snd('click');close()};
+  if($('#lob-ref'))$('#lob-ref').onclick=()=>{snd('click');updateLobbyPresence(false);renderLobbyModalBody()};
+  renderLobbyModalBody();
+}
 function renderAuthBar(){
   const bar=$('#auth-bar');
   if(!bar)return;
+  const lobBtnHtml=`<button type="button" class="auth-lb-btn auth-lob-btn" id="ab-lob" title="${tr('Çevrim İçi Lobi & Düello Daveti','Online Lobby & Duel Invites')}"><i class="lob-live-dot"></i><span>${tr('Lobi','Lobby')}</span><b id="ab-lob-cnt">${LOBBY_ONLINE_LIST.length}</b></button>`;
   const lbBtnHtml=`<button type="button" class="auth-lb-btn" id="ab-lb" title="${tr('Üye ELO Sıralaması','Member ELO Leaderboard')}">🏆 <span>${tr('Sıralama','Ranks')}</span></button>`;
   if(!USER_ACC){
     bar.hidden=false;
-    bar.innerHTML=`${lbBtnHtml}<button type="button" class="auth-pill auth-pill-empty" id="ab-login"><span>${tr('Giriş Yap / Kayıt Ol','Sign In / Register')}</span></button>`;
-    const btn=$('#ab-login'),lb=$('#ab-lb');
+    bar.innerHTML=`${lobBtnHtml}${lbBtnHtml}<button type="button" class="auth-pill auth-pill-empty" id="ab-login"><span>${tr('Giriş Yap / Kayıt Ol','Sign In / Register')}</span></button>`;
+    const btn=$('#ab-login'),lb=$('#ab-lb'),lob=$('#ab-lob');
     if(btn)btn.onclick=()=>{snd('click');openAuthModal('login',false)};
     if(lb)lb.onclick=()=>{snd('click');openLeaderboardModal()};
+    if(lob)lob.onclick=()=>{snd('click');openLobbyModal()};
     return;
   }
   const rk=eloRank(USER_ACC.elo);
   const nm=USER_ACC.isGuest?tr('Misafir','Guest'):escHtml(USER_ACC.username);
   const stDays=Math.max(1,USER_ACC.streak||1);
   bar.hidden=false;
-  bar.innerHTML=`${lbBtnHtml}<button type="button" class="auth-pill ${rk.cls}" id="ab-prof" title="${tr('Profil, ELO & Günlük Seri','Profile, ELO & Daily Streak')}">
+  bar.innerHTML=`${lobBtnHtml}${lbBtnHtml}<button type="button" class="auth-pill ${rk.cls}" id="ab-prof" title="${tr('Profil, ELO & Günlük Seri','Profile, ELO & Daily Streak')}">
     <span class="ap-ic">${rk.ic}</span>
     <span class="ap-info">
       <b>${nm}</b>
@@ -5728,9 +6035,10 @@ function renderAuthBar(){
     <span class="ap-streak" title="${tr(`${stDays} Günlük Seri`,`${stDays}-Day Streak`)}">🔥 ${stDays}</span>
     <span class="ap-elo">${Math.round(USER_ACC.elo||1200)} <i>ELO</i></span>
   </button>`;
-  const pb=$('#ab-prof'),lb=$('#ab-lb');
+  const pb=$('#ab-prof'),lb=$('#ab-lb'),lob=$('#ab-lob');
   if(pb)pb.onclick=()=>{snd('click');openProfileModal()};
   if(lb)lb.onclick=()=>{snd('click');openLeaderboardModal()};
+  if(lob)lob.onclick=()=>{snd('click');openLobbyModal()};
 }
 async function openLeaderboardModal(){
   const mb=$('#mb');
@@ -6127,6 +6435,7 @@ function openAuthModal(initialTab='login',isUpgrade=false){
     }
   }
   renderAuthBar();
+  if(fbDb)startLobbyPresence();
   if(sp)setTimeout(()=>{if(sp.isConnected)sp.remove()},2350);
   // Kahraman portrelerini açılıştan sonra arka planda çöz ki Kahraman Seç modalı 0ms takılmayla açılsın
   setTimeout(()=>{
