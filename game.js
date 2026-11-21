@@ -2489,12 +2489,13 @@ function buildEndScreenHtml(S,v,L,roll,th){
     <defs>
       <linearGradient id="ndIron" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#9ca3af"/><stop offset="50%" stop-color="#52525b"/><stop offset="100%" stop-color="#27272a"/></linearGradient>
       <linearGradient id="ndAsh" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3f3f46"/><stop offset="55%" stop-color="#27272a"/><stop offset="100%" stop-color="#121215"/></linearGradient>
+      <linearGradient id="ndBloodGlow" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fca5a5"/><stop offset="50%" stop-color="#dc2626"/><stop offset="100%" stop-color="#7f1d1d"/></linearGradient>
     </defs>
-    <!-- Shattered Obsidian Runic Ring (No Crown, No Red Box) -->
-    <g opacity="0.72">
-      <path d="M118 96 A108 108 0 0 1 286 78" stroke="#71717a" stroke-width="2.4" stroke-dasharray="18 8"/>
-      <path d="M312 132 A108 108 0 0 1 258 250" stroke="#52525b" stroke-width="2.2" stroke-dasharray="14 10"/>
-      <path d="M164 252 A108 108 0 0 1 104 148" stroke="#71717a" stroke-width="2.2" stroke-dasharray="12 9"/>
+    <!-- Crimson-Ember Runic Halo (Defeat Mirror of Victory Halo) -->
+    <g class="nd-halo-spin" opacity="0.78">
+      <circle cx="210" cy="154" r="118" stroke="url(#ndBloodGlow)" stroke-width="1.5" stroke-dasharray="10 9" opacity="0.65"/>
+      <circle cx="210" cy="154" r="102" stroke="url(#ndBloodGlow)" stroke-width="2" stroke-dasharray="28 12" opacity="0.75"/>
+      <path d="M210 26 L216 62 L204 62 Z M210 282 L216 246 L204 246 Z M82 154 L118 148 L118 160 Z M338 154 L302 148 L302 160 Z" fill="url(#ndBloodGlow)" opacity="0.7"/>
     </g>
     <!-- Broken Crossed Blades -->
     <g stroke="#0e0e11" stroke-width="1.8" stroke-linejoin="round">
