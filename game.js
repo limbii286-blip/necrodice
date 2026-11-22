@@ -930,8 +930,8 @@ function bo3v(T,p,r){ // tur sonucu r (p açısından) -> düelloyu kazanma değ
     return Math.max(-1.25,Math.min(1.25,val));
   }
   let cBonus=0;
-  if(avKey(T,p)==='c'&&T.cWins){const cw=(T.cWins[p]||0)+(r>0?1:0);if(cw>=4)cBonus+=0.07}
-  if(avKey(T,q)==='c'&&T.cWins){const cw=(T.cWins[q]||0)+(r<0?1:0);if(cw>=4)cBonus-=0.07}
+  if(avKey(T,p)==='c'&&T.cWins){const cw=(T.cWins[p]||0)+(r>0?1:0);if(cw>=3)cBonus+=0.07}
+  if(avKey(T,q)==='c'&&T.cWins){const cw=(T.cWins[q]||0)+(r<0?1:0);if(cw>=3)cBonus-=0.07}
   return Math.max(-.92,Math.min(.92,.56*(np-nq)+.035*(T.hand[p].length-T.hand[q].length)+cBonus));
 }
 function rollout(T,p,a,pol){
@@ -1180,7 +1180,7 @@ function bot(){
     thinkOn=false;
     if(S.hpUsed&&!S.hpUsed[1]){
       const bh=avKey(S,1),bt=total(S,1),bT=tg(S),low=lowW(S);
-      if(bh==='c'&&S.cWins&&S.cWins[1]>=4&&!low){
+      if(bh==='c'&&S.cWins&&S.cWins[1]>=3&&!low){
         const curEv=evalS(clone(S),1),dp1=deathProb(S,1);
         const rwThr=prm.deepRoll?-(0.18+(1-dp1)*0.16):-0.35;
         if((bt>bT&&curEv<0.22)||(prm.hero&&curEv<rwThr)){
@@ -1833,7 +1833,7 @@ function enter(fn){
 }
 let MY_HERO='c',OPP_HERO='n';
 const HEROES_TR=[
-  {id:'c',name:'Lanetli Tüccar',hpName:'Zamanın İadesi',desc:'Kullanıldığında masadaki tüm sayı kartları desteye geri karıştırılır. Kullanılmış Joker kartları yakılır ve yeni bir sayı kartı destesi dağıtılır. 4 tur galibiyet elde ettiğinde aktifleşir.'},
+  {id:'c',name:'Lanetli Tüccar',hpName:'Zamanın İadesi',desc:'Kullanıldığında masadaki tüm sayı kartları desteye geri karıştırılır. Kullanılmış Joker kartları yakılır ve yeni bir sayı kartı destesi dağıtılır. 3 tur galibiyet elde ettiğinde aktifleşir.'},
   {id:'p',name:'Veba Doktoru',hpName:'Vebalı Takas',desc:'Elindeki 1 Joker kartını yakarak desteden rastgele 2 yeni Joker kartı çek.'},
   {id:'n',name:'Kara Şövalye',passive:true,hpName:'Ölüm Fermanı',desc:'Rakibinin attığı her Ölüm Zarı sonucundan 2 çıkar.'},
   {id:'a',name:'Solmuş Kraliçe',hpName:'Yitik Yazgı',desc:'Destenin en üstündeki 2 kartı gizlice incele. Dilersen bu kartların yerlerini değiştir.'},
@@ -1846,7 +1846,7 @@ const HEROES_TR=[
   {id:'u',name:'Bilinmeyen',passive:true,bossOnly:true,hpName:'Hiçlikten Dönüş',desc:'Ölüm zarında hedef sayının altında atarsan, ölümden bir kereliğine geri dönersin.'}
 ];
 const HEROES_EN=[
-  {id:'c',name:'Cursed Merchant',hpName:'Rewind of Time',desc:'Shuffles all number cards on the table back into the deck, burns used Jokers, and deals a fresh number hand. Unlocks after winning 4 rounds.'},
+  {id:'c',name:'Cursed Merchant',hpName:'Rewind of Time',desc:'Shuffles all number cards on the table back into the deck, burns used Jokers, and deals a fresh number hand. Unlocks after winning 3 rounds.'},
   {id:'p',name:'Plague Doctor',hpName:'Plague Trade',desc:'Burn 1 Joker card from your hand to draw 2 random new Joker cards from the deck.'},
   {id:'n',name:'Dark Knight',passive:true,hpName:'Death Decree',desc:'Subtract 2 from every Death Dice roll made by your opponent.'},
   {id:'a',name:'Withered Queen',hpName:'Lost Fate',desc:'Secretly inspect the top 2 cards of the deck. Swap their order if you wish.'},
@@ -2291,11 +2291,11 @@ function R(){
   const hpUsed0=myHId==='u'?!!(S.uRevived&&S.uRevived[0]):myHId==='v'?!!(S.vampUsed&&S.vampUsed[0]):(myHId==='m'||myHId==='e'||myHId==='n'||myHId==='s'||myHId==='c')?false:!!(S.hpUsed&&S.hpUsed[0]);
   const hpUsed1=oppHId==='u'?!!(MODE==='bot'?S.rigDone:(S.uRevived&&S.uRevived[1])):oppHId==='v'?!!(S.vampUsed&&S.vampUsed[1]):(oppHId==='m'||oppHId==='e'||oppHId==='n'||oppHId==='s'||oppHId==='w'||oppHId==='a'||oppHId==='c')?false:!!(S.hpUsed&&S.hpUsed[1]);
   const hpObj0=HERO_MAP[myHId]||HEROES[0],hpObj1=HERO_MAP[oppHId]||HEROES[0];
-  const cWins0=(S.cWins&&S.cWins[0])||0,cReady=myHId!=='c'||cWins0>=4;
-  const cWins1=(S.cWins&&S.cWins[1])||0,cReady1=oppHId!=='c'||cWins1>=4;
+  const cWins0=(S.cWins&&S.cWins[0])||0,cReady=myHId!=='c'||cWins0>=3;
+  const cWins1=(S.cWins&&S.cWins[1])||0,cReady1=oppHId!=='c'||cWins1>=3;
   const canHp=!isSpec&&!hpObj0.passive&&my&&!P&&!hpUsed0&&cReady;
-  const cProg=(myHId==='c'&&!cReady)?`<i class="hp-prog">${Math.min(4,cWins0)}/4</i>`:'';
-  const cProg1=(oppHId==='c'&&!cReady1)?`<i class="hp-prog">${Math.min(4,cWins1)}/4</i>`:'';
+  const cProg=(myHId==='c'&&!cReady)?`<i class="hp-prog">${Math.min(3,cWins0)}/3</i>`:'';
+  const cProg1=(oppHId==='c'&&!cReady1)?`<i class="hp-prog">${Math.min(3,cWins1)}/3</i>`:'';
   const hpDot0=(!hpObj0.passive&&!cProg)?`<i class="hp-dot ${(!hpUsed0&&cReady)?'on':'off'}"></i>`:'';
   const hpDot1=(!hpObj1.passive&&!cProg1&&oppHId!=='w'&&oppHId!=='a')?`<i class="hp-dot ${(!hpUsed1&&cReady1)?'on':'off'}"></i>`:'';
   const isMob=window.matchMedia&&window.matchMedia('(max-width: 760px), (hover: none) and (pointer: coarse)').matches;
@@ -2635,7 +2635,7 @@ function useHeroPower(){
   const hid=avKey(S,0);
   if(hid==='c'){
     const wins=(S.cWins&&S.cWins[0])||0;
-    if(wins<4)return box(`<h3>${tr('Zamanın İadesi','Rewind of Time')}</h3><p>${tr(`4 tur galibiyet elde ettiğinde aktifleşir. (Şu an: ${wins}/4)`,`Unlocks after winning 4 rounds. (Current: ${wins}/4)`)}</p>`);
+    if(wins<3)return box(`<h3>${tr('Zamanın İadesi','Rewind of Time')}</h3><p>${tr(`3 tur galibiyet elde ettiğinde aktifleşir. (Şu an: ${wins}/3)`,`Unlocks after winning 3 rounds. (Current: ${wins}/3)`)}</p>`);
     if(MODE==='guest'){S.cWins[0]=0;snd('flip');playHeroPowerAnim('c',0,HERO_MAP.c);R();return conn.send({k:'hp_rewind'})}
     execRewind(S,0);
   }else if(hid==='p'){
@@ -3107,8 +3107,8 @@ document.addEventListener('click',e=>{
       const hid=t.dataset.hpId,side=+t.dataset.hpSide,h=HERO_MAP[hid];
       if(!h)return;
       const isUsed=t.classList.contains('used'),isReady=t.classList.contains('ready');
-      const cw=hid==='c'?Math.min(4,(S.cWins&&S.cWins[side])||0):0;
-      const tagTxt=hid==='c'?tr(`Aktif · Galibiyet: ${cw}/4`,`Active · Wins: ${cw}/4`):(h.passive?tr('Pasif','Passive'):tr('Aktif','Active'));
+      const cw=hid==='c'?Math.min(3,(S.cWins&&S.cWins[side])||0):0;
+      const tagTxt=hid==='c'?tr(`Aktif · Galibiyet: ${cw}/3`,`Active · Wins: ${cw}/3`):(h.passive?tr('Pasif','Passive'):tr('Aktif','Active'));
       const canUse=side===0&&!h.passive&&isReady&&S.turn===0&&!S.wait&&MODE!=='spectator'&&!P;
       const thiefCard=hid==='s'&&IMG.j[25]?`<img class="hp-mc-jcard" src="${IMG.j[25]}" alt="${tr('Hırsız','Thief')}">`:'';
       box(`<div class="hp-mobile-card ${side===1?'opp':'mine'}${h.passive?' passive':''}${isUsed?' used':''}"><div class="hp-mc-ic">${HP_IC[hid]||HP_IC.c}</div><div class="hp-tip-title">${h.hpName}</div><div class="hp-tip-tag">${tagTxt}</div><p class="hp-tip-desc">${h.desc}</p>${thiefCard}${canUse?`<div class="row"><button id="hp-mob-use" class="btn alt">${tr('Kullan','Use')}</button><button id="pc" class="btn">${tr('Kapat','Close')}</button></div>`:''}</div>`, !canUse);
@@ -3501,7 +3501,7 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     R();
   }
   else if(m.k=='hp_rewind'){
-    if(avKey(S,1)!=='c'||!(S.cWins&&S.cWins[1]>=4))return;
+    if(avKey(S,1)!=='c'||!(S.cWins&&S.cWins[1]>=3))return;
     execRewind(S,1);
   }
   else if(m.k=='hp_peek'){
@@ -4618,8 +4618,8 @@ function createSmoothDragLoop(onFrame){
     const h=HERO_MAP[hid];
     if(!h)return;
     const isUsed=btn.classList.contains('used');
-    const cw=(hid==='c'&&G&&G.cWins)?Math.min(4,G.cWins[side]||0):0;
-    const tagTxt=hid==='c'?tr(`Aktif · Galibiyet: ${cw}/4`,`Active · Wins: ${cw}/4`):(h.passive?tr('Pasif','Passive'):tr('Aktif','Active'));
+    const cw=(hid==='c'&&G&&G.cWins)?Math.min(3,G.cWins[side]||0):0;
+    const tagTxt=hid==='c'?tr(`Aktif · Galibiyet: ${cw}/3`,`Active · Wins: ${cw}/3`):(h.passive?tr('Pasif','Passive'):tr('Aktif','Active'));
     let tip=document.getElementById('hp-tip');
     if(!tip){
       tip=document.createElement('div');
@@ -5459,12 +5459,12 @@ function analyzeHeroPowerOpp(S,played,wpPlayed,wpBest,odds,loss){
         msg:tr(`${h.hpName} hazırdı: Kazanma şansın %${wpPlayed}'e düşmüşken masadaki kartları temizleyip dezavantajı kırabilirdin.`,`${h.hpName} was ready: With win odds down to ${wpPlayed}%, wiping table cards could reset the disadvantage.`)
       };
     }
-  }else if(hid==='c'&&((S.cWins&&S.cWins[0])||0)>=4){
+  }else if(hid==='c'&&((S.cWins&&S.cWins[0])||0)>=3){
     if(wpPlayed<=45){
       return {
         hid,name:h.hpName,
         sev:'high',
-        msg:tr(`${h.hpName} (4/4) doluydu: Dezavantajlı bu turda zamanı geri sarıp üstünlüğü ele alabilirdin.`,`${h.hpName} (4/4) was charged: Rewinding this unfavorable round could turn the duel around.`)
+        msg:tr(`${h.hpName} (3/3) doluydu: Dezavantajlı bu turda zamanı geri sarıp üstünlüğü ele alabilirdin.`,`${h.hpName} (3/3) was charged: Rewinding this unfavorable round could turn the duel around.`)
       };
     }
   }else if(hid==='p'&&S.hand&&S.hand[0]&&S.hand[0].length>0&&S.jdeck&&S.jdeck.length>0){
