@@ -1290,7 +1290,7 @@ function next(){
     bot();
   }
 }
-function M(html,btn,cb,end){lock=true;const mb=$('#mb');mb.classList.remove('end-mode','an-mode','set-mode');mb.innerHTML=html+(btn?`<br><br><button id="mo" class="btn">${btn}</button>`:end?'':`<br><i>${tr('Oda sahibinin devam etmesi bekleniyor…','Waiting for the host to continue…')}</i>`)+(end?`<br><br><button id="mx" class="btn alt">${tr('Ana Menüye Dön','Return to Main Menu')}</button>`:'');$('#m').hidden=false;
+function M(html,btn,cb,end){lock=true;const mb=$('#mb');mb.classList.remove('end-mode','an-mode','set-mode');mb.innerHTML=html+(btn?`<br><br><button id="mo" class="btn">${btn}</button>`:end?'':`<br><i>${tr('Rakibin devam etmesi bekleniyor…','Waiting for opponent to continue…')}</i>`)+(end?`<br><br><button id="mx" class="btn alt">${tr('Ana Menüye Dön','Return to Main Menu')}</button>`:'');$('#m').hidden=false;
   if(end&&$('#mb .dice'))$('#mx').style.visibility='hidden'; // zar atılmadan sonuç sızmasın
   anim();
   let done=false;
@@ -2275,8 +2275,8 @@ function R(){
   const av0=avh(0),av1=avh(1);
   const p0Char=NAMES[avKey(S,0)]||tr('Lanetli Tüccar','Cursed Merchant');
   const p1Char=NAMES[avKey(S,1)]||tr('Kara Şövalye','Dark Knight');
-  const p0Name=isSpec?`${p0Char} (${tr('Oda Sahibi','Host')})`:p0Char;
-  const p1Name=isSpec?`${p1Char} (${tr('Misafir','Guest')})`:(MODE=='guest'?`${p1Char} (${tr('Oda Sahibi','Host')})`:(MODE=='host'?`${p1Char} (${tr('Rakip','Opponent')})`:(MODE=='bot'||S.av?oppName():tr('Rakip','Opponent'))));
+  const p0Name=isSpec?`${p0Char} (${tr('1. Oyuncu','Player 1')})`:p0Char;
+  const p1Name=isSpec?`${p1Char} (${tr('2. Oyuncu','Player 2')})`:((MODE=='guest'||MODE=='host')?`${p1Char} (${tr('Rakip','Opponent')})`:(MODE=='bot'||S.av?oppName():tr('Rakip','Opponent')));
   const oppTimeOut=!!(S.timeOut&&S.timeOut[1]),meTimeOut=!!(S.timeOut&&S.timeOut[0]);
   const defClock=initClockSec();
   const c0=Math.ceil(S.clocks?S.clocks[0]:defClock),c1=Math.ceil(S.clocks?S.clocks[1]:defClock);
@@ -3212,14 +3212,84 @@ function note(p,id,cb){
   }
   cast(p,id,cb);
 }
+let draftActive=false,draftTimer=null,draftPicked=[false,false],draftHeroes=[null,null];
+const DRAFT_TIMEOUT_MS=60000;
+function clearOnlineDraft(){
+  draftActive=false;
+  draftPicked=[false,false];
+  draftHeroes=[null,null];
+  if(draftTimer){clearTimeout(draftTimer);draftTimer=null;}
+}
+function abortOnlineDraft(msg,notifyKey){
+  clearOnlineDraft();
+  try{if(notifyKey&&conn&&conn.open)conn.send({k:notifyKey});}catch(e){}
+  try{if(typeof cancelQuickMatch==='function')cancelQuickMatch(false);}catch(e){}
+  try{if(typeof clearOutgoingInvite==='function')clearOutgoingInvite(null);}catch(e){}
+  try{if(conn)conn.close();}catch(e){}
+  try{if(peer)peer.destroy();}catch(e){}
+  conn=null;peer=null;spectators=[];MODE='bot';
+  const menuEl=$('#menu');if(menuEl)menuEl.hidden=false;
+  setMusic('menu');
+  if(msg){
+    st(msg);
+    box(`<h3>${tr('Kahraman Seçimi','Hero Selection')}</h3><p>${escHtml(msg)}</p>`,true);
+  }else{
+    $('#m').hidden=true;lock=false;st('');
+  }
+}
+function showDraftWaitBox(){
+  box(`<div class="lobby-box">
+    <h3 style="margin-bottom:8px">${tr('Kahraman Seçildi','Hero Selected')}</h3>
+    <div class="lobby-spinner"><i></i><i></i><i></i></div>
+    <p id="lobbyStatus" style="font-size:17px;color:#a0b8a4;margin-top:12px">${tr('Rakibin kahraman seçmesi bekleniyor…','Waiting for opponent to choose a hero…')}</p>
+  </div>`,true);
+  const pc=$('#pc');
+  if(pc){
+    pc.textContent=tr('Vazgeç','Cancel');
+    pc.onclick=()=>abortOnlineDraft('','draft_cancel');
+  }
+}
+function finishOnlineDraft(){
+  if(!draftActive)return;
+  MY_HERO=draftHeroes[0]||'c';
+  OPP_HERO=draftHeroes[1]||'c';
+  clearOnlineDraft();
+  try{if(conn&&conn.open)conn.send({k:'role',role:'player'});}catch(e){}
+  $('#m').hidden=true;lock=false;
+  enter(start);
+}
+function startOnlineHeroDraft(isHost){
+  clearOnlineDraft();
+  draftActive=true;
+  st('');
+  draftTimer=setTimeout(()=>{
+    if(!draftActive)return;
+    abortOnlineDraft(tr('Kahraman seçimi zaman aşımına uğradı.','Hero selection timed out.'),'draft_timeout');
+  },DRAFT_TIMEOUT_MS);
+  chooseHero(h=>{
+    if(!draftActive)return;
+    MY_HERO=h;
+    if(isHost){
+      draftPicked[0]=true;draftHeroes[0]=h;
+      if(draftPicked[1]){finishOnlineDraft();return;}
+      showDraftWaitBox();
+    }else{
+      draftPicked[0]=true;draftHeroes[0]=h;
+      if(conn&&conn.open)conn.send({k:'draft_pick',hero:h});
+      showDraftWaitBox();
+    }
+  },()=>{
+    if(draftActive)abortOnlineDraft('','draft_cancel');
+  });
+}
 function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gelen mesajlar
   if(m.k=='query_slots'){
     const guestBusy = !!(conn && conn.open);
     fromConn.send({
       k: 'slots_info',
       slots: {
-        p0: { name: tr('1. Oyuncu','Player 1'), hero: MY_HERO||'t', role: tr('Oda Sahibi','Room Host'), busy: true },
-        p1: { name: tr('2. Oyuncu','Player 2'), hero: guestBusy?(OPP_HERO||'c'):'c', role: tr('Misafir Oyuncu','Guest Player'), busy: guestBusy }
+        p0: { name: tr('1. Oyuncu','Player 1'), hero: MY_HERO||'t', role: '', busy: true },
+        p1: { name: tr('2. Oyuncu','Player 2'), hero: guestBusy?(OPP_HERO||'c'):'c', role: '', busy: guestBusy }
       },
       specCount: spectators.length
     });
@@ -3242,16 +3312,15 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
       if(!conn || !conn.open){
         conn = fromConn;
         fromConn._role = 'player';
-        OPP_HERO = (m.hero && HERO_MAP[m.hero]) ? m.hero : 'c';
-        fromConn.send({k:'role', role:'player'});
-        const ls=$('#lobbyStatus');if(ls)ls.textContent=tr('Rakip bağlandı! Oyun başlıyor…','Opponent connected! Starting game…');
-        setTimeout(()=>{
-          $('#m').hidden=true;lock=false;
-          enter(start);
-        },600);
-        fromConn.on('close',()=>startReconnectGrace(true,tr('Rakip oyundan ayrıldı.','Opponent left the game.')));
+        try{if(typeof cancelQuickMatch==='function')cancelQuickMatch(true);}catch(e){}
+        try{if(typeof clearOutgoingInvite==='function')clearOutgoingInvite(null);}catch(e){}
+        fromConn.on('close',()=>{
+          if(draftActive){abortOnlineDraft(tr('Rakip kahraman seçiminden ayrıldı.','Opponent left hero selection.'),null);return;}
+          startReconnectGrace(true,tr('Rakip oyundan ayrıldı.','Opponent left the game.'));
+        });
+        fromConn.send({k:'start_draft'});
+        startOnlineHeroDraft(true);
       }else{
-        // Oyuncu slotu dolmuş, mecburen izleyiciye al veya bilgi ver
         fromConn.send({k:'slot_full'});
       }
     }else if(m.role=='spectator'){
@@ -3268,6 +3337,23 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
         if(G)R();
       });
     }
+    return;
+  }
+  if(m.k=='draft_pick'){
+    if(!draftActive||fromConn!==conn)return;
+    draftPicked[1]=true;
+    draftHeroes[1]=(m.hero&&HERO_MAP[m.hero]&&!HERO_MAP[m.hero].bossOnly)?m.hero:'c';
+    if(draftPicked[0])finishOnlineDraft();
+    return;
+  }
+  if(m.k=='draft_timeout'){
+    if(fromConn!==conn)return;
+    abortOnlineDraft(tr('Kahraman seçimi zaman aşımına uğradı.','Hero selection timed out.'),null);
+    return;
+  }
+  if(m.k=='draft_cancel'){
+    if(fromConn!==conn)return;
+    abortOnlineDraft(tr('Rakip kahraman seçiminden ayrıldı.','Opponent left hero selection.'),null);
     return;
   }
   if(m.k=='emote'&&EMOTE_SET.has(m.e)){
@@ -3394,30 +3480,31 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
 }
 let PENDING_INVITE_JOIN=false;
 function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
-  if(m.k=='slots_info'){
-    if(PENDING_INVITE_JOIN&&m.slots&&m.slots.p1&&!m.slots.p1.busy){
-      PENDING_INVITE_JOIN=false;
-      chooseHero(h=>{
-        MY_HERO=h;
-        if(conn&&conn.open){
-          st(tr('Düelloya katılınıyor…','Joining duel…'));
-          conn.send({k:'join_as',role:'player',hero:h});
-        }
-      },()=>{
-        try{if(conn)conn.close()}catch(e){}
-        try{if(peer)peer.destroy()}catch(e){}
-        conn=null;peer=null;MODE='bot';$('#m').hidden=true;lock=false;st('');
-      });
-      return;
-    }
+  if(m.k=='start_draft'){
     PENDING_INVITE_JOIN=false;
-    showJoinModal(m.slots, m.specCount);
+    MODE='guest';
+    startOnlineHeroDraft(false);
+    return;
+  }
+  if(m.k=='draft_timeout'){
+    abortOnlineDraft(tr('Kahraman seçimi zaman aşımına uğradı.','Hero selection timed out.'),null);
+    return;
+  }
+  if(m.k=='draft_cancel'){
+    abortOnlineDraft(tr('Rakip kahraman seçiminden ayrıldı.','Opponent left hero selection.'),null);
+    return;
+  }
+  if(m.k=='slots_info'){
+    PENDING_INVITE_JOIN=false;
+    if(m.slots&&m.slots.p1&&!m.slots.p1.busy){
+      if(conn&&conn.open)conn.send({k:'join_as',role:'player'});
+    }else{
+      abortOnlineDraft(tr('Oda dolu!','Room is full!'),null);
+    }
     return;
   }
   if(m.k=='slot_full'){
-    st(tr('Oda dolu!','Room is full!'));
-    const btnP = $('#btnJoinPlayer');
-    if(btnP){ btnP.disabled = true; btnP.textContent = tr('Oda Dolu','Room Full'); }
+    abortOnlineDraft(tr('Oda dolu!','Room is full!'),null);
     return;
   }
   if(m.k=='spec_full'){
@@ -3427,6 +3514,7 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
     return;
   }
   if(m.k=='role'){
+    clearOnlineDraft();
     $('#m').hidden = true; lock = false;
     if(m.role=='spectator'){
       MODE='spectator';
@@ -3436,7 +3524,7 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
       MODE='guest';
       OPP_PROFILE={name:'',elo:1200,isGuest:true};
       sendMyProfile(conn);
-      st(tr('Odaya oyuncu olarak katıldın.','Joined room as player.'));
+      st('');
       veil();setMusic('game');
     }
     return;
@@ -3631,7 +3719,7 @@ function checkAbandonedOrResumeMatch(){
           conn.send({k:'reconnect'});
           showUnlockToast('✦',tr('Online Maça Geri Dönüldü','Reconnected to Online Match'),tr('Bağlantı yenilendi, maç devam ediyor.','Connection restored, match resumed.'));
         });
-        conn.on('close',()=>startReconnectGrace(false,tr('Oda sahibi oyundan ayrıldı.','Room host left the game.')));
+        conn.on('close',()=>startReconnectGrace(false,tr('Rakip oyundan ayrıldı.','Opponent left the game.')));
       });
       peer.on('error',()=>applyAbandonLoss(snap));
     }else{
@@ -3690,7 +3778,7 @@ function startReconnectGrace(isHost,fallbackMsg){
           clearReconnectGrace();
           conn=nc;
           conn.on('data',onHost);
-          conn.on('close',()=>startReconnectGrace(false,tr('Oda sahibi oyundan ayrıldı.','Room host left the game.')));
+          conn.on('close',()=>startReconnectGrace(false,tr('Rakip oyundan ayrıldı.','Opponent left the game.')));
           conn.send({k:'reconnect'});
           snd('ok');
         });
@@ -3929,10 +4017,13 @@ function joinRoom(directCode,fromInvite=false){
     conn=peer.connect('necrodice-'+code,{reliable:true});
     conn.on('data',onHost);
     conn.on('open',()=>{
-      st(tr('Oda bulundu. Slot durumu alınıyor…','Room found. Fetching slots…'));
-      conn.send({k:'query_slots'});
+      st(tr('Oda bulundu. Kahraman seçimine geçiliyor…','Room found. Entering hero selection…'));
+      conn.send({k:'join_as',role:'player'});
     });
-    conn.on('close',()=>startReconnectGrace(false,tr('Oda sahibi oyundan ayrıldı.','Room host left the game.')));
+    conn.on('close',()=>{
+      if(draftActive){abortOnlineDraft(tr('Rakip kahraman seçiminden ayrıldı.','Opponent left hero selection.'),null);return;}
+      startReconnectGrace(false,tr('Rakip oyundan ayrıldı.','Opponent left the game.'));
+    });
   });
   peer.on('error',e=>{PENDING_INVITE_JOIN=false;st(NETERR(e))});
 }
@@ -3971,7 +4062,7 @@ document.addEventListener('keydown',e=>{
 });
 try{if(RM)document.body.classList.add('rm');if(CB)document.body.classList.add('cb');if(!CRT)document.documentElement.classList.add('nocrt')}catch(e){}
 try{$('#slogo').src='limbi_favicon.png?v=limbi4'}catch(e){}setTimeout(()=>{const s=$('#splash');s&&s.remove()},3550);
-on('#b2',()=>{if(noNet())return;chooseHero(h=>{MY_HERO=h;hostRoom()})});on('#b3',joinRoom);on('#bqm',()=>{snd('click');startQuickMatch()});
+on('#b2',()=>{if(noNet())return;hostRoom()});on('#b3',joinRoom);on('#bqm',()=>{snd('click');startQuickMatch()});
 
 /* ---------- SÜRÜKLENEBİLİR KARTLAR İÇİN ORTAK SMOOTH LERP DÖNGÜSÜ ---------- */
 function createSmoothDragLoop(onFrame){
@@ -6256,88 +6347,85 @@ function cancelQuickMatch(silent=false){
     if(!conn){peer=null;MODE='bot';CURRENT_HOST_CODE=''}
   }
 }
-function startQuickMatch(){
+async function startQuickMatch(){
   if(noNet()||!fbDb)return;
   if(!USER_ACC)createGuestAccount();
-  chooseHero(async h=>{
-    MY_HERO=h;
-    cancelQuickMatch(true);
-    const myPid=getMyPresenceId();
-    const myElo=Math.round((USER_ACC&&USER_ACC.elo)||1200);
-    const myName=(USER_ACC&&!USER_ACC.isGuest)?USER_ACC.username:tr('Misafir','Guest');
-    let secs=0;
-    const renderWait=(msg)=>{
-      box(`<div class="lobby-box">
-        <h3 style="margin-bottom:8px">${tr('Dereceli Rakip Aranıyor','Searching for Ranked Match')}</h3>
-        <p style="color:var(--bone);font-size:16px;margin-bottom:8px">${tr(`Senin ELO: <b>${myElo}</b> · En yakın rakip aranıyor…`,`Your ELO: <b>${myElo}</b> · Finding closest opponent…`)}</p>
-        <div class="lobby-spinner"><i></i><i></i><i></i></div>
-        <p id="lobbyStatus" style="font-size:15px;color:#a0b8a4;margin-top:10px">${msg||`${tr('Geçen süre','Elapsed')}: ${secs}s`}</p>
-      </div>`,true);
-      const pc=$('#pc');
-      if(pc){
-        pc.textContent=tr('Aramayı İptal Et','Cancel Search');
-        pc.onclick=()=>{cancelQuickMatch(false);$('#m').hidden=true;lock=false;st('')};
-      }
-    };
-    renderWait();
-    try{
-      const snap=await fbDb.collection('lobby_queue').where('status','==','waiting').get();
-      const now=Date.now();
-      const cands=[];
-      snap.forEach(doc=>{
-        const d=doc.data();
-        if(d&&d.pid&&d.pid!==myPid&&d.roomCode&&d.createdAt&&(now-d.createdAt)<=90000){
-          cands.push({id:doc.id,...d});
-        }
-      });
-      cands.sort((a,b)=>Math.abs((a.elo||1200)-myElo)-Math.abs((b.elo||1200)-myElo));
-      for(const cand of cands){
-        try{
-          const ref=fbDb.collection('lobby_queue').doc(cand.id);
-          const claimed=await fbDb.runTransaction(async tx=>{
-            const doc=await tx.get(ref);
-            if(!doc.exists||doc.data().status!=='waiting')return false;
-            tx.update(ref,{status:'matched',matchedBy:myPid,matchedName:myName,matchedAt:Date.now()});
-            return true;
-          });
-          if(claimed){
-            const ls=$('#lobbyStatus');
-            if(ls)ls.textContent=tr(`Rakip bulundu: ${cand.name} (${cand.elo} ELO)! Bağlanılıyor…`,`Match found: ${cand.name} (${cand.elo} ELO)! Connecting…`);
-            joinRoom(cand.roomCode,true);
-            return;
-          }
-        }catch(ce){}
-      }
-      // Kuyrukta bekleyen yok: oda açıp kuyruğa gir
-      hostRoom(null,code=>{
-        QM_DOC_ID=myPid;
-        const qRef=fbDb.collection('lobby_queue').doc(myPid);
-        qRef.set({pid:myPid,name:myName,elo:myElo,roomCode:code,status:'waiting',createdAt:Date.now()}).catch(()=>{});
-        QM_TIMER=setInterval(()=>{
-          secs++;
-          const ls=$('#lobbyStatus');
-          if(ls&&!conn)ls.textContent=`${tr('Geçen süre','Elapsed')}: ${secs}s`;
-          if(secs%20===0&&QM_DOC_ID)qRef.update({createdAt:Date.now()}).catch(()=>{});
-          if(secs>=120&&!conn){
-            cancelQuickMatch(false);
-            box(`<h3>${tr('Rakip Bulunamadı','No Opponent Found')}</h3><p>${tr('Şu an kuyrukta başka oyuncu yok. Lobiden davet atabilir veya botla oynayabilirsin.','No other players in queue right now. You can invite from the Lobby or play vs AI.')}</p>`,true);
-          }
-        },1000);
-        QM_UNSUB=qRef.onSnapshot(s=>{
-          if(!s.exists)return;
-          const d=s.data();
-          if(d&&d.status==='matched'){
-            const ls=$('#lobbyStatus');
-            if(ls)ls.textContent=tr(`Rakip bulundu: ${d.matchedName||''}! Bağlanılıyor…`,`Opponent found: ${d.matchedName||''}! Connecting…`);
-            cancelQuickMatch(true);
-          }
-        },()=>{});
-      });
-    }catch(e){
-      cancelQuickMatch(false);
-      box(`<h3>${tr('Bağlantı Hatası','Connection Error')}</h3><p>${tr('Eşleştirme başlatılamadı, tekrar dene.','Could not start matchmaking, please try again.')}</p>`,true);
+  cancelQuickMatch(true);
+  const myPid=getMyPresenceId();
+  const myElo=Math.round((USER_ACC&&USER_ACC.elo)||1200);
+  const myName=(USER_ACC&&!USER_ACC.isGuest)?USER_ACC.username:tr('Misafir','Guest');
+  let secs=0;
+  const renderWait=(msg)=>{
+    box(`<div class="lobby-box">
+      <h3 style="margin-bottom:8px">${tr('Dereceli Rakip Aranıyor','Searching for Ranked Match')}</h3>
+      <p style="color:var(--bone);font-size:16px;margin-bottom:8px">${tr(`Senin ELO: <b>${myElo}</b> · En yakın rakip aranıyor…`,`Your ELO: <b>${myElo}</b> · Finding closest opponent…`)}</p>
+      <div class="lobby-spinner"><i></i><i></i><i></i></div>
+      <p id="lobbyStatus" style="font-size:15px;color:#a0b8a4;margin-top:10px">${msg||`${tr('Geçen süre','Elapsed')}: ${secs}s`}</p>
+    </div>`,true);
+    const pc=$('#pc');
+    if(pc){
+      pc.textContent=tr('Aramayı İptal Et','Cancel Search');
+      pc.onclick=()=>{cancelQuickMatch(false);$('#m').hidden=true;lock=false;st('')};
     }
-  });
+  };
+  renderWait();
+  try{
+    const snap=await fbDb.collection('lobby_queue').where('status','==','waiting').get();
+    const now=Date.now();
+    const cands=[];
+    snap.forEach(doc=>{
+      const d=doc.data();
+      if(d&&d.pid&&d.pid!==myPid&&d.roomCode&&d.createdAt&&(now-d.createdAt)<=90000){
+        cands.push({id:doc.id,...d});
+      }
+    });
+    cands.sort((a,b)=>Math.abs((a.elo||1200)-myElo)-Math.abs((b.elo||1200)-myElo));
+    for(const cand of cands){
+      try{
+        const ref=fbDb.collection('lobby_queue').doc(cand.id);
+        const claimed=await fbDb.runTransaction(async tx=>{
+          const doc=await tx.get(ref);
+          if(!doc.exists||doc.data().status!=='waiting')return false;
+          tx.update(ref,{status:'matched',matchedBy:myPid,matchedName:myName,matchedAt:Date.now()});
+          return true;
+        });
+        if(claimed){
+          const ls=$('#lobbyStatus');
+          if(ls)ls.textContent=tr(`Rakip bulundu: ${cand.name} (${cand.elo} ELO)! Bağlanılıyor…`,`Match found: ${cand.name} (${cand.elo} ELO)! Connecting…`);
+          joinRoom(cand.roomCode,true);
+          return;
+        }
+      }catch(ce){}
+    }
+    // Kuyrukta bekleyen yok: oda açıp kuyruğa gir
+    hostRoom(null,code=>{
+      QM_DOC_ID=myPid;
+      const qRef=fbDb.collection('lobby_queue').doc(myPid);
+      qRef.set({pid:myPid,name:myName,elo:myElo,roomCode:code,status:'waiting',createdAt:Date.now()}).catch(()=>{});
+      QM_TIMER=setInterval(()=>{
+        secs++;
+        const ls=$('#lobbyStatus');
+        if(ls&&!conn)ls.textContent=`${tr('Geçen süre','Elapsed')}: ${secs}s`;
+        if(secs%20===0&&QM_DOC_ID)qRef.update({createdAt:Date.now()}).catch(()=>{});
+        if(secs>=120&&!conn){
+          cancelQuickMatch(false);
+          box(`<h3>${tr('Rakip Bulunamadı','No Opponent Found')}</h3><p>${tr('Şu an kuyrukta başka oyuncu yok. Lobiden davet atabilir veya botla oynayabilirsin.','No other players in queue right now. You can invite from the Lobby or play vs AI.')}</p>`,true);
+        }
+      },1000);
+      QM_UNSUB=qRef.onSnapshot(s=>{
+        if(!s.exists)return;
+        const d=s.data();
+        if(d&&d.status==='matched'){
+          const ls=$('#lobbyStatus');
+          if(ls)ls.textContent=tr(`Rakip bulundu: ${d.matchedName||''}! Bağlanılıyor…`,`Opponent found: ${d.matchedName||''}! Connecting…`);
+          cancelQuickMatch(true);
+        }
+      },()=>{});
+    });
+  }catch(e){
+    cancelQuickMatch(false);
+    box(`<h3>${tr('Bağlantı Hatası','Connection Error')}</h3><p>${tr('Eşleştirme başlatılamadı, tekrar dene.','Could not start matchmaking, please try again.')}</p>`,true);
+  }
 }
 function renderLobbyModalBody(){
   const mb=$('#mb');
@@ -6382,7 +6470,7 @@ function renderLobbyModalBody(){
         mb.classList.remove('auth-mode','lob-mode');
         $('#m').hidden=true;lock=false;
         if(noNet())return;
-        chooseHero(h=>{MY_HERO=h;hostRoom(target)},()=>openLobbyModal());
+        hostRoom(target);
       };
     });
     listEl.querySelectorAll('.lob-spec-btn').forEach(btn=>{
