@@ -7914,8 +7914,8 @@ body[data-cardback="sovereign"] .c.back {
 }
 #glog.glog.collapsed {
   width: auto;
-  min-width: 158px;
-  max-width: 224px;
+  min-width: 142px;
+  max-width: 186px;
 }
 #glog.glog:not(.collapsed) {
   z-index: 38;

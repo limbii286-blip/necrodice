@@ -2416,16 +2416,15 @@ function renderGameLog(S){
     return `<div class="glog-row ${l.p===0?'me':'opp'}"><span class="glog-who">${glogEsc(who)}</span><span>${glogFmtText(l.t)}</span></div>`;
   }).join('');
   el.classList.toggle('collapsed',!glogOpen);
-  el.innerHTML=`<button type="button" class="glog-hdr" aria-expanded="${glogOpen?'true':'false'}"><span class="glog-title"><span class="glog-dot"></span><span>${tr('Maç Günlüğü','Game Log')}</span></span><span class="glog-meta"><span>${actCnt}</span><span class="glog-chev">▾</span></span></button><div class="glog-peek">${glogEsc(peekTxt)}</div><div class="glog-body">${rows||`<div class="glog-empty">${tr('Henüz hamle yok','No moves yet')}</div>`}</div>`;
+  el.innerHTML=`<button type="button" class="glog-hdr" aria-expanded="${glogOpen?'true':'false'}"><span class="glog-title"><span class="glog-dot"></span><span>${tr('Maç Günlüğü','Game Log')}</span></span><span class="glog-meta"><span class="glog-chev">▾</span></span></button><div class="glog-body">${rows||`<div class="glog-empty">${tr('Henüz hamle yok','No moves yet')}</div>`}</div>`;
   const toggle=()=>{
     glogOpen=!glogOpen;
     glogLastSig='';
     renderGameLog(G);
     if(glogOpen){const b=el.querySelector('.glog-body');if(b)b.scrollTop=b.scrollHeight;}
   };
-  const hdr=el.querySelector('.glog-hdr'),pk=el.querySelector('.glog-peek');
+  const hdr=el.querySelector('.glog-hdr');
   if(hdr)hdr.onclick=e=>{e.stopPropagation();toggle()};
-  if(pk)pk.onclick=e=>{e.stopPropagation();if(!glogOpen)toggle()};
   if(glogOpen){const b=el.querySelector('.glog-body');if(b)b.scrollTop=b.scrollHeight;}
   syncGlogMobileSize();
 }
