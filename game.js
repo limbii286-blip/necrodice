@@ -746,8 +746,8 @@ function play(S,p,id,pk){
 const PR={
   easy:{rand:.25,noise:.35,jc:.45,jp:.4,dm:.05,depth:0},
   med:{rand:.01,noise:.06,jc:.2,jp:1,dm:.03,depth:0},
-  hard:{rand:0,noise:0,jc:.15,jl:.06,jp:1,dm:.015,depth:2,beta:.55,gap:6,mc:1,K:1600,ms:3200,top:7,rjp:.85,bo3:1,pf:1,hero:1},
-  imp:{rand:0,noise:0,jc:.08,jl:.03,jp:1,dm:.01,depth:2,beta:.82,gap:7,mc:1,K:35000,ms:7500,top:12,rjp:.95,bo3:1,pf:1,learn:1,hero:1,deepRoll:1} // imkansız: derin tarama, tam kombo ve kahraman ustalığı
+  hard:{rand:0,noise:0,jc:.15,jl:.06,jp:1,dm:.015,depth:2,beta:.55,gap:6,mc:1,K:1200,ms:2000,top:7,rjp:.85,bo3:1,pf:1,hero:1},
+  imp:{rand:0,noise:0,jc:.09,jl:.03,jp:1,dm:.01,depth:2,beta:.85,gap:6,mc:1,K:1600,ms:1900,top:12,rjp:.95,bo3:1,pf:1,learn:1,hero:1,deepRoll:1} // imkansız: derin tarama, tam kombo ve kahraman ustalığı
 };
 let DIFF='med';
 const unk=(S,p)=>{const seen=new Set([...S.pl[p].open,...S.pl[p].closed,...S.pl[1-p].open,...(S.dead||[])].map(c=>c.n));if(p===1&&S.botPeekVal!=null)seen.add(S.botPeekVal);return range(11).filter(n=>!seen.has(n))};
@@ -810,13 +810,21 @@ function listC(S,p,prm){
   const cost=matchPoint&&prm.deepRoll?0.015:(S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc);
   const HI_THIEF=new Set([6,7,14,16,17,18,23,24]);
   const oppOpen=total(S,1-p,false);
+  const q=1-p,activeTg=tgE(S);
   if(!S.noJ[p])new Set(S.hand[p]).forEach(id=>{
     if(!playable(S,p,id))return;
+    if(id==22&&S.deck.length===0)return; // deste boşken ±0 anlamsız
+    if(id==23&&S.deck.length===0)return; // deste boşken kart çekme engeli anlamsız
+    if(id==24&&(S.hand[q].length===0||S.noJ[q]||S.jUsed[q]>=2))return; // rakibin oynayabileceği joker yok
     if(id==16){const T=clone(S);T.log=[];T.deck=shuf(pool.map(n=>({id:++T.u,n}))).slice(0,S.deck.length);play(T,p,id,[]);out.push({a:{t:'j',id,pk:[]},v:look(T,p,d)-cost});return}
     combos((NEED[id]||[]).map(k=>opts(S,p,k))).forEach(pk=>{
       if(id==15&&pk[0]==pk[1])return;
-      if(id==12){const ef=S.eff.find(e=>e.uid==pk[0]);if(ef&&ef.o===p)return}
-      if((id==5||id==14)&&!low&&oppOpen>Tg&&!act(S,20))return; // rakip zaten açıktan patlamışsa kart verip/imha edip kurtarma
+      if(id==12){
+        const ef=S.eff.find(e=>e.uid==pk[0]);
+        if(!ef||(ef.o===p&&!TGS.has(ef.id)))return;
+        if(TGS.has(ef.id)&&activeTg&&ef.uid!==activeTg.uid)return; // zaten geçersiz kalmış eski hedef jokeri
+      }
+      if((id==5||id==14)&&!low&&oppOpen>Tg)return; // rakip zaten açıktan patlamışsa kart verip/imha edip kurtarma
       const T=clone(S);T.log=[];T.deck=shuf(pool.map(n=>({id:++T.u,n}))).slice(0,S.deck.length);
       let bonus=0;
       if(id===25&&prm.hero){const st=(S.pj||[]).find(e=>e.uid===pk[0]);if(st&&HI_THIEF.has(st.id))bonus=0.12}
@@ -836,7 +844,7 @@ function listC(S,p,prm){
           if(comboVal>val)val=val*0.35+comboVal*0.65;
         }
       }
-      out.push({a:{t:'j',id,pk},v:val+bonus-(id===25?0:cost)})});
+      out.push({a:{t:'j',id,pk},v:val+bonus-(id===25?cost*0.5:cost)})});
   });
   return out;
 }
@@ -926,6 +934,8 @@ function bo3v(T,p,r){ // tur sonucu r (p açısından) -> düelloyu kazanma değ
   let cBonus=0;
   if(avKey(T,p)==='c'&&T.cWins){const cw=(T.cWins[p]||0)+(r>0?1:0);if(cw>=3)cBonus+=0.07}
   if(avKey(T,q)==='c'&&T.cWins){const cw=(T.cWins[q]||0)+(r<0?1:0);if(cw>=3)cBonus-=0.07}
+  if(r>0&&avKey(T,q)==='v'&&T.hand[p].length>0)cBonus-=0.06; // Vampir'e karşı tur kazanınca 1 joker yanar
+  if(r<0&&avKey(T,p)==='v'&&T.hand[q].length>0)cBonus+=0.06; // Vampir kaybedince rakibin 1 jokeri yanar
   return Math.max(-.92,Math.min(.92,.56*(np-nq)+.035*(T.hand[p].length-T.hand[q].length)+cBonus));
 }
 function rollout(T,p,a,pol){
@@ -962,16 +972,16 @@ function decideH(S,p,prm){
 const EXACT_JOKERS=new Set([1,2,3,4,6,7,8,9,10,11,12,13,14,15,19,20,21,22]);
 const HI_TIER_J=new Set([8,9,10,11,12,19,20,23,24,25]);
 function exactEndgameEvalBot(S,p,action,prm){
+  // Kesin çözücü yalnızca rakip az önce pas geçtiyse (yani biz pas geçersek tur hemen bitiyorsa)
+  // ve gerçek total()/outcHero() ile çalışır; böylece tüm joker etkileri (%100 doğru) ve ölçek tutarlı olur!
   if(!S||!prm||!prm.deepRoll)return null;
-  if(action&&action.t==='j'&&!EXACT_JOKERS.has(action.id))return null;
   const q=1-p,oppPassed=S.turns>0&&!S.acted;
+  if(!oppPassed)return null;
+  if(action&&action.t==='j'&&!EXACT_JOKERS.has(action.id))return null;
   let Sx=S;
   if(action&&action.t==='j'){
-    // Sadece kesin sonuçlu jokerleri (kart çekmeyen / rastgele olmayan) kesin çözücüyle değerlendir
-    if(!oppPassed&&unk(S,p).length>6)return null;
     Sx=clone(S);Sx.log=[];
     try{play(Sx,p,action.id,action.pk||[])}catch(e){return null}
-    // Joker oynayınca sıra bizde kalır; en iyi devamı (Pas vs 1 kart çek) kesin hesapla
     const eStand=exactEndgameEvalBot(Sx,p,null,prm);
     if(eStand===null)return null;
     let eBest=eStand;
@@ -982,23 +992,9 @@ function exactEndgameEvalBot(S,p,action,prm){
     return eBest;
   }
   const pool=unk(Sx,p);
-  if(!oppPassed&&pool.length>6)return null;
-  const Tg=tg(Sx),low=lowW(Sx),noBust=act(Sx,20);
-  const myBase=total(Sx,p,true),oppOpenBase=total(Sx,q,false);
   const cl=Sx.pl[q]&&Sx.pl[q].closed&&Sx.pl[q].closed[0];
   const peekVal=(p===1&&Sx.botPeekVal!=null)?Sx.botPeekVal:(cl&&cl.o!=null?cl.o:null);
-  const cmp=(m,o)=>{
-    let r=0;
-    if(low)r=m<o?1:(m>o?-1:0);
-    else{
-      const mb=!noBust&&m>Tg,ob=!noBust&&o>Tg;
-      if(mb&&ob)r=m<o?1:(m>o?-1:0);
-      else if(mb)r=-1;
-      else if(ob)r=1;
-      else r=m>o?1:(m<o?-1:0);
-    }
-    return prm.bo3?bo3v(Sx,p,r):r;
-  };
+  const scoreState=T=>{const r=prm.hero?outcHero(T,p):outc(T,p);return prm.bo3?bo3v(T,p,r):r};
   const oppDist=[];
   if(!cl){
     oppDist.push({cOpp:0,w:1,rem:pool});
@@ -1014,62 +1010,73 @@ function exactEndgameEvalBot(S,p,action,prm){
   }else{
     oppDist.push({cOpp:0,w:1,rem:[]});
   }
-  const oppT=cOpp=>oppOpenBase+(cl?cOpp:0);
   if(!action){
     let ev=0;
     for(const d of oppDist){
-      const oT=oppT(d.cOpp);
-      if(oppPassed||!d.rem.length){
-        ev+=d.w*cmp(myBase,oT);
-      }else{
-        const sVal=cmp(myBase,oT);
-        let dVal=0;
-        for(const c of d.rem)dVal+=cmp(myBase,oT+c);
-        ev+=d.w*Math.min(sVal,dVal/d.rem.length);
-      }
+      const T=clone(Sx);T.log=[];
+      if(T.pl[q].closed[0]&&T.pl[q].closed[0].o==null)T.pl[q].closed[0].n=d.cOpp;
+      ev+=d.w*scoreState(T);
     }
     return ev;
   }
-  // Kart Çek: Scry biliniyorsa üst kartı doğrudan kullan, değilse tam kombinatoryal ağırlıklı ortalama
   const scryTop=(p===1&&Sx.botScry&&Sx.botScry.length)?Sx.botScry[0]:null;
   let ev=0;
   for(const d of oppDist){
-    const oT=oppT(d.cOpp);
     const drawPool=(scryTop!=null&&d.rem.includes(scryTop))?[scryTop]:d.rem;
-    if(!drawPool.length){ev+=d.w*cmp(myBase,oT);continue}
+    if(!drawPool.length){
+      const T=clone(Sx);T.log=[];
+      if(T.pl[q].closed[0]&&T.pl[q].closed[0].o==null)T.pl[q].closed[0].n=d.cOpp;
+      ev+=d.w*scoreState(T);continue;
+    }
     let sub=0;
     for(let j=0;j<drawPool.length;j++){
-      const cDraw=drawPool[j],newMy=myBase+cDraw;
-      const sVal=cmp(newMy,oT);
-      if(oppPassed){
-        let bestN=sVal;
-        if(!low&&newMy<Tg&&d.rem.length>1){
-          let d2=0,cnt2=0;
-          for(let k=0;k<d.rem.length;k++){
-            if(d.rem[k]===cDraw)continue;
-            d2+=cmp(newMy+d.rem[k],oT);cnt2++;
-          }
-          if(cnt2&&d2/cnt2>bestN)bestN=d2/cnt2;
-        }
-        sub+=bestN;
-      }else{
-        let oDraw=0,cnt2=0;
+      const cDraw=drawPool[j];
+      const T=clone(Sx);T.log=[];
+      if(T.pl[q].closed[0]&&T.pl[q].closed[0].o==null)T.pl[q].closed[0].n=d.cOpp;
+      if(T.deck.length)T.deck.pop();
+      T.pl[p].open.push({id:++T.u,n:cDraw});
+      let bestN=scoreState(T);
+      if(!lowW(T)&&total(T,p,true)<tg(T)&&d.rem.length>1&&canDraw(T,p)){
+        let d2=0,cnt2=0;
         for(let k=0;k<d.rem.length;k++){
           if(d.rem[k]===cDraw)continue;
-          oDraw+=cmp(newMy,oT+d.rem[k]);cnt2++;
+          const U=clone(T);
+          if(U.deck.length)U.deck.pop();
+          U.pl[p].open.push({id:++U.u,n:d.rem[k]});
+          d2+=scoreState(U);cnt2++;
         }
-        sub+=cnt2?Math.min(sVal,oDraw/cnt2):sVal;
+        if(cnt2&&d2/cnt2>bestN)bestN=d2/cnt2;
       }
+      sub+=bestN;
     }
     ev+=d.w*(sub/drawPool.length);
   }
   return ev;
 }
+function isGuaranteedPassWin(S,p){
+  const q=1-p;
+  if(!(S.turns>0&&!S.acted))return false; // rakip az önce pas geçmediyse garantili değil
+  const cl=S.pl[q]&&S.pl[q].closed&&S.pl[q].closed[0];
+  if(!cl||cl.o!=null||(p===1&&S.botPeekVal!=null)){
+    const T=clone(S);
+    if(cl&&cl.o==null&&p===1&&S.botPeekVal!=null)T.pl[q].closed[0].n=S.botPeekVal;
+    return outc(T,p)>0;
+  }
+  const pool=unk(S,p);
+  if(!pool.length)return outc(S,p)>0;
+  for(const n of pool){
+    const T=clone(S);T.pl[q].closed[0].n=n;
+    if(outc(T,p)<=0)return false;
+  }
+  return true;
+}
 function decideHA(S,p,prm,done,budCap){ // zaman dilimli Monte-Carlo + Exact Endgame Solver + Sıkı Joker Disiplini
   const now=()=>(typeof performance!='undefined'?performance:Date).now();
   const low=lowW(S),Tg=tg(S),myT=total(S,p,true);
-  // Rakip pas geçtiyse ve rakip açıktan hedefi aşıp patladıysa (ve biz patlamadıysak) hiç kaynak harcamadan pas geç
-  if(S.pa&&S.pa[1-p]>0&&!low&&myT<=Tg&&total(S,1-p,false)>Tg&&!act(S,20))return done(null);
+  // 1) Rakip pas geçtiyse ve Pas geçmek tüm olasılıklara karşı %100 kesin galibiyetse tek kaynak bile harcama
+  if(isGuaranteedPassWin(S,p))return done(null);
+  // 2) Rakip pas geçtiyse ve rakip açıktan hedefi aşıp patladıysa (ve biz patlamadıysak) hemen pas geç
+  if(S.pa&&S.pa[1-p]>0&&!low&&myT<=Tg&&total(S,1-p,false)>Tg)return done(null);
   let all=listC(S,p,prm).sort((x,y)=>y.v-x.v);
   if(low||myT>=Tg)all=all.filter(c=>!(c.a&&c.a.t=='d')); // hedefte/üstündeyken veya "En az kazanır" etkisinde kart çekmek yalnızca batırır
   const pass=all.find(c=>!c.a),draw=all.find(c=>c.a&&c.a.t=='d');
@@ -1153,7 +1160,7 @@ function decideHA(S,p,prm,done,budCap){ // zaman dilimli Monte-Carlo + Exact End
   tick();
 }
 /* Bot zamanlaması: her hamleden önce düşünme süresi; jokerler ve çekmeler peş peşe gelmez */
-const THINK={easy:[3000,4300],med:[3500,5200],hard:[4300,6500],imp:[10000,13000]},AFTER={easy:[3000,3800],med:[3300,4400],hard:[3600,5000],imp:[10000,13000]};
+const THINK={easy:[2600,3800],med:[2800,4200],hard:[3000,4600],imp:[2400,3400]},AFTER={easy:[2400,3200],med:[2500,3500],hard:[2600,3800],imp:[2000,2800]};
 const rnd=r=>r[0]+Math.random()*(r[1]-r[0]);
 let botGen=0,thinkOn=false;
 function bot(){
@@ -1207,7 +1214,7 @@ function bot(){
         S.hpUsed[1]=true;S.log.push({p:1,t:'Yitik Yazgı kullandı (destenin üstünü düzenledi)'});
         playHeroPowerAnim('a',1,HERO_MAP.a);snd('flip');R();return think(AFTER[DIFF]);
       }
-      if(bh==='p'&&S.hand[1].length>=1&&S.hand[1].length<=(prm.hero?3:2)&&S.jdeck.length>=2){
+      if(bh==='p'&&S.hand[1].length>=1&&S.hand[1].length<=(prm.hero?4:2)&&S.jdeck.length>=2){
         let bIdx=0;
         if(prm.hero){
           const cands=listC(S,1,prm),baseV=cands.find(x=>!x.a)?.v??0;
@@ -1223,7 +1230,7 @@ function bot(){
       }
       if(bh==='l'&&(S.pl[0].open.length||S.pl[1].open.length)){
         let useW=false;
-        const oppVisBust=!low&&total(S,0,false)>bT&&!act(S,20);
+        const oppVisBust=!low&&total(S,0,false)>bT;
         if(prm.hero&&!(oppVisBust&&bt<=bT)){
           CUR=prm;
           const before=evalS(clone(S),1);
