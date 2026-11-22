@@ -3592,8 +3592,6 @@ body.dragging-joker #fx::after {
   border-radius: 50%;
   display: block;
   pointer-events: none;
-  clip-path: circle(42.5% at 50% 50%);
-  transform: scale(1.18);
 }
 .hpc-ic:has(.hp-art) {
   width: 28px !important;
