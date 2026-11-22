@@ -2435,7 +2435,7 @@ function renderGameLog(S){
     return `<div class="glog-row ${l.p===0?'me':'opp'}"><span class="glog-who">${glogEsc(who)}</span><span>${glogFmtText(l.t)}</span></div>`;
   }).join('');
   el.classList.toggle('collapsed',!glogOpen);
-  el.innerHTML=`<button type="button" class="glog-hdr" aria-expanded="${glogOpen?'true':'false'}"><span class="glog-title"><span class="glog-dot"></span><span>${tr('Maç Günlüğü','Game Log')}</span></span><span class="glog-meta"><span class="glog-chev">▾</span></span></button><div class="glog-body">${rows||`<div class="glog-empty">${tr('Henüz hamle yok','No moves yet')}</div>`}</div>`;
+  el.innerHTML=`<button type="button" class="glog-hdr" aria-expanded="${glogOpen?'true':'false'}"><span class="glog-title">${tr('Maç Günlüğü','Game Log')}</span></button><div class="glog-body">${rows||`<div class="glog-empty">${tr('Henüz hamle yok','No moves yet')}</div>`}</div>`;
   const toggle=()=>{
     glogOpen=!glogOpen;
     glogLastSig='';

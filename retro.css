@@ -7935,12 +7935,12 @@ body[data-cardback="sovereign"] .c.back {
   padding: 6px 10px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 8px;
   cursor: pointer;
   font: 700 12.5px/1 var(--mf);
   letter-spacing: 0.4px;
-  text-align: left;
+  text-align: center;
   transition: background 0.16s ease, color 0.16s ease;
 }
 #glog.collapsed .glog-hdr {
