@@ -1122,7 +1122,8 @@ function decideHA(S,p,prm,done,budCap){ // zaman dilimli Monte-Carlo + Exact End
       }
       return alive[i]?(sum[i]/Math.max(1,cnt[i])+(prm.w||0)*c.v):-99;
     });
-    // Overkill & Minimum Kazanç Kapısı: En iyi bedava hamle (Pas / Kart Çek) zaten kazanıyorsa veya joker yeterince EV katmıyorsa boşuna joker yakma
+    // Overkill Kapısı: En iyi bedava hamle zaten çok yüksek olasılıkla kazanıyorsa boşuna joker yakma;
+    // MC ve kesin çözücü zaten joker maliyetini (cost) düştüğü için çift ceza uygulama
     let bestFreeIdx=-1,bestFreeVal=-99;
     top.forEach((c,i)=>{
       if(!c.a||c.a.t==='d'){
@@ -1130,12 +1131,12 @@ function decideHA(S,p,prm,done,budCap){ // zaman dilimli Monte-Carlo + Exact End
       }
     });
     let bi=bestFreeIdx>=0?bestFreeIdx:0,bestVal=bestFreeIdx>=0?bestFreeVal:rawSc[0];
+    const safeWinThr=matchPoint?0.88:0.46;
     top.forEach((c,i)=>{
       const v=rawSc[i];
       if(c.a&&c.a.t==='j'){
-        const tier=HI_TIER_J.has(c.a.id)?1.28:1.0;
-        const overkill=(bestFreeVal>=0.58)?(matchPoint?0.14:0.24):0;
-        const minGain=overkill>0?overkill:((matchPoint?0.045:0.11)*tier);
+        const overkill=(bestFreeVal>=safeWinThr)?(matchPoint?0.08:0.14):0;
+        const minGain=overkill>0?overkill:(matchPoint?0.015:0.03);
         if(v>bestFreeVal+minGain&&v>bestVal+1e-9){bestVal=v;bi=i}
       }else if(v>bestVal+1e-9){
         bestVal=v;bi=i;
@@ -1392,7 +1393,7 @@ function syncToFirebase(){
       Bot, hamle seçerken oyuncunun cevabını kendi gibi değil, bu öğrendiği alışkanlıklarla simüle eder.
    2) Ayar seçimi: birkaç farklı oyun tarzı (risk, joker maliyeti, rakip tahmini) denenir; oyuncuya karşı
       en çok tur kazandıran tarz zamanla daha sık seçilir (UCB). */
-const ARMS=[{},{jc:.05,jl:.02},{jc:.18,jl:.1},{beta:.4,gap:6},{beta:1,gap:8},{dm:.05},{rjp:.45},{rjp:.95}];
+const ARMS=[{},{jc:.06,jl:.02},{jc:.11,jl:.035},{beta:.72,gap:6},{beta:.95,gap:7},{dm:.008},{rjp:.88},{rjp:1}];
 const LRN=(()=>{try{const o=JSON.parse(LS('lrn')||'null');if(o&&o.v==1&&Array.isArray(o.dp)&&o.dp.length==19&&Array.isArray(o.arm)&&o.arm.length==ARMS.length)return o}catch(e){}return lrnNew()})();
 window.botMemory=LRN;
 window.botStats=()=>{const tr=LRN.r[0]+LRN.r[1]+LRN.r[2];return{toplamHamle:LRN.ht,jokerKullanimi:LRN.hj,toplamTur:tr,turSonuclari:{botKazandi:LRN.r[0],oyuncuKazandi:LRN.r[1],berabere:LRN.r[2]},turKazanmaYuzdesi:tr>0?Math.round(100*(LRN.r[0]+LRN.r[2]/2)/tr)+'%':'0%',oyunlar:{botKazandi:LRN.g[0],toplamOyun:LRN.g[1]},detay:LRN}};
@@ -1411,13 +1412,16 @@ function lrnRound(r){ // r: oyuncu açısından tur sonucu
 function lrnGame(botWon){if(!learning())return;LRN.g[1]++;if(botWon)LRN.g[0]++;lrnSave()}
 const impPrm=()=>({...PR.imp,...ARMS[LRN.cur]});
 const hjr=()=>(LRN.hj+1)/(LRN.ht+6); // oyuncunun bir hamlede joker oynama olasılığı
-function hmove(T,a,pol){ // simülasyonda oyuncunun hamlesi: öğrendiği alışkanlıklar
-  if(lowW(T))return decide(T,a,pol);
-  const d=Math.max(-6,Math.min(12,tg(T)-total(T,a)))+6,e=LRN.dp[d],n=e[0]+e[1];
-  if(n<5)return decide(T,a,pol); // bu durumda yeterli veri yok: güçlü oyuncu varsay
-  if(canDraw(T,a)&&Math.random()<(e[0]+.3)/(n+.6))return{t:'d'};
-  if(T.jUsed[a]<2&&!T.noJ[a]&&T.hand[a].length&&Math.random()<hjr()){const x=decide(T,a,{...pol,jp:1});if(x&&x.t=='j')return x}
-  return null}
+function hmove(T,a,pol){ // simülasyonda oyuncunun hamlesi: akıllı rakip + öğrenilen çekme eğilimi
+  const opt=decide(T,a,pol);
+  if(lowW(T)||total(T,a,true)>=tg(T))return opt;
+  if(opt&&opt.t==='j')return opt; // güçlü joker fırsatını asla küçümseme
+  const d=Math.max(-6,Math.min(12,tg(T)-total(T,a,true)))+6,e=LRN.dp[d],n=e[0]+e[1];
+  if(n<8)return opt;
+  const pDraw=(e[0]+.5)/(n+1);
+  if(canDraw(T,a)&&Math.random()<pDraw*0.5+(opt&&opt.t==='d'?0.5:0))return{t:'d'};
+  return opt;
+}
 function isMobilePerf(){
   return window.innerWidth<=760||(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches);
 }
