@@ -483,7 +483,6 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
             if(isCrit){snd('win');flash();vib([80,80,200])}
             else if(isFail){snd('death');if(res=='death'){try{document.body.classList.add('dead')}catch(e){}}vib([300,100,500])}
             else{snd(res);flash()}
-            setTimeout(()=>{const x=document.querySelector('#mx');if(x)x.style.visibility=''},600);
             if(res==='death'||res==='win'){
               setTimeout(()=>{
                 const mb=document.querySelector('#mb');

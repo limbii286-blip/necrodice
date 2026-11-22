@@ -935,8 +935,9 @@ body:has(#menu:not([hidden])) #fl {
   opacity: 0 !important;
   pointer-events: none !important;
 }
-.d20-box ~ #mx, .d20-box ~ #mo { visibility: hidden; }
-.d20-box.finished ~ #mx, .d20-box.finished ~ #mo { visibility: visible; }
+.d20-box ~ #mx, #mb:has(template.end-tpl) #mo, #mb:has(template.end-tpl) #mx { display: none !important; }
+.d20-box ~ #mo { visibility: hidden; }
+.d20-box.finished ~ #mo { visibility: visible; }
 .d20-box ~ .after { opacity: 0; transition: opacity 0.6s; }
 .d20-box.finished ~ .after { opacity: 1; }
 #mb.rig .after, #mb.rig #mo { display: none !important; }
