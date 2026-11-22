@@ -620,18 +620,37 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
     animId = requestAnimationFrame(frame);
   };
 
+  window._triggerD20Roll=()=>{
+    if(!d.isConnected||rolling||finished)return;
+    const b=document.querySelector('#rl');
+    if(b){b.disabled=true;b.classList.add('used')}
+    snd('heart');
+    setTimeout(runRoll,200);
+  };
   const rl=document.querySelector('#rl');
-  if(rl&&isMe) {
-    rl.onclick=()=>{
+  const stageEl=d.querySelector('.d20-stage');
+  const isOnline=(MODE==='host'||MODE==='guest'||MODE==='spectator');
+  if(rl&&isMe&&MODE!=='spectator') {
+    const startMyD20=()=>{
+      if(rolling||finished||rl.disabled)return;
       rl.disabled=true;
       rl.classList.add('used');
+      if(MODE==='guest'&&conn&&conn.open)conn.send({k:'d20_roll'});
+      else if(MODE==='host'){
+        if(conn&&conn.open)conn.send({k:'d20_roll'});
+        spectators.forEach(s=>{try{if(s.open)s.send({k:'d20_roll'})}catch(e){}});
+      }
       snd('heart');
-      setTimeout(runRoll, 300);
+      setTimeout(runRoll,200);
     };
+    rl.onclick=startMyD20;
+    if(stageEl){stageEl.style.cursor='pointer';stageEl.onclick=startMyD20}
   } else {
     if(rl){rl.disabled=true;rl.classList.add('used')}
-    snd('heart');
-    setTimeout(runRoll, 1000);
+    if(!isOnline){
+      snd('heart');
+      setTimeout(runRoll, 1000);
+    }
   }
 }
 
@@ -3234,6 +3253,12 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     spectators.forEach(s=>{try{if(s.open)s.send({k:'tie_roll'})}catch(e){}});
     return;
   }
+  if(m.k=='d20_roll'){
+    if(fromConn!==conn)return;
+    if(window._triggerD20Roll)window._triggerD20Roll();
+    spectators.forEach(s=>{try{if(s.open)s.send({k:'d20_roll'})}catch(e){}});
+    return;
+  }
 
   const S=G;if(!S||S.over||S.wait||S.turn!=1)return;
   if(fromConn !== conn) return; // Hamleleri sadece aktif rakip (conn) yapabilir!
@@ -3425,6 +3450,9 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
   }
   else if(m.k=='tie_roll'){
     if(window._triggerTieRoll)window._triggerTieRoll();
+  }
+  else if(m.k=='d20_roll'){
+    if(window._triggerD20Roll)window._triggerD20Roll();
   }
   else if(m.k=='wolf_claw'){
     if(Array.isArray(m.ids))playWolfClawFx(m.ids);
