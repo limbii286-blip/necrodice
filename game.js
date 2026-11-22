@@ -1710,6 +1710,9 @@ function endRound(){
       if(S!==G)return;
       // Vuruş animasyonu tamamlandıktan sonra düello kutusu (yeşil/kırmızı/gri) ve puanlar güncellenir
       if(r!==0){S.cWins=S.cWins||[0,0];S.cWins[r>0?0:1]++;}
+      if(r>0)S.log.push({p:0,t:`turu kazandı (${a[0]} - ${a[1]})`});
+      else if(r<0)S.log.push({p:1,t:`turu kazandı (${a[1]} - ${a[0]})`});
+      else S.log.push({p:-1,t:`Tur ${S.rounds+1} berabere (${a[0]} - ${a[1]})`});
       S.pts[0]+=r>0?1:r==0?.5:0;S.pts[1]+=r<0?1:r==0?.5:0;S.rounds++;S.res.push(r);
       if(!(S.pts.some(x=>x>=2)||S.rounds>=3)&&r==0){
         [0,1].forEach(p=>S.jdeck.length&&S.hand[p].push(S.jdeck.pop()));
@@ -1872,7 +1875,7 @@ const HP_IC={
   v:hpImg('v'),
   u:hpImg('u')
 };
-function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}LAST_MATCH_HIST=[];rematchReady=[false,false];rematchHeroes=[null,null];deathContReady=[false,false];deathContGo=null;const botPool=HEROES.filter(h=>(!h.bossOnly||DIFF==='imp')&&!(MY_HERO==='v'&&h.id==='v')).map(h=>h.id),oppH=MODE=='bot'?botPool[Math.floor(Math.random()*botPool.length)]:(OPP_HERO||'n');G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],vampUsed:[false,false],cWins:[0,0],vampWinSide:-1,mast:[0,0]};prevAv[0]=prevAv[1]=undefined;prevHpAnim=[false,false];newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();runAfterDeal(G)}
+function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}glogOpen=false;glogLastSig='';LAST_MATCH_HIST=[];rematchReady=[false,false];rematchHeroes=[null,null];deathContReady=[false,false];deathContGo=null;const botPool=HEROES.filter(h=>(!h.bossOnly||DIFF==='imp')&&!(MY_HERO==='v'&&h.id==='v')).map(h=>h.id),oppH=MODE=='bot'?botPool[Math.floor(Math.random()*botPool.length)]:(OPP_HERO||'n');G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],vampUsed:[false,false],cWins:[0,0],vampWinSide:-1,mast:[0,0]};prevAv[0]=prevAv[1]=undefined;prevHpAnim=[false,false];newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();runAfterDeal(G)}
 
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
@@ -2372,6 +2375,7 @@ function R(){
   const dealMs=fly();flipId=null;
   const mt0=S.turn==0&&!S.wait;if(mt0&&!prevT&&!dealMs&&!entering)snd('turn');prevT=mt0;
   const last=S.log[S.log.length-1],lk=S.log.length+JSON.stringify(last);if(lk!=lastLk){lastLk=lk;if(last&&last.t=='pas dedi')snd('pass')}
+  renderGameLog(S);
   if(MODE==='tutorial')tutApplyHighlights();
   if(MODE=='host'){
     if(conn&&conn.open)conn.send({k:'s',v:view(G)});
@@ -2381,6 +2385,54 @@ function R(){
     }
   }
 }
+let glogOpen=false,glogLastSig='';
+function glogEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function glogFmtText(raw){
+  let h=glogEsc(raw||'');
+  h=h.replace(/joker oynadı:\s*(.+)$/i,(m,jn)=>`joker oynadı: <span class="glog-tag">${jn}</span>`);
+  h=h.replace(/\(([^)]+)\)/g,(m,inner)=>`(<span class="glog-num">${inner}</span>)`);
+  return h;
+}
+function renderGameLog(S){
+  const el=$('#glog');if(!el)return;
+  const menuEl=$('#menu');
+  if(!S||(menuEl&&!menuEl.hidden)){el.hidden=true;return}
+  el.hidden=false;
+  const raw=(S.log||[]).filter(l=>l&&!(l.p===1&&/Kuzgunun Kehaneti|Yitik Yazgı/.test(l.t||''))).slice(-30);
+  const sig=(glogOpen?1:0)+'|'+MODE+'|'+(isEn()?1:0)+'|'+raw.length+'|'+(raw.length?raw[raw.length-1].p+':'+raw[raw.length-1].t:'');
+  if(sig===glogLastSig)return;
+  glogLastSig=sig;
+  const isSpec=MODE==='spectator';
+  const whoOf=p=>isSpec?(p===0?tr('1. Oyuncu','P1'):tr('2. Oyuncu','P2')):(p===0?tr('Sen','You'):tr('Rakip','Opp'));
+  let actCnt=0,peekTxt=tr('Henüz hamle yok','No moves yet');
+  const rows=raw.map(l=>{
+    if(l.p<0){
+      const clean=String(l.t||'').replace(/^—\s*|\s*—$/g,'');
+      return `<div class="glog-row div">${glogEsc(clean)}</div>`;
+    }
+    actCnt++;
+    const who=whoOf(l.p);
+    peekTxt=`${who} ${l.t||''}`;
+    return `<div class="glog-row ${l.p===0?'me':'opp'}"><span class="glog-who">${glogEsc(who)}</span><span>${glogFmtText(l.t)}</span></div>`;
+  }).join('');
+  el.classList.toggle('collapsed',!glogOpen);
+  el.innerHTML=`<button type="button" class="glog-hdr" aria-expanded="${glogOpen?'true':'false'}"><span class="glog-title"><span class="glog-dot"></span><span>${tr('Maç Günlüğü','Game Log')}</span></span><span class="glog-meta"><span>${actCnt}</span><span class="glog-chev">▾</span></span></button><div class="glog-peek">${glogEsc(peekTxt)}</div><div class="glog-body">${rows||`<div class="glog-empty">${tr('Henüz hamle yok','No moves yet')}</div>`}</div>`;
+  const toggle=()=>{
+    glogOpen=!glogOpen;
+    glogLastSig='';
+    renderGameLog(G);
+    if(glogOpen){const b=el.querySelector('.glog-body');if(b)b.scrollTop=b.scrollHeight;}
+  };
+  const hdr=el.querySelector('.glog-hdr'),pk=el.querySelector('.glog-peek');
+  if(hdr)hdr.onclick=e=>{e.stopPropagation();toggle()};
+  if(pk)pk.onclick=e=>{e.stopPropagation();if(!glogOpen)toggle()};
+  if(glogOpen){const b=el.querySelector('.glog-body');if(b)b.scrollTop=b.scrollHeight;}
+}
+document.addEventListener('click',e=>{
+  if(!glogOpen)return;
+  const el=$('#glog');
+  if(el&&!el.contains(e.target)){glogOpen=false;glogLastSig='';if(G)renderGameLog(G);}
+});
 function playHeroPowerAnim(hId,side,hObj){
   const btn=document.querySelector(side===0?'#me .hp-btn':'#opp .hp-btn');
   if(btn){
@@ -3139,7 +3191,7 @@ function view(S){ // rakibe gidecek, gizli bilgisi temizlenmiş ve aynalanmış 
   return {av:f(S.av),hero:S.hero?f(S.hero):f(S.av),hpUsed:[hu1,visHu0],hpMod:S.hpMod?f(S.hpMod):[0,0],plagueMod:S.plagueMod?f(S.plagueMod):[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?f(S.uRevived):[false,false],vampUsed:S.vampUsed?f(S.vampUsed):[false,false],cWins:S.cWins?f(S.cWins):[0,0],vampWinSide:S.vampWinSide>=0?1-S.vampWinSide:-1,oppPeek:pk1,mast:f(S.mast),turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:1-S.turn,clocks:S.clocks?f(S.clocks):[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?f(S.timeOut):[false,false],hadTimeout:!!S.hadTimeout,pts:f(S.pts),rev:S.rev,winSide:S.winSide==null?null:-S.winSide,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),jTurn:S.jTurn?f(S.jTurn):[0,0],noJ:f(S.noJ),
     hand:[S.hand[1],S.hand[0].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
     pl:[S.pl[1],{open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:(S.rev||pk1.includes(c.id))?c.n:0,o:c.o,hpImmune:!!c.hpImmune}))}],
-    eff:S.eff.map(e=>({...e,o:1-e.o})),pj:(S.pj||[]).map(e=>({...e,o:1-e.o})),log:S.log.slice(-6).map(l=>({...l,p:l.p<0?-1:1-l.p}))};
+    eff:S.eff.map(e=>({...e,o:1-e.o})),pj:(S.pj||[]).map(e=>({...e,o:1-e.o})),log:S.log.filter(l=>!(l.p===0&&/Kuzgunun Kehaneti|Yitik Yazgı/.test(l.t||''))).slice(-30).map(l=>({...l,p:l.p<0?-1:1-l.p}))};
 }
 function specView(S){ // izleyicilere gidecek durum (0 = host/oda sahibi, 1 = misafir oyuncu, kapalı kartlar rev olmadan görünmez)
   return {
@@ -3149,7 +3201,7 @@ function specView(S){ // izleyicilere gidecek durum (0 = host/oda sahibi, 1 = mi
       {open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:c.o,hpImmune:!!c.hpImmune}))},
       {open:S.pl[1].open,closed:S.pl[1].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:c.o,hpImmune:!!c.hpImmune}))}
     ],
-    eff:S.eff.map(e=>({...e})),pj:(S.pj||[]).map(e=>({...e})),log:S.log.slice(-6).map(l=>({...l}))
+    eff:S.eff.map(e=>({...e})),pj:(S.pj||[]).map(e=>({...e})),log:S.log.slice(-30).map(l=>({...l}))
   };
 }
 function note(p,id,cb){
@@ -4826,7 +4878,7 @@ function createSmoothDragLoop(onFrame){
     if(e.button!=null&&e.button!==0)return;
     const menu=$('#menu'),modal=$('#m');
     if((menu&&!menu.hidden)||(modal&&!modal.hidden))return;
-    if(e.target.closest&&e.target.closest('button, a, input, select, .c, .j, .e, #deck, #pass, .who, #hdr .hs, #hdr .hc, #hdr .hg, .side-clock, .seal'))return;
+    if(e.target.closest&&e.target.closest('button, a, input, select, .c, .j, .e, #deck, #pass, .who, #hdr .hs, #hdr .hc, #hdr .hg, #glog, .side-clock, .seal'))return;
     snd('stone');
     const r=document.createElement('div');
     r.className='stone-ripple';
