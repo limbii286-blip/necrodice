@@ -2427,7 +2427,28 @@ function renderGameLog(S){
   if(hdr)hdr.onclick=e=>{e.stopPropagation();toggle()};
   if(pk)pk.onclick=e=>{e.stopPropagation();if(!glogOpen)toggle()};
   if(glogOpen){const b=el.querySelector('.glog-body');if(b)b.scrollTop=b.scrollHeight;}
+  syncGlogMobileSize();
 }
+function syncGlogMobileSize(){
+  const el=$('#glog'),hc=$('#hdr .hc');
+  if(!el||!hc)return;
+  if(window.innerWidth<=760){
+    const r=hc.getBoundingClientRect();
+    if(r.width>40&&r.height>16){
+      el.style.setProperty('--glog-mob-w',Math.round(r.width)+'px');
+      el.style.setProperty('--glog-mob-h',Math.round(r.height)+'px');
+      el.style.setProperty('--glog-mob-l',Math.round(r.left)+'px');
+      el.style.setProperty('--glog-mob-t',Math.round(r.bottom+5)+'px');
+    }
+  }else{
+    el.style.removeProperty('--glog-mob-w');
+    el.style.removeProperty('--glog-mob-h');
+    el.style.removeProperty('--glog-mob-l');
+    el.style.removeProperty('--glog-mob-t');
+  }
+}
+window.addEventListener('resize',syncGlogMobileSize);
+window.addEventListener('orientationchange',()=>setTimeout(syncGlogMobileSize,260));
 document.addEventListener('click',e=>{
   if(!glogOpen)return;
   const el=$('#glog');

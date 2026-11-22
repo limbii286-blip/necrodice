@@ -8104,20 +8104,38 @@ body.cb #glog .glog-row.opp .glog-who {
 }
 @media (max-width: 760px) {
   #glog.glog {
-    top: calc(max(3px, env(safe-area-inset-top, 3px)) + 42px);
-    left: 6px;
+    top: var(--glog-mob-t, calc(max(3px, env(safe-area-inset-top, 3px)) + 42px));
+    left: var(--glog-mob-l, 6px);
     width: min(84vw, 278px);
     border-radius: 9px;
+    box-sizing: border-box;
   }
   #glog.glog.collapsed {
-    width: auto;
-    min-width: 122px;
-    max-width: 170px;
+    width: var(--glog-mob-w, 138px);
+    min-width: 0;
+    max-width: none;
+    height: var(--glog-mob-h, 34px);
+    display: flex;
+    align-items: stretch;
   }
   #glog .glog-hdr {
     padding: 5px 8px;
     font-size: 11px;
     letter-spacing: 0.4px;
+  }
+  #glog.glog.collapsed .glog-hdr {
+    height: 100%;
+    padding: 0 9px;
+    gap: 4px;
+  }
+  #glog.glog.collapsed .glog-title {
+    gap: 5px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #glog.glog.collapsed .glog-peek {
+    display: none !important;
   }
   #glog .glog-peek {
     padding: 3.5px 8px 4.5px;
