@@ -4975,11 +4975,11 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   position: absolute;
   z-index: 1;
   left: 50%;
-  top: 24%;
+  top: 19%;
   transform: translateX(-50%);
-  width: 34%;
-  height: 59%;
-  border-radius: 50% 50% 46% 46% / 42% 42% 52% 52%;
+  width: 48%;
+  height: 63%;
+  border-radius: 50%;
   border: none;
   background: radial-gradient(circle at 50% 35%, #2b221a, #14100d 80%);
   box-shadow: none;
@@ -4999,9 +4999,10 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   filter: brightness(1.18) contrast(1.06) saturate(1.12);
 }
 .end-screen.lose .hs-arch-frame {
-  top: 28%;
-  width: 34%;
-  height: 56%;
+  top: 22%;
+  width: 44%;
+  height: 58%;
+  border-radius: 50%;
 }
 .end-screen.lose .hs-arch-frame img {
   object-position: center 20%;
