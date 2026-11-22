@@ -4955,7 +4955,7 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
 }
 .hs-crest-stage {
   position: relative;
-  width: min(92vw, 430px);
+  width: min(94vw, 470px);
   aspect-ratio: 4 / 3;
   margin: 0 auto 2px;
   display: flex;
@@ -4976,24 +4976,37 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   position: absolute;
   z-index: 1;
   left: 50%;
-  top: 25%;
+  top: 24%;
   transform: translateX(-50%);
-  width: 31%;
+  width: 34%;
   height: 59%;
   border-radius: 50% 50% 46% 46% / 42% 42% 52% 52%;
   border: none;
-  background: #0d0a0c;
+  background: radial-gradient(circle at 50% 35%, #2b221a, #14100d 80%);
   box-shadow: none;
   overflow: hidden;
 }
+.end-screen.win .hs-arch-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at 50% 24%, rgba(254, 240, 170, 0.24), transparent 62%);
+  box-shadow: inset 0 0 22px rgba(253, 224, 130, 0.42);
+  pointer-events: none;
+}
+.end-screen.win .hs-arch-frame img {
+  object-position: center 20%;
+  filter: brightness(1.18) contrast(1.06) saturate(1.12);
+}
 .end-screen.lose .hs-arch-frame {
-  top: 29%;
-  width: 32%;
-  height: 55%;
+  top: 28%;
+  width: 34%;
+  height: 56%;
 }
 .end-screen.lose .hs-arch-frame img {
-  object-position: center 22%;
-  filter: brightness(1.08) contrast(1.05);
+  object-position: center 20%;
+  filter: brightness(1.08) saturate(0.72) contrast(1.03);
 }
 .nd-halo-spin {
   transform-origin: 210px 154px;
@@ -5025,10 +5038,10 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   position: absolute;
   z-index: 4;
   left: 50%;
-  bottom: 4%;
+  bottom: 0%;
   transform: translateX(-50%);
-  min-width: 60%;
-  padding: 10px 28px 9px;
+  min-width: 58%;
+  padding: 8px 26px 7px;
   border-radius: 4px;
   clip-path: polygon(10px 0%, calc(100% - 10px) 0%, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0% 50%);
   border-top: 2.5px solid #e6be6c;
@@ -5040,7 +5053,7 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   animation: hsPlaquePop 0.55s 0.14s cubic-bezier(0.2, 1.25, 0.3, 1) both;
 }
 .end-screen.lose .hs-wood-plaque {
-  bottom: 1%;
+  bottom: 0%;
   border-top-color: #9ca3af;
   border-bottom-color: #52525b;
   background: linear-gradient(180deg, #26262b 0%, #111114 100%);
@@ -5071,7 +5084,7 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
 }
 @media (max-width: 760px) {
   .hs-crest-stage {
-    width: min(88vw, 340px);
+    width: min(92vw, 370px);
   }
   .hs-end-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
