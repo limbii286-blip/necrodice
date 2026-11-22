@@ -294,7 +294,7 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
         if(btn){btn.disabled=true;btn.classList.add('used')}
         if(turnLbl)turnLbl.textContent=curSide===0?tr('1. Oyuncu D20 atıyor…','Player 1 is rolling D20…'):tr('2. Oyuncu D20 atıyor…','Player 2 is rolling D20…');
       }else if(curSide===0){
-        if(btn){btn.disabled=false;btn.classList.remove('used');btn.textContent=tr('D20 AT','ROLL D20')}
+        if(btn){btn.disabled=false;btn.classList.remove('used');btn.textContent=tr('D20 At','Roll D20')}
         if(turnLbl)turnLbl.textContent=tr('Sıra sende! D20 zarını at.','Your turn! Roll the D20.');
       }else{
         if(btn){btn.disabled=true;btn.classList.add('used')}
@@ -1780,7 +1780,7 @@ function endRound(){
         <div class="bg3-card-border"></div>
         <i class="bg3-corner tl"></i><i class="bg3-corner tr"></i><i class="bg3-corner bl"></i><i class="bg3-corner br"></i>
         <div class="bg3-dc-arch">
-          <span class="lbl">${tr('HEDEF','TARGET')}</span>
+          <span class="lbl">${tr('Hedef','Target')}</span>
           <span class="val">${th}</span>
         </div>
         <div class="d20-stage">
@@ -1788,7 +1788,7 @@ function endRound(){
           <canvas id="d20cv" class="d20-canvas" width="280" height="280"></canvas>
         </div>
         ${(rawOv==null&&(hpB||execPen))?`<div class="d20-hp-mod">${hpB?`<span class="d20-mod-pill bg3-bonus-card pos" data-val="${hpB}"><span class="mod-ic">${HP_IC.m}</span><b>${blessingName}</b><i>+${hpB}</i></span>`:''}${execPen?`<span class="d20-mod-pill bg3-bonus-card neg" data-val="-2"><span class="mod-ic">${HP_IC.n}</span><b>${decreeName}</b><i>−2</i></span>`:''}</div>`:''}
-        ${L==v?`<button id="rl" class="btn d20-btn">${tr('ÖLÜM ZARINI AT','ROLL DEATH DICE')}</button>`:`<button id="rl" class="btn d20-btn used" disabled aria-hidden="true">${tr('ÖLÜM ZARINI AT','ROLL DEATH DICE')}</button>`}
+        ${L==v?`<button id="rl" class="btn d20-btn">${tr('Ölüm Zarını At','Roll Death Dice')}</button>`:`<button id="rl" class="btn d20-btn used" disabled aria-hidden="true">${tr('Ölüm Zarını At','Roll Death Dice')}</button>`}
       </div>
     </div><div class="after"><div class="after-roll"><b>${tr('Zar Sonucu','Roll Result')}: ${roll}${(hpB||execPen)&&rawOv==null?` (${rr}${hpB?`+${hpB} ${blessingName}`:''}${execPen?`−2 ${decreeName}`:''})`:''}</b></div><div class="after-msg">`+(surv?(L==v?`${tr('Kurtuldun!','You survived!')}<span class="after-sub">${tr('Hayatta kaldın.','You live to fight on.')}</span>`:tr('Rakip hayatta kaldı.','Opponent survived.')):(`<b>${L==v?`${tr('Öldün.','You died.')}<span class="after-sub">${tr('Oyunu rakip kazandı.','Opponent won the game.')}</span>`:`${tr('Rakip öldü.','Opponent died.')}<span class="after-sub">${tr('Oyunu sen kazandın!','You won the game!')}</span>`}</b>`))+'</div></div>'};
     const openDeathModal=()=>{
@@ -1810,7 +1810,7 @@ function endRound(){
         const myLbl=v===2?tr('1. Oyuncu','Player 1'):tr('Senin Zarın','Your Roll');
         const opLbl=v===2?tr('2. Oyuncu','Player 2'):(MODE==='bot'?tr('Botun Zarı','Bot\'s Roll'):tr('Rakibin Zarı','Opponent\'s Roll'));
         const resTxt=v===2?(w===0?tr('1. Oyuncu düelloyu kazandı!','Player 1 won the duel!'):tr('2. Oyuncu düelloyu kazandı!','Player 2 won the duel!')):(w===0?tr('Düelloyu sen kazandın!<br>Rakip Ölüm Zarı atacak.','You won the duel!<br>Opponent will roll the Death Dice.'):tr('Düelloyu rakip kazandı!<br>Ölüm Zarını sen atacaksın.','Opponent won the duel!<br>You will roll the Death Dice.'));
-        return `<h3>${tr('Düello Berabere!','Duel Tied!')}</h3><p class="tie-sub">${tr('Puanlar ve kalan jokerler eşit. Sırayla D20 atılır, yüksek atan kazanır!','Points and remaining jokers are tied. Roll D20 in turn, higher wins!')}</p><div class="tie-box" data-d0="${hx[vi]}" data-d1="${hx[1-vi]}" data-win="${w}" data-first="${firstForV}" data-bot="${MODE==='bot'?1:0}"><div class="bg3-roll-card tie-d20-card"><div class="bg3-card-border"></div><i class="bg3-corner tl"></i><i class="bg3-corner tr"></i><i class="bg3-corner bl"></i><i class="bg3-corner br"></i><div id="tie-turn" class="tie-turn"></div><div class="d20-stage tie-d20-stage"><div class="d20-glow"></div><canvas id="tie-d20cv" class="d20-canvas" width="280" height="280"></canvas></div><div class="tie-sides"><div class="tie-side me"><span class="tie-lbl">${myLbl}</span><b id="tie-s0" class="tie-sum">—</b></div><div class="tie-vs">VS</div><div class="tie-side opp"><span class="tie-lbl">${opLbl}</span><b id="tie-s1" class="tie-sum">—</b></div></div><button id="tie-rl" class="btn d20-btn">${tr('D20 AT','ROLL D20')}</button></div><div class="tie-after"><b>${hx[vi]} – ${hx[1-vi]}</b><br>${resTxt}</div></div>`;
+        return `<h3>${tr('Düello Berabere!','Duel Tied!')}</h3><p class="tie-sub">${tr('Puanlar ve kalan jokerler eşit. Sırayla D20 atılır, yüksek atan kazanır!','Points and remaining jokers are tied. Roll D20 in turn, higher wins!')}</p><div class="tie-box" data-d0="${hx[vi]}" data-d1="${hx[1-vi]}" data-win="${w}" data-first="${firstForV}" data-bot="${MODE==='bot'?1:0}"><div class="bg3-roll-card tie-d20-card"><div class="bg3-card-border"></div><i class="bg3-corner tl"></i><i class="bg3-corner tr"></i><i class="bg3-corner bl"></i><i class="bg3-corner br"></i><div id="tie-turn" class="tie-turn"></div><div class="d20-stage tie-d20-stage"><div class="d20-glow"></div><canvas id="tie-d20cv" class="d20-canvas" width="280" height="280"></canvas></div><div class="tie-sides"><div class="tie-side me"><span class="tie-lbl">${myLbl}</span><b id="tie-s0" class="tie-sum">—</b></div><div class="tie-vs">VS</div><div class="tie-side opp"><span class="tie-lbl">${opLbl}</span><b id="tie-s1" class="tie-sum">—</b></div></div><button id="tie-rl" class="btn d20-btn">${tr('D20 At','Roll D20')}</button></div><div class="tie-after"><b>${hx[vi]} – ${hx[1-vi]}</b><br>${resTxt}</div></div>`;
       };
       MM(tieFn,tr('Ölüm Zarına Geç','Proceed to Death Dice'),openDeathModal);
     }else{
@@ -2942,7 +2942,7 @@ function applyLang(lang){
   if(dImp)dImp.textContent=tr('İmkansız','Impossible');
   if($('#b2'))$('#b2').textContent=tr('Özel Oyun Oluştur','Create Private Match');
   if($('#bqm'))$('#bqm').textContent=tr('Hızlı Maç Ara','Find Quick Match');
-  if($('#code'))$('#code').placeholder=tr('ODA KODU','ROOM CODE');
+  if($('#code'))$('#code').placeholder=tr('Oda Kodu','Room Code');
   if($('#b3'))$('#b3').textContent=tr('Özel Oyuna Katıl','Join Private Match');
   if($('#b6'))$('#b6').textContent=tr('Ayarlar','Settings');
   if($('#btut'))$('#btut').textContent=tr('Eğitim (Karga Rehberi)','Tutorial (Raven Guide)');
@@ -3945,7 +3945,7 @@ function hostRoom(inviteTarget,onCodeReady){
         <h3 style="margin-bottom:8px">${tr('Çevrim İçi Lobi','Online Lobby')}</h3>
         <p style="color:var(--bone);font-size:20px;margin-bottom:14px">${tr('Bu kodu arkadaşına ilet:','Share this code with your friend:')}</p>
         <div class="lobby-code-badge" id="lobbyCodeBox" title="${tr('Kodu Kopyala','Copy Code')}">
-          <span class="lobby-lbl">${tr('ODA KODU','ROOM CODE')}</span>
+          <span class="lobby-lbl">${tr('Oda Kodu','Room Code')}</span>
           <b class="lobby-code">${code}</b>
           <span class="lobby-copy-hint">${tr('kopyalamak için tıkla','click to copy')}</span>
         </div>
@@ -4068,7 +4068,7 @@ function showJoinModal(slots, specCount){
               <small>${p0DispRole}</small>
             </div>
           </div>
-          <span class="slot-status busy">${tr('DOLU','FULL')}</span>
+          <span class="slot-status busy">${tr('Dolu','Full')}</span>
         </div>
         
         <div class="slot-card">
@@ -4079,7 +4079,7 @@ function showJoinModal(slots, specCount){
               <small>${p1DispRole}</small>
             </div>
           </div>
-          <span class="slot-status ${p1Free?'free':'busy'}">${p1Free?tr('BOŞ','OPEN'):tr('DOLU','FULL')}</span>
+          <span class="slot-status ${p1Free?'free':'busy'}">${p1Free?tr('Boş','Open'):tr('Dolu','Full')}</span>
         </div>
       </div>
       
