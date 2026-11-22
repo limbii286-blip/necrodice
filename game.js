@@ -664,7 +664,7 @@ function newBO3(S){
   if(!S.stats)S.stats={rounds:[0,0,0],draws:[0,0],jokers:[0,0],d20Surv:[0,0],startAt:Date.now()};
   S.dj=[];S.jdeck=shuf(range(24));
   S.hand=[0,1].map(p=>avKey(S,p)==='s'?[...S.jdeck.splice(0,3),25]:S.jdeck.splice(0,4));
-  S.pts=[0,0];S.rounds=0;S.res=[];
+  S.pts=[0,0];S.rounds=0;S.res=[];S.log=[];
   S.hpUsed=[false,false];S.d20Bonus=[0,0];
   S.clocks=[cs,cs];
   S.clockMax=cs;
@@ -2399,7 +2399,7 @@ function renderGameLog(S){
   if(!S||(menuEl&&!menuEl.hidden)){el.hidden=true;return}
   el.hidden=false;
   const raw=(S.log||[]).filter(l=>l&&!(l.p===1&&/Kuzgunun Kehaneti|Yitik Yazgı/.test(l.t||''))).slice(-30);
-  const sig=(glogOpen?1:0)+'|'+MODE+'|'+(isEn()?1:0)+'|'+raw.length+'|'+(raw.length?raw[raw.length-1].p+':'+raw[raw.length-1].t:'');
+  const sig=(glogOpen?1:0)+'|'+(S.bo||0)+'|'+MODE+'|'+(isEn()?1:0)+'|'+raw.length+'|'+(raw.length?raw[raw.length-1].p+':'+raw[raw.length-1].t:'');
   if(sig===glogLastSig)return;
   glogLastSig=sig;
   const isSpec=MODE==='spectator';
