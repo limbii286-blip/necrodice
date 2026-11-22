@@ -6552,18 +6552,22 @@ html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, 
   align-items: center !important;
   justify-content: center !important;
 }
+#mb2 .hs-online-row,
 #mb2 .hs-join-row {
-  display: flex !important;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   gap: 8px !important;
   width: 100% !important;
   align-items: stretch !important;
 }
+#mb2 #b2,
+#mb2 #bqm,
 #mb2 #code,
 #mb2 #b3 {
-  flex: 1 1 0 !important;
+  width: 100% !important;
   min-width: 0 !important;
-  width: 0 !important;
   max-width: none !important;
+  box-sizing: border-box !important;
 }
 #mb2 #code {
   font-size: 16px !important;
@@ -7852,15 +7856,14 @@ body[data-cardback="sovereign"] .c.back {
     align-items: center !important;
     justify-content: center !important;
   }
+  #menu #mb2 .hs-online-row,
   #menu #mb2 .hs-join-row {
     gap: 6px !important;
-    align-items: stretch !important;
   }
   #menu #mb2 #code,
   #menu #mb2 #b3 {
-    flex: 1 1 0 !important;
+    width: 100% !important;
     min-width: 0 !important;
-    width: 0 !important;
     max-width: none !important;
   }
   #menu #mb2 #code {
