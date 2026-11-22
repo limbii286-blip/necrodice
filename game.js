@@ -2584,67 +2584,7 @@ function buildEndScreenHtml(S,v,L,roll,th){
   const sec=Math.max(1,Math.round((Date.now()-(st.startAt||Date.now()))/1000));
   const durTxt=`${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
   const titleTxt=isSpec?tr('Maç Bitti!','Match Over!'):(won?tr('Zafer!','Victory!'):tr('Mağlubiyet!','Defeat!'));
-  const winCrestSvg=`<svg class="hs-crest-svg nd-win-svg" viewBox="0 0 420 330" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="ndGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fff4bf"/><stop offset="48%" stop-color="#d8a53c"/><stop offset="100%" stop-color="#7a4f12"/></linearGradient>
-      <linearGradient id="ndSteel" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f3f4f6"/><stop offset="50%" stop-color="#9ca3af"/><stop offset="100%" stop-color="#374151"/></linearGradient>
-      <linearGradient id="ndCrim" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8b1a26"/><stop offset="55%" stop-color="#4e0c14"/><stop offset="100%" stop-color="#210508"/></linearGradient>
-    </defs>
-    <!-- Gothic Runic Sunburst Halo (Original Necrodice) -->
-    <g class="nd-halo-spin">
-      <circle cx="210" cy="154" r="118" stroke="url(#ndGold)" stroke-width="1.5" stroke-dasharray="6 7" opacity="0.72"/>
-      <circle cx="210" cy="154" r="102" stroke="url(#ndGold)" stroke-width="2.2" opacity="0.82"/>
-      <path d="M210 22 L218 62 L202 62 Z M210 286 L218 246 L202 246 Z M78 154 L118 146 L118 162 Z M342 154 L302 146 L302 162 Z" fill="url(#ndGold)" opacity="0.88"/>
-      <path d="M116 60 L148 84 L138 94 Z M304 60 L272 84 L282 94 Z M116 248 L148 224 L138 214 Z M304 248 L272 224 L282 214 Z" fill="url(#ndGold)" opacity="0.72"/>
-    </g>
-    <!-- Crossed Gothic Greatswords -->
-    <g stroke="#1b1208" stroke-width="1.8" stroke-linejoin="round">
-      <path d="M68 58 L286 244 L276 254 L58 68 L52 46 Z" fill="url(#ndSteel)"/>
-      <path d="M352 58 L134 244 L144 254 L362 68 L368 46 Z" fill="url(#ndSteel)"/>
-      <rect x="64" y="64" width="32" height="7" rx="2" transform="rotate(-48 64 64)" fill="url(#ndGold)"/>
-      <rect x="334" y="88" width="32" height="7" rx="2" transform="rotate(48 334 88)" fill="url(#ndGold)"/>
-    </g>
-    <!-- Twin Crimson-Velvet Gothic Swallowtail Pennants -->
-    <path d="M84 124 L132 140 L132 288 L108 266 L84 288 Z" fill="url(#ndCrim)" stroke="url(#ndGold)" stroke-width="3" stroke-linejoin="round"/>
-    <path d="M336 124 L288 140 L288 288 L312 266 L336 288 Z" fill="url(#ndCrim)" stroke="url(#ndGold)" stroke-width="3" stroke-linejoin="round"/>
-    <path d="M98 142 L98 258 M118 148 L118 258 M302 148 L302 258 M322 142 L322 258" stroke="#f0c453" stroke-width="1" opacity="0.45"/>
-    <!-- Apex Golden D20 Gem Crest (Signature Necrodice!) -->
-    <g class="nd-d20-apex">
-      <polygon points="210,14 238,32 238,62 210,78 182,62 182,32" fill="url(#ndGold)" stroke="#2b1905" stroke-width="2.4" stroke-linejoin="round"/>
-      <polygon points="210,20 232,48 188,48" fill="#fff4bf" opacity="0.55"/>
-      <path d="M210 14 L232 48 L210 78 L188 48 Z M182 32 L232 48 M238 32 L188 48 M182 62 L238 62" stroke="#5c3a0b" stroke-width="1.3" opacity="0.8"/>
-    </g>
-  </svg>`;
-  const defeatCrestSvg=`<svg class="hs-crest-svg nd-lose-svg" viewBox="0 0 420 330" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="ndIron" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#9ca3af"/><stop offset="50%" stop-color="#52525b"/><stop offset="100%" stop-color="#27272a"/></linearGradient>
-      <linearGradient id="ndAsh" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3f3f46"/><stop offset="55%" stop-color="#27272a"/><stop offset="100%" stop-color="#121215"/></linearGradient>
-      <linearGradient id="ndBloodGlow" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fca5a5"/><stop offset="50%" stop-color="#dc2626"/><stop offset="100%" stop-color="#7f1d1d"/></linearGradient>
-    </defs>
-    <!-- Crimson-Ember Runic Halo (Defeat Mirror of Victory Halo) -->
-    <g class="nd-halo-spin" opacity="0.78">
-      <circle cx="210" cy="154" r="118" stroke="url(#ndBloodGlow)" stroke-width="1.5" stroke-dasharray="10 9" opacity="0.65"/>
-      <circle cx="210" cy="154" r="102" stroke="url(#ndBloodGlow)" stroke-width="2" stroke-dasharray="28 12" opacity="0.75"/>
-      <path d="M210 26 L216 62 L204 62 Z M210 282 L216 246 L204 246 Z M82 154 L118 148 L118 160 Z M338 154 L302 148 L302 160 Z" fill="url(#ndBloodGlow)" opacity="0.7"/>
-    </g>
-    <!-- Broken Crossed Blades -->
-    <g stroke="#0e0e11" stroke-width="1.8" stroke-linejoin="round">
-      <path d="M76 74 L168 152 L158 164 L66 84 L74 64 Z" fill="url(#ndIron)"/>
-      <path d="M254 222 L286 248 L276 258 L242 232 Z" fill="url(#ndIron)"/>
-      <path d="M346 82 L252 162 L262 174 L356 92 L348 70 Z" fill="url(#ndIron)"/>
-      <path d="M168 228 L138 252 L148 262 L178 238 Z" fill="url(#ndIron)"/>
-    </g>
-    <!-- Torn Charcoal-Ash Pennants -->
-    <path d="M88 134 L132 146 L132 276 L116 252 L104 282 L88 262 Z" fill="url(#ndAsh)" stroke="#71717a" stroke-width="2.5" stroke-linejoin="round"/>
-    <path d="M332 134 L288 146 L288 280 L306 258 L318 286 L332 264 Z" fill="url(#ndAsh)" stroke="#71717a" stroke-width="2.5" stroke-linejoin="round"/>
-    <!-- Shattered Dark D20 Shard at Apex (Signature Necrodice!) -->
-    <g class="nd-d20-broken">
-      <polygon points="205,18 182,34 184,60 206,74 202,48" fill="url(#ndIron)" stroke="#18181b" stroke-width="2.2" stroke-linejoin="round"/>
-      <polygon points="216,20 238,36 236,62 214,76 218,50" fill="url(#ndIron)" stroke="#18181b" stroke-width="2.2" stroke-linejoin="round"/>
-      <path d="M208 16 L204 46 L213 54 L208 78" stroke="#09090b" stroke-width="3" stroke-linecap="round"/>
-    </g>
-  </svg>`;
-  const crestBgSvg=(won||isSpec)?winCrestSvg:defeatCrestSvg;
+  const crestImgSrc=(won||isSpec)?'end_win_crest.png?v=20261122_crest1':'end_lose_crest.png?v=20261122_crest1';
   const eloRes=(!isSpec&&v===0&&MODE!=='tutorial'&&typeof recordMatchElo==='function')?recordMatchElo(S,won):null;
   const eloHtml=eloRes?(eloRes.unranked
     ?`<div class="end-elo-bar unranked">
@@ -2658,12 +2598,11 @@ function buildEndScreenHtml(S,v,L,roll,th){
       <span class="end-elo-d">${eloRes.delta>=0?'+':''}${eloRes.delta} ELO</span>
     </div>`):'';
   return `<div class="end-screen hs-victory ${isSpec?'spec':won?'win':'lose'}" data-res="${isSpec?'spec':won?'win':'lose'}">
-    <div class="end-glow"></div>
     <div class="hs-crest-stage">
-      ${crestBgSvg}
       <div class="hs-arch-frame">
         <img src="${avSrc(featH)}" alt="${featNm}" style="object-position:${HERO_FOCUS[featH]||'50% 25%'}">
       </div>
+      <img class="hs-crest-img" src="${crestImgSrc}" alt="">
       <div class="hs-wood-plaque"><span>${titleTxt}</span></div>
     </div>
     ${eloHtml}
