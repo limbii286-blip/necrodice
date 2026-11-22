@@ -674,7 +674,7 @@ function deal(S){
   S.deck=shuf(range(11).map(n=>({id:++S.u,n})));
   S.pl=[0,1].map(()=>({open:[S.deck.pop()],closed:[S.deck.pop()]}));
   S.eff=[];S.pj=[];S.jUsed=[0,0];S.jTurn=[0,0];S.noJ=[false,false];S.acted=false;S.turns=0;
-  S.hpMod=[0,0];S.plagueMod=[0,0];S.hpTgMod=0;S.oppPeek=[];S.oppPeek1=[];S.botPeekVal=null;S.botScry=null;S.vampWinSide=-1;
+  S.hpMod=[0,0];S.plagueMod=[0,0];S.hpTgMod=0;S.oppPeek=[];S.oppPeek1=[];S.botPeekVal=null;S.botScry=null;S.vampBurn=null;
   S.turn=S.pl[0].open[0].n<S.pl[1].open[0].n?0:1;
   S.wait=false;S.rev=false;S.winSide=null;S.timeOut=[false,false];S.hadTimeout=false;S.dead=[];S.pa=[0,0];S.st={pb:0,ob:0,px:0};
   const cs=initClockSec();
@@ -754,12 +754,6 @@ const unk=(S,p)=>{const seen=new Set([...S.pl[p].open,...S.pl[p].closed,...S.pl[
 let CUR=PR.med;
 function outcHero(S,p){
   let r=outc(S,p);
-  if(r===0){
-    const v0=avKey(S,0)==='v'&&!(S.vampUsed&&S.vampUsed[0]);
-    const v1=avKey(S,1)==='v'&&!(S.vampUsed&&S.vampUsed[1]);
-    if(v0&&!v1)r=p===0?1:-1;
-    else if(v1&&!v0)r=p===1?1:-1;
-  }
   if(r!==0){
     const loser=r>0?1-p:p;
     if(avKey(S,loser)==='e')r*=0.91; // Buz Devi %18 hasar savuşturup berabereye çevirebilir
@@ -1420,9 +1414,8 @@ function hmove(T,a,pol){ // simülasyonda oyuncunun hamlesi: öğrendiği alış
 function isMobilePerf(){
   return window.innerWidth<=760||(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches);
 }
-function dustTableCards(){
-  const cards=[...document.querySelectorAll('#opp .cards .c, #me .cards .c, #jo .e, #jm .e')];
-  if(!cards.length)return;
+function dustElements(cards,crimson=false){
+  if(!cards||!cards.length)return;
   const rects=cards.map(c=>c.getBoundingClientRect());
   try{if(VS>0){noise(.62,.14,1900);noise(.45,.09,900,.1)}}catch(e){}
   cards.forEach((c,idx)=>{
@@ -1442,12 +1435,13 @@ function dustTableCards(){
   const perCard=mob?38:78;
   const palParch=['#e7d7b8','#d5c098','#a6906c','#5c5043','#2b2520','#d4a855'];
   const palRed=['#c99c62','#8f242c','#4c2124','#3a312c','#e0c79e','#211b19'];
+  const palBlood=['#dc2626','#991b1b','#f87171','#e7d7b8','#3a1518','#1c1412'];
   const pts=[];
   cards.forEach((c,idx)=>{
     const r=rects[idx];
     if(!r.width||!r.height)return;
     const isRed=c.classList.contains('bk')||c.classList.contains('opp');
-    const pal=isRed?palRed:palParch;
+    const pal=crimson?palBlood:(isRed?palRed:palParch);
     const baseD=idx*35;
     for(let i=0;i<perCard;i++){
       const u=Math.random(),v=Math.random(); // u: 0..1 left->right, v: 0..1 top->bottom
@@ -1494,6 +1488,24 @@ function dustTableCards(){
     else cvs.remove();
   };
   requestAnimationFrame(frame);
+}
+function dustTableCards(){
+  const cards=[...document.querySelectorAll('#opp .cards .c, #me .cards .c, #jo .e, #jm .e')];
+  dustElements(cards,false);
+}
+function triggerVampBurnFx(vb){
+  if(!vb)return;
+  const btn=document.querySelector(vb.vamp===0?'#me .hp-btn':'#opp .hp-btn');
+  if(btn){
+    const hr=btn.getBoundingClientRect(),fx=document.createElement('div');
+    fx.className='hp-cast-fx'+(vb.vamp===1?' opp':'');
+    fx.style.left=(hr.left+hr.width/2)+'px';fx.style.top=(hr.top+hr.height/2)+'px';
+    fx.innerHTML=`<i class="hp-cast-ring"></i><span class="hp-cast-pop">${tr('Kanlı Karşılık!','Blood Retaliation!')}</span>`;
+    document.body.appendChild(fx);setTimeout(()=>fx.remove(),1350);
+  }
+  const jEls=vb.victim===0?[...document.querySelectorAll('#hand .j')]:[...document.querySelectorAll('#opp .opp-jhand .oj')];
+  const targetEl=jEls[vb.idx]||jEls[jEls.length-1];
+  if(targetEl)dustElements([targetEl],true);
 }
 function heroAttack(winIdx,tanked=false){
   const srcAv=document.querySelector((winIdx===0?'#me':'#opp')+' .who .av');
@@ -1676,7 +1688,7 @@ function heroVampTie(vampIdx){
 }
 function endRound(){
   const S=G,a=[total(S,0),total(S,1)],T=tg(S);
-  let r=outc(S,0),tankedSide=-1,vampWinSide=-1;
+  let r=outc(S,0),tankedSide=-1,vampBurn=null;
   if(r!==0){
     const loser=r<0?0:1;
     if(avKey(S,loser)==='e'&&Math.random()<0.18){
@@ -1684,19 +1696,18 @@ function endRound(){
       S.log.push({p:loser,t:'Kadim Direnç! Hasarı savuşturup turu berabereye çevirdi!'});
     }
   }
-  if(r===0){
-    const vc=[0,1].filter(p=>avKey(S,p)==='v'&&!(S.vampUsed&&S.vampUsed[p]));
-    if(vc.length===1){
-      const vp=vc[0];
-      r=vp===0?1:-1;vampWinSide=vp;
-      S.vampUsed=S.vampUsed||[false,false];S.vampUsed[vp]=true;
-      S.hpUsed=S.hpUsed||[false,false];S.hpUsed[vp]=true;
-      S.log.push({p:vp,t:'Kanla Mühürlenen Kader! Beraberliği galibiyete çevirdi!'});
+  if(r!==0){
+    const loser=r<0?0:1,winner=1-loser;
+    if(avKey(S,loser)==='v'&&S.hand[winner]&&S.hand[winner].length>0){
+      const bIdx=Math.floor(Math.random()*S.hand[winner].length);
+      const jid=S.hand[winner][bIdx];
+      vampBurn={vamp:loser,victim:winner,idx:bIdx,jid};
+      S.log.push({p:loser,t:`Kanlı Karşılık! Rakibin 1 jokeri yandı (${J[jid]||''})`});
     }
   }
   if(S.stats&&S.stats.rounds){if(r>0)S.stats.rounds[0]++;else if(r<0)S.stats.rounds[1]++;else S.stats.rounds[2]++;}
   if(MODE=='bot'){profRec(S,a[0],T);lrnRound(r)}
-  S.wait=true;S.rev=true;S.winSide=null;S.vampWinSide=vampWinSide;
+  S.wait=true;S.rev=true;S.winSide=null;S.vampBurn=vampBurn;
   R();snd('flip');lock=true; // 1) Kapalı kartlar açılır ve masada açık kalır (düello kutusu henüz yanmaz)
   setTimeout(()=>{
     if(S!==G)return;
@@ -1705,10 +1716,18 @@ function endRound(){
     if(MODE=='bot'){talk(r==0?'tie':r<0?'win':(a[1]>T&&!lowW(S)?'bust':'lose'),2)}
     snd(r>0?'win':r<0?'lose':'ok');
     R();
-    setTimeout(()=>{if(S===G){if(vampWinSide>=0){const btn=document.querySelector(vampWinSide===0?'#me .hp-btn':'#opp .hp-btn');if(btn){const hr=btn.getBoundingClientRect(),fx=document.createElement('div');fx.className='hp-cast-fx'+(vampWinSide===1?' opp':'');fx.style.left=(hr.left+hr.width/2)+'px';fx.style.top=(hr.top+hr.height/2)+'px';fx.innerHTML=`<i class="hp-cast-ring"></i><span class="hp-cast-pop">${tr('Kanla Mühürlenen Kader!','Blood-Sealed Fate!')}</span>`;document.body.appendChild(fx);setTimeout(()=>fx.remove(),1350);}heroClash();}else if(tankedSide>=0)heroAttack(1-tankedSide,true);else if(r!==0)heroAttack(r>0?0:1);else heroClash();}},1000);
+    setTimeout(()=>{if(S===G){if(tankedSide>=0)heroAttack(1-tankedSide,true);else if(r!==0)heroAttack(r>0?0:1);else heroClash();}},1000);
+    if(vampBurn){
+      setTimeout(()=>{if(S===G)triggerVampBurnFx(vampBurn);},2400);
+    }
     setTimeout(()=>{
       if(S!==G)return;
       // Vuruş animasyonu tamamlandıktan sonra düello kutusu (yeşil/kırmızı/gri) ve puanlar güncellenir
+      if(vampBurn&&S.hand[vampBurn.victim]&&S.hand[vampBurn.victim][vampBurn.idx]===vampBurn.jid){
+        S.hand[vampBurn.victim].splice(vampBurn.idx,1);
+        (S.dj=S.dj||[]).push(vampBurn.jid);
+      }
+      S.vampBurn=null;
       if(r!==0){S.cWins=S.cWins||[0,0];S.cWins[r>0?0:1]++;}
       if(r>0)S.log.push({p:0,t:`turu kazandı (${a[0]} - ${a[1]})`});
       else if(r<0)S.log.push({p:1,t:`turu kazandı (${a[1]} - ${a[0]})`});
@@ -1727,7 +1746,7 @@ function endRound(){
     },4100);
   },750);
   function fin(){
-    S.winSide=null;S.vampWinSide=-1;
+    S.winSide=null;S.vampBurn=null;
     if(MODE==='tutorial'){
       tutStep=8;R();tutRender();
       return;
@@ -1842,7 +1861,7 @@ const HEROES_TR=[
   {id:'m',name:'Ölümün Efendisi',passive:true,hpName:'Ölümün Takdiri',desc:'Attığın her Ölüm Zarı sonucuna +2 bonus kazan.'},
   {id:'w',name:'Cadı',hpName:'Kuzgunun Kehaneti',desc:'Rakibinin kapalı sayı kartını gizlice incele.'},
   {id:'l',name:'Kurt Adam',hpName:'Kanlı Dolunay',desc:'Her iki oyuncunun da masadaki rastgele 1 açık sayı kartını imha et.'},
-  {id:'v',name:'Vampir',passive:true,hpName:'Kanla Mühürlenen Kader',desc:'İlk beraberlikte turu kazanmış sayılırsın. Bu güç oyun boyunca yalnızca 1 kez kullanılabilir.'},
+  {id:'v',name:'Vampir',passive:true,hpName:'Kanlı Karşılık',desc:'Bir turu kaybedince rakibin elindeki rastgele 1 Joker kartı yanar.'},
   {id:'u',name:'Bilinmeyen',passive:true,bossOnly:true,hpName:'Hiçlikten Dönüş',desc:'Ölüm zarında hedef sayının altında atarsan, ölümden bir kereliğine geri dönersin.'}
 ];
 const HEROES_EN=[
@@ -1855,7 +1874,7 @@ const HEROES_EN=[
   {id:'m',name:'Lord of Death',passive:true,hpName:'Death\'s Favor',desc:'Gain a +2 bonus to every Death Dice roll you make.'},
   {id:'w',name:'Witch',hpName:'Raven\'s Prophecy',desc:'Secretly inspect your opponent\'s hidden number card.'},
   {id:'l',name:'Werewolf',hpName:'Blood Full Moon',desc:'Destroy 1 random face-up number card on the table from both players.'},
-  {id:'v',name:'Vampire',passive:true,hpName:'Blood-Sealed Fate',desc:'On your first tied round, you win the round instead. Triggers once per match.'},
+  {id:'v',name:'Vampire',passive:true,hpName:'Blood Retaliation',desc:'Whenever you lose a round, 1 random Joker card in your opponent\'s hand is burned.'},
   {id:'u',name:'The Unknown',passive:true,bossOnly:true,hpName:'Return from the Void',desc:'If you roll below the target on the Death Dice, return from death once per match.'}
 ];
 let HEROES=[...HEROES_TR];
@@ -1875,7 +1894,7 @@ const HP_IC={
   v:hpImg('v'),
   u:hpImg('u')
 };
-function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}glogOpen=false;glogLastSig='';LAST_MATCH_HIST=[];rematchReady=[false,false];rematchHeroes=[null,null];deathContReady=[false,false];deathContGo=null;const botPool=HEROES.filter(h=>(!h.bossOnly||DIFF==='imp')&&!(MY_HERO==='v'&&h.id==='v')).map(h=>h.id),oppH=MODE=='bot'?botPool[Math.floor(Math.random()*botPool.length)]:(OPP_HERO||'n');G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],vampUsed:[false,false],cWins:[0,0],vampWinSide:-1,mast:[0,0]};prevAv[0]=prevAv[1]=undefined;prevHpAnim=[false,false];newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();runAfterDeal(G)}
+function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}glogOpen=false;glogLastSig='';LAST_MATCH_HIST=[];rematchReady=[false,false];rematchHeroes=[null,null];deathContReady=[false,false];deathContGo=null;const botPool=HEROES.filter(h=>!h.bossOnly||DIFF==='imp').map(h=>h.id),oppH=MODE=='bot'?botPool[Math.floor(Math.random()*botPool.length)]:(OPP_HERO||'n');G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],vampUsed:[false,false],cWins:[0,0],vampBurn:null,mast:[0,0]};prevAv[0]=prevAv[1]=undefined;prevHpAnim=[false,false];newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();runAfterDeal(G)}
 
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
@@ -2288,8 +2307,8 @@ function R(){
   const oppHandHtml=`<div class="opp-jhand" title="${tr(`Rakibin elindeki kapalı jokerler (${S.hand[1].length})`,`Opponent's hidden jokers (${S.hand[1].length})`)}">${S.hand[1].map((_,i)=>`<img class="oj" style="--r:${((i-(S.hand[1].length-1)/2)*4.5).toFixed(1)}deg" src="${IMG.bj}" alt="">`).join('')}</div>`;
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'')+(S.winSide!=null?(S.winSide>0?' round-lose':S.winSide===0?' round-tie':''):'');
   const myHId=avKey(S,0),oppHId=avKey(S,1);
-  const hpUsed0=myHId==='u'?!!(S.uRevived&&S.uRevived[0]):myHId==='v'?!!(S.vampUsed&&S.vampUsed[0]):(myHId==='m'||myHId==='e'||myHId==='n'||myHId==='s'||myHId==='c')?false:!!(S.hpUsed&&S.hpUsed[0]);
-  const hpUsed1=oppHId==='u'?!!(MODE==='bot'?S.rigDone:(S.uRevived&&S.uRevived[1])):oppHId==='v'?!!(S.vampUsed&&S.vampUsed[1]):(oppHId==='m'||oppHId==='e'||oppHId==='n'||oppHId==='s'||oppHId==='w'||oppHId==='a'||oppHId==='c')?false:!!(S.hpUsed&&S.hpUsed[1]);
+  const hpUsed0=myHId==='u'?!!(S.uRevived&&S.uRevived[0]):(myHId==='m'||myHId==='e'||myHId==='n'||myHId==='s'||myHId==='c'||myHId==='v')?false:!!(S.hpUsed&&S.hpUsed[0]);
+  const hpUsed1=oppHId==='u'?!!(MODE==='bot'?S.rigDone:(S.uRevived&&S.uRevived[1])):(oppHId==='m'||oppHId==='e'||oppHId==='n'||oppHId==='s'||oppHId==='w'||oppHId==='a'||oppHId==='c'||oppHId==='v')?false:!!(S.hpUsed&&S.hpUsed[1]);
   const hpObj0=HERO_MAP[myHId]||HEROES[0],hpObj1=HERO_MAP[oppHId]||HEROES[0];
   const cWins0=(S.cWins&&S.cWins[0])||0,cReady=myHId!=='c'||cWins0>=3;
   const cWins1=(S.cWins&&S.cWins[1])||0,cReady1=oppHId!=='c'||cWins1>=3;
@@ -3210,14 +3229,14 @@ function view(S){ // rakibe gidecek, gizli bilgisi temizlenmiş ve aynalanmış 
   const f=a=>[a[1],a[0]],pk1=S.oppPeek1||[];
   const hu0=S.hpUsed?!!S.hpUsed[0]:false,hu1=S.hpUsed?!!S.hpUsed[1]:false;
   const visHu0=(avKey(S,0)==='w'||avKey(S,0)==='a')?false:hu0;
-  return {av:f(S.av),hero:S.hero?f(S.hero):f(S.av),hpUsed:[hu1,visHu0],hpMod:S.hpMod?f(S.hpMod):[0,0],plagueMod:S.plagueMod?f(S.plagueMod):[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?f(S.uRevived):[false,false],vampUsed:S.vampUsed?f(S.vampUsed):[false,false],cWins:S.cWins?f(S.cWins):[0,0],vampWinSide:S.vampWinSide>=0?1-S.vampWinSide:-1,oppPeek:pk1,mast:f(S.mast),turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:1-S.turn,clocks:S.clocks?f(S.clocks):[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?f(S.timeOut):[false,false],hadTimeout:!!S.hadTimeout,pts:f(S.pts),rev:S.rev,winSide:S.winSide==null?null:-S.winSide,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),jTurn:S.jTurn?f(S.jTurn):[0,0],noJ:f(S.noJ),
+  return {av:f(S.av),hero:S.hero?f(S.hero):f(S.av),hpUsed:[hu1,visHu0],hpMod:S.hpMod?f(S.hpMod):[0,0],plagueMod:S.plagueMod?f(S.plagueMod):[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?f(S.uRevived):[false,false],vampUsed:S.vampUsed?f(S.vampUsed):[false,false],cWins:S.cWins?f(S.cWins):[0,0],vampBurn:S.vampBurn?{vamp:1-S.vampBurn.vamp,victim:1-S.vampBurn.victim,idx:S.vampBurn.idx,jid:S.vampBurn.jid}:null,oppPeek:pk1,mast:f(S.mast),turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:1-S.turn,clocks:S.clocks?f(S.clocks):[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?f(S.timeOut):[false,false],hadTimeout:!!S.hadTimeout,pts:f(S.pts),rev:S.rev,winSide:S.winSide==null?null:-S.winSide,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),jTurn:S.jTurn?f(S.jTurn):[0,0],noJ:f(S.noJ),
     hand:[S.hand[1],S.hand[0].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
     pl:[S.pl[1],{open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:(S.rev||pk1.includes(c.id))?c.n:0,o:c.o,hpImmune:!!c.hpImmune}))}],
     eff:S.eff.map(e=>({...e,o:1-e.o})),pj:(S.pj||[]).map(e=>({...e,o:1-e.o})),log:S.log.filter(l=>!(l.p===0&&/Kuzgunun Kehaneti|Yitik Yazgı/.test(l.t||''))).slice(-30).map(l=>({...l,p:l.p<0?-1:1-l.p}))};
 }
 function specView(S){ // izleyicilere gidecek durum (0 = host/oda sahibi, 1 = misafir oyuncu, kapalı kartlar rev olmadan görünmez)
   return {
-    av:[S.av[0],S.av[1]],hero:S.hero?[...S.hero]:[S.av[0],S.av[1]],hpUsed:S.hpUsed?[...S.hpUsed]:[false,false],hpMod:S.hpMod?[...S.hpMod]:[0,0],plagueMod:S.plagueMod?[...S.plagueMod]:[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?[...S.uRevived]:[false,false],vampUsed:S.vampUsed?[...S.vampUsed]:[false,false],cWins:S.cWins?[...S.cWins]:[0,0],vampWinSide:S.vampWinSide>=0?S.vampWinSide:-1,mast:[S.mast[0],S.mast[1]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:S.turn,clocks:S.clocks?[...S.clocks]:[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?[...S.timeOut]:[false,false],hadTimeout:!!S.hadTimeout,pts:S.pts,rev:S.rev,winSide:S.winSide,res:S.res,jUsed:S.jUsed,jTurn:S.jTurn?[...S.jTurn]:[0,0],noJ:S.noJ,
+    av:[S.av[0],S.av[1]],hero:S.hero?[...S.hero]:[S.av[0],S.av[1]],hpUsed:S.hpUsed?[...S.hpUsed]:[false,false],hpMod:S.hpMod?[...S.hpMod]:[0,0],plagueMod:S.plagueMod?[...S.plagueMod]:[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?[...S.uRevived]:[false,false],vampUsed:S.vampUsed?[...S.vampUsed]:[false,false],cWins:S.cWins?[...S.cWins]:[0,0],vampBurn:S.vampBurn?{...S.vampBurn}:null,mast:[S.mast[0],S.mast[1]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:S.turn,clocks:S.clocks?[...S.clocks]:[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?[...S.timeOut]:[false,false],hadTimeout:!!S.hadTimeout,pts:S.pts,rev:S.rev,winSide:S.winSide,res:S.res,jUsed:S.jUsed,jTurn:S.jTurn?[...S.jTurn]:[0,0],noJ:S.noJ,
     hand:[S.hand[0].map(()=>0),S.hand[1].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
     pl:[
       {open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:c.o,hpImmune:!!c.hpImmune}))},
@@ -3637,7 +3656,8 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
     if(G.winSide!=null&&prevWin==null){
       snd(G.winSide>0?'win':G.winSide<0?'lose':'ok');
       const winW=G.winSide;
-      setTimeout(()=>{if(G&&G.winSide===winW){if(G.vampWinSide>=0){const btn=document.querySelector(G.vampWinSide===0?'#me .hp-btn':'#opp .hp-btn');if(btn){const hr=btn.getBoundingClientRect(),fx=document.createElement('div');fx.className='hp-cast-fx'+(G.vampWinSide===1?' opp':'');fx.style.left=(hr.left+hr.width/2)+'px';fx.style.top=(hr.top+hr.height/2)+'px';fx.innerHTML=`<i class="hp-cast-ring"></i><span class="hp-cast-pop">${tr('Kanla Mühürlenen Kader!','Blood-Sealed Fate!')}</span>`;document.body.appendChild(fx);setTimeout(()=>fx.remove(),1350);}heroClash();}else if(winW!==0)heroAttack(winW>0?0:1);else heroClash();}},1000);
+      setTimeout(()=>{if(G&&G.winSide===winW){if(winW!==0)heroAttack(winW>0?0:1);else heroClash();}},1000);
+      if(G.vampBurn){const vb=G.vampBurn;setTimeout(()=>{if(G&&G.winSide===winW)triggerVampBurnFx(vb);},2400);}
       setTimeout(()=>{if(G&&G.winSide===winW)dustTableCards();},3400);
     }
     if(waitM){$('#m').hidden=true;lock=false;waitM=false}
