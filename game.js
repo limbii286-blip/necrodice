@@ -13,8 +13,8 @@ const NEED={6:['any'],7:['any'],12:['eff'],13:['my'],14:['opp'],15:['my','opp'],
 const KTXT_TR={any:'bir sayı kartı seç',my:'kendi açık kartını seç',opp:'rakibin açık kartını seç',eff:'etkisiz kılınacak jokeri seç',sign:'ekle mi çıkar mı?',steal_j:'yerden çalınacak jokeri seç'};
 const KTXT_EN={any:'select a number card',my:'select your open card',opp:'select opponent\'s open card',eff:'select a joker to negate',sign:'add or subtract?',steal_j:'select a used joker to steal'};
 let KTXT={...KTXT_TR};
-const THIEF_SVG_TR='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 170"><rect width="120" height="170" rx="10" fill="#efe3c4" stroke="#8a6432" stroke-width="4"/><rect x="6" y="6" width="108" height="158" rx="6" fill="none" stroke="#b99352" stroke-width="1.4"/><g transform="translate(18,16) scale(3.5)" fill="none" stroke="#221712" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11c2.5-3 6-3 9-1 3-2 6.5-2 9 1-1.5 4-4.5 5-9 3-4.5 2-7.5 1-9-3z" fill="#3a231c"/><circle cx="8" cy="11.5" r="1.25" fill="#fde68a" stroke="none"/><circle cx="16" cy="11.5" r="1.25" fill="#fde68a" stroke="none"/><path d="M9 17.5h6l-1 3h-4z" fill="#221712"/></g><line x1="16" y1="92" x2="104" y2="92" stroke="#8a6432" stroke-width="1.2" opacity="0.6"/><text x="60" y="106" text-anchor="middle" fill="#1c120d" font-family="Georgia,serif" font-size="8.2" font-weight="bold"><tspan x="60" dy="0">Kullanılmış bir joker</tspan><tspan x="60" dy="10.5">kartını çal. Eğer kartın</tspan><tspan x="60" dy="10.5">aktif etkisi varsa sona</tspan><tspan x="60" dy="10.5">erer. (Bu kart 2 joker</tspan><tspan x="60" dy="10.5">limitinden bağımsızdır)</tspan></text></svg>');
-const THIEF_SVG_EN='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 170"><rect width="120" height="170" rx="10" fill="#efe3c4" stroke="#8a6432" stroke-width="4"/><rect x="6" y="6" width="108" height="158" rx="6" fill="none" stroke="#b99352" stroke-width="1.4"/><g transform="translate(18,16) scale(3.5)" fill="none" stroke="#221712" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11c2.5-3 6-3 9-1 3-2 6.5-2 9 1-1.5 4-4.5 5-9 3-4.5 2-7.5 1-9-3z" fill="#3a231c"/><circle cx="8" cy="11.5" r="1.25" fill="#fde68a" stroke="none"/><circle cx="16" cy="11.5" r="1.25" fill="#fde68a" stroke="none"/><path d="M9 17.5h6l-1 3h-4z" fill="#221712"/></g><line x1="16" y1="92" x2="104" y2="92" stroke="#8a6432" stroke-width="1.2" opacity="0.6"/><text x="60" y="106" text-anchor="middle" fill="#1c120d" font-family="Georgia,serif" font-size="8.2" font-weight="bold"><tspan x="60" dy="0">Steal one used joker</tspan><tspan x="60" dy="10.5">card. If it has an active</tspan><tspan x="60" dy="10.5">effect, that effect ends.</tspan><tspan x="60" dy="10.5">(Ignores the 2-joker</tspan><tspan x="60" dy="10.5">per round limit.)</tspan></text></svg>');
+const THIEF_SVG_TR='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 170"><rect width="120" height="170" rx="10" fill="#efe3c4" stroke="#8a6432" stroke-width="4"/><rect x="6" y="6" width="108" height="158" rx="6" fill="none" stroke="#b99352" stroke-width="1.4"/><g transform="translate(18,16) scale(3.5)" fill="none" stroke="#221712" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11c2.5-3 6-3 9-1 3-2 6.5-2 9 1-1.5 4-4.5 5-9 3-4.5 2-7.5 1-9-3z" fill="#3a231c"/><circle cx="8" cy="11.5" r="1.25" fill="#fde68a" stroke="none"/><circle cx="16" cy="11.5" r="1.25" fill="#fde68a" stroke="none"/><path d="M9 17.5h6l-1 3h-4z" fill="#221712"/></g><line x1="16" y1="92" x2="104" y2="92" stroke="#8a6432" stroke-width="1.2" opacity="0.6"/><text x="60" y="114" text-anchor="middle" fill="#1c120d" font-family="Georgia,serif" font-size="8.6" font-weight="bold"><tspan x="60" dy="0">Kullanılmış bir joker</tspan><tspan x="60" dy="12">kartını çal. Eğer kartın</tspan><tspan x="60" dy="12">aktif etkisi varsa</tspan><tspan x="60" dy="12">sona erer.</tspan></text></svg>');
+const THIEF_SVG_EN='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 170"><rect width="120" height="170" rx="10" fill="#efe3c4" stroke="#8a6432" stroke-width="4"/><rect x="6" y="6" width="108" height="158" rx="6" fill="none" stroke="#b99352" stroke-width="1.4"/><g transform="translate(18,16) scale(3.5)" fill="none" stroke="#221712" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11c2.5-3 6-3 9-1 3-2 6.5-2 9 1-1.5 4-4.5 5-9 3-4.5 2-7.5 1-9-3z" fill="#3a231c"/><circle cx="8" cy="11.5" r="1.25" fill="#fde68a" stroke="none"/><circle cx="16" cy="11.5" r="1.25" fill="#fde68a" stroke="none"/><path d="M9 17.5h6l-1 3h-4z" fill="#221712"/></g><line x1="16" y1="92" x2="104" y2="92" stroke="#8a6432" stroke-width="1.2" opacity="0.6"/><text x="60" y="114" text-anchor="middle" fill="#1c120d" font-family="Georgia,serif" font-size="8.6" font-weight="bold"><tspan x="60" dy="0">Steal one used joker</tspan><tspan x="60" dy="12">card. If it has an active</tspan><tspan x="60" dy="12">effect, that effect</tspan><tspan x="60" dy="12">ends.</tspan></text></svg>');
 if(typeof IMG!=='undefined'&&IMG.j){IMG.j[25]=THIEF_SVG_TR;if(IMG.j_tr)IMG.j_tr[25]=THIEF_SVG_TR;if(IMG.j_en)IMG.j_en[25]=THIEF_SVG_EN;}
 const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 const range=n=>[...Array(n)].map((_,i)=>i+1);
@@ -711,12 +711,14 @@ function opts(S,p,k){
   if(k=='hand_j')return S.hand[p].map((_,i)=>i);
   if(k=='sign')return [1,-1];
 }
-const playable=(S,p,id)=>(id==25||S.jUsed[p]<2)&&!S.noJ[p]&&S.hand[p].includes(id)&&(NEED[id]||[]).every(k=>opts(S,p,k).length)&&(id!=5||S.deck.length>0);
+const playable=(S,p,id)=>S.jUsed[p]<2&&!S.noJ[p]&&S.hand[p].includes(id)&&(NEED[id]||[]).every(k=>opts(S,p,k).length)&&(id!=5||S.deck.length>0);
 function play(S,p,id,pk){
   const q=1-p;
   const find=cid=>{for(const x of S.pl)for(const z of ['open','closed']){const i=x[z].findIndex(c=>c.id==cid);if(i>=0)return[x[z],i]}};
   const take=cid=>{const[a,i]=find(cid);return a.splice(i,1)[0]};
   S.hand[p].splice(S.hand[p].indexOf(id),1);S.used=(S.used||[]).concat(id);(S.dj=S.dj||[]).push(id);
+  S.jUsed[p]++;S.jTurn=S.jTurn||[0,0];S.jTurn[p]++;
+  if(S.stats&&S.stats.jokers)S.stats.jokers[p]++;
   if(id==25){
     const pjIdx=(S.pj||[]).findIndex(e=>e.uid==pk[0]);
     if(pjIdx>=0){
@@ -726,8 +728,6 @@ function play(S,p,id,pk){
     }
     return;
   }
-  S.jUsed[p]++;S.jTurn=S.jTurn||[0,0];S.jTurn[p]++;
-  if(S.stats&&S.stats.jokers)S.stats.jokers[p]++;
   const uid=++S.u;(S.pj=S.pj||[]).push({id,o:p,uid});
   if(BLOCK.has(id))S.eff.push({id,o:p,uid,neg:false,s:pk[0]});
   if(id==5){if(S.botScry&&S.botScry.length)S.botScry.shift();S.pl[q].open.push(S.deck.pop())}
