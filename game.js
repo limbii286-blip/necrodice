@@ -2723,11 +2723,11 @@ function buildEndScreenHtml(S,v,L,roll,th){
   return `<div class="end-screen hs-victory ${isSpec?'spec':won?'win':'lose'}" data-res="${isSpec?'spec':won?'win':'lose'}">
     <div class="hs-crest-stage">
       <div class="hs-arch-frame">
-        <img src="${avSrc(featH)}" alt="${featNm}" style="object-position:${HERO_FOCUS[featH]||'50% 25%'}">
+        <img src="${avSrc(featH)}" alt="${featNm}">
       </div>
       <img class="hs-crest-img" src="${crestImgSrc}" alt="">
-      <div class="hs-wood-plaque"><span>${titleTxt}</span></div>
     </div>
+    <div class="hs-wood-plaque"><span>${titleTxt}</span></div>
     ${eloHtml}
     <div class="end-stats hs-end-stats">
       <div class="end-stat" style="--d:0.12s"><span>${tr('Tur','Rounds')}</span><b>${rw}${tr('G','W')} · ${rl}${tr('M','L')}${rt?` · ${rt}${tr('B','T')}`:''}</b></div>

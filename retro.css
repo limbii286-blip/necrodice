@@ -4954,9 +4954,9 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
 }
 .hs-crest-stage {
   position: relative;
-  width: min(94vw, 470px);
+  width: min(86vw, 390px);
   aspect-ratio: 4 / 3;
-  margin: 0 auto 2px;
+  margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4975,13 +4975,13 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   position: absolute;
   z-index: 1;
   left: 50%;
-  top: 19%;
-  transform: translateX(-50%);
-  width: 48%;
-  height: 63%;
+  top: 50.3%;
+  transform: translate(-50%, -50%);
+  width: 47%;
+  height: 62.6%;
   border-radius: 50%;
   border: none;
-  background: radial-gradient(circle at 50% 35%, #2b221a, #14100d 80%);
+  background: radial-gradient(circle at 50% 40%, #2b221a, #120e0b 80%);
   box-shadow: none;
   overflow: hidden;
 }
@@ -4989,23 +4989,23 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(circle at 50% 24%, rgba(254, 240, 170, 0.24), transparent 62%);
-  box-shadow: inset 0 0 22px rgba(253, 224, 130, 0.42);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 24%, rgba(254, 240, 170, 0.22), transparent 62%);
+  box-shadow: inset 0 0 20px rgba(253, 224, 130, 0.42);
   pointer-events: none;
 }
 .end-screen.win .hs-arch-frame img {
-  object-position: center 20%;
-  filter: brightness(1.18) contrast(1.06) saturate(1.12);
+  object-position: 50% 50%;
+  filter: brightness(1.16) contrast(1.06) saturate(1.12);
 }
 .end-screen.lose .hs-arch-frame {
-  top: 22%;
-  width: 44%;
-  height: 58%;
+  top: 50.6%;
+  width: 43%;
+  height: 57.3%;
   border-radius: 50%;
 }
 .end-screen.lose .hs-arch-frame img {
-  object-position: center 20%;
+  object-position: 50% 50%;
   filter: brightness(1.08) saturate(0.72) contrast(1.03);
 }
 .nd-halo-spin {
@@ -5035,31 +5035,28 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   display: block;
 }
 .hs-wood-plaque {
-  position: absolute;
+  position: relative;
   z-index: 4;
-  left: 50%;
-  bottom: 0%;
-  transform: translateX(-50%);
-  min-width: 58%;
-  padding: 8px 26px 7px;
+  margin-top: -2px;
+  min-width: 220px;
+  padding: 8px 28px 7px;
   border-radius: 4px;
   clip-path: polygon(10px 0%, calc(100% - 10px) 0%, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0% 50%);
   border-top: 2.5px solid #e6be6c;
   border-bottom: 2.5px solid #9c7228;
   background: linear-gradient(180deg, #271a12 0%, #120c09 100%);
   box-shadow:
-    0 12px 28px rgba(0, 0, 0, 0.95),
+    0 10px 24px rgba(0, 0, 0, 0.94),
     inset 0 1px 0 rgba(255, 240, 185, 0.35);
   animation: hsPlaquePop 0.55s 0.14s cubic-bezier(0.2, 1.25, 0.3, 1) both;
 }
 .end-screen.lose .hs-wood-plaque {
-  bottom: 0%;
   border-top-color: #9ca3af;
   border-bottom-color: #52525b;
   background: linear-gradient(180deg, #26262b 0%, #111114 100%);
 }
 .hs-wood-plaque span {
-  font: 800 clamp(22px, 4.4vw, 32px)/1 var(--mf);
+  font: 800 clamp(22px, 4.4vw, 30px)/1 var(--mf);
   color: #fde68a;
   letter-spacing: 1px;
   white-space: nowrap;
@@ -5069,13 +5066,13 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   color: #e4e4e7;
 }
 @keyframes hsPlaquePop {
-  from { opacity: 0; transform: translateX(-50%) scale(0.75); }
-  to   { opacity: 1; transform: translateX(-50%) scale(1); }
+  from { opacity: 0; transform: scale(0.78); }
+  to   { opacity: 1; transform: scale(1); }
 }
 .hs-end-stats {
   grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
   max-width: 440px;
-  margin-top: -6px !important;
+  margin-top: 2px !important;
 }
 .hs-end-stats .end-stat {
   background: rgba(14, 10, 12, 0.9);
@@ -5084,7 +5081,7 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
 }
 @media (max-width: 760px) {
   .hs-crest-stage {
-    width: min(92vw, 370px);
+    width: min(84vw, 320px);
   }
   .hs-end-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
