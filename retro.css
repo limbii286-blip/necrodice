@@ -7938,9 +7938,8 @@ body[data-cardback="sovereign"] .c.back {
   justify-content: space-between;
   gap: 8px;
   cursor: pointer;
-  font: 700 12px/1 var(--mf);
-  letter-spacing: 0.7px;
-  text-transform: uppercase;
+  font: 700 12.5px/1 var(--mf);
+  letter-spacing: 0.4px;
   text-align: left;
   transition: background 0.16s ease, color 0.16s ease;
 }
