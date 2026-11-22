@@ -2429,15 +2429,17 @@ function renderGameLog(S){
   syncGlogMobileSize();
 }
 function syncGlogMobileSize(){
-  const el=$('#glog'),hc=$('#hdr .hc');
-  if(!el||!hc)return;
+  const el=$('#glog'),tl=$('#hdr .hs.sks'),hc=$('#hdr .hc');
+  if(!el)return;
   if(window.innerWidth<=760){
-    const r=hc.getBoundingClientRect();
-    if(r.width>40&&r.height>16){
-      el.style.setProperty('--glog-mob-w',Math.round(r.width)+'px');
-      el.style.setProperty('--glog-mob-h',Math.round(r.height)+'px');
-      el.style.setProperty('--glog-mob-l',Math.round(r.left)+'px');
-      el.style.setProperty('--glog-mob-t',Math.round(r.bottom+5)+'px');
+    const tr=tl?tl.getBoundingClientRect():null;
+    const hr=hc?hc.getBoundingClientRect():null;
+    const ref=(tr&&tr.width>40&&tr.height>16)?tr:hr;
+    if(ref&&ref.width>40&&ref.height>16){
+      el.style.setProperty('--glog-mob-w',Math.round(ref.width)+'px');
+      el.style.setProperty('--glog-mob-h',Math.round(hr&&hr.height>16?hr.height:ref.height)+'px');
+      el.style.setProperty('--glog-mob-l','6px');
+      el.style.setProperty('--glog-mob-t',Math.round(ref.bottom+5)+'px');
     }
   }else{
     el.style.removeProperty('--glog-mob-w');
