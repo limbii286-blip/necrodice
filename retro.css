@@ -4987,12 +4987,13 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   overflow: hidden;
 }
 .end-screen.lose .hs-arch-frame {
-  top: 32%;
-  width: 29%;
-  height: 54%;
+  top: 29%;
+  width: 32%;
+  height: 55%;
 }
 .end-screen.lose .hs-arch-frame img {
-  filter: grayscale(0.55) brightness(0.78) contrast(1.08);
+  object-position: center 22%;
+  filter: brightness(1.08) contrast(1.05);
 }
 .nd-halo-spin {
   transform-origin: 210px 154px;
@@ -5039,6 +5040,7 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   animation: hsPlaquePop 0.55s 0.14s cubic-bezier(0.2, 1.25, 0.3, 1) both;
 }
 .end-screen.lose .hs-wood-plaque {
+  bottom: 1%;
   border-top-color: #9ca3af;
   border-bottom-color: #52525b;
   background: linear-gradient(180deg, #26262b 0%, #111114 100%);

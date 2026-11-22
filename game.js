@@ -2603,7 +2603,7 @@ function buildEndScreenHtml(S,v,L,roll,th){
   const sec=Math.max(1,Math.round((Date.now()-(st.startAt||Date.now()))/1000));
   const durTxt=`${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
   const titleTxt=isSpec?tr('Maç Bitti!','Match Over!'):(won?tr('Zafer!','Victory!'):tr('Mağlubiyet!','Defeat!'));
-  const crestImgSrc=(won||isSpec)?'end_win_crest.png?v=20261122_crest1':'end_lose_crest.png?v=20261122_crest1';
+  const crestImgSrc=(won||isSpec)?'end_win_crest.png?v=20261122_crest1':'end_lose_crest.png?v=20261122_crest2';
   const eloRes=(!isSpec&&v===0&&MODE!=='tutorial'&&typeof recordMatchElo==='function')?recordMatchElo(S,won):null;
   const eloHtml=eloRes?(eloRes.unranked
     ?`<div class="end-elo-bar unranked">
