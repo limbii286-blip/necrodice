@@ -3213,8 +3213,14 @@ function note(p,id,cb){
   cast(p,id,cb);
 }
 let draftActive=false,draftTimer=null,draftPicked=[false,false],draftHeroes=[null,null];
+let IS_QUICK_MATCH=false,matchFoundActive=false,matchFoundTimer=null;
 const DRAFT_TIMEOUT_MS=60000;
+function clearMatchFound(){
+  matchFoundActive=false;
+  if(matchFoundTimer){clearInterval(matchFoundTimer);matchFoundTimer=null;}
+}
 function clearOnlineDraft(){
+  clearMatchFound();
   draftActive=false;
   draftPicked=[false,false];
   draftHeroes=[null,null];
@@ -3222,6 +3228,7 @@ function clearOnlineDraft(){
 }
 function abortOnlineDraft(msg,notifyKey){
   clearOnlineDraft();
+  IS_QUICK_MATCH=false;
   try{if(notifyKey&&conn&&conn.open)conn.send({k:notifyKey});}catch(e){}
   try{if(typeof cancelQuickMatch==='function')cancelQuickMatch(false);}catch(e){}
   try{if(typeof clearOutgoingInvite==='function')clearOutgoingInvite(null);}catch(e){}
@@ -3236,6 +3243,45 @@ function abortOnlineDraft(msg,notifyKey){
   }else{
     $('#m').hidden=true;lock=false;st('');
   }
+}
+function showQuickMatchFound(isHost,oppName,oppElo,secs=10){
+  clearOnlineDraft();
+  matchFoundActive=true;
+  IS_QUICK_MATCH=false;
+  const myName=(USER_ACC&&!USER_ACC.isGuest)?USER_ACC.username:tr('Misafir','Guest');
+  const myElo=Math.round((USER_ACC&&USER_ACC.elo)||1200);
+  const oName=String(oppName||tr('Misafir','Guest')).slice(0,22);
+  const oElo=Math.max(400,Math.min(4000,Math.round(+oppElo||1200)));
+  OPP_PROFILE={name:oName,elo:oElo,isGuest:oName===tr('Misafir','Guest')};
+  let left=Math.max(1,secs|0);
+  try{snd('turn');}catch(e){}
+  st('');
+  box(`<div class="qm-found-box">
+    <h3 class="qm-found-title">${tr(`${escHtml(oName)} ile eşleştin!`,`Matched with ${escHtml(oName)}!`)}</h3>
+    <p class="qm-found-sub">${tr('Kahraman seçim ekranına gidiliyor.','Heading to hero selection.')}</p>
+    <div class="qm-vs-stack">
+      <div class="qm-vs-card me">
+        <b class="qm-vs-name">${escHtml(myName)}</b>
+        <span class="qm-vs-elo">${myElo} ELO</span>
+      </div>
+      <div class="qm-vs-sep"><span>VS</span></div>
+      <div class="qm-vs-card opp">
+        <b class="qm-vs-name">${escHtml(oName)}</b>
+        <span class="qm-vs-elo">${oElo} ELO</span>
+      </div>
+    </div>
+    <div class="qm-vs-cd"><b id="qm-cd-num">${left}</b><span>${tr('saniye','seconds')}</span></div>
+  </div>`,false);
+  matchFoundTimer=setInterval(()=>{
+    if(!matchFoundActive){clearMatchFound();return;}
+    left--;
+    const numEl=$('#qm-cd-num');
+    if(numEl&&left>=0)numEl.textContent=String(left);
+    if(left<=0){
+      clearMatchFound();
+      startOnlineHeroDraft(isHost);
+    }
+  },1000);
 }
 function showDraftWaitBox(){
   box(`<div class="lobby-box">
@@ -3312,14 +3358,25 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
       if(!conn || !conn.open){
         conn = fromConn;
         fromConn._role = 'player';
+        const isQM=!!(m.quickMatch||IS_QUICK_MATCH);
         try{if(typeof cancelQuickMatch==='function')cancelQuickMatch(true);}catch(e){}
         try{if(typeof clearOutgoingInvite==='function')clearOutgoingInvite(null);}catch(e){}
         fromConn.on('close',()=>{
+          if(matchFoundActive){abortOnlineDraft(tr('Rakip eşleşmeden ayrıldı.','Opponent left the match.'),null);return;}
           if(draftActive){abortOnlineDraft(tr('Rakip kahraman seçiminden ayrıldı.','Opponent left hero selection.'),null);return;}
           startReconnectGrace(true,tr('Rakip oyundan ayrıldı.','Opponent left the game.'));
         });
-        fromConn.send({k:'start_draft'});
-        startOnlineHeroDraft(true);
+        if(isQM){
+          const myName=(USER_ACC&&!USER_ACC.isGuest)?USER_ACC.username:tr('Misafir','Guest');
+          const myElo=Math.round((USER_ACC&&USER_ACC.elo)||1200);
+          const oppName=String(m.name||tr('Misafir','Guest')).slice(0,22);
+          const oppElo=Math.max(400,Math.min(4000,Math.round(+m.elo||1200)));
+          fromConn.send({k:'match_found',oppName:myName,oppElo:myElo,secs:10});
+          showQuickMatchFound(true,oppName,oppElo,10);
+        }else{
+          fromConn.send({k:'start_draft'});
+          startOnlineHeroDraft(true);
+        }
       }else{
         fromConn.send({k:'slot_full'});
       }
@@ -3480,6 +3537,12 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
 }
 let PENDING_INVITE_JOIN=false;
 function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
+  if(m.k=='match_found'){
+    PENDING_INVITE_JOIN=false;
+    MODE='guest';
+    showQuickMatchFound(false,m.oppName,m.oppElo,m.secs||10);
+    return;
+  }
   if(m.k=='start_draft'){
     PENDING_INVITE_JOIN=false;
     MODE='guest';
@@ -4017,10 +4080,13 @@ function joinRoom(directCode,fromInvite=false){
     conn=peer.connect('necrodice-'+code,{reliable:true});
     conn.on('data',onHost);
     conn.on('open',()=>{
-      st(tr('Oda bulundu. Kahraman seçimine geçiliyor…','Room found. Entering hero selection…'));
-      conn.send({k:'join_as',role:'player'});
+      st(IS_QUICK_MATCH?tr('Rakibe bağlanılıyor…','Connecting to opponent…'):tr('Oda bulundu. Kahraman seçimine geçiliyor…','Room found. Entering hero selection…'));
+      const myName=(USER_ACC&&!USER_ACC.isGuest)?USER_ACC.username:tr('Misafir','Guest');
+      const myElo=Math.round((USER_ACC&&USER_ACC.elo)||1200);
+      conn.send({k:'join_as',role:'player',quickMatch:!!IS_QUICK_MATCH,name:myName,elo:myElo});
     });
     conn.on('close',()=>{
+      if(matchFoundActive){abortOnlineDraft(tr('Rakip eşleşmeden ayrıldı.','Opponent left the match.'),null);return;}
       if(draftActive){abortOnlineDraft(tr('Rakip kahraman seçiminden ayrıldı.','Opponent left hero selection.'),null);return;}
       startReconnectGrace(false,tr('Rakip oyundan ayrıldı.','Opponent left the game.'));
     });
@@ -4062,7 +4128,7 @@ document.addEventListener('keydown',e=>{
 });
 try{if(RM)document.body.classList.add('rm');if(CB)document.body.classList.add('cb');if(!CRT)document.documentElement.classList.add('nocrt')}catch(e){}
 try{$('#slogo').src='limbi_favicon.png?v=limbi4'}catch(e){}setTimeout(()=>{const s=$('#splash');s&&s.remove()},3550);
-on('#b2',()=>{if(noNet())return;hostRoom()});on('#b3',joinRoom);on('#bqm',()=>{snd('click');startQuickMatch()});
+on('#b2',()=>{if(noNet())return;IS_QUICK_MATCH=false;hostRoom()});on('#b3',()=>{IS_QUICK_MATCH=false;joinRoom()});on('#bqm',()=>{snd('click');startQuickMatch()});
 
 /* ---------- SÜRÜKLENEBİLİR KARTLAR İÇİN ORTAK SMOOTH LERP DÖNGÜSÜ ---------- */
 function createSmoothDragLoop(onFrame){
@@ -6343,6 +6409,7 @@ function cancelQuickMatch(silent=false){
     QM_DOC_ID=null;
   }
   if(!silent){
+    IS_QUICK_MATCH=false;
     try{if(peer&&!conn)peer.destroy()}catch(e){}
     if(!conn){peer=null;MODE='bot';CURRENT_HOST_CODE=''}
   }
@@ -6351,6 +6418,7 @@ async function startQuickMatch(){
   if(noNet()||!fbDb)return;
   if(!USER_ACC)createGuestAccount();
   cancelQuickMatch(true);
+  IS_QUICK_MATCH=true;
   const myPid=getMyPresenceId();
   const myElo=Math.round((USER_ACC&&USER_ACC.elo)||1200);
   const myName=(USER_ACC&&!USER_ACC.isGuest)?USER_ACC.username:tr('Misafir','Guest');
