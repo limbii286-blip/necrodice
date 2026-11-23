@@ -7373,11 +7373,32 @@ html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, 
   line-height: 1;
 }
 #mb.lob-mode {
-  max-width: min(94vw, 510px) !important;
-  max-height: min(86dvh, 640px) !important;
+  width: min(95vw, 510px) !important;
+  max-width: 510px !important;
+  height: min(82dvh, 580px) !important;
+  max-height: 86dvh !important;
   display: flex;
   flex-direction: column;
   overflow: hidden !important;
+}
+.lob-list {
+  min-height: 160px;
+}
+.lob-elo {
+  flex-shrink: 0;
+  font: 700 14.5px/1 'Crimson Pro', Georgia, serif;
+  color: #f6dfaa;
+  background: rgba(212, 168, 85, 0.14);
+  border: 1px solid rgba(212, 168, 85, 0.36);
+  padding: 4px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.lob-elo i {
+  font-style: normal;
+  font-size: 11px;
+  color: #cbb58c;
+  margin-left: 2px;
 }
 .lob-row {
   display: flex;

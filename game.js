@@ -6608,13 +6608,15 @@ function renderLobbyModalBody(){
           ?`<button type="button" class="btn sm lob-spec-btn" data-code="${escHtml(u.roomCode)}">${tr('İzle','Watch')}</button>`
           :`<span class="lob-busy-tag">${tr('Maçta','In Match')}</span>`)
         :`<button type="button" class="btn alt sm lob-inv-btn" data-pid="${escHtml(u.pid)}">${tr('Davet Et','Challenge')}</button>`);
+    const eloVal=Math.round(u.elo||1200);
     return `<div class="lob-row${isMe?' me':''}${inGame?' busy':''}">
       <span class="lob-dot ${inGame?'busy':'free'}" title="${inGame?tr('Maçta','In Match'):tr('Müsait','Available')}"></span>
       <span class="lb-rk" title="${rk.name}">${rk.ic}</span>
       <div class="lb-u">
         <b>${escHtml(dispName)}</b>
-        <small>${rk.name} · ${Math.round(u.elo||1200)} ELO${tLbl} · ${inGame?tr('Maçta','In Match'):tr('Müsait','Available')}</small>
+        <small>${rk.name}${tLbl} · ${inGame?tr('Maçta','In Match'):tr('Müsait','Available')}</small>
       </div>
+      <span class="lob-elo">${eloVal} <i>ELO</i></span>
       ${actHtml}
     </div>`;
   }).join(''):`<div class="lb-empty">${tr('Şu an lobide başka çevrim içi oyuncu yok.','No other players online in the lobby right now.')}</div>`;
