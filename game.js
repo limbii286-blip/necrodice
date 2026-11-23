@@ -323,6 +323,8 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
           if(conn&&conn.open)conn.send({k:'tie_roll'});
           spectators.forEach(s=>{try{if(s.open)s.send({k:'tie_roll'})}catch(e){}});
         }
+      }else if(isBot&&spectators.length){
+        spectators.forEach(s=>{try{if(s.open)s.send({k:'tie_roll'})}catch(e){}});
       }
       if(btn){btn.disabled=true;btn.classList.add('used')}
       if(stage)stage.style.cursor='default';
@@ -642,8 +644,8 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
       rl.disabled=true;
       rl.classList.add('used');
       if(MODE==='guest'&&conn&&conn.open)conn.send({k:'d20_roll'});
-      else if(MODE==='host'){
-        if(conn&&conn.open)conn.send({k:'d20_roll'});
+      else if(MODE==='host'||MODE==='bot'){
+        if(MODE==='host'&&conn&&conn.open)conn.send({k:'d20_roll'});
         spectators.forEach(s=>{try{if(s.open)s.send({k:'d20_roll'})}catch(e){}});
       }
       snd('heart');
@@ -1321,6 +1323,8 @@ function MM(fn,btn,cb,sd,end){
       M(fn(0),btn,()=>{deathContReady[0]=true;checkDeathCont()},end);snd(sd&&sd(0));
       return;
     }
+  }else if(MODE=='bot'&&spectators.length){
+    spectators.forEach(s=>{try{if(s.open)s.send({k:'m',html:fn(2),sd:sd&&sd(2),end,spec:true})}catch(e){}});
   }
   M(fn(0),btn,cb,end);snd(sd&&sd(0));
 }
@@ -1919,7 +1923,7 @@ const HP_IC={
   v:hpImg('v'),
   u:hpImg('u')
 };
-function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}glogOpen=false;glogLastSig='';LAST_MATCH_HIST=[];rematchReady=[false,false];rematchHeroes=[null,null];deathContReady=[false,false];deathContGo=null;const botPool=HEROES.filter(h=>!h.bossOnly||DIFF==='imp').map(h=>h.id),oppH=MODE=='bot'?botPool[Math.floor(Math.random()*botPool.length)]:(OPP_HERO||'n');G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],vampUsed:[false,false],cWins:[0,0],vampBurn:null,mast:[0,0]};prevAv[0]=prevAv[1]=undefined;prevHpAnim=[false,false];newBO3(G);deal(G);if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();runAfterDeal(G)}
+function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}glogOpen=false;glogLastSig='';LAST_MATCH_HIST=[];rematchReady=[false,false];rematchHeroes=[null,null];deathContReady=[false,false];deathContGo=null;const botPool=HEROES.filter(h=>!h.bossOnly||DIFF==='imp').map(h=>h.id),oppH=MODE=='bot'?botPool[Math.floor(Math.random()*botPool.length)]:(OPP_HERO||'n');G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],vampUsed:[false,false],cWins:[0,0],vampBurn:null,mast:[0,0]};prevAv[0]=prevAv[1]=undefined;prevHpAnim=[false,false];newBO3(G);deal(G);if(MODE==='bot'&&typeof startBotSpectateHost==='function')startBotSpectateHost();if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();runAfterDeal(G)}
 
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
@@ -2423,10 +2427,10 @@ function R(){
   if(MODE==='tutorial')tutApplyHighlights();
   if(MODE=='host'){
     if(conn&&conn.open)conn.send({k:'s',v:view(G)});
-    if(spectators.length){
-      const sv=specView(G);
-      spectators.forEach(s=>{try{if(s.open)s.send({k:'s',v:sv,specCount:spectators.length})}catch(e){}});
-    }
+  }
+  if((MODE=='host'||MODE=='bot')&&spectators.length){
+    const sv=specView(G);
+    spectators.forEach(s=>{try{if(s.open)s.send({k:'s',v:sv,specCount:spectators.length})}catch(e){}});
   }
 }
 let glogOpen=false,glogLastSig='';
@@ -3127,6 +3131,7 @@ function exitGame(){ // limbigames perdesi, sonra ilk ekrana dön
     try{if(conn)conn.close()}catch(e){}
     try{spectators.forEach(s=>{try{s.close()}catch(err){}})}catch(e){}
     try{if(peer)peer.destroy()}catch(e){}
+    if(typeof stopBotSpectateHost==='function')stopBotSpectateHost();
     conn=null;spectators=[];peer=null;waitM=false;specCount=0;CURRENT_HOST_CODE='';LAST_JOIN_CODE='';
     if(typeof clearReconnectGrace==='function')clearReconnectGrace();
     if(typeof clearActiveMatchSnapshot==='function')clearActiveMatchSnapshot();
@@ -3275,6 +3280,8 @@ function note(p,id,cb){
     if(conn&&conn.open)conn.send({k:'j',p:1-p,id});
     spectators.forEach(s=>{try{if(s.open)s.send({k:'j',p,id})}catch(e){}});
     R();
+  }else if(MODE=='bot'&&spectators.length){
+    spectators.forEach(s=>{try{if(s.open)s.send({k:'j',p,id})}catch(e){}});
   }
   cast(p,id,cb);
 }
@@ -6355,6 +6362,35 @@ function updateLobbyBadge(){
   const c=document.getElementById('ab-lob-cnt');
   if(c)c.textContent=String(LOBBY_ONLINE_LIST.length);
 }
+let botSpecPeer=null,CURRENT_BOT_SPEC_CODE='';
+function stopBotSpectateHost(){
+  try{if(botSpecPeer)botSpecPeer.destroy();}catch(e){}
+  botSpecPeer=null;CURRENT_BOT_SPEC_CODE='';
+}
+function startBotSpectateHost(){
+  if(typeof Peer==='undefined'||!fbDb||MODE!=='bot')return;
+  if(botSpecPeer&&CURRENT_BOT_SPEC_CODE){updateLobbyPresence(false);return;}
+  stopBotSpectateHost();
+  const code='S'+Array.from({length:3},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random()*32|0]).join('');
+  CURRENT_BOT_SPEC_CODE=code;
+  try{
+    botSpecPeer=new Peer('necrodice-'+code);
+    botSpecPeer.on('open',()=>{updateLobbyPresence(false);});
+    botSpecPeer.on('connection',c=>{
+      c.on('data',m=>{
+        if(m&&m.k==='join_as'&&m.role==='spectator'){
+          if(spectators.length>=MAX_SPECTATORS){c.send({k:'spec_full',max:MAX_SPECTATORS});return;}
+          c._role='spectator';
+          spectators.push(c);
+          c.send({k:'role',role:'spectator'});
+          if(G)c.send({k:'s',v:specView(G),specCount:spectators.length});
+          c.on('close',()=>{spectators=spectators.filter(x=>x!==c);if(G)R();});
+        }
+      });
+    });
+    botSpecPeer.on('error',()=>{CURRENT_BOT_SPEC_CODE='';});
+  }catch(e){CURRENT_BOT_SPEC_CODE='';}
+}
 function updateLobbyPresence(forceOffline=false){
   if(!fbDb)return;
   const pid=getMyPresenceId();
@@ -6369,7 +6405,7 @@ function updateLobbyPresence(forceOffline=false){
   const name=(USER_ACC&&!USER_ACC.isGuest&&USER_ACC.username)?USER_ACC.username:tr('Misafir','Guest');
   const elo=Math.round((USER_ACC&&USER_ACC.elo)||1200);
   const isGuest=!(USER_ACC&&!USER_ACC.isGuest);
-  const roomCode=(inGame&&MODE==='host'&&CURRENT_HOST_CODE)?CURRENT_HOST_CODE:'';
+  const roomCode=inGame?(MODE==='host'?CURRENT_HOST_CODE:(MODE==='guest'?LAST_JOIN_CODE:(MODE==='bot'?CURRENT_BOT_SPEC_CODE:''))):'';
   const title=(USER_ACC&&USER_ACC.title)||'';
   ref.set({
     pid,
@@ -6609,7 +6645,8 @@ function renderLobbyModalBody(){
           :`<span class="lob-busy-tag">${tr('Maçta','In Match')}</span>`)
         :`<button type="button" class="btn alt sm lob-inv-btn" data-pid="${escHtml(u.pid)}">${tr('Davet Et','Challenge')}</button>`);
     const eloVal=Math.round(u.elo||1200);
-    return `<div class="lob-row${isMe?' me':''}${inGame?' busy':''}">
+    const watchable=!isMe&&inGame&&!!u.roomCode;
+    return `<div class="lob-row${isMe?' me':''}${inGame?' busy':''}${watchable?' watchable':''}"${watchable?` data-watch-code="${escHtml(u.roomCode)}"`:''}>
       <span class="lob-dot ${inGame?'busy':'free'}" title="${inGame?tr('Maçta','In Match'):tr('Müsait','Available')}"></span>
       <span class="lb-rk" title="${rk.name}">${rk.ic}</span>
       <div class="lb-u">
@@ -6627,7 +6664,8 @@ function renderLobbyModalBody(){
   if(listEl){
     listEl.innerHTML=rowsHtml;
     listEl.querySelectorAll('.lob-inv-btn').forEach(btn=>{
-      btn.onclick=()=>{
+      btn.onclick=e=>{
+        e.stopPropagation();
         const target=list.find(x=>x.pid===btn.dataset.pid);
         if(!target)return;
         snd('click');
@@ -6637,15 +6675,18 @@ function renderLobbyModalBody(){
         hostRoom({...target,name:displayNameOf(target)});
       };
     });
+    const openWatch=code=>{
+      if(!code)return;
+      snd('click');
+      mb.classList.remove('auth-mode','lob-mode');
+      $('#m').hidden=true;lock=false;
+      spectateRoom(code);
+    };
     listEl.querySelectorAll('.lob-spec-btn').forEach(btn=>{
-      btn.onclick=()=>{
-        const code=btn.dataset.code;
-        if(!code)return;
-        snd('click');
-        mb.classList.remove('auth-mode','lob-mode');
-        $('#m').hidden=true;lock=false;
-        spectateRoom(code);
-      };
+      btn.onclick=e=>{e.stopPropagation();openWatch(btn.dataset.code)};
+    });
+    listEl.querySelectorAll('.lob-row.watchable').forEach(row=>{
+      row.onclick=()=>openWatch(row.dataset.watchCode);
     });
   }
 }

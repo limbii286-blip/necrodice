@@ -7415,7 +7415,15 @@ html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, 
   background: rgba(212, 168, 85, 0.14);
 }
 .lob-row.busy {
-  opacity: 0.76;
+  opacity: 0.88;
+}
+.lob-row.watchable {
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+.lob-row.watchable:hover {
+  border-color: rgba(245, 208, 120, 0.72);
+  background: rgba(212, 168, 85, 0.14);
 }
 .lob-dot {
   width: 9px;
