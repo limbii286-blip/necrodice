@@ -6469,9 +6469,9 @@ function stopBotSpectateHost(){
   try{if(botSpecPeer)botSpecPeer.destroy();}catch(e){}
   botSpecPeer=null;CURRENT_BOT_SPEC_CODE='';
 }
-function startBotSpectateHost(){
+function startBotSpectateHost(retry=0){
   if(typeof Peer==='undefined'||!fbDb||MODE!=='bot')return;
-  if(botSpecPeer&&CURRENT_BOT_SPEC_CODE){updateLobbyPresence(false);return;}
+  if(botSpecPeer&&!botSpecPeer.destroyed&&CURRENT_BOT_SPEC_CODE){updateLobbyPresence(false);return;}
   stopBotSpectateHost();
   const code='S'+Array.from({length:3},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random()*32|0]).join('');
   CURRENT_BOT_SPEC_CODE=code;
@@ -6490,7 +6490,19 @@ function startBotSpectateHost(){
         }
       });
     });
-    botSpecPeer.on('error',()=>{CURRENT_BOT_SPEC_CODE='';});
+    botSpecPeer.on('disconnected',()=>{try{if(botSpecPeer&&!botSpecPeer.destroyed)botSpecPeer.reconnect();}catch(e){}});
+    botSpecPeer.on('error',err=>{
+      const t=err&&err.type;
+      if(t==='unavailable-id'&&retry<3){
+        CURRENT_BOT_SPEC_CODE='';
+        setTimeout(()=>startBotSpectateHost(retry+1),250);
+        return;
+      }
+      if(t==='invalid-id'||t==='server-error'||t==='socket-error'||t==='socket-closed'){
+        CURRENT_BOT_SPEC_CODE='';
+        updateLobbyPresence(false);
+      }
+    });
   }catch(e){CURRENT_BOT_SPEC_CODE='';}
 }
 function updateLobbyPresence(forceOffline=false){
@@ -6804,7 +6816,7 @@ function openLobbyModal(){
   mb.innerHTML=`<div class="lb-wrap">
     <div class="lb-head">
       <h3>${tr('Çevrim İçi Lobi','Online Lobby')}</h3>
-      <p class="lb-sub">${tr('Çevrim içi oyuncular yükleniyor…','Loading online players…')}</p>
+      <p class="lb-sub lob-sub">${tr('Çevrim içi oyuncular yükleniyor…','Loading online players…')}</p>
     </div>
     <div class="lb-list lob-list"></div>
     <div class="row lb-acts">
