@@ -2661,6 +2661,9 @@ body.dragging-joker #fx::after {
     0 0 32px rgba(212, 168, 85, 0.9) !important;
 }
 
+#hand .j.spec-ro {
+  cursor: default !important;
+}
 #hand .j.dim {
   filter: brightness(0.48) saturate(0.45) !important;
   border-color: #4a3f35 !important;

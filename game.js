@@ -2311,8 +2311,7 @@ function R(){
   const pips=[0,1,2].map(i=>`<span class="pip ${res[i]==null?(i==S.rounds?'now':''):res[i]>0?'w':res[i]<0?'l':'d'}"></span>`).join('');
   const sk=TH.map((t,i)=>`<span class="sk${i<bi?' past':i==bi?' cur':''}" title="${tr(`D20 Ölüm Eşiği: ${t} veya üstü atmalısın`,`D20 Death Threshold: Roll ${t} or higher`)}">${IC.skull}<small>${t}</small></span>`).join('');
   const isSpec=MODE=='spectator';
-  const specHdr=isSpec?`<div class="spec-badge"><i></i>${tr('İzleyici Modu','Spectator Mode')} (${specCount||1}/${MAX_SPECTATORS})</div>`:'';
-  setH('#hdr',`<div class="hs sks">${sk}</div><div class="hc"><span class="lab">${tr('Düello','Duel')} ${S.bo+1}</span><span class="pips">${pips}</span>${specHdr}</div><div class="hg"><button class="gear" data-g="1" aria-label="${tr('Ayarlar','Settings')}">${IC.gear}<span>${tr('Ayarlar','Settings')}</span></button></div>`);
+  setH('#hdr',`<div class="hs sks">${sk}</div><div class="hc"><span class="lab">${tr('Düello','Duel')} ${S.bo+1}</span><span class="pips">${pips}</span></div><div class="hg"><button class="gear" data-g="1" aria-label="${tr('Ayarlar','Settings')}">${IC.gear}<span>${tr('Ayarlar','Settings')}</span></button></div>`);
   const oppHidZero=!S.rev&&act(S,20)&&S.pl[1].closed.length>0;
   const oppClosedKnown=!!(S.rev||oppHidZero||(S.pl[1].closed.length&&S.pl[1].closed.every(c=>c.o!=null||(S.oppPeek&&S.oppPeek.includes(c.id)))));
   const my=!isSpec&&S.turn==0&&!lock&&!S.wait,mt=total(S,0),ot=total(S,1,oppClosedKnown),bust=!low&&mt>T,obust=oppClosedKnown&&!low&&ot>T,seal=T+(low?'L':'');
@@ -2323,8 +2322,8 @@ function R(){
   const av0=avh(0),av1=avh(1);
   const p0Char=NAMES[avKey(S,0)]||tr('Lanetli Tüccar','Cursed Merchant');
   const p1Char=NAMES[avKey(S,1)]||tr('Kara Şövalye','Dark Knight');
-  const p0Name=isSpec?`${p0Char} (${tr('1. Oyuncu','Player 1')})`:p0Char;
-  const p1Name=isSpec?`${p1Char} (${tr('2. Oyuncu','Player 2')})`:((MODE=='guest'||MODE=='host')?`${p1Char} (${tr('Rakip','Opponent')})`:(MODE=='bot'||S.av?oppName():tr('Rakip','Opponent')));
+  const p0Name=p0Char;
+  const p1Name=isSpec?p1Char:((MODE=='guest'||MODE=='host')?`${p1Char} (${tr('Rakip','Opponent')})`:(MODE=='bot'||S.av?oppName():tr('Rakip','Opponent')));
   const oppTimeOut=!!(S.timeOut&&S.timeOut[1]),meTimeOut=!!(S.timeOut&&S.timeOut[0]);
   const defClock=initClockSec();
   const c0=Math.ceil(S.clocks?S.clocks[0]:defClock),c1=Math.ceil(S.clocks?S.clocks[1]:defClock);
@@ -2347,16 +2346,17 @@ function R(){
   const hpDot0=(!hpObj0.passive&&!cProg)?`<i class="hp-dot ${(!hpUsed0&&cReady)?'on':'off'}"></i>`:'';
   const hpDot1=(!hpObj1.passive&&!cProg1&&oppHId!=='w'&&oppHId!=='a')?`<i class="hp-dot ${(!hpUsed1&&cReady1)?'on':'off'}"></i>`:'';
   const isMob=window.matchMedia&&window.matchMedia('(max-width: 760px), (hover: none) and (pointer: coarse)').matches;
-  const hpBtn0=isSpec?'':`<button id="hp-btn" class="hp-btn${hpObj0.passive?' passive':''}${hpUsed0?' used':canHp?' ready':''}" data-hp="1" data-hp-id="${myHId}" data-hp-side="0" aria-disabled="${!canHp}">${HP_IC[myHId]||HP_IC.c}${cProg}${hpDot0}</button>`;
+  const hpBtn0=isSpec?`<span class="hp-btn opp-hp${hpObj0.passive?' passive':''}${hpUsed0?' used':!cReady?' locked':''}" data-hp-id="${myHId}" data-hp-side="0">${HP_IC[myHId]||HP_IC.c}${cProg}${hpDot0}</span>`:`<button id="hp-btn" class="hp-btn${hpObj0.passive?' passive':''}${hpUsed0?' used':canHp?' ready':''}" data-hp="1" data-hp-id="${myHId}" data-hp-side="0" aria-disabled="${!canHp}">${HP_IC[myHId]||HP_IC.c}${cProg}${hpDot0}</button>`;
   const hpBtn1=`<span class="hp-btn opp-hp${hpObj1.passive?' passive':''}${hpUsed1?' used':!cReady1?' locked':''}${(oppHId==='w'||oppHId==='a')?' secret-hp':''}" data-hp-id="${oppHId}" data-hp-side="1">${HP_IC[oppHId]||HP_IC.c}${cProg1}${hpDot1}</span>`;
   const myElo=Math.round((typeof USER_ACC!=='undefined'&&USER_ACC&&typeof USER_ACC.elo==='number')?USER_ACC.elo:1200);
   const myBaseName=(typeof USER_ACC!=='undefined'&&USER_ACC&&!USER_ACC.isGuest&&USER_ACC.username)?escHtml(USER_ACC.username):tr('Misafir','Guest');
   const myNick=`${myBaseName} · ${myElo} ELO`;
+  const p0Sub=isSpec?((S.specMeta&&S.specMeta.p0Sub)?escHtml(S.specMeta.p0Sub):''):myNick;
   const oppBotElo=DIFF==='hard'?'1320 ELO':DIFF==='imp'?'1550 ELO':tr('Derecesiz','Unranked');
   const oppBotSub=(DIFF==='easy'?tr('Kolay Bot','Easy Bot'):DIFF==='med'?tr('Orta Bot','Medium Bot'):DIFF==='hard'?tr('Zor Bot','Hard Bot'):tr('İmkansız Bot','Impossible Bot'))+` · ${oppBotElo}`;
   const oppOnlineElo=Math.round((OPP_PROFILE&&typeof OPP_PROFILE.elo==='number')?OPP_PROFILE.elo:1200);
   const oppOnlineName=(OPP_PROFILE&&OPP_PROFILE.name)?escHtml(OPP_PROFILE.name):tr('Çevrim İçi','Online');
-  const oppSub=MODE==='bot'?oppBotSub:(MODE==='tutorial'?tr('Eğitim','Tutorial'):`${oppOnlineName} · ${oppOnlineElo} ELO`);
+  const oppSub=isSpec?((S.specMeta&&S.specMeta.p1Sub)?escHtml(S.specMeta.p1Sub):''):(MODE==='bot'?oppBotSub:(MODE==='tutorial'?tr('Eğitim','Tutorial'):`${oppOnlineName} · ${oppOnlineElo} ELO`));
   const cCnt1=S.pl[1].open.length+S.pl[1].closed.length;
   setH('#opp',`${oppHandHtml}<div class="who">${av1}${hpBtn1}<div class="nm"><b>${p1Name}</b><span class="meta nick">${oppSub}</span></div><div class="tot${obust?' bust':oexact?' exact':''}"><small>${tr('Toplam','Total')}</small><div class="tl"><b>${lastTot[1]}</b>${oppHidZero?'<i class="pq">+</i><b>0</b>':oppClosedKnown?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards${cCnt1>=6?' cards-2row':''}${cCnt1>=9?' cards-dense':''}">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!(S.rev||c.o!=null||(S.oppPeek&&S.oppPeek.includes(c.id))),S.rev)).join('')}</div>`);
   const activeTg=tgE(S);
@@ -2374,8 +2374,8 @@ function R(){
   if(prevSeal&&prevSeal!=seal){sl.classList.remove('stamp');void sl.offsetWidth;sl.classList.add('stamp')}
   $('#me').className='zone'+(my?' act':'')+(S.winSide!=null?(S.winSide<0?' round-lose':S.winSide===0?' round-tie':''):'');
   const cCnt0=S.pl[0].open.length+S.pl[0].closed.length;
-  setH('#me',`<div class="who">${av0}${hpBtn0}<div class="nm"><b>${p0Name}</b><span class="meta nick">${isSpec?tr('İzleyici','Spectator'):myNick}</span></div><div class="tot${bust?' bust':exact?' exact':''}"><small>${tr('Toplam','Total')}</small><b>${lastTot[0]}</b></div></div><div class="cards${cCnt0>=6?' cards-2row':''}${cCnt0>=9?' cards-dense':''}">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||c.o!=null||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`);
-  const myAv=$('#me .who .av');if(myAv)myAv.onclick=e=>{e.stopPropagation();toggleEmoteMenu()};
+  setH('#me',`<div class="who">${av0}${hpBtn0}<div class="nm"><b>${p0Name}</b><span class="meta nick">${p0Sub}</span></div><div class="tot${bust?' bust':exact?' exact':''}"><small>${tr('Toplam','Total')}</small><b>${lastTot[0]}</b></div></div><div class="cards${cCnt0>=6?' cards-2row':''}${cCnt0>=9?' cards-dense':''}">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||c.o!=null||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`);
+  const myAv=$('#me .who .av');if(myAv)myAv.onclick=isSpec?null:(e=>{e.stopPropagation();toggleEmoteMenu()});
   const pr=$('#prompt');
   pr.className=P?(P.hp?'ask'+(k==='hand_j'?' hand-mode':''):'ask has-joker'+(k==='sign'?' sign-mode':'')):'';
   if(!P){
@@ -2403,7 +2403,8 @@ function R(){
   const n=S.hand[0].length;
   $('#hand').classList.toggle('joker-locked',!!(S.noJ&&S.noJ[0]));
   if(isSpec){
-    setH('#hand',`<div class="spec-notice">${tr('Canlı Maç Yayını · İzleyici Modundasın','Live Match Broadcast · Spectator Mode')}</div>`);
+    setH('#hand',S.hand[0].filter(Boolean).map((id,i)=>`<span class="jslot"><img class="j spec-ro" draggable="false" style="--r:${((i-(n-1)/2)*5).toFixed(1)}deg" data-j="${id}" data-jidx="${i}" src="${IMG.j[id]}" alt=""></span>`).join(''));
+    document.querySelectorAll('#hand .j[data-j]').forEach(im=>hi(im,+im.dataset.j));
   }else{
     setH('#hand',S.hand[0].map((id,i)=>`<span class="jslot"><img class="j${k==='hand_j'?' hl':(my&&!P&&playable(S,0,id)?'':' dim')}" draggable="false" style="--r:${((i-(n-1)/2)*5).toFixed(1)}deg" data-j="${id}" data-jidx="${i}" src="${IMG.j[id]}" alt=""></span>`).join(''));
     document.querySelectorAll('#hand .j[data-j]').forEach(im=>hi(im,+im.dataset.j));
@@ -2451,7 +2452,7 @@ function renderGameLog(S){
   if(sig===glogLastSig)return;
   glogLastSig=sig;
   const isSpec=MODE==='spectator';
-  const whoOf=p=>isSpec?(p===0?tr('1. Oyuncu','P1'):tr('2. Oyuncu','P2')):(p===0?tr('Sen','You'):tr('Rakip','Opp'));
+  const whoOf=p=>isSpec?(p===0?((S.specMeta&&S.specMeta.p0Name)||tr('Oyuncu','Player')):((S.specMeta&&S.specMeta.p1Name)||tr('Rakip','Opponent'))):(p===0?tr('Sen','You'):tr('Rakip','Opp'));
   let actCnt=0,peekTxt=tr('Henüz hamle yok','No moves yet');
   const rows=raw.map(l=>{
     if(l.p<0){
@@ -2549,8 +2550,8 @@ function execAlchSwap(cid){
     }
   }
 }
-function pick(v){if(P&&P.hp==='u'){const id=v;P=null;return execSwapDeckHeroPower(0,id)}if(P&&P.hp==='a'){const id=v;P=null;return execAlchSwap(id)}if(P&&P.hp==='p'){const idx=v;P=null;if(!G||idx<0||idx>=G.hand[0].length)return R();snd('play');if(MODE==='guest'){G.hpUsed[0]=true;R();return conn.send({k:'hp_plague',idx})}execPlague(G,0,idx);return R()}P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
-function startJoker(id){if(MODE==='tutorial'&&(tutStep!==3||id!==3))return;const ks=NEED[id]||[];if(ks.length){P={id,ks,pk:[]};R()}else doPlay(id,[])}
+function pick(v){if(MODE==='spectator')return;if(P&&P.hp==='u'){const id=v;P=null;return execSwapDeckHeroPower(0,id)}if(P&&P.hp==='a'){const id=v;P=null;return execAlchSwap(id)}if(P&&P.hp==='p'){const idx=v;P=null;if(!G||idx<0||idx>=G.hand[0].length)return R();snd('play');if(MODE==='guest'){G.hpUsed[0]=true;R();return conn.send({k:'hp_plague',idx})}execPlague(G,0,idx);return R()}P.pk.push(v);if(P.pk.length==P.ks.length)doPlay(P.id,P.pk);else R()}
+function startJoker(id){if(MODE==='spectator')return;if(MODE==='tutorial'&&(tutStep!==3||id!==3))return;const ks=NEED[id]||[];if(ks.length){P={id,ks,pk:[]};R()}else doPlay(id,[])}
 const HERO_FOCUS={c:'44% 28%',p:'56% 24%',n:'64% 25%',a:'50% 24%',s:'48% 25%',e:'52% 28%',m:'50% 30%',w:'45% 23%',l:'68% 28%',v:'50% 25%'};
 function chooseHero(onPick,onCancel){
   lock=true;
@@ -2678,7 +2679,7 @@ function execWolf(S,p,afterCb){
   setTimeout(finish,ids.length?360:120);
 }
 function useHeroPower(){
-  const S=G;if(!S||S.over||S.wait||S.turn!==0||lock||P||(S.hpUsed&&S.hpUsed[0])||MODE==='tutorial')return;
+  const S=G;if(!S||S.over||S.wait||S.turn!==0||lock||P||(S.hpUsed&&S.hpUsed[0])||MODE==='tutorial'||MODE==='spectator')return;
   S.hpUsed=S.hpUsed||[false,false];
   const hid=avKey(S,0);
   if(hid==='c'){
@@ -3214,8 +3215,8 @@ document.addEventListener('click',e=>{
     return;
   }
 });
-function drawFromDeck(){const S=G;if(!S||S.turn||lock||P||!canDraw(S,0))return;if(MODE==='tutorial'&&tutStep!==2)return;recMove(S,{t:'d'},tr('Kart Çek','Draw Card'));snd('draw');if(MODE=='guest')return conn.send({k:'draw'});S.graceLeft=0;lrnAct(S,'d');if(S.botScry&&S.botScry.length)S.botScry.shift();const c=S.deck.pop();S.pl[0].open.push(c);if(S.stats&&S.stats.draws)S.stats.draws[0]++;S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R();if(MODE==='tutorial'&&tutStep===2)tutAdvance('draw')}
-$('#pass').onclick=()=>{if(G.turn==0&&!lock&&!P){if(MODE==='tutorial'&&tutStep!==7)return;recMove(G,null,$('#pass').textContent||tr('Pas','Pass'));if(MODE=='guest')conn.send({k:'pass'});else{lrnAct(G,'p');pass();if(MODE==='tutorial'&&tutStep===7)tutClearHighlights()}}};
+function drawFromDeck(){if(MODE==='spectator')return;const S=G;if(!S||S.turn||lock||P||!canDraw(S,0))return;if(MODE==='tutorial'&&tutStep!==2)return;recMove(S,{t:'d'},tr('Kart Çek','Draw Card'));snd('draw');if(MODE=='guest')return conn.send({k:'draw'});S.graceLeft=0;lrnAct(S,'d');if(S.botScry&&S.botScry.length)S.botScry.shift();const c=S.deck.pop();S.pl[0].open.push(c);if(S.stats&&S.stats.draws)S.stats.draws[0]++;S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R();if(MODE==='tutorial'&&tutStep===2)tutAdvance('draw')}
+$('#pass').onclick=()=>{if(MODE==='spectator')return;if(G.turn==0&&!lock&&!P){if(MODE==='tutorial'&&tutStep!==7)return;recMove(G,null,$('#pass').textContent||tr('Pas','Pass'));if(MODE=='guest')conn.send({k:'pass'});else{lrnAct(G,'p');pass();if(MODE==='tutorial'&&tutStep===7)tutClearHighlights()}}};
 
 /* ---------- ONLINE (PeerJS) ---------- */
 let MODE='bot',peer,conn,spectators=[],specCount=0,waitM=false,rematchReady=[false,false],rematchHeroes=[null,null],deathContReady=[false,false],deathContGo=null;
@@ -3264,14 +3265,23 @@ function view(S){ // rakibe gidecek, gizli bilgisi temizlenmiş ve aynalanmış 
     pl:[S.pl[1],{open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:(S.rev||pk1.includes(c.id))?c.n:0,o:c.o,hpImmune:!!c.hpImmune}))}],
     eff:S.eff.map(e=>({...e,o:1-e.o})),pj:(S.pj||[]).map(e=>({...e,o:1-e.o})),log:S.log.filter(l=>!(l.p===0&&/Kuzgunun Kehaneti|Yitik Yazgı/.test(l.t||''))).slice(-30).map(l=>({...l,p:l.p<0?-1:1-l.p}))};
 }
-function specView(S){ // izleyicilere gidecek durum (0 = host/oda sahibi, 1 = misafir oyuncu, kapalı kartlar rev olmadan görünmez)
+function specView(S){ // izleyicilere gidecek durum: izlenen oyuncunun (0) gözünden canlı görünüm (kendi eli + kapalı kartı bakılabilir, rakip kapalı kartı gizli)
+  const pk0=S.oppPeek0||[];
+  const myElo=Math.round((typeof USER_ACC!=='undefined'&&USER_ACC&&typeof USER_ACC.elo==='number')?USER_ACC.elo:1200);
+  const myNm=(typeof USER_ACC!=='undefined'&&USER_ACC&&!USER_ACC.isGuest&&USER_ACC.username)?USER_ACC.username:tr('Misafir','Guest');
+  const botElo=DIFF==='hard'?'1320 ELO':DIFF==='imp'?'1550 ELO':tr('Derecesiz','Unranked');
+  const botNm=DIFF==='easy'?tr('Kolay Bot','Easy Bot'):DIFF==='med'?tr('Orta Bot','Medium Bot'):DIFF==='hard'?tr('Zor Bot','Hard Bot'):tr('İmkansız Bot','Impossible Bot');
+  const oppNm=MODE==='bot'?botNm:((OPP_PROFILE&&OPP_PROFILE.name)?OPP_PROFILE.name:tr('Rakip','Opponent'));
+  const oppElo=Math.round((OPP_PROFILE&&typeof OPP_PROFILE.elo==='number')?OPP_PROFILE.elo:1200);
+  const oppSub=MODE==='bot'?`${botNm} · ${botElo}`:`${oppNm} · ${oppElo} ELO`;
   return {
-    av:[S.av[0],S.av[1]],hero:S.hero?[...S.hero]:[S.av[0],S.av[1]],hpUsed:S.hpUsed?[...S.hpUsed]:[false,false],hpMod:S.hpMod?[...S.hpMod]:[0,0],plagueMod:S.plagueMod?[...S.plagueMod]:[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?[...S.uRevived]:[false,false],vampUsed:S.vampUsed?[...S.vampUsed]:[false,false],cWins:S.cWins?[...S.cWins]:[0,0],vampBurn:S.vampBurn?{...S.vampBurn}:null,mast:[S.mast[0],S.mast[1]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:S.turn,clocks:S.clocks?[...S.clocks]:[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?[...S.timeOut]:[false,false],hadTimeout:!!S.hadTimeout,pts:S.pts,rev:S.rev,winSide:S.winSide,res:S.res,jUsed:S.jUsed,jTurn:S.jTurn?[...S.jTurn]:[0,0],noJ:S.noJ,
-    hand:[S.hand[0].map(()=>0),S.hand[1].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
+    av:[S.av[0],S.av[1]],hero:S.hero?[...S.hero]:[S.av[0],S.av[1]],hpUsed:S.hpUsed?[...S.hpUsed]:[false,false],hpMod:S.hpMod?[...S.hpMod]:[0,0],plagueMod:S.plagueMod?[...S.plagueMod]:[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?[...S.uRevived]:[false,false],vampUsed:S.vampUsed?[...S.vampUsed]:[false,false],cWins:S.cWins?[...S.cWins]:[0,0],vampBurn:S.vampBurn?{...S.vampBurn}:null,oppPeek:[...pk0],mast:[S.mast[0],S.mast[1]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:S.turn,clocks:S.clocks?[...S.clocks]:[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?[...S.timeOut]:[false,false],hadTimeout:!!S.hadTimeout,pts:S.pts,rev:S.rev,winSide:S.winSide,res:S.res,jUsed:S.jUsed,jTurn:S.jTurn?[...S.jTurn]:[0,0],noJ:S.noJ,
+    hand:[S.hand[0].slice(),S.hand[1].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
     pl:[
-      {open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:c.o,hpImmune:!!c.hpImmune}))},
-      {open:S.pl[1].open,closed:S.pl[1].closed.map(c=>({id:c.id,n:S.rev?c.n:0,o:c.o,hpImmune:!!c.hpImmune}))}
+      {open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:c.n,o:c.o,hpImmune:!!c.hpImmune}))},
+      {open:S.pl[1].open,closed:S.pl[1].closed.map(c=>({id:c.id,n:(S.rev||pk0.includes(c.id))?c.n:0,o:c.o,hpImmune:!!c.hpImmune}))}
     ],
+    specMeta:{p0Name:myNm,p0Sub:`${myNm} · ${myElo} ELO`,p1Name:oppNm,p1Sub:oppSub},
     eff:S.eff.map(e=>({...e})),pj:(S.pj||[]).map(e=>({...e})),log:S.log.slice(-30).map(l=>({...l}))
   };
 }
