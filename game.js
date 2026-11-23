@@ -6120,6 +6120,9 @@ function saveSession(acc,syncCloud=true){
     map[acc.key]={...(map[acc.key]||{}),...acc};
     saveLocalUsers(map);
     if(syncCloud)syncAccountToCloud(acc);
+    if(typeof claimActiveSession==='function'&&fbDb)claimActiveSession(acc);
+  }else if(!acc&&typeof stopSessionWatch==='function'){
+    stopSessionWatch();SESSION_KICKED=false;
   }
   renderAuthBar();
   if(typeof startLobbyPresence==='function'&&fbDb)startLobbyPresence();
@@ -6162,8 +6165,64 @@ function updateDailyStreak(acc,silent=false){
   if(!silent)showStreakToast(acc.streak,continued);
   return true;
 }
-function syncAccountToCloud(acc){
+const SESSION_TOKEN='s_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8);
+let SESSION_KICKED=false,SESSION_WATCH_UNSUB=null,SESSION_WATCH_KEY='';
+function stopSessionWatch(){
+  if(SESSION_WATCH_UNSUB){try{SESSION_WATCH_UNSUB()}catch(e){}SESSION_WATCH_UNSUB=null}
+  SESSION_WATCH_KEY='';
+}
+function handleSessionKicked(){
+  if(SESSION_KICKED)return;
+  SESSION_KICKED=true;
+  botGen++;thinkOn=false;
+  try{if(LOBBY_HB_TIMER){clearInterval(LOBBY_HB_TIMER);LOBBY_HB_TIMER=null}}catch(e){}
+  try{if(typeof clearOnlineDraft==='function')clearOnlineDraft()}catch(e){}
+  try{if(typeof stopBotSpectateHost==='function')stopBotSpectateHost()}catch(e){}
+  try{if(conn)conn.close()}catch(e){}
+  try{if(peer)peer.destroy()}catch(e){}
+  conn=null;peer=null;spectators=[];MODE='bot';
+  const menuEl=$('#menu');if(menuEl)menuEl.hidden=false;
+  setMusic('menu');
+  const key=USER_ACC&&USER_ACC.key;
+  box(`<div class="lobby-box">
+    <h3 style="margin-bottom:8px">${tr('Başka Cihazda Oturum Açıldı','Signed In on Another Device')}</h3>
+    <p style="color:var(--bone);font-size:16px;line-height:1.45">${tr('Bu hesap başka bir cihazda veya sekmede açıldığı için buradaki oturum kapatıldı.','This account was opened on another device or tab, so this session has been closed.')}</p>
+    <div class="row" style="margin-top:14px">
+      <button type="button" id="sk-takeover" class="btn">${tr('Bu Cihazda Devam Et','Continue on This Device')}</button>
+    </div>
+  </div>`,false);
+  const btn=$('#sk-takeover');
+  if(btn)btn.onclick=async()=>{
+    snd('click');
+    btn.disabled=true;
+    SESSION_KICKED=false;
+    if(key)await pullAccountFromCloud(key);
+    if(isRegisteredMember(USER_ACC))claimActiveSession(USER_ACC,true);
+    $('#m').hidden=true;lock=false;st('');
+    if(fbDb&&typeof startLobbyPresence==='function')startLobbyPresence();
+  };
+}
+function claimActiveSession(acc,force=false){
   if(!fbDb||!isRegisteredMember(acc)||!acc.key)return;
+  if(!force&&SESSION_WATCH_KEY===acc.key&&SESSION_WATCH_UNSUB&&!SESSION_KICKED)return;
+  stopSessionWatch();
+  SESSION_KICKED=false;
+  SESSION_WATCH_KEY=acc.key;
+  const ref=fbDb.collection('users').doc(acc.key);
+  ref.set({activeSessionId:SESSION_TOKEN,activeSessionAt:Date.now()},{merge:true}).catch(()=>{});
+  let seenOwn=false;
+  SESSION_WATCH_UNSUB=ref.onSnapshot(snap=>{
+    if(!snap.exists||!USER_ACC||USER_ACC.key!==acc.key)return;
+    const d=snap.data();
+    if(!d||!d.activeSessionId)return;
+    if(d.activeSessionId===SESSION_TOKEN){seenOwn=true;return;}
+    if(seenOwn||(d.activeSessionAt&&d.activeSessionAt>Date.now()-15000)){
+      handleSessionKicked();
+    }
+  },()=>{});
+}
+function syncAccountToCloud(acc){
+  if(SESSION_KICKED||!fbDb||!isRegisteredMember(acc)||!acc.key)return;
   const ref=fbDb.collection('users').doc(acc.key);
   const toPayload=a=>({
     key:a.key,
@@ -7456,7 +7515,7 @@ function openAuthModal(initialTab='login',isUpgrade=false){
       setTimeout(()=>showStreakToast(stVal,stVal>1),sp?2250:400);
     }
     if(!USER_ACC.isGuest&&USER_ACC.key&&fbDb){
-      pullAccountFromCloud(USER_ACC.key);
+      pullAccountFromCloud(USER_ACC.key).then(()=>{if(isRegisteredMember(USER_ACC))claimActiveSession(USER_ACC);});
     }
   }
   renderAuthBar();
