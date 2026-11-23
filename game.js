@@ -5999,21 +5999,33 @@ function mergeMatchHistory(h1,h2){
   }
   return out;
 }
+function reconcileStatsFromHistory(acc){
+  if(!acc)return acc;
+  const history=mergeMatchHistory(acc.history,[]);
+  let hRw=0,hRl=0,hUw=0,hUl=0;
+  history.forEach(h=>{if(!h)return;if(h.unranked){if(h.won)hUw++;else hUl++;}else{if(h.won)hRw++;else hRl++;}});
+  const wins=Math.max(acc.wins||0,hRw),losses=Math.max(acc.losses||0,hRl);
+  const uWins=Math.max(acc.unrankedWins||0,hUw),uLosses=Math.max(acc.unrankedLosses||0,hUl);
+  return {...acc,history,wins,losses,matches:Math.max(acc.matches||0,wins+losses),unrankedWins:uWins,unrankedLosses:uLosses,unrankedMatches:Math.max(acc.unrankedMatches||0,uWins+uLosses)};
+}
 function mergeAccountData(localAcc,cloudAcc){
   if(!localAcc&&!cloudAcc)return null;
-  if(!localAcc)return {...cloudAcc,history:mergeMatchHistory(cloudAcc.history,[])};
-  if(!cloudAcc)return {...localAcc,history:mergeMatchHistory(localAcc.history,[])};
+  if(!localAcc)return reconcileStatsFromHistory(cloudAcc);
+  if(!cloudAcc)return reconcileStatsFromHistory(localAcc);
   const lTot=(localAcc.matches||0)+(localAcc.unrankedMatches||0);
   const cTot=(cloudAcc.matches||0)+(cloudAcc.unrankedMatches||0);
   const lUp=localAcc.updatedAt||0,cUp=cloudAcc.updatedAt||0;
   const preferLocal=(lTot>cTot)||(lTot===cTot&&lUp>=cUp);
   const pri=preferLocal?localAcc:cloudAcc;
   const sec=preferLocal?cloudAcc:localAcc;
-  const wins=Math.max(localAcc.wins||0,cloudAcc.wins||0);
-  const losses=Math.max(localAcc.losses||0,cloudAcc.losses||0);
+  const history=mergeMatchHistory(localAcc.history,cloudAcc.history);
+  let hRw=0,hRl=0,hUw=0,hUl=0;
+  history.forEach(h=>{if(!h)return;if(h.unranked){if(h.won)hUw++;else hUl++;}else{if(h.won)hRw++;else hRl++;}});
+  const wins=Math.max(localAcc.wins||0,cloudAcc.wins||0,hRw);
+  const losses=Math.max(localAcc.losses||0,cloudAcc.losses||0,hRl);
   const matches=Math.max(localAcc.matches||0,cloudAcc.matches||0,wins+losses);
-  const uWins=Math.max(localAcc.unrankedWins||0,cloudAcc.unrankedWins||0);
-  const uLosses=Math.max(localAcc.unrankedLosses||0,cloudAcc.unrankedLosses||0);
+  const uWins=Math.max(localAcc.unrankedWins||0,cloudAcc.unrankedWins||0,hUw);
+  const uLosses=Math.max(localAcc.unrankedLosses||0,cloudAcc.unrankedLosses||0,hUl);
   const uMatches=Math.max(localAcc.unrankedMatches||0,cloudAcc.unrankedMatches||0,uWins+uLosses);
   const elo=typeof pri.elo==='number'?Math.round(pri.elo):(typeof sec.elo==='number'?Math.round(sec.elo):1200);
   const peakElo=Math.max(localAcc.peakElo||localAcc.elo||1200,cloudAcc.peakElo||cloudAcc.elo||1200,elo);
@@ -6021,7 +6033,6 @@ function mergeAccountData(localAcc,cloudAcc){
   const lastStreakDay=lDay>=cDay?lDay:cDay;
   const streak=lDay>cDay?(localAcc.streak||1):(cDay>lDay?(cloudAcc.streak||1):Math.max(localAcc.streak||1,cloudAcc.streak||1));
   const bestStreak=Math.max(localAcc.bestStreak||0,cloudAcc.bestStreak||0,streak);
-  const history=mergeMatchHistory(localAcc.history,cloudAcc.history);
   const achSet=new Set([...(Array.isArray(localAcc.achievements)?localAcc.achievements:[]),...(Array.isArray(cloudAcc.achievements)?cloudAcc.achievements:[])]);
   const hStats={};
   const addHS=src=>{
