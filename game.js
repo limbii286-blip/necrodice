@@ -1085,6 +1085,13 @@ function decideHA(S,p,prm,done,budCap){ // zaman dilimli Monte-Carlo + Exact End
   if(S.pa&&S.pa[1-p]>0&&!low&&myT<=Tg&&total(S,1-p,false)>Tg)return done(null);
   let all=listC(S,p,prm).sort((x,y)=>y.v-x.v);
   if(low||myT>=Tg)all=all.filter(c=>!(c.a&&c.a.t=='d')); // hedefte/üstündeyken veya "En az kazanır" etkisinde kart çekmek yalnızca batırır
+  // Sıfır patlama riski varken (en büyük olası kartı çeksek bile hedefi aşmıyorsak) ve rakip açıktan patlamadıysa,
+  // 5/21 - 10/21 gibi çok düşük toplamla boş yere pas geçip rakibe bedava tur verme
+  const oppOpenNow=total(S,1-p,false),poolNow=unk(S,p),maxPool=poolNow.length?Math.max(...poolNow):11;
+  const maxGain=act(S,1)?maxPool*2:maxPool;
+  if(!low&&canDraw(S,p)&&poolNow.length&&oppOpenNow<=Tg&&myT+maxGain<=Tg&&all.some(c=>c.a&&c.a.t==='d')){
+    all=all.filter(c=>c.a!==null);
+  }
   const pass=all.find(c=>!c.a),draw=all.find(c=>c.a&&c.a.t=='d');
   const top=all.slice(0,prm.top||4);[pass,draw].forEach(c=>{if(c&&!top.includes(c))top.push(c)});
   const TACTICAL=new Set([12,16,23,24,25]);
