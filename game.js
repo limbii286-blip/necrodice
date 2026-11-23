@@ -2323,7 +2323,7 @@ function R(){
   const p0Char=NAMES[avKey(S,0)]||tr('Lanetli Tüccar','Cursed Merchant');
   const p1Char=NAMES[avKey(S,1)]||tr('Kara Şövalye','Dark Knight');
   const p0Name=p0Char;
-  const p1Name=isSpec?p1Char:((MODE=='guest'||MODE=='host')?`${p1Char} (${tr('Rakip','Opponent')})`:(MODE=='bot'||S.av?oppName():tr('Rakip','Opponent')));
+  const p1Name=(isSpec||MODE=='guest'||MODE=='host')?p1Char:(MODE=='bot'||S.av?oppName():tr('Rakip','Opponent'));
   const oppTimeOut=!!(S.timeOut&&S.timeOut[1]),meTimeOut=!!(S.timeOut&&S.timeOut[0]);
   const defClock=initClockSec();
   const c0=Math.ceil(S.clocks?S.clocks[0]:defClock),c1=Math.ceil(S.clocks?S.clocks[1]:defClock);
