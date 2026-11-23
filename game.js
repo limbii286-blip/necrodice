@@ -6164,36 +6164,79 @@ function updateDailyStreak(acc,silent=false){
 }
 function syncAccountToCloud(acc){
   if(!fbDb||!isRegisteredMember(acc)||!acc.key)return;
+  const ref=fbDb.collection('users').doc(acc.key);
+  const toPayload=a=>({
+    key:a.key,
+    username:a.username,
+    passHash:a.passHash||'',
+    elo:Math.round(a.elo||1200),
+    peakElo:Math.round(a.peakElo||a.elo||1200),
+    wins:a.wins||0,
+    losses:a.losses||0,
+    matches:a.matches||0,
+    unrankedWins:a.unrankedWins||0,
+    unrankedLosses:a.unrankedLosses||0,
+    unrankedMatches:a.unrankedMatches||0,
+    streak:a.streak||1,
+    bestStreak:a.bestStreak||a.streak||1,
+    lastStreakDay:a.lastStreakDay||dayKey(0),
+    winStreak:a.winStreak||0,
+    achievements:Array.isArray(a.achievements)?a.achievements:[],
+    title:a.title||'',
+    cardBack:a.cardBack||'classic',
+    frame:a.frame||'classic',
+    heroStats:a.heroStats||{},
+    quests:a.quests||null,
+    _sig:a._sig||computeAccountSig(a),
+    history:(a.history||[]).slice(0,AUTH_HIST_MAX),
+    createdAt:a.createdAt||Date.now(),
+    updatedAt:Date.now()
+  });
   try{
-    fbDb.collection('users').doc(acc.key).set({
-      key:acc.key,
-      username:acc.username,
-      passHash:acc.passHash||'',
-      elo:Math.round(acc.elo||1200),
-      peakElo:Math.round(acc.peakElo||acc.elo||1200),
-      wins:acc.wins||0,
-      losses:acc.losses||0,
-      matches:acc.matches||0,
-      unrankedWins:acc.unrankedWins||0,
-      unrankedLosses:acc.unrankedLosses||0,
-      unrankedMatches:acc.unrankedMatches||0,
-      streak:acc.streak||1,
-      bestStreak:acc.bestStreak||acc.streak||1,
-      lastStreakDay:acc.lastStreakDay||dayKey(0),
-      winStreak:acc.winStreak||0,
-      achievements:Array.isArray(acc.achievements)?acc.achievements:[],
-      title:acc.title||'',
-      cardBack:acc.cardBack||'classic',
-      frame:acc.frame||'classic',
-      heroStats:acc.heroStats||{},
-      quests:acc.quests||null,
-      _sig:acc._sig||computeAccountSig(acc),
-      history:(acc.history||[]).slice(0,AUTH_HIST_MAX),
-      createdAt:acc.createdAt||Date.now(),
-      updatedAt:acc.updatedAt||Date.now()
-    },{merge:true}).catch(e=>console.warn('Account cloud sync error:',e));
+    fbDb.runTransaction(async tx=>{
+      const snap=await tx.get(ref);
+      let finalAcc=acc;
+      if(snap.exists){
+        const cloud=snap.data();
+        if(cloud&&cloud.key===acc.key){
+          finalAcc=mergeAccountData(acc,cloud);
+          // Eğer iki cihazda farklı yeni dereceli maçlar oynandıysa ELO'yu tüm birleşik geçmişten tutarlı hesapla
+          const rkHist=(finalAcc.history||[]).filter(h=>h&&!h.unranked);
+          if(rkHist.length>0&&rkHist.length===finalAcc.matches){
+            const calcElo=Math.max(400,Math.min(3000,1200+rkHist.reduce((s,h)=>s+(+h.delta||0),0)));
+            finalAcc.elo=calcElo;
+            finalAcc.peakElo=Math.max(finalAcc.peakElo||1200,calcElo);
+          }
+          finalAcc._sig=computeAccountSig(finalAcc);
+        }
+      }
+      const payload=toPayload(finalAcc);
+      tx.set(ref,payload,{merge:true});
+      return finalAcc;
+    }).then(merged=>{
+      if(merged&&USER_ACC&&USER_ACC.key===merged.key){
+        USER_ACC=merged;
+        try{
+          localStorage.setItem(AUTH_SESS_KEY,JSON.stringify(merged));
+          const map=loadLocalUsers();map[merged.key]={...(map[merged.key]||{}),...merged};saveLocalUsers(map);
+        }catch(e){}
+        renderAuthBar();
+      }
+    }).catch(e=>console.warn('Account cloud sync error:',e));
   }catch(e){console.warn('Account cloud sync error:',e)}
 }
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden&&isRegisteredMember(USER_ACC)&&USER_ACC.key&&fbDb){
+    pullAccountFromCloud(USER_ACC.key).then(cloud=>{
+      if(cloud&&USER_ACC&&USER_ACC.key===cloud.key){
+        const merged=mergeAccountData(USER_ACC,cloud);
+        if(merged&&(merged.matches!==USER_ACC.matches||merged.elo!==USER_ACC.elo)){
+          saveSession(merged,false);
+        }
+      }
+    }).catch(()=>{});
+  }
+});
 async function pullAccountFromCloud(key){
   if(!fbDb||!key)return null;
   try{
