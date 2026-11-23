@@ -6343,6 +6343,7 @@ function recordMatchElo(S,won){
 let LOBBY_ONLINE_LIST=[];
 let LOBBY_PRESENCE_UNSUB=null,LOBBY_INVITE_UNSUB=null,LOBBY_HB_TIMER=null,LOBBY_LISTEN_PID='';
 const LOBBY_FALLBACK_PID='g_'+Math.random().toString(36).slice(2,10);
+const LOBBY_JOINED_AT=Date.now();
 const LOBBY_TTL_MS=45000;
 
 function getMyPresenceId(){
@@ -6378,6 +6379,7 @@ function updateLobbyPresence(forceOffline=false){
     title,
     roomCode,
     status:inGame?'ingame':'menu',
+    joinedAt:LOBBY_JOINED_AT,
     lastSeen:Date.now()
   },{merge:true}).catch(()=>{});
 }
@@ -6580,11 +6582,24 @@ function renderLobbyModalBody(){
   const myPid=getMyPresenceId();
   const now=Date.now();
   const list=LOBBY_ONLINE_LIST.filter(u=>u&&u.lastSeen&&(now-u.lastSeen)<=LOBBY_TTL_MS);
+  // Misafirleri giriş sırasına göre numaralandır: Misafir, Misafir 2, Misafir 3...
+  const guestOrder=list
+    .filter(u=>u.isGuest||!u.name||u.name==='Misafir'||u.name==='Guest')
+    .slice()
+    .sort((a,b)=>((a.joinedAt||a.lastSeen||0)-(b.joinedAt||b.lastSeen||0))||String(a.pid||'').localeCompare(String(b.pid||'')));
+  const guestLabelMap=new Map();
+  guestOrder.forEach((u,idx)=>{
+    guestLabelMap.set(u.pid,idx===0?tr('Misafir','Guest'):`${tr('Misafir','Guest')} ${idx+1}`);
+  });
+  const displayNameOf=u=>{
+    if(guestLabelMap.has(u.pid))return guestLabelMap.get(u.pid);
+    return u.name||tr('Oyuncu','Player');
+  };
   const rowsHtml=list.length?list.map(u=>{
     const isMe=u.pid===myPid;
     const rk=eloRank(u.elo);
     const inGame=u.status==='ingame';
-    const tag=u.isGuest?` <em>(${tr('Misafir','Guest')})</em>`:'';
+    const dispName=displayNameOf(u);
     const tLbl=(u.title&&typeof getTitleLabel==='function')?` · ${escHtml(getTitleLabel(u.title))}`:'';
     const actHtml=isMe
       ?`<span class="lob-me-tag">${tr('Sen','You')}</span>`
@@ -6597,7 +6612,7 @@ function renderLobbyModalBody(){
       <span class="lob-dot ${inGame?'busy':'free'}" title="${inGame?tr('Maçta','In Match'):tr('Müsait','Available')}"></span>
       <span class="lb-rk" title="${rk.name}">${rk.ic}</span>
       <div class="lb-u">
-        <b>${escHtml(u.name||tr('Oyuncu','Player'))}${tag}</b>
+        <b>${escHtml(dispName)}</b>
         <small>${rk.name} · ${Math.round(u.elo||1200)} ELO${tLbl} · ${inGame?tr('Maçta','In Match'):tr('Müsait','Available')}</small>
       </div>
       ${actHtml}
@@ -6617,7 +6632,7 @@ function renderLobbyModalBody(){
         mb.classList.remove('auth-mode','lob-mode');
         $('#m').hidden=true;lock=false;
         if(noNet())return;
-        hostRoom(target);
+        hostRoom({...target,name:displayNameOf(target)});
       };
     });
     listEl.querySelectorAll('.lob-spec-btn').forEach(btn=>{
