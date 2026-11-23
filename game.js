@@ -6600,7 +6600,7 @@ function renderLobbyModalBody(){
     const rk=eloRank(u.elo);
     const inGame=u.status==='ingame';
     const dispName=displayNameOf(u);
-    const tLbl=(u.title&&typeof getTitleLabel==='function')?` · ${escHtml(getTitleLabel(u.title))}`:'';
+    const tLbl=(u.title&&typeof getTitleLabel==='function')?`${escHtml(getTitleLabel(u.title))} · `:'';
     const actHtml=isMe
       ?`<span class="lob-me-tag">${tr('Sen','You')}</span>`
       :(inGame
@@ -6614,7 +6614,7 @@ function renderLobbyModalBody(){
       <span class="lb-rk" title="${rk.name}">${rk.ic}</span>
       <div class="lb-u">
         <b>${escHtml(dispName)}</b>
-        <small>${rk.name}${tLbl} · ${inGame?tr('Maçta','In Match'):tr('Müsait','Available')}</small>
+        <small>${tLbl}${inGame?tr('Maçta','In Match'):tr('Müsait','Available')}</small>
       </div>
       <span class="lob-elo">${eloVal} <i>ELO</i></span>
       ${actHtml}
@@ -6921,13 +6921,13 @@ async function openLeaderboardModal(activeTab='rank'){
         const rk=eloRank(u.elo);
         const isMe=!!(myKey&&u.key===myKey);
         const med=`#${pos}`;
-        const tTag=u.title?` · <span class="lb-title-tag">${escHtml(getTitleLabel(u.title))}</span>`:'';
+        const tTag=u.title?`<span class="lb-title-tag">${escHtml(getTitleLabel(u.title))}</span> · `:'';
         return `<div class="lb-row${pos<=3?' top'+pos:''}${isMe?' me':''}">
           <span class="lb-pos">${med}</span>
           <span class="lb-rk" title="${rk.name}">${rk.ic}</span>
           <div class="lb-u">
             <b>${escHtml(u.username)}${isMe?` <em>(${tr('Sen','You')})</em>`:''}</b>
-            <small>${rk.name}${tTag} · ${u.wins}${tr('G','W')} / ${u.losses}${tr('M','L')} · ${Math.max(1,u.streak||1)}${tr('g seri','d streak')}</small>
+            <small>${tTag}${u.wins}${tr('G','W')} / ${u.losses}${tr('M','L')} · ${Math.max(1,u.streak||1)}${tr('g seri','d streak')}</small>
           </div>
           <span class="lb-elo">${u.elo} <i>ELO</i></span>
         </div>`;
