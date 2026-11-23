@@ -4943,13 +4943,15 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  animation: endCardIn 0.44s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+  will-change: transform, opacity;
+  contain: layout style;
+  animation: endCardIn 0.34s cubic-bezier(0.22, 1, 0.36, 1) both !important;
 }
 #mb.end-mode::before {
   display: none !important;
 }
 @keyframes endCardIn {
-  from { opacity: 0; transform: translate3d(0, 18px, 0) scale(0.84); }
+  from { opacity: 0; transform: translate3d(0, 12px, 0) scale(0.92); }
   to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
 .hs-crest-stage {
@@ -4960,6 +4962,7 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   display: flex;
   align-items: center;
   justify-content: center;
+  transform: translateZ(0);
 }
 .hs-crest-img {
   position: absolute;
@@ -4967,7 +4970,8 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.92));
+  filter: none;
+  transform: translateZ(0);
   z-index: 2;
   pointer-events: none;
 }
@@ -5048,7 +5052,6 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   box-shadow:
     0 10px 24px rgba(0, 0, 0, 0.94),
     inset 0 1px 0 rgba(255, 240, 185, 0.35);
-  animation: hsPlaquePop 0.55s 0.14s cubic-bezier(0.2, 1.25, 0.3, 1) both;
 }
 .end-screen.lose .hs-wood-plaque {
   border-top-color: #9ca3af;
@@ -5078,6 +5081,7 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   background: rgba(14, 10, 12, 0.9);
   border-color: rgba(212, 168, 85, 0.48);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.85);
+  animation: none !important;
 }
 @media (max-width: 760px) {
   .hs-crest-stage {

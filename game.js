@@ -221,9 +221,12 @@ let hiPre=false;
 function hiPreload(){
   if(hiPre)return;
   hiPre=true;
+  ['end_win_crest.png?v=20261123_wide2','end_lose_crest.png?v=20261123_wide2'].forEach(u=>{
+    const im=new Image();im.decoding='async';im.onload=()=>{try{im.decode&&im.decode().catch(()=>{})}catch(e){}};im.src=u;
+  });
   const baseDelay=entering?1700:350;
   range(24).forEach((id,n)=>setTimeout(()=>hiLoad(id),baseDelay+n*90));
-} // tüm HD jokerler geçiş sonrasında arka planda yumuşakça yüklenir
+} // tüm HD jokerler ve oyun sonu armaları geçiş sonrasında arka planda yumuşakça yüklenir
 function hi(el,id){if(!el)return;if(id===25){if(IMG.j&&IMG.j[25])el.src=IMG.j[25];return}const fb=IMG.j[id];el.onerror=()=>{el.onerror=null;if(fb)el.src=fb}; // HD açılmazsa gömülü görsele dön
   hiLoad(id,u=>{if(el.isConnected)el.src=u})}
 function tone(f,d,ty='sine',v=.12,w=0,sl=0){const a=ac(),t=a.currentTime+w,o=a.createOscillator(),g=a.createGain();o.type=ty;o.frequency.setValueAtTime(f,t);if(sl)o.frequency.linearRampToValueAtTime(Math.max(30,f+sl),t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(SG);o.start(t);o.stop(t+d)}
@@ -487,7 +490,7 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
               setTimeout(()=>{
                 const mb=document.querySelector('#mb');
                 const tpl=mb&&mb.querySelector('template.end-tpl');
-                if(!mb||!tpl||!d.isConnected)return;
+                if(!mb||!tpl||!d.isConnected){flushUnlockToasts();return;}
                 const mo=mb.querySelector('#mo'),mx=mb.querySelector('#mx');
                 mb.classList.add('end-mode');
                 mb.innerHTML=tpl.innerHTML;
@@ -504,7 +507,10 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
                   if(mx){mx.style.visibility='';row.appendChild(mx)}
                 }
                 snd(res==='win'?'win':'lose');
+                flushUnlockToasts();
               },1450);
+            }else{
+              setTimeout(()=>flushUnlockToasts(),450);
             }
           }
         };
@@ -1796,6 +1802,7 @@ function endRound(){
       </div>
     </div><div class="after"><div class="after-roll"><b>${tr('Zar Sonucu','Roll Result')}: ${roll}${(hpB||execPen)&&rawOv==null?` (${rr}${hpB?`+${hpB} ${blessingName}`:''}${execPen?`−2 ${decreeName}`:''})`:''}</b></div><div class="after-msg">`+(surv?(L==v?`${tr('Kurtuldun!','You survived!')}<span class="after-sub">${tr('Hayatta kaldın.','You live to fight on.')}</span>`:tr('Rakip hayatta kaldı.','Opponent survived.')):(`<b>${L==v?`${tr('Öldün.','You died.')}<span class="after-sub">${tr('Oyunu rakip kazandı.','Opponent won the game.')}</span>`:`${tr('Rakip öldü.','Opponent died.')}<span class="after-sub">${tr('Oyunu sen kazandın!','You won the game!')}</span>`}</b>`))+'</div></div>'};
     const openDeathModal=()=>{
+      HOLD_UNLOCK_TOASTS=true;
       const full=v=>mk(v,roll,surv)+(!surv&&!rig&&!uRev?`<template class="end-tpl">${buildEndScreenHtml(S,v,L,roll,th)}</template>`:''),rig=MODE=='bot'&&avKey(S,1)==='u'&&L==1&&!surv&&!S.rigDone; // Bilinmeyen (İmkansız bot): oyun başına bir kez ölümden döner
       const uRev=(MODE==='host'?(L===0||L===1):L===0)&&avKey(S,L)==='u'&&!surv&&!(S.uRevived&&S.uRevived[L]);
       if(surv||rig||uRev){const n=S.bo+2;
@@ -3679,6 +3686,7 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
   else if(m.k=='m'){
     waitM=true;
     if(m.end&&MODE==='guest'){
+      HOLD_UNLOCK_TOASTS=true;
       let endHtml=m.html;
       if(G&&typeof recordMatchElo==='function'){
         const guestWon=/data-res="win"|hs-victory\s+win/.test(endHtml);
@@ -6708,7 +6716,18 @@ function applyCosmetics(acc){
     document.body.dataset.frame=fr;
   }catch(e){}
 }
-function showUnlockToast(ic,title,sub){
+let HOLD_UNLOCK_TOASTS=false,QUEUED_UNLOCK_TOASTS=[];
+function flushUnlockToasts(){
+  HOLD_UNLOCK_TOASTS=false;
+  if(!QUEUED_UNLOCK_TOASTS.length)return;
+  const q=QUEUED_UNLOCK_TOASTS.splice(0);
+  q.forEach((t,i)=>setTimeout(()=>showUnlockToast(t.ic,t.title,t.sub,true),i*420));
+}
+function showUnlockToast(ic,title,sub,forceNow=false){
+  if(HOLD_UNLOCK_TOASTS&&!forceNow){
+    QUEUED_UNLOCK_TOASTS.push({ic,title,sub});
+    return;
+  }
   const old=document.getElementById('streak-toast');
   if(old)old.remove();
   const el=document.createElement('div');
