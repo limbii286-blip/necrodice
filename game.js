@@ -6663,20 +6663,23 @@ function openLobbyModal(){
 function renderAuthBar(){
   const bar=$('#auth-bar');
   if(!bar)return;
+  const lobCnt=Array.isArray(LOBBY_ONLINE_LIST)?LOBBY_ONLINE_LIST.length:0;
+  const lobBtnHtml=`<button type="button" class="auth-lb-btn auth-lob-btn" id="ab-lob" title="${tr('Çevrim İçi Lobi','Online Lobby')}"><i class="lob-live-dot"></i><span>${tr('Lobi','Lobby')}</span><b id="ab-lob-cnt">${lobCnt}</b></button>`;
   const lbBtnHtml=`<button type="button" class="auth-lb-btn" id="ab-lb" title="${tr('Üye ELO Sıralaması','Member ELO Leaderboard')}"><span>${tr('Sıralama','Ranks')}</span></button>`;
   if(!USER_ACC){
     bar.hidden=false;
-    bar.innerHTML=`${lbBtnHtml}<button type="button" class="auth-pill auth-pill-empty" id="ab-login"><span>${tr('Giriş Yap / Kayıt Ol','Sign In / Register')}</span></button>`;
-    const btn=$('#ab-login'),lb=$('#ab-lb');
+    bar.innerHTML=`${lobBtnHtml}${lbBtnHtml}<button type="button" class="auth-pill auth-pill-empty" id="ab-login"><span>${tr('Giriş Yap / Kayıt Ol','Sign In / Register')}</span></button>`;
+    const btn=$('#ab-login'),lb=$('#ab-lb'),lob=$('#ab-lob');
     if(btn)btn.onclick=()=>{snd('click');openAuthModal('login',false)};
     if(lb)lb.onclick=()=>{snd('click');openLeaderboardModal()};
+    if(lob)lob.onclick=()=>{snd('click');openLobbyModal()};
     return;
   }
   const rk=eloRank(USER_ACC.elo);
   const nm=USER_ACC.isGuest?tr('Misafir','Guest'):escHtml(USER_ACC.username);
   const stDays=Math.max(1,USER_ACC.streak||1);
   bar.hidden=false;
-  bar.innerHTML=`${lbBtnHtml}<button type="button" class="auth-pill ${rk.cls}" id="ab-prof" title="${tr('Profil, ELO & Günlük Seri','Profile, ELO & Daily Streak')}">
+  bar.innerHTML=`${lobBtnHtml}${lbBtnHtml}<button type="button" class="auth-pill ${rk.cls}" id="ab-prof" title="${tr('Profil, ELO & Günlük Seri','Profile, ELO & Daily Streak')}">
     <span class="ap-ic">${rk.ic}</span>
     <span class="ap-info">
       <b>${nm}</b>
@@ -6685,9 +6688,10 @@ function renderAuthBar(){
     <span class="ap-streak" title="${tr(`${stDays} Günlük Seri`,`${stDays}-Day Streak`)}">${stDays}${tr('g','d')}</span>
     <span class="ap-elo">${Math.round(USER_ACC.elo||1200)} <i>ELO</i></span>
   </button>`;
-  const pb=$('#ab-prof'),lb=$('#ab-lb');
+  const pb=$('#ab-prof'),lb=$('#ab-lb'),lob=$('#ab-lob');
   if(pb)pb.onclick=()=>{snd('click');openProfileModal()};
   if(lb)lb.onclick=()=>{snd('click');openLeaderboardModal()};
+  if(lob)lob.onclick=()=>{snd('click');openLobbyModal()};
 }
 /* ---------- BAŞARIMLAR, UNVANLAR, GÜNLÜK GÖREVLER, KOZMETİKLER & SEZONLAR ---------- */
 const ACHIEVEMENTS=[
