@@ -1,4 +1,4 @@
-const C='nd-v261-no-rakip-tag';
+const C='nd-v262-reconn-clock-pause';
 self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(['./','index.html','style.css','retro.css','game.js','images.js','manifest.json']).catch(()=>{})));self.skipWaiting()});
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!=C).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{

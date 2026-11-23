@@ -2330,8 +2330,8 @@ function R(){
   const sc0=$('#sc-0'),sc1=$('#sc-1'),scSec0=$('#sc-sec-0'),scSec1=$('#sc-sec-1');
   if(scSec0)scSec0.textContent=(meTimeOut||c0<=0)?'✕':String(c0);
   if(scSec1)scSec1.textContent=(oppTimeOut||c1<=0)?'✕':String(c1);
-  if(sc0){sc0.classList.toggle('ticking',S.turn==0&&!S.wait&&!(S.graceLeft>0)&&!meTimeOut);sc0.classList.toggle('low',c0<=10&&c0>0);sc0.classList.toggle('out',meTimeOut||c0<=0);sc0.classList.toggle('turn-on',S.turn==0&&!S.wait&&!S.over);sc0.classList.toggle('turn-off',S.turn!=0&&!S.wait&&!S.over)}
-  if(sc1){sc1.classList.toggle('ticking',S.turn==1&&!S.wait&&!(S.graceLeft>0)&&!oppTimeOut);sc1.classList.toggle('low',c1<=10&&c1>0);sc1.classList.toggle('out',oppTimeOut||c1<=0);sc1.classList.toggle('turn-on',S.turn==1&&!S.wait&&!S.over);sc1.classList.toggle('turn-off',S.turn!=1&&!S.wait&&!S.over)}
+  if(sc0){sc0.classList.toggle('ticking',S.turn==0&&!S.wait&&!(S.graceLeft>0)&&!S.reconnPause&&!meTimeOut);sc0.classList.toggle('low',c0<=10&&c0>0);sc0.classList.toggle('out',meTimeOut||c0<=0);sc0.classList.toggle('turn-on',S.turn==0&&!S.wait&&!S.over);sc0.classList.toggle('turn-off',S.turn!=0&&!S.wait&&!S.over)}
+  if(sc1){sc1.classList.toggle('ticking',S.turn==1&&!S.wait&&!(S.graceLeft>0)&&!S.reconnPause&&!oppTimeOut);sc1.classList.toggle('low',c1<=10&&c1>0);sc1.classList.toggle('out',oppTimeOut||c1<=0);sc1.classList.toggle('turn-on',S.turn==1&&!S.wait&&!S.over);sc1.classList.toggle('turn-off',S.turn!=1&&!S.wait&&!S.over)}
   const oppHandHtml=`<div class="opp-jhand" title="${tr(`Rakibin elindeki kapalı jokerler (${S.hand[1].length})`,`Opponent's hidden jokers (${S.hand[1].length})`)}">${S.hand[1].map((_,i)=>`<img class="oj" style="--r:${((i-(S.hand[1].length-1)/2)*4.5).toFixed(1)}deg" src="${IMG.bj}" alt="">`).join('')}</div>`;
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'')+(S.winSide!=null?(S.winSide>0?' round-lose':S.winSide===0?' round-tie':''):'');
   const myHId=avKey(S,0),oppHId=avKey(S,1);
@@ -3260,7 +3260,7 @@ function view(S){ // rakibe gidecek, gizli bilgisi temizlenmiş ve aynalanmış 
   const f=a=>[a[1],a[0]],pk1=S.oppPeek1||[];
   const hu0=S.hpUsed?!!S.hpUsed[0]:false,hu1=S.hpUsed?!!S.hpUsed[1]:false;
   const visHu0=(avKey(S,0)==='w'||avKey(S,0)==='a')?false:hu0;
-  return {av:f(S.av),hero:S.hero?f(S.hero):f(S.av),hpUsed:[hu1,visHu0],hpMod:S.hpMod?f(S.hpMod):[0,0],plagueMod:S.plagueMod?f(S.plagueMod):[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?f(S.uRevived):[false,false],vampUsed:S.vampUsed?f(S.vampUsed):[false,false],cWins:S.cWins?f(S.cWins):[0,0],vampBurn:S.vampBurn?{vamp:1-S.vampBurn.vamp,victim:1-S.vampBurn.victim,idx:S.vampBurn.idx,jid:S.vampBurn.jid}:null,oppPeek:pk1,mast:f(S.mast),turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:1-S.turn,clocks:S.clocks?f(S.clocks):[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?f(S.timeOut):[false,false],hadTimeout:!!S.hadTimeout,pts:f(S.pts),rev:S.rev,winSide:S.winSide==null?null:-S.winSide,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),jTurn:S.jTurn?f(S.jTurn):[0,0],noJ:f(S.noJ),
+  return {av:f(S.av),hero:S.hero?f(S.hero):f(S.av),hpUsed:[hu1,visHu0],hpMod:S.hpMod?f(S.hpMod):[0,0],plagueMod:S.plagueMod?f(S.plagueMod):[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?f(S.uRevived):[false,false],vampUsed:S.vampUsed?f(S.vampUsed):[false,false],cWins:S.cWins?f(S.cWins):[0,0],vampBurn:S.vampBurn?{vamp:1-S.vampBurn.vamp,victim:1-S.vampBurn.victim,idx:S.vampBurn.idx,jid:S.vampBurn.jid}:null,oppPeek:pk1,mast:f(S.mast),turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,reconnPause:!!S.reconnPause,turn:1-S.turn,clocks:S.clocks?f(S.clocks):[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?f(S.timeOut):[false,false],hadTimeout:!!S.hadTimeout,pts:f(S.pts),rev:S.rev,winSide:S.winSide==null?null:-S.winSide,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),jTurn:S.jTurn?f(S.jTurn):[0,0],noJ:f(S.noJ),
     hand:[S.hand[1],S.hand[0].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
     pl:[S.pl[1],{open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:(S.rev||pk1.includes(c.id))?c.n:0,o:c.o,hpImmune:!!c.hpImmune}))}],
     eff:S.eff.map(e=>({...e,o:1-e.o})),pj:(S.pj||[]).map(e=>({...e,o:1-e.o})),log:S.log.filter(l=>!(l.p===0&&/Kuzgunun Kehaneti|Yitik Yazgı/.test(l.t||''))).slice(-30).map(l=>({...l,p:l.p<0?-1:1-l.p}))};
@@ -3275,7 +3275,7 @@ function specView(S){ // izleyicilere gidecek durum: izlenen oyuncunun (0) göz�
   const oppElo=Math.round((OPP_PROFILE&&typeof OPP_PROFILE.elo==='number')?OPP_PROFILE.elo:1200);
   const oppSub=MODE==='bot'?`${botNm} · ${botElo}`:`${oppNm} · ${oppElo} ELO`;
   return {
-    av:[S.av[0],S.av[1]],hero:S.hero?[...S.hero]:[S.av[0],S.av[1]],hpUsed:S.hpUsed?[...S.hpUsed]:[false,false],hpMod:S.hpMod?[...S.hpMod]:[0,0],plagueMod:S.plagueMod?[...S.plagueMod]:[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?[...S.uRevived]:[false,false],vampUsed:S.vampUsed?[...S.vampUsed]:[false,false],cWins:S.cWins?[...S.cWins]:[0,0],vampBurn:S.vampBurn?{...S.vampBurn}:null,oppPeek:[...pk0],mast:[S.mast[0],S.mast[1]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,turn:S.turn,clocks:S.clocks?[...S.clocks]:[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?[...S.timeOut]:[false,false],hadTimeout:!!S.hadTimeout,pts:S.pts,rev:S.rev,winSide:S.winSide,res:S.res,jUsed:S.jUsed,jTurn:S.jTurn?[...S.jTurn]:[0,0],noJ:S.noJ,
+    av:[S.av[0],S.av[1]],hero:S.hero?[...S.hero]:[S.av[0],S.av[1]],hpUsed:S.hpUsed?[...S.hpUsed]:[false,false],hpMod:S.hpMod?[...S.hpMod]:[0,0],plagueMod:S.plagueMod?[...S.plagueMod]:[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?[...S.uRevived]:[false,false],vampUsed:S.vampUsed?[...S.vampUsed]:[false,false],cWins:S.cWins?[...S.cWins]:[0,0],vampBurn:S.vampBurn?{...S.vampBurn}:null,oppPeek:[...pk0],mast:[S.mast[0],S.mast[1]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,reconnPause:!!S.reconnPause,turn:S.turn,clocks:S.clocks?[...S.clocks]:[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?[...S.timeOut]:[false,false],hadTimeout:!!S.hadTimeout,pts:S.pts,rev:S.rev,winSide:S.winSide,res:S.res,jUsed:S.jUsed,jTurn:S.jTurn?[...S.jTurn]:[0,0],noJ:S.noJ,
     hand:[S.hand[0].slice(),S.hand[1].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
     pl:[
       {open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:c.n,o:c.o,hpImmune:!!c.hpImmune}))},
@@ -3758,6 +3758,8 @@ let RECONN_TIMER=null,RECONN_IV=null,RECONN_LEFT=0;
 function clearReconnectGrace(){
   if(RECONN_TIMER){clearInterval(RECONN_TIMER);RECONN_TIMER=null}
   if(RECONN_IV){clearInterval(RECONN_IV);RECONN_IV=null}
+  RECONN_LEFT=0;
+  if(G&&G.reconnPause){G.reconnPause=false;if(MODE==='host')R();}
   const b=document.getElementById('reconn-bar');if(b)b.remove();
 }
 const ACTIVE_MATCH_KEY='nd_active_match_v1';
@@ -3886,6 +3888,7 @@ function startReconnectGrace(isHost,fallbackMsg){
   }
   clearReconnectGrace();
   RECONN_LEFT=30;
+  if(G){G.reconnPause=true;if(isHost)R();}
   const showBar=()=>{
     let b=document.getElementById('reconn-bar');
     if(!b){
@@ -5043,7 +5046,8 @@ function createSmoothDragLoop(onFrame){
     const menu=$('#menu');
     const modalEl=$('#m'),mbEl=$('#mb');
     const isMenuModal=!!(modalEl&&!modalEl.hidden&&mbEl&&!mbEl.querySelector('.d20-box,.tie-box,.scry-row,#hp-p2,.hero-grid'));
-    const active=!!(G && MODE!=='tutorial' && !G.over && !G.wait && (!lock || (MODE!=='bot' && isMenuModal)) && (!menu || menu.hidden));
+    const isReconnPaused=!!(RECONN_TIMER||RECONN_LEFT>0||(G&&G.reconnPause));
+    const active=!!(G && MODE!=='tutorial' && !G.over && !G.wait && !isReconnPaused && (!lock || (MODE!=='bot' && isMenuModal)) && (!menu || menu.hidden));
     if(!active){
       if(sc0){sc0.classList.remove('ticking','low');sc0.classList.toggle('turn-on',!!(G&&G.turn===0));sc0.classList.toggle('turn-off',!!(G&&G.turn!==0))}
       if(sc1){sc1.classList.remove('ticking','low');sc1.classList.toggle('turn-on',!!(G&&G.turn===1));sc1.classList.toggle('turn-off',!!(G&&G.turn!==1))}
