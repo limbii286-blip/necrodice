@@ -6661,10 +6661,9 @@ function openLobbyModal(){
       <h3>${tr('Çevrim İçi Lobi','Online Lobby')}</h3>
       <p class="lb-sub">${tr('Çevrim içi oyuncular yükleniyor…','Loading online players…')}</p>
     </div>
-    <button type="button" id="lob-qm" class="btn alt lob-qm-btn">${tr('Hızlı Dereceli Rakip Bul','Quick Ranked Match')}</button>
     <div class="lb-list lob-list"></div>
     <div class="row lb-acts">
-      <button type="button" id="lob-ref" class="btn alt sm">↻ ${tr('Yenile','Refresh')}</button>
+      <button type="button" id="lob-ref" class="btn alt sm">${tr('Yenile','Refresh')}</button>
       <button type="button" id="lob-close" class="btn sm">${tr('Kapat','Close')}</button>
     </div>
   </div>`;
@@ -6672,7 +6671,6 @@ function openLobbyModal(){
   const close=()=>{mb.classList.remove('auth-mode','lob-mode');$('#m').hidden=true;lock=false};
   if($('#lob-close'))$('#lob-close').onclick=()=>{snd('click');close()};
   if($('#lob-ref'))$('#lob-ref').onclick=()=>{snd('click');updateLobbyPresence(false);renderLobbyModalBody()};
-  if($('#lob-qm'))$('#lob-qm').onclick=()=>{snd('click');mb.classList.remove('auth-mode','lob-mode');$('#m').hidden=true;lock=false;startQuickMatch()};
   renderLobbyModalBody();
 }
 function renderAuthBar(){
