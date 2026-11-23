@@ -682,7 +682,7 @@ function deal(S){
   S.deck=shuf(range(11).map(n=>({id:++S.u,n})));
   S.pl=[0,1].map(()=>({open:[S.deck.pop()],closed:[S.deck.pop()]}));
   S.eff=[];S.pj=[];S.jUsed=[0,0];S.jTurn=[0,0];S.noJ=[false,false];S.acted=false;S.turns=0;
-  S.hpMod=[0,0];S.plagueMod=[0,0];S.hpTgMod=0;S.oppPeek=[];S.oppPeek1=[];S.botPeekVal=null;S.botScry=null;S.vampBurn=null;
+  S.hpMod=[0,0];S.plagueMod=[0,0];S.hpTgMod=0;S.oppPeek=[];S.oppPeek1=[];S.botPeekVal=null;S.botScry=null;S.vampBurn=null;S.thiefSteal=null;
   S.turn=S.pl[0].open[0].n<S.pl[1].open[0].n?0:1;
   S.wait=false;S.rev=false;S.winSide=null;S.timeOut=[false,false];S.hadTimeout=false;S.dead=[];S.pa=[0,0];S.st={pb:0,ob:0,px:0};
   const cs=initClockSec();
@@ -733,6 +733,7 @@ function play(S,p,id,pk){
       const stolen=S.pj.splice(pjIdx,1)[0];
       S.eff=(S.eff||[]).filter(e=>e.uid!=pk[0]);
       S.hand[p].push(stolen.id);
+      S.thiefSteal={thief:p,uid:pk[0],jid:stolen.id,seq:(S.thiefSteal?S.thiefSteal.seq:0)+1};
     }
     return;
   }
@@ -1923,11 +1924,76 @@ const HP_IC={
   v:hpImg('v'),
   u:hpImg('u')
 };
-function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}glogOpen=false;glogLastSig='';LAST_MATCH_HIST=[];rematchReady=[false,false];rematchHeroes=[null,null];deathContReady=[false,false];deathContGo=null;const botPool=HEROES.filter(h=>!h.bossOnly||DIFF==='imp').map(h=>h.id),oppH=MODE=='bot'?botPool[Math.floor(Math.random()*botPool.length)]:(OPP_HERO||'n');G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],vampUsed:[false,false],cWins:[0,0],vampBurn:null,mast:[0,0]};prevAv[0]=prevAv[1]=undefined;prevHpAnim=[false,false];newBO3(G);deal(G);if(MODE==='bot'&&typeof startBotSpectateHost==='function')startBotSpectateHost();if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();runAfterDeal(G)}
+function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}glogOpen=false;glogLastSig='';LAST_MATCH_HIST=[];rematchReady=[false,false];rematchHeroes=[null,null];deathContReady=[false,false];deathContGo=null;const botPool=HEROES.filter(h=>!h.bossOnly||DIFF==='imp').map(h=>h.id),oppH=MODE=='bot'?botPool[Math.floor(Math.random()*botPool.length)]:(OPP_HERO||'n');G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],vampUsed:[false,false],cWins:[0,0],vampBurn:null,mast:[0,0]};prevAv[0]=prevAv[1]=undefined;prevHpAnim=[false,false];lastThiefSeq=0;newBO3(G);deal(G);if(MODE==='bot'&&typeof startBotSpectateHost==='function')startBotSpectateHost();if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();runAfterDeal(G)}
 
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
-let prevT=false,lastLk='',flipId=null,lastTot=[0,0],lastBust=false,prevSeal='',sayT='',prevHpAnim=[false,false];
+let prevT=false,lastLk='',flipId=null,lastTot=[0,0],lastBust=false,prevSeal='',sayT='',prevHpAnim=[false,false],lastThiefSeq=0;
+function playThiefStealAnim(ev){
+  if(!ev||RM||!ev.jid)return;
+  const from=ev.fromRect||{left:innerWidth/2-28,top:innerHeight/2-40,width:56,height:80};
+  const fx=from.left+from.width/2,fy=from.top+from.height/2;
+  let targetEl=null;
+  if(ev.thief===0){
+    const cards=[...document.querySelectorAll('#hand .j[data-j]')];
+    targetEl=cards[cards.length-1]||document.querySelector('#hand');
+  }else{
+    const oj=[...document.querySelectorAll('#opp .opp-jhand .oj')];
+    targetEl=oj[oj.length-1]||document.querySelector('#opp .opp-jhand')||document.querySelector('#opp .who .av');
+  }
+  const tr=targetEl&&targetEl.getBoundingClientRect?targetEl.getBoundingClientRect():{left:innerWidth/2-40,top:ev.thief===0?innerHeight-110:70,width:80,height:120};
+  const tx=tr.left+tr.width/2,ty=tr.top+tr.height/2;
+  if(targetEl&&targetEl.classList&&targetEl.classList.contains('j')){
+    targetEl.style.opacity='0';
+  }
+  const puff=document.createElement('div');
+  puff.className='thief-puff';
+  puff.style.left=fx+'px';
+  puff.style.top=fy+'px';
+  document.body.appendChild(puff);
+  setTimeout(()=>{if(puff.isConnected)puff.remove()},560);
+
+  const card=document.createElement('img');
+  card.className='thief-fly-card';
+  card.src=IMG.j[ev.jid]||'';
+  card.alt='';
+  const cw=Math.max(76,Math.min(118,tr.width||92));
+  const ch=Math.round(cw*1.5);
+  card.style.width=cw+'px';
+  card.style.height=ch+'px';
+  card.style.left=(fx-cw/2)+'px';
+  card.style.top=(fy-ch/2)+'px';
+  document.body.appendChild(card);
+  hi(card,ev.jid);
+  snd('flip');
+
+  const dx=tx-fx,dy=ty-fy;
+  const midX=dx*0.42,midY=dy*0.35+(ev.thief===0?-48:48);
+  const startSc=Math.max(0.45,Math.min(0.75,(from.width||52)/cw));
+  const endSc=ev.thief===0?1:0.42;
+  let cleaned=false;
+  const done=()=>{
+    if(cleaned)return;
+    cleaned=true;
+    if(card.isConnected)card.remove();
+    if(targetEl&&targetEl.classList&&targetEl.classList.contains('j')){
+      targetEl.style.opacity='';
+      targetEl.classList.add('thief-landed');
+      setTimeout(()=>targetEl.classList.remove('thief-landed'),480);
+    }
+    snd('draw');
+  };
+  if(card.animate){
+    const anim=card.animate([
+      {transform:`translate3d(0,0,0) scale(${startSc.toFixed(3)}) rotate(-10deg)`,opacity:0.92},
+      {transform:`translate3d(${midX.toFixed(1)}px,${midY.toFixed(1)}px,0) scale(1.18) rotate(${ev.thief===0?'5deg':'-5deg'})`,opacity:1,offset:0.45},
+      {transform:`translate3d(${dx.toFixed(1)}px,${dy.toFixed(1)}px,0) scale(${endSc.toFixed(3)}) rotate(0deg)`,opacity:ev.thief===0?1:0.2}
+    ],{duration:660,easing:'cubic-bezier(0.22,1,0.36,1)',fill:'forwards'});
+    anim.onfinish=done;
+    anim.oncancel=done;
+  }
+  setTimeout(done,740);
+}
 const NAMES_TR={c:'Lanetli Tüccar',p:'Veba Doktoru',n:'Kara Şövalye',a:'Solmuş Kraliçe',s:'Büyücü',e:'Buz Devi',m:'Ölümün Efendisi',w:'Cadı',l:'Kurt Adam',v:'Vampir',u:'BİLİNMEYEN'};
 const NAMES_EN={c:'Cursed Merchant',p:'Plague Doctor',n:'Dark Knight',a:'Withered Queen',s:'Sorcerer',e:'Frost Giant',m:'Lord of Death',w:'Witch',l:'Werewolf',v:'Vampire',u:'THE UNKNOWN'};
 let NAMES={...NAMES_TR};
@@ -2365,6 +2431,14 @@ function R(){
   const drawLocked=S.eff.some(e=>e.id==23&&!e.neg&&e.o!=0);
   $('#deck').classList.toggle('can-draw',!isSpec&&my&&!P&&canDraw(S,0));
   $('#deck').classList.toggle('draw-locked',drawLocked);
+  let pendingThief=null;
+  if(S.thiefSteal&&S.thiefSteal.seq&&S.thiefSteal.seq!==lastThiefSeq){
+    lastThiefSeq=S.thiefSteal.seq;
+    const chipEl=document.querySelector(`[data-e="${S.thiefSteal.uid}"]`);
+    const fbEl=document.querySelector('#jm')||document.querySelector('#jo')||document.querySelector('#seal');
+    const r=(chipEl||fbEl)&&((chipEl||fbEl).getBoundingClientRect());
+    pendingThief={...S.thiefSteal,fromRect:r?{left:r.left,top:r.top,width:r.width,height:r.height}:null};
+  }
   setH('#jo',(S.pj||[]).filter(x=>x.o==1).map(chip).join(''));
   setH('#jm',(S.pj||[]).filter(x=>x.o==0).map(chip).join(''));
   const sl=$('#seal'),sc=(T!=21||low?' alt':'')+(low?' low':'')+(S.turn==0?' turn-me':' turn-op');
@@ -2409,6 +2483,7 @@ function R(){
     setH('#hand',S.hand[0].map((id,i)=>`<span class="jslot"><img class="j${k==='hand_j'?' hl':(my&&!P&&playable(S,0,id)?'':' dim')}" draggable="false" style="--r:${((i-(n-1)/2)*5).toFixed(1)}deg" data-j="${id}" data-jidx="${i}" src="${IMG.j[id]}" alt=""></span>`).join(''));
     document.querySelectorAll('#hand .j[data-j]').forEach(im=>hi(im,+im.dataset.j));
   }
+  if(pendingThief)playThiefStealAnim(pendingThief);
   count(document.querySelector('#me .tot b'),lastTot[0],mt);count(document.querySelector('#opp .tot b'),lastTot[1],ot);lastTot=[mt,ot];
   (S.pj||[]).forEach(e=>seenE.add(e.uid));S.hand[0].forEach(id=>hiLoad(id));
   if(prevSeal&&prevSeal!=seal)snd('stamp');prevSeal=seal;
@@ -3260,7 +3335,7 @@ function view(S){ // rakibe gidecek, gizli bilgisi temizlenmiş ve aynalanmış 
   const f=a=>[a[1],a[0]],pk1=S.oppPeek1||[];
   const hu0=S.hpUsed?!!S.hpUsed[0]:false,hu1=S.hpUsed?!!S.hpUsed[1]:false;
   const visHu0=(avKey(S,0)==='w'||avKey(S,0)==='a')?false:hu0;
-  return {av:f(S.av),hero:S.hero?f(S.hero):f(S.av),hpUsed:[hu1,visHu0],hpMod:S.hpMod?f(S.hpMod):[0,0],plagueMod:S.plagueMod?f(S.plagueMod):[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?f(S.uRevived):[false,false],vampUsed:S.vampUsed?f(S.vampUsed):[false,false],cWins:S.cWins?f(S.cWins):[0,0],vampBurn:S.vampBurn?{vamp:1-S.vampBurn.vamp,victim:1-S.vampBurn.victim,idx:S.vampBurn.idx,jid:S.vampBurn.jid}:null,oppPeek:pk1,mast:f(S.mast),turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,reconnPause:!!S.reconnPause,turn:1-S.turn,clocks:S.clocks?f(S.clocks):[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?f(S.timeOut):[false,false],hadTimeout:!!S.hadTimeout,pts:f(S.pts),rev:S.rev,winSide:S.winSide==null?null:-S.winSide,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),jTurn:S.jTurn?f(S.jTurn):[0,0],noJ:f(S.noJ),
+  return {av:f(S.av),hero:S.hero?f(S.hero):f(S.av),hpUsed:[hu1,visHu0],hpMod:S.hpMod?f(S.hpMod):[0,0],plagueMod:S.plagueMod?f(S.plagueMod):[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?f(S.uRevived):[false,false],vampUsed:S.vampUsed?f(S.vampUsed):[false,false],cWins:S.cWins?f(S.cWins):[0,0],vampBurn:S.vampBurn?{vamp:1-S.vampBurn.vamp,victim:1-S.vampBurn.victim,idx:S.vampBurn.idx,jid:S.vampBurn.jid}:null,thiefSteal:S.thiefSteal?{...S.thiefSteal,thief:1-S.thiefSteal.thief}:null,oppPeek:pk1,mast:f(S.mast),turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,reconnPause:!!S.reconnPause,turn:1-S.turn,clocks:S.clocks?f(S.clocks):[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?f(S.timeOut):[false,false],hadTimeout:!!S.hadTimeout,pts:f(S.pts),rev:S.rev,winSide:S.winSide==null?null:-S.winSide,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),jTurn:S.jTurn?f(S.jTurn):[0,0],noJ:f(S.noJ),
     hand:[S.hand[1],S.hand[0].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
     pl:[S.pl[1],{open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:(S.rev||pk1.includes(c.id))?c.n:0,o:c.o,hpImmune:!!c.hpImmune}))}],
     eff:S.eff.map(e=>({...e,o:1-e.o})),pj:(S.pj||[]).map(e=>({...e,o:1-e.o})),log:S.log.filter(l=>!(l.p===0&&/Kuzgunun Kehaneti|Yitik Yazgı/.test(l.t||''))).slice(-30).map(l=>({...l,p:l.p<0?-1:1-l.p}))};
@@ -3275,7 +3350,7 @@ function specView(S){ // izleyicilere gidecek durum: izlenen oyuncunun (0) göz�
   const oppElo=Math.round((OPP_PROFILE&&typeof OPP_PROFILE.elo==='number')?OPP_PROFILE.elo:1200);
   const oppSub=MODE==='bot'?`${botNm} · ${botElo}`:`${oppNm} · ${oppElo} ELO`;
   return {
-    av:[S.av[0],S.av[1]],hero:S.hero?[...S.hero]:[S.av[0],S.av[1]],hpUsed:S.hpUsed?[...S.hpUsed]:[false,false],hpMod:S.hpMod?[...S.hpMod]:[0,0],plagueMod:S.plagueMod?[...S.plagueMod]:[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?[...S.uRevived]:[false,false],vampUsed:S.vampUsed?[...S.vampUsed]:[false,false],cWins:S.cWins?[...S.cWins]:[0,0],vampBurn:S.vampBurn?{...S.vampBurn}:null,oppPeek:[...pk0],mast:[S.mast[0],S.mast[1]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,reconnPause:!!S.reconnPause,turn:S.turn,clocks:S.clocks?[...S.clocks]:[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?[...S.timeOut]:[false,false],hadTimeout:!!S.hadTimeout,pts:S.pts,rev:S.rev,winSide:S.winSide,res:S.res,jUsed:S.jUsed,jTurn:S.jTurn?[...S.jTurn]:[0,0],noJ:S.noJ,
+    av:[S.av[0],S.av[1]],hero:S.hero?[...S.hero]:[S.av[0],S.av[1]],hpUsed:S.hpUsed?[...S.hpUsed]:[false,false],hpMod:S.hpMod?[...S.hpMod]:[0,0],plagueMod:S.plagueMod?[...S.plagueMod]:[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?[...S.uRevived]:[false,false],vampUsed:S.vampUsed?[...S.vampUsed]:[false,false],cWins:S.cWins?[...S.cWins]:[0,0],vampBurn:S.vampBurn?{...S.vampBurn}:null,thiefSteal:S.thiefSteal?{...S.thiefSteal}:null,oppPeek:[...pk0],mast:[S.mast[0],S.mast[1]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,reconnPause:!!S.reconnPause,turn:S.turn,clocks:S.clocks?[...S.clocks]:[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?[...S.timeOut]:[false,false],hadTimeout:!!S.hadTimeout,pts:S.pts,rev:S.rev,winSide:S.winSide,res:S.res,jUsed:S.jUsed,jTurn:S.jTurn?[...S.jTurn]:[0,0],noJ:S.noJ,
     hand:[S.hand[0].slice(),S.hand[1].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
     pl:[
       {open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:c.n,o:c.o,hpImmune:!!c.hpImmune}))},

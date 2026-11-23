@@ -2692,6 +2692,39 @@ body.dragging-joker #fx::after {
 }
 
 /* Rakip Joker Oynadığında Ortada Beliren Kart */
+.thief-fly-card {
+  position: fixed;
+  z-index: 62;
+  pointer-events: none;
+  border-radius: 9px;
+  border: 2px solid #e8c36a;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.92), 0 0 28px rgba(170, 92, 235, 0.65), 0 0 16px rgba(232, 195, 106, 0.55);
+  will-change: transform, opacity;
+  object-fit: cover;
+}
+.thief-puff {
+  position: fixed;
+  z-index: 61;
+  width: 66px;
+  height: 66px;
+  margin-left: -33px;
+  margin-top: -33px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(232, 195, 106, 0.55) 0%, rgba(128, 62, 196, 0.45) 45%, rgba(16, 10, 24, 0) 75%);
+  animation: thiefPuff 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes thiefPuff {
+  0%   { transform: scale(0.4); opacity: 0.95; }
+  100% { transform: scale(2.15); opacity: 0; }
+}
+#hand .j.thief-landed {
+  animation: thiefLand 0.46s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes thiefLand {
+  0%   { box-shadow: 0 0 34px rgba(232, 195, 106, 0.95), 0 0 20px rgba(168, 92, 235, 0.8); filter: brightness(1.22); }
+  100% { box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9); filter: none; }
+}
 #cast {
   pointer-events: auto;
   background: radial-gradient(circle at 50% 50%, rgba(36, 14, 18, 0.76), rgba(6, 4, 6, 0.86)) !important;
