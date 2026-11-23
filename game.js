@@ -6374,12 +6374,14 @@ function getOppElo(){
   }
   return (OPP_PROFILE&&typeof OPP_PROFILE.elo==='number'&&OPP_PROFILE.elo>=400)?Math.round(OPP_PROFILE.elo):1200;
 }
-function getOppLabel(){
+function getOppLabel(S){
   if(MODE==='bot'){
-    if(DIFF==='easy')return tr('Bot (Kolay)','Bot (Easy)');
-    if(DIFF==='med')return tr('Bot (Orta)','Bot (Medium)');
-    if(DIFF==='hard')return tr('Bot (Zor)','Bot (Hard)');
-    if(DIFF==='imp')return tr('Bilinmeyen (İmkansız)','Unknown (Impossible)');
+    const oppH=(S&&S.hero&&S.hero[1])||(G&&G.hero&&G.hero[1])||'';
+    const hName=(oppH&&NAMES[oppH])?NAMES[oppH]:tr('Bot','Bot');
+    if(DIFF==='easy')return `${hName} (${tr('Kolay','Easy')})`;
+    if(DIFF==='med')return `${hName} (${tr('Orta','Medium')})`;
+    if(DIFF==='hard')return `${hName} (${tr('Zor','Hard')})`;
+    if(DIFF==='imp')return `${hName} (${tr('İmkansız','Impossible')})`;
   }
   if(OPP_PROFILE&&OPP_PROFILE.name)return `${OPP_PROFILE.name} (${Math.round(OPP_PROFILE.elo||1200)})`;
   return tr('Çevrim İçi Rakip','Online Opponent');
@@ -7181,12 +7183,16 @@ function openProfileModal(initialTab='overview'){
         ?hist.map(h=>{
             const tm=fmtMatchTime(h.ts);
             const sc=h.score?` · ${escHtml(h.score)}`:'';
+            let oppDisp=h.opp||'';
+            if(h.mode==='bot'&&h.diff==='imp'&&h.oppHero&&NAMES[h.oppHero]&&h.oppHero!=='u'&&/^(Bilinmeyen|Unknown)\s*\(/i.test(oppDisp)){
+              oppDisp=`${NAMES[h.oppHero]} (${tr('İmkansız','Impossible')})`;
+            }
             const rightHtml=h.unranked
               ?`<b class="pr-hunr">${tr('Antrenman','Unranked')} <i>(0 ELO)</i></b>`
               :`<b>${h.delta>=0?'+':''}${h.delta} ELO <i>(${h.elo})</i></b>`;
             return `<div class="pr-hrow ${h.won?'w':'l'}${h.unranked?' unr':''}">
               <div class="pr-hl">
-                <span>${h.won?tr('Zafer','Win'):tr('Mağlubiyet','Loss')} · ${escHtml(h.opp)}${sc}</span>
+                <span>${h.won?tr('Zafer','Win'):tr('Mağlubiyet','Loss')} · ${escHtml(oppDisp)}${sc}</span>
                 ${tm?`<small class="pr-htm">${tm}</small>`:''}
               </div>
               ${rightHtml}
