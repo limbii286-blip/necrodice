@@ -1,4 +1,4 @@
-const C='nd-v267-big4-modes-cosmetics';
+const C='nd-v268-social-viral-hooks';
 self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(['./','index.html','style.css','retro.css','game.js','images.js','manifest.json']).catch(()=>{})));self.skipWaiting()});
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!=C).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{

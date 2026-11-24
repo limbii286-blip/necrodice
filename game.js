@@ -498,6 +498,13 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
                 mb.innerHTML=tpl.innerHTML;
                 const row=mb.querySelector('.end-acts');
                 if(row){
+                  if(LAST_DEATH_CARD&&!LAST_DEATH_CARD.isSpec){
+                    const sb=document.createElement('button');
+                    sb.id='btn-share-card';sb.className='btn alt';
+                    sb.textContent=tr('Ölüm Kartını Paylaş','Share Death Card');
+                    sb.onclick=()=>{snd('click');shareDeathCard(LAST_DEATH_CARD,sb)};
+                    row.appendChild(sb);
+                  }
                   if(LAST_MATCH_HIST&&LAST_MATCH_HIST.length){
                     const ab=document.createElement('button');
                     ab.id='btn-analyze';ab.className='btn alt';
@@ -508,6 +515,8 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
                   if(mo){mo.style.visibility='';row.appendChild(mo)}
                   if(mx){mx.style.visibility='';row.appendChild(mx)}
                 }
+                const gSave=mb.querySelector('#end-save-guest');
+                if(gSave){gSave.onclick=()=>{snd('click');mb.classList.remove('end-mode');openAuthModal('register',true)}}
                 snd(res==='win'?'win':'lose');
                 flushUnlockToasts();
               },1450);
@@ -667,7 +676,9 @@ const DUEL_CLOCK_INIT=33; // Her sırası gelen oyuncunun 33 saniyesi vardır
 const ONLINE_CLOCK_INIT=33;
 const initClockSec=()=>((MODE==='host'||MODE==='guest'||MODE==='spectator')?ONLINE_CLOCK_INIT:DUEL_CLOCK_INIT);
 const GRACE_INIT=5;       // İlk düello ve geçişlerde jokerlere bakmak için 5 saniye hazırlık süresi
-let CURSED_RULE=null,VAULT_RUN=null,PUZZLE_ACTIVE=null;
+let CURSED_RULE=null,VAULT_RUN=null,PUZZLE_ACTIVE=null,LAST_DEATH_CARD=null;
+let KING_TABLE=false,KING_QUEUE=[],KING_STREAK=0;
+let SPEC_VOTES=[0,0],MY_SPEC_VOTE=-1;
 function newBO3(S){
   const cs=initClockSec();
   if(!S.stats)S.stats={rounds:[0,0,0],draws:[0,0],jokers:[0,0],d20Surv:[0,0],startAt:Date.now()};
@@ -1864,6 +1875,9 @@ function endRound(){
           if(vWon&&USER_ACC){USER_ACC.vaultBest=Math.max(USER_ACC.vaultBest||0,VAULT_RUN.stage+1);if(VAULT_RUN.stage>=4)USER_ACC.vaultWins=(USER_ACC.vaultWins||0)+1;saveSession(USER_ACC);}
           const vLbl=vWon?(VAULT_RUN.stage>=4?tr('Mahzen Zaferi (5/5)','Vault Victory (5/5)'):tr(`Kalıntı Seç (${VAULT_RUN.stage+2}/5)`,`Pick Relic (${VAULT_RUN.stage+2}/5)`)):tr('Mahzene Yeniden Gir','Retry Death Vault');
           MM(full,vLbl,()=>{if(vWon){if(VAULT_RUN.stage>=4)openVaultVictoryModal();else openVaultRelicPick();}else{VAULT_RUN=null;openVaultModal();}},null,true);
+        }else if(MODE==='host'&&KING_TABLE&&KING_QUEUE.length>0){
+          if(L===1)KING_STREAK++;else KING_STREAK=0;
+          MM(full,tr(`Sıradaki Rakip (${KING_QUEUE.length} Sırada)`,`Next Challenger (${KING_QUEUE.length} Queued)`),()=>rotateKingTableNext(),null,true);
         }else{
           MM(full,tr('Yeniden Oyna','Play Again'),()=>chooseHero(hid=>{if(MODE==='host'){MY_HERO=hid;rematchReady[0]=true;rematchHeroes[0]=hid;checkStartOnlineRematch()}else{MY_HERO=hid;start()}},()=>{$('#menu').hidden=false;setMusic('menu')}),null,true);
         }
@@ -2546,6 +2560,7 @@ function R(){
   const mt0=S.turn==0&&!S.wait;if(mt0&&!prevT&&!dealMs&&!entering)snd('turn');prevT=mt0;
   const last=S.log[S.log.length-1],lk=S.log.length+JSON.stringify(last);if(lk!=lastLk){lastLk=lk;if(last&&last.t=='pas dedi')snd('pass')}
   renderGameLog(S);
+  if(typeof renderSpecSocialBar==='function')renderSpecSocialBar();
   if(MODE==='tutorial')tutApplyHighlights();
   if(MODE=='host'){
     if(conn&&conn.open)conn.send({k:'s',v:view(G)});
@@ -2860,6 +2875,8 @@ function buildEndScreenHtml(S,v,L,roll,th){
       <span class="end-elo-val">${eloRes.before} → <b>${eloRes.after}</b></span>
       <span class="end-elo-d">${eloRes.delta>=0?'+':''}${eloRes.delta} ELO</span>
     </div>`):'';
+  LAST_DEATH_CARD={won,isSpec,heroId:featH,heroName:featNm,oppLabel:typeof getOppLabel==='function'?getOppLabel(S):tr('Rakip','Opponent'),rw,rl,rt,roll,th,elo:eloRes?(eloRes.unranked?eloRes.before:eloRes.after):Math.round((USER_ACC&&USER_ACC.elo)||1200),delta:(eloRes&&!eloRes.unranked)?eloRes.delta:0,playerName:(USER_ACC&&!USER_ACC.isGuest&&USER_ACC.username)?USER_ACC.username:tr('Misafir','Guest'),durTxt};
+  const guestCta=(!isSpec&&USER_ACC&&USER_ACC.isGuest)?`<button type="button" class="end-save-cta" id="end-save-guest"><span>${tr("İsmini kaydet, ELO'nu ve başarımlarını koru","Save your name to keep your ELO & badges")}</span><b>${tr('Üye Ol','Sign Up')}</b></button>`:'';
   return `<div class="end-screen hs-victory ${isSpec?'spec':won?'win':'lose'}" data-res="${isSpec?'spec':won?'win':'lose'}">
     <div class="hs-crest-stage">
       <div class="hs-arch-frame">
@@ -2875,6 +2892,7 @@ function buildEndScreenHtml(S,v,L,roll,th){
       <div class="end-stat" style="--d:0.28s"><span>${tr('Son D20','Final D20')}</span><b>${roll} / ${th}</b></div>
       <div class="end-stat" style="--d:0.36s"><span>${tr('Süre','Time')}</span><b>${durTxt}</b></div>
     </div>
+    ${guestCta}
     <div class="end-acts row"></div>
   </div>`;
 }
@@ -3261,7 +3279,7 @@ function exitGame(){ // limbigames perdesi, sonra ilk ekrana dön
     if(typeof clearReconnectGrace==='function')clearReconnectGrace();
     if(typeof clearActiveMatchSnapshot==='function')clearActiveMatchSnapshot();
     if(typeof cancelQuickMatch==='function')cancelQuickMatch(true);
-    if(G)G.over=true;G=null;MODE='bot';CURSED_RULE=null;VAULT_RUN=null;PUZZLE_ACTIVE=null;sayT='';try{document.body.classList.remove('dead')}catch(e){}
+    if(G)G.over=true;G=null;MODE='bot';CURSED_RULE=null;VAULT_RUN=null;PUZZLE_ACTIVE=null;KING_TABLE=false;KING_QUEUE=[];KING_STREAK=0;SPEC_VOTES=[0,0];MY_SPEC_VOTE=-1;if(typeof renderSpecSocialBar==='function')renderSpecSocialBar();sayT='';try{document.body.classList.remove('dead')}catch(e){}
     st('');$('#menu').hidden=false;lock=false;setMusic('menu');
     if(typeof updateLobbyPresence==='function')updateLobbyPresence(false);
   },460);
@@ -3584,6 +3602,19 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
           fromConn.send({k:'start_draft'});
           startOnlineHeroDraft(true);
         }
+      }else if(KING_TABLE&&spectators.length<8){
+        fromConn._role='spectator';
+        fromConn._kingName=String(m.name||tr('Oyuncu','Player')).slice(0,20);
+        fromConn._kingElo=Math.max(400,Math.min(4000,Math.round(+m.elo||1200)));
+        spectators.push(fromConn);
+        KING_QUEUE.push(fromConn);
+        fromConn.send({k:'role',role:'spectator',kingQueuePos:KING_QUEUE.length});
+        if(G)fromConn.send({k:'s',v:specView(G),specCount:spectators.length});
+        fromConn.on('close',()=>{
+          spectators=spectators.filter(x=>x!==fromConn);
+          KING_QUEUE=KING_QUEUE.filter(x=>x!==fromConn);
+          if(G)R();
+        });
       }else{
         fromConn.send({k:'slot_full'});
       }
@@ -3598,9 +3629,26 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
       if(G) fromConn.send({k:'s', v:specView(G), specCount:spectators.length});
       fromConn.on('close',()=>{
         spectators=spectators.filter(x=>x!==fromConn);
+        KING_QUEUE=KING_QUEUE.filter(x=>x!==fromConn);
         if(G)R();
       });
     }
+    return;
+  }
+  if(m.k=='spec_react'){
+    const ic=String(m.ic||'✦').slice(0,4),lbl=String(m.label||'').slice(0,18);
+    if(typeof showSpecReactionToast==='function')showSpecReactionToast(ic,lbl);
+    if(conn&&conn.open)try{conn.send({k:'spec_react',ic,label:lbl})}catch(e){}
+    spectators.forEach(s=>{try{if(s.open)s.send({k:'spec_react',ic,label:lbl})}catch(e){}});
+    return;
+  }
+  if(m.k=='spec_vote'&&(m.side===0||m.side===1)){
+    if(fromConn._votedSide===0||fromConn._votedSide===1)SPEC_VOTES[fromConn._votedSide]=Math.max(0,SPEC_VOTES[fromConn._votedSide]-1);
+    fromConn._votedSide=m.side;
+    SPEC_VOTES[m.side]=(SPEC_VOTES[m.side]||0)+1;
+    const payload={k:'spec_votes',votes:[...SPEC_VOTES]};
+    if(conn&&conn.open)try{conn.send(payload)}catch(e){}
+    spectators.forEach(s=>{try{if(s.open)s.send(payload)}catch(e){}});
     return;
   }
   if(m.k=='draft_pick'){
@@ -3811,6 +3859,15 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
   if(m.k=='emote'&&EMOTE_SET.has(m.e)){
     const s=MODE==='spectator'?(m.side===1?1:0):1;
     showEmote(s,m.e);
+    return;
+  }
+  if(m.k=='spec_react'){
+    if(typeof showSpecReactionToast==='function')showSpecReactionToast(m.ic,m.label);
+    return;
+  }
+  if(m.k=='spec_votes'&&Array.isArray(m.votes)){
+    SPEC_VOTES=[m.votes[0]|0,m.votes[1]|0];
+    if(typeof renderSpecSocialBar==='function')renderSpecSocialBar();
     return;
   }
   if(m.k=='s'){
@@ -4112,6 +4169,13 @@ function hostRoom(inviteTarget,onCodeReady){
           <b class="lobby-code">${code}</b>
           <span class="lobby-copy-hint">${tr('kopyalamak için tıkla','click to copy')}</span>
         </div>
+        <div class="row" style="justify-content:center;gap:8px;margin-top:10px">
+          <button type="button" id="lobbyCopyLink" class="btn alt sm">${tr('Davet Linkini Kopyala','Copy Invite Link')}</button>
+        </div>
+        <label class="king-opt" style="display:inline-flex;align-items:center;gap:7px;margin-top:10px;font-size:13.5px;color:#d6c7ae;cursor:pointer">
+          <input type="checkbox" id="lobbyKingChk"${KING_TABLE?' checked':''}>
+          <span>${tr('Kral Masası (Kazanan Kalır · 4–8 Kişi)','King of the Table (Winner Stays · 4–8 Players)')}</span>
+        </label>
         <div class="lobby-spinner"><i></i><i></i><i></i></div>
         <p id="lobbyStatus" style="font-size:18px;color:#a0b8a4;margin-top:12px">${tr('Bağlantı açık · Rakip bekleniyor','Connection open · Waiting for opponent')}</p>
       </div>
@@ -4127,6 +4191,20 @@ function hostRoom(inviteTarget,onCodeReady){
         }catch(e){}
       };
     }
+    const cl=$('#lobbyCopyLink');
+    if(cl){
+      cl.onclick=()=>{
+        const url=`${location.origin}${location.pathname}?join=${encodeURIComponent(code)}`;
+        try{
+          navigator.clipboard.writeText(url);
+          snd('ok');
+          cl.textContent=tr('Link Kopyalandı! ✔','Link Copied! ✔');
+          setTimeout(()=>{if(cl.isConnected)cl.textContent=tr('Davet Linkini Kopyala','Copy Invite Link')},2200);
+        }catch(e){prompt(tr('Davet Linki:','Invite Link:'),url)}
+      };
+    }
+    const kc=$('#lobbyKingChk');
+    if(kc){kc.onchange=()=>{KING_TABLE=!!kc.checked;snd('click')}}
 
     const pc=$('#pc');
     if(pc){
@@ -6640,6 +6718,16 @@ function startBotSpectateHost(retry=0){
           c.send({k:'role',role:'spectator'});
           if(G)c.send({k:'s',v:specView(G),specCount:spectators.length});
           c.on('close',()=>{spectators=spectators.filter(x=>x!==c);if(G)R();});
+        }else if(m&&m.k==='spec_react'){
+          const ic=String(m.ic||'✦').slice(0,4),lbl=String(m.label||'').slice(0,18);
+          if(typeof showSpecReactionToast==='function')showSpecReactionToast(ic,lbl);
+          spectators.forEach(s=>{try{if(s.open)s.send({k:'spec_react',ic,label:lbl})}catch(e){}});
+        }else if(m&&m.k==='spec_vote'&&(m.side===0||m.side===1)){
+          if(c._votedSide===0||c._votedSide===1)SPEC_VOTES[c._votedSide]=Math.max(0,SPEC_VOTES[c._votedSide]-1);
+          c._votedSide=m.side;
+          SPEC_VOTES[m.side]=(SPEC_VOTES[m.side]||0)+1;
+          const payload={k:'spec_votes',votes:[...SPEC_VOTES]};
+          spectators.forEach(s=>{try{if(s.open)s.send(payload)}catch(e){}});
         }
       });
     });
@@ -7759,12 +7847,26 @@ function openAuthModal(initialTab='login',isUpgrade=false){
       });
     }catch(e){}
   },2400);
-  // Oyun ilk açıldığında oturum yoksa açılış perdesi biterken Üyelik / Misafir modalını aç
-  if(!USER_ACC){
+  // 1) ?join=XXXX tek tıkla davet linki ile gelindiyse doğrudan odaya bağlan
+  let inviteJoinCode='';
+  try{
+    const qp=new URLSearchParams(location.search);
+    const jc=(qp.get('join')||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4);
+    if(jc.length===4){
+      inviteJoinCode=jc;
+      history.replaceState(null,'',location.pathname);
+    }
+  }catch(e){}
+  if(inviteJoinCode){
+    if(!USER_ACC)createGuestAccount();
+    setTimeout(()=>{joinRoom(inviteJoinCode,true);},sp?1950:350);
+  }else if(!USER_ACC){
+    // 2) İlk 60 saniye kancası: kayıt engeline takılmadan misafir oluştur + Eğitim öncelikli hoş geldin ekranı aç
+    createGuestAccount();
     setTimeout(()=>{
       const menu=$('#menu');
-      if(!USER_ACC&&menu&&!menu.hidden&&!lock){
-        openAuthModal('login',false);
+      if(menu&&!menu.hidden&&!lock&&!localStorage.getItem('nd_onboarded_v1')){
+        if(typeof openFirstVisitWelcome==='function')openFirstVisitWelcome();
       }
     },sp?2150:220);
   }
@@ -8029,4 +8131,195 @@ function openVaultVictoryModal(){
   $('#m').hidden=false;
   $('#sp-vv-new').onclick=()=>{snd('click');VAULT_RUN=null;openVaultModal()};
   $('#sp-vv-home').onclick=()=>{snd('click');mb.classList.remove('auth-mode');home()};
+}
+
+
+/* ---------- PAYLAŞILABİLİR ÖLÜM KARTI (CANVAS PNG) ---------- */
+function shareDeathCard(card,btn){
+  if(!card)return;
+  const cv=document.createElement('canvas');
+  cv.width=1080;cv.height=600;
+  const ctx=cv.getContext('2d');
+  // Arka plan: koyu gotik parşömen/obsidyen degrade
+  const bg=ctx.createLinearGradient(0,0,1080,600);
+  bg.addColorStop(0,card.won?'#1d130b':'#1a0a0c');
+  bg.addColorStop(0.55,'#0e090a');
+  bg.addColorStop(1,card.won?'#26160a':'#24080c');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,1080,600);
+  // Altın/kızıl çerçeve
+  ctx.strokeStyle=card.won?'rgba(232,190,98,0.82)':'rgba(210,68,68,0.78)';
+  ctx.lineWidth=6;ctx.strokeRect(24,24,1032,552);
+  ctx.strokeStyle='rgba(255,255,255,0.12)';
+  ctx.lineWidth=1.5;ctx.strokeRect(36,36,1008,528);
+
+  const finishDraw=(img)=>{
+    // Sol dairede kahraman portresi
+    const cx=215,cy=300,rad=148;
+    ctx.save();
+    ctx.beginPath();ctx.arc(cx,cy,rad,0,Math.PI*2);ctx.closePath();ctx.clip();
+    if(img){
+      const s=Math.max((rad*2)/img.width,(rad*2)/img.height);
+      const dw=img.width*s,dh=img.height*s;
+      ctx.drawImage(img,cx-dw/2,cy-dh/2,dw,dh);
+    }else{
+      ctx.fillStyle='#241812';ctx.fillRect(cx-rad,cy-rad,rad*2,rad*2);
+    }
+    ctx.restore();
+    ctx.beginPath();ctx.arc(cx,cy,rad+3,0,Math.PI*2);
+    ctx.strokeStyle=card.won?'#f5c451':'#ef4444';ctx.lineWidth=6;ctx.stroke();
+
+    // Sağ taraf tipografi
+    ctx.textAlign='left';ctx.textBaseline='alphabetic';
+    ctx.fillStyle=card.won?'#fde68a':'#fca5a5';
+    ctx.font='700 24px Georgia, serif';
+    ctx.fillText('NECRODICE · '+(card.won?tr('ZAFER MÜHRÜ','VICTORY SEAL'):tr('ÖLÜM MÜHRÜ','DEATH SEAL')),410,126);
+
+    ctx.fillStyle='#fff6e0';
+    ctx.font='800 56px Georgia, serif';
+    ctx.fillText(card.won?tr('ZAFER!','VICTORY!'):tr('MAĞLUBİYET','DEFEAT'),410,198);
+
+    const headline=tr(
+      `${card.heroName} ile ${card.oppLabel} karşısında ${card.rw}-${card.rl}`,
+      `${card.heroName} vs ${card.oppLabel} · ${card.rw}-${card.rl}`
+    );
+    ctx.fillStyle='#e8dbc2';
+    ctx.font='600 28px Georgia, serif';
+    ctx.fillText(headline.slice(0,46),410,256);
+
+    const d20Line=tr(`Son Ölüm Zarı (D20): ${card.roll} / ${card.th}  ·  Süre: ${card.durTxt}`,`Final Death Dice (D20): ${card.roll} / ${card.th}  ·  Time: ${card.durTxt}`);
+    ctx.fillStyle='#cbb999';
+    ctx.font='600 24px Georgia, serif';
+    ctx.fillText(d20Line,410,312);
+
+    // Oyuncu + ELO bandı
+    ctx.fillStyle='rgba(245,196,81,0.12)';
+    ctx.fillRect(410,356,595,88);
+    ctx.strokeStyle='rgba(245,196,81,0.45)';ctx.lineWidth=2;ctx.strokeRect(410,356,595,88);
+    ctx.fillStyle='#f8e3ab';
+    ctx.font='700 30px Georgia, serif';
+    const dStr=card.delta?` (${card.delta>0?'+':''}${card.delta})`:'';
+    ctx.fillText(`${card.playerName}  ·  ${card.elo} ELO${dStr}`,434,412);
+
+    ctx.fillStyle='rgba(210,192,162,0.65)';
+    ctx.font='600 20px Georgia, serif';
+    ctx.fillText('limbii286-blip.github.io/necrodice',410,516);
+
+    const shareTxt=tr(
+      `${card.heroName} ile ${card.oppLabel} karşısında ${card.rw}-${card.rl} ${card.won?'kazandım':'oynadım'} · D20: ${card.roll}/${card.th} · ${card.elo} ELO`,
+      `${card.heroName} vs ${card.oppLabel} (${card.rw}-${card.rl}) · D20: ${card.roll}/${card.th} · ${card.elo} ELO`
+    );
+    cv.toBlob(async blob=>{
+      if(!blob)return;
+      try{
+        const file=new File([blob],'necrodice-olum-karti.png',{type:'image/png'});
+        if(navigator.canShare&&navigator.canShare({files:[file]})&&navigator.share){
+          await navigator.share({title:'Necrodice',text:shareTxt,files:[file]});
+          return;
+        }
+      }catch(e){}
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download='necrodice-olum-karti.png';
+      a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+      if(btn){const old=btn.textContent;btn.textContent=tr('Kart İndirildi ✔','Card Saved ✔');setTimeout(()=>{if(btn.isConnected)btn.textContent=old},2200);}
+    },'image/png');
+  };
+
+  const im=new Image();
+  im.crossOrigin='anonymous';
+  im.onload=()=>finishDraw(im);
+  im.onerror=()=>finishDraw(null);
+  im.src=avSrc(card.heroId);
+}
+
+/* ---------- İZLEYİCİ ETKİLEŞİMİ (SESSİZ TEPKİ + CANLI TAHMİN OYU) ---------- */
+function showSpecReactionToast(ic,label){
+  const el=document.createElement('div');
+  el.className='spec-float-react';
+  el.innerHTML=`<b>${escHtml(ic||'✦')}</b><span>${escHtml(label||'')}</span>`;
+  el.style.right=(14+Math.random()*38)+'px';
+  document.body.appendChild(el);
+  setTimeout(()=>{if(el.isConnected)el.remove()},1950);
+}
+function renderSpecSocialBar(){
+  let bar=document.getElementById('spec-social-bar');
+  const menu=$('#menu');
+  const active=(MODE==='spectator'&&G&&(!menu||menu.hidden));
+  if(!active){if(bar)bar.remove();return;}
+  if(!bar){
+    bar=document.createElement('div');
+    bar.id='spec-social-bar';
+    bar.className='spec-social-bar';
+    document.body.appendChild(bar);
+  }
+  const p0=(G.specMeta&&G.specMeta.p0Name)||tr('1. Oyuncu','P1');
+  const p1=(G.specMeta&&G.specMeta.p1Name)||tr('2. Oyuncu','P2');
+  const tot=(SPEC_VOTES[0]||0)+(SPEC_VOTES[1]||0);
+  const pct0=tot?Math.round(((SPEC_VOTES[0]||0)/tot)*100):50;
+  const pct1=tot?100-pct0:50;
+  bar.innerHTML=`
+    <div class="ssb-reacts">
+      <button type="button" class="ssb-btn" data-ric="✦" data-rlbl="${tr('Alkış','Applause')}" title="${tr('Alkış','Applause')}">✦ ${tr('Alkış','Clap')}</button>
+      <button type="button" class="ssb-btn" data-ric="†" data-rlbl="${tr('Gerilim','Tension')}" title="${tr('Gerilim','Tension')}">† ${tr('Gerilim','Tense')}</button>
+      <button type="button" class="ssb-btn" data-ric="★" data-rlbl="${tr('Efsane','Epic')}" title="${tr('Efsane','Epic')}">★ ${tr('Efsane','Epic')}</button>
+    </div>
+    <div class="ssb-poll">
+      <button type="button" class="ssb-vote${MY_SPEC_VOTE===0?' on':''}" data-v="0">${escHtml(p0.slice(0,10))} <b>%${pct0}</b></button>
+      <button type="button" class="ssb-vote${MY_SPEC_VOTE===1?' on':''}" data-v="1">${escHtml(p1.slice(0,10))} <b>%${pct1}</b></button>
+    </div>`;
+  bar.querySelectorAll('.ssb-btn').forEach(b=>b.onclick=()=>{
+    const ic=b.dataset.ric,lbl=b.dataset.rlbl;
+    showSpecReactionToast(ic,lbl);
+    if(conn&&conn.open)try{conn.send({k:'spec_react',ic,label:lbl})}catch(e){}
+  });
+  bar.querySelectorAll('.ssb-vote').forEach(b=>b.onclick=()=>{
+    const side=+b.dataset.v;
+    MY_SPEC_VOTE=side;
+    if(conn&&conn.open)try{conn.send({k:'spec_vote',side})}catch(e){}
+    renderSpecSocialBar();
+  });
+}
+
+/* ---------- KRAL MASASI (WINNER STAYS) ROTASYONU ---------- */
+function rotateKingTableNext(){
+  if(!KING_TABLE||!KING_QUEUE.length)return;
+  const oldGuest=conn;
+  const nextChallenger=KING_QUEUE.shift();
+  spectators=spectators.filter(x=>x!==nextChallenger);
+  if(oldGuest&&oldGuest.open){
+    oldGuest._role='spectator';
+    spectators.push(oldGuest);
+    KING_QUEUE.push(oldGuest);
+    try{oldGuest.send({k:'role',role:'spectator',kingQueuePos:KING_QUEUE.length})}catch(e){}
+  }
+  conn=nextChallenger;
+  conn._role='player';
+  OPP_PROFILE={name:nextChallenger._kingName||tr('Rakip','Opponent'),elo:nextChallenger._kingElo||1200,isGuest:false};
+  conn.on('close',()=>startReconnectGrace(true,tr('Rakip oyundan ayrıldı.','Opponent left the game.')));
+  try{conn.send({k:'role',role:'player'});conn.send({k:'start_draft'});}catch(e){}
+  startOnlineHeroDraft(true);
+}
+
+/* ---------- İLK 60 SANİYE KANCASI (EĞİTİM ÖNCELİKLİ HOŞ GELDİN) ---------- */
+function openFirstVisitWelcome(){
+  const mb=$('#mb');if(!mb)return;
+  lock=true;
+  mb.classList.remove('end-mode','an-mode','set-mode','lb-mode','lob-mode','pr-mode');
+  mb.classList.add('auth-mode');
+  mb.innerHTML=`<div class="sp-wrap">
+    <div class="sp-badge vault">${tr('Necrodice\'a Hoş Geldin','Welcome to Necrodice')}</div>
+    <h3 class="sp-title">${tr('Kaderin Kartlarda, Hayatın Zarda','Fate in Cards, Life on the Die')}</h3>
+    <p class="sp-desc">${tr('21\'e en yakın toplamı kur, Jokerlerle masayı tersine çevir ve düelloyu kaybedersen Ölüm Zarından sağ çıkmaya çalış. İlk kez oynuyorsan 60 saniyelik hızlı eğitimle hemen öğren!','Get closest to 21, bend the rules with Jokers, and survive the Death Dice if you lose. New here? Learn everything in 60 seconds with the interactive tutorial!')}</p>
+    <div class="row sp-acts">
+      <button type="button" id="fv-tut" class="btn alt">${tr('Hızlı Eğitimle Başla (60sn)','Start 60s Tutorial')}</button>
+      <button type="button" id="fv-play" class="btn sm">${tr('Zaten Biliyorum · Oyna','I Know How · Play')}</button>
+    </div>
+    <button type="button" id="fv-login" class="btn sm" style="margin-top:4px;opacity:0.8">${tr('Hesabım Var · Giriş Yap','Have an Account · Sign In')}</button>
+  </div>`;
+  $('#m').hidden=false;
+  const markDone=()=>{try{localStorage.setItem('nd_onboarded_v1','1')}catch(e){}};
+  $('#fv-tut').onclick=()=>{snd('ok');markDone();mb.classList.remove('auth-mode');$('#m').hidden=true;lock=false;MODE='tutorial';MY_HERO='p';OPP_HERO='n';enter(startTutorial);};
+  $('#fv-play').onclick=()=>{snd('click');markDone();mb.classList.remove('auth-mode');$('#m').hidden=true;lock=false;};
+  $('#fv-login').onclick=()=>{snd('click');markDone();mb.classList.remove('auth-mode');openAuthModal('login',false);};
 }
