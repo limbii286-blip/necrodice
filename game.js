@@ -684,6 +684,14 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
     }else if(window._pendingD20Roll&&(Date.now()-window._pendingD20Roll)<10000){
       window._pendingD20Roll=0;
       window._triggerD20Roll();
+    }else{
+      // Güvenlik ağı: rakibin zar sinyali ağda kaybolursa veya rakip ayrılırsa 7sn sonra zarı otomatik döndür (ekranda takılı kalmayı önler)
+      setTimeout(()=>{
+        if(d.isConnected&&!rolling&&!finished){
+          snd('heart');
+          runRoll();
+        }
+      },7000);
     }
   }
 }
@@ -3275,9 +3283,11 @@ function peerLeft(msg){ // rakip çıktı: ana menüye ASLA doğrudan atma, yaln
   }
   if(!G){st(msg);return}              // henüz oyun yok (lobi): sadece bilgi yaz
   const c=$('#cast');if(c)c.remove();P=null;
-  if(G.over){ // oyun zaten bitmişti: sonuç penceresi kalsın, not eklensin, yeniden oyna kalksın
+  if(G.over){ // oyun zaten bitmişti: sonuç penceresi kalsın, zar henüz dönmediyse hemen döndür
     const mb=$('#mb');
-    if(!$('#m').hidden&&mb){const o=$('#mo');if(o){const br=o.previousElementSibling;o.remove();if(br&&br.tagName=='BR')br.remove()}
+    if(!$('#m').hidden&&mb){
+      if(mb.querySelector('.d20-box:not(.finished)')&&window._triggerD20Roll)window._triggerD20Roll();
+      const o=$('#mo');if(o){const br=o.previousElementSibling;o.remove();if(br&&br.tagName=='BR')br.remove()}
       if(!mb.querySelector('.pl'))mb.insertAdjacentHTML('afterbegin',`<div class="pn pl">${msg}</div>`);
       if(!$('#mx')){mb.insertAdjacentHTML('beforeend',`<br><br><button id="mx" class="btn alt">${tr('Ana Menüye Dön','Return to Main Menu')}</button>`);$('#mx').onclick=exitGame}
       lock=true;return}
@@ -3903,7 +3913,8 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
       if(G.vampBurn){const vb=G.vampBurn;setTimeout(()=>{if(G&&G.winSide===winW)triggerVampBurnFx(vb);},2400);}
       setTimeout(()=>{if(G&&G.winSide===winW)dustTableCards();},3400);
     }
-    if(waitM){$('#m').hidden=true;lock=false;waitM=false}
+    const keepModalOpen=!!(G.over||document.querySelector('#mb .d20-box,#mb .end-screen,#mb .tie-box'));
+    if(waitM&&!keepModalOpen){$('#m').hidden=true;lock=false;waitM=false}
     if(MODE!='spectator'&&(G.turn!=0||G.wait))P=null;
     if(!$('#menu').hidden)setTimeout(()=>{$('#menu').hidden=true},1500);
     setMusic('game');R();
