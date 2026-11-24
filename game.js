@@ -295,7 +295,9 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
       }
       if(MODE==='spectator'){
         if(btn){btn.disabled=true;btn.classList.add('used')}
-        if(turnLbl)turnLbl.textContent=curSide===0?tr('1. Oyuncu D20 atıyor…','Player 1 is rolling D20…'):tr('2. Oyuncu D20 atıyor…','Player 2 is rolling D20…');
+        const sp0=(G&&G.specMeta&&G.specMeta.p0Name)||(G&&NAMES[avKey(G,0)])||tr('Oyuncu','Player');
+        const sp1=(G&&G.specMeta&&G.specMeta.p1Name)||(G&&NAMES[avKey(G,1)])||tr('Rakip','Opponent');
+        if(turnLbl)turnLbl.textContent=curSide===0?tr(`${sp0} D20 atıyor…`,`${sp0} is rolling D20…`):tr(`${sp1} D20 atıyor…`,`${sp1} is rolling D20…`);
       }else if(curSide===0){
         if(btn){btn.disabled=false;btn.classList.remove('used');btn.textContent=tr('D20 At','Roll D20')}
         if(turnLbl)turnLbl.textContent=tr('Sıra sende! D20 zarını at.','Your turn! Roll the D20.');
@@ -1887,9 +1889,11 @@ function endRound(){
       const tieFn=v=>{
         const vi=v===2?0:v,w=L===vi?1:0;
         const firstForV=tieFirst===vi?0:1;
-        const myLbl=v===2?tr('1. Oyuncu','Player 1'):tr('Senin Zarın','Your Roll');
-        const opLbl=v===2?tr('2. Oyuncu','Player 2'):(MODE==='bot'?tr('Botun Zarı','Bot\'s Roll'):tr('Rakibin Zarı','Opponent\'s Roll'));
-        const resTxt=v===2?(w===0?tr('1. Oyuncu düelloyu kazandı!','Player 1 won the duel!'):tr('2. Oyuncu düelloyu kazandı!','Player 2 won the duel!')):(w===0?tr('Düelloyu sen kazandın!<br>Rakip Ölüm Zarı atacak.','You won the duel!<br>Opponent will roll the Death Dice.'):tr('Düelloyu rakip kazandı!<br>Ölüm Zarını sen atacaksın.','Opponent won the duel!<br>You will roll the Death Dice.'));
+        const sp0=(S.specMeta&&S.specMeta.p0Name)||NAMES[avKey(S,0)]||tr('Oyuncu','Player');
+        const sp1=(S.specMeta&&S.specMeta.p1Name)||NAMES[avKey(S,1)]||tr('Rakip','Opponent');
+        const myLbl=v===2?sp0:tr('Senin Zarın','Your Roll');
+        const opLbl=v===2?sp1:(MODE==='bot'?tr('Botun Zarı','Bot\'s Roll'):tr('Rakibin Zarı','Opponent\'s Roll'));
+        const resTxt=v===2?(w===0?tr(`${sp0} düelloyu kazandı!`,`${sp0} won the duel!`):tr(`${sp1} düelloyu kazandı!`,`${sp1} won the duel!`)) :(w===0?tr('Düelloyu sen kazandın!<br>Rakip Ölüm Zarı atacak.','You won the duel!<br>Opponent will roll the Death Dice.'):tr('Düelloyu rakip kazandı!<br>Ölüm Zarını sen atacaksın.','Opponent won the duel!<br>You will roll the Death Dice.'));
         return `<h3>${tr('Düello Berabere!','Duel Tied!')}</h3><p class="tie-sub">${tr('Puanlar ve kalan jokerler eşit. Sırayla D20 atılır, yüksek atan kazanır!','Points and remaining jokers are tied. Roll D20 in turn, higher wins!')}</p><div class="tie-box" data-d0="${hx[vi]}" data-d1="${hx[1-vi]}" data-win="${w}" data-first="${firstForV}" data-bot="${MODE==='bot'?1:0}"><div class="bg3-roll-card tie-d20-card"><div class="bg3-card-border"></div><i class="bg3-corner tl"></i><i class="bg3-corner tr"></i><i class="bg3-corner bl"></i><i class="bg3-corner br"></i><div id="tie-turn" class="tie-turn"></div><div class="d20-stage tie-d20-stage"><div class="d20-glow"></div><canvas id="tie-d20cv" class="d20-canvas" width="280" height="280"></canvas></div><div class="tie-sides"><div class="tie-side me"><span class="tie-lbl">${myLbl}</span><b id="tie-s0" class="tie-sum">—</b></div><div class="tie-vs">VS</div><div class="tie-side opp"><span class="tie-lbl">${opLbl}</span><b id="tie-s1" class="tie-sum">—</b></div></div><button id="tie-rl" class="btn d20-btn">${tr('D20 At','Roll D20')}</button></div><div class="tie-after"><b>${hx[vi]} – ${hx[1-vi]}</b><br>${resTxt}</div></div>`;
       };
       MM(tieFn,tr('Ölüm Zarına Geç','Proceed to Death Dice'),openDeathModal);
@@ -2537,7 +2541,8 @@ function R(){
   const n=S.hand[0].length;
   $('#hand').classList.toggle('joker-locked',!!(S.noJ&&S.noJ[0]));
   if(isSpec){
-    setH('#hand',S.hand[0].filter(Boolean).map((id,i)=>`<span class="jslot"><img class="j spec-ro" draggable="false" style="--r:${((i-(n-1)/2)*5).toFixed(1)}deg" data-j="${id}" data-jidx="${i}" src="${IMG.j[id]}" alt=""></span>`).join(''));
+    const sh=S.hand[0]||[];
+    setH('#hand',sh.map((id,i)=>id?`<span class="jslot"><img class="j spec-ro" draggable="false" style="--r:${((i-(sh.length-1)/2)*5).toFixed(1)}deg" data-j="${id}" data-jidx="${i}" src="${IMG.j[id]}" alt=""></span>`:`<span class="jslot"><img class="j spec-ro" draggable="false" style="--r:${((i-(sh.length-1)/2)*5).toFixed(1)}deg" src="${IMG.bj}" alt=""></span>`).join(''));
     document.querySelectorAll('#hand .j[data-j]').forEach(im=>hi(im,+im.dataset.j));
   }else{
     setH('#hand',S.hand[0].map((id,i)=>`<span class="jslot"><img class="j${k==='hand_j'?' hl':(my&&!P&&playable(S,0,id)?'':' dim')}" draggable="false" style="--r:${((i-(n-1)/2)*5).toFixed(1)}deg" data-j="${id}" data-jidx="${i}" src="${IMG.j[id]}" alt=""></span>`).join(''));
@@ -8253,8 +8258,8 @@ function renderSpecSocialBar(){
     bar.className='spec-social-bar';
     document.body.appendChild(bar);
   }
-  const p0=(G.specMeta&&G.specMeta.p0Name)||tr('1. Oyuncu','P1');
-  const p1=(G.specMeta&&G.specMeta.p1Name)||tr('2. Oyuncu','P2');
+  const p0=(G.specMeta&&G.specMeta.p0Name)||NAMES[avKey(G,0)]||tr('Oyuncu','Player');
+  const p1=(G.specMeta&&G.specMeta.p1Name)||NAMES[avKey(G,1)]||tr('Rakip','Opponent');
   const tot=(SPEC_VOTES[0]||0)+(SPEC_VOTES[1]||0);
   const pct0=tot?Math.round(((SPEC_VOTES[0]||0)/tot)*100):50;
   const pct1=tot?100-pct0:50;
