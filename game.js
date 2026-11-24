@@ -5228,7 +5228,7 @@ function createSmoothDragLoop(onFrame){
     const wantMobile=window.innerWidth<=760||window.innerHeight>window.innerWidth*1.15;
     if(wantMobile===isMobileMenuBg&&menuImg.src)return;
     isMobileMenuBg=wantMobile;
-    const url=wantMobile?'menu_gothic_mobile.jpg?v=20261116_m1':'menu_gothic.jpg?v=20261114_sanctum1';
+    const url=wantMobile?'menu_gothic_mobile.jpg?v=20261125_keyart2':'menu_gothic.jpg?v=20261125_keyart2';
     cvs.style.background=`url('${url}') center/cover no-repeat #09060a`;
     menuImg.src=url;
   }
