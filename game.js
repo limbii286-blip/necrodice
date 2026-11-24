@@ -382,7 +382,15 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
       requestAnimationFrame(frame);
     };
 
-    window._triggerTieRoll=()=>rollSide(curSide,true);
+    window._triggerTieRoll=()=>{
+      if(!tb.isConnected||rollingSide||doneCount>=2)return false;
+      rollSide(curSide,true);
+      return true;
+    };
+    if(window._pendingTieRoll&&(Date.now()-window._pendingTieRoll)<10000){
+      window._pendingTieRoll=0;
+      setTimeout(()=>{if(window._triggerTieRoll)window._triggerTieRoll()},120);
+    }
     const triggerMine=e=>{if(e)e.stopPropagation();if(curSide===0&&!rollingSide&&MODE!=='spectator')rollSide(0,false)};
     if(btn)btn.onclick=triggerMine;
     if(stage)stage.onclick=triggerMine;
@@ -640,11 +648,12 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
   };
 
   window._triggerD20Roll=()=>{
-    if(!d.isConnected||rolling||finished)return;
+    if(!d.isConnected||rolling||finished)return false;
     const b=document.querySelector('#rl');
     if(b){b.disabled=true;b.classList.add('used')}
     snd('heart');
     setTimeout(runRoll,200);
+    return true;
   };
   const rl=document.querySelector('#rl');
   const stageEl=d.querySelector('.d20-stage');
@@ -667,8 +676,14 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
   } else {
     if(rl){rl.disabled=true;rl.classList.add('used')}
     if(!isOnline){
+      if(MODE==='bot'&&spectators.length){
+        spectators.forEach(s=>{try{if(s.open)s.send({k:'d20_roll'})}catch(e){}});
+      }
       snd('heart');
       setTimeout(runRoll, 1000);
+    }else if(window._pendingD20Roll&&(Date.now()-window._pendingD20Roll)<10000){
+      window._pendingD20Roll=0;
+      window._triggerD20Roll();
     }
   }
 }
@@ -3704,13 +3719,13 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
   }
   if(m.k=='tie_roll'){
     if(fromConn!==conn)return;
-    if(window._triggerTieRoll)window._triggerTieRoll();
+    if(!(window._triggerTieRoll&&window._triggerTieRoll()))window._pendingTieRoll=Date.now();
     spectators.forEach(s=>{try{if(s.open)s.send({k:'tie_roll'})}catch(e){}});
     return;
   }
   if(m.k=='d20_roll'){
     if(fromConn!==conn)return;
-    if(window._triggerD20Roll)window._triggerD20Roll();
+    if(!(window._triggerD20Roll&&window._triggerD20Roll()))window._pendingD20Roll=Date.now();
     spectators.forEach(s=>{try{if(s.open)s.send({k:'d20_roll'})}catch(e){}});
     return;
   }
@@ -3923,10 +3938,10 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
     snd(m.sd);
   }
   else if(m.k=='tie_roll'){
-    if(window._triggerTieRoll)window._triggerTieRoll();
+    if(!(window._triggerTieRoll&&window._triggerTieRoll()))window._pendingTieRoll=Date.now();
   }
   else if(m.k=='d20_roll'){
-    if(window._triggerD20Roll)window._triggerD20Roll();
+    if(!(window._triggerD20Roll&&window._triggerD20Roll()))window._pendingD20Roll=Date.now();
   }
   else if(m.k=='wolf_claw'){
     if(Array.isArray(m.ids))playWolfClawFx(m.ids);
