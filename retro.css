@@ -9464,3 +9464,518 @@ body[data-board="gold"] main::after {
   .end-elo-bar { padding: 8px 10px !important; gap: 9px; }
   .end-lg-name { font-size: 14px; }
 }
+
+/* ==========================================================================
+   AAA 3-BÖLGELİ OYUN LOBİSİ (TOP HUD + CENTER PLAY STAGE + BOTTOM DOCK)
+   ZERO SCROLL · MASAÜSTÜ VE MOBİL İÇİN ÖZEL GRID MİMARİSİ
+   ========================================================================== */
+#menu {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) auto !important;
+  align-items: stretch !important;
+  justify-items: stretch !important;
+  overflow: hidden !important;
+  background: #080608 !important;
+}
+#menu[hidden] {
+  display: none !important;
+}
+
+/* BÖLGE 1: ÜST HUD BARI (TEK SATIR, TEMİZ, ÇAKIŞMASIZ) */
+#menu > #auth-bar {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 100% !important;
+  max-width: 1180px !important;
+  margin: 0 auto !important;
+  padding: max(12px, env(safe-area-inset-top, 12px)) clamp(12px, 2.5vw, 24px) 6px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  z-index: 4 !important;
+  box-sizing: border-box !important;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+#menu > #auth-bar[hidden] {
+  display: none !important;
+}
+#menu > #auth-bar .auth-bar-left {
+  display: flex !important;
+  align-items: center !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+#menu > #auth-bar .auth-bar-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex: 0 0 auto !important;
+}
+#menu > #auth-bar .auth-pill {
+  height: 44px !important;
+  padding: 0 12px 0 9px !important;
+  max-width: 100% !important;
+}
+#menu > #auth-bar .auth-lb-btn {
+  height: 40px !important;
+  padding: 0 14px !important;
+  font-size: 13.5px !important;
+}
+
+/* BÖLGE 2: MERKEZİ OYUN SAHNESİ (#mb2.lobby-hub) */
+#mb2.lobby-hub {
+  position: relative !important;
+  z-index: 2 !important;
+  width: min(92vw, 470px) !important;
+  max-width: 470px !important;
+  height: auto !important;
+  max-height: 100% !important;
+  margin: auto !important;
+  padding: 4px 0 6px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: clamp(10px, 1.8dvh, 18px) !important;
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  animation: gothicRise 0.45s cubic-bezier(0.2, 0.9, 0.3, 1) both !important;
+}
+#mb2.lobby-hub::before,
+#mb2.lobby-hub::after {
+  display: none !important;
+  content: none !important;
+}
+#mb2.lobby-hub .hs-header {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+#mb2.lobby-hub .hs-title {
+  width: min(82vw, 390px) !important;
+  margin: 0 auto !important;
+}
+#mb2.lobby-hub .hs-logo-img {
+  width: 100% !important;
+  height: auto !important;
+  max-height: clamp(72px, 14dvh, 132px) !important;
+  object-fit: contain !important;
+}
+
+.lobby-stage {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  background:
+    radial-gradient(90% 60% at 50% 0%, rgba(242, 195, 105, 0.12) 0%, transparent 70%),
+    linear-gradient(180deg, rgba(28, 19, 14, 0.88) 0%, rgba(14, 10, 8, 0.94) 100%);
+  border: 1.5px solid rgba(201, 158, 78, 0.48);
+  box-shadow:
+    0 20px 54px rgba(0, 0, 0, 0.82),
+    inset 0 1px 0 rgba(255, 232, 179, 0.22);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-sizing: border-box;
+}
+
+.play-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.play-card {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.14s ease, border-color 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+  box-sizing: border-box;
+}
+.play-card:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+}
+.play-card:active {
+  transform: scale(0.985);
+}
+.pc-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.pc-text b {
+  font: 800 17.5px/1.15 var(--mf);
+  letter-spacing: 0.03em;
+  color: #fdf4df;
+}
+.pc-text small {
+  font: 600 12px/1.25 var(--mf);
+  color: #cbb99b;
+}
+.pc-arrow {
+  font: 700 26px/1 var(--mf);
+  color: rgba(246, 207, 85, 0.8);
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+.play-card:hover .pc-arrow {
+  transform: translateX(3px);
+}
+
+/* Ana CTA: Çevrim İçi Oyna */
+.play-card.play-primary {
+  min-height: 64px;
+  background:
+    radial-gradient(85% 90% at 15% 50%, rgba(214, 62, 42, 0.42), transparent 68%),
+    linear-gradient(180deg, rgba(138, 42, 28, 0.92) 0%, rgba(76, 20, 14, 0.96) 100%);
+  border: 2px solid rgba(246, 207, 85, 0.86);
+  box-shadow:
+    0 8px 24px rgba(150, 32, 20, 0.42),
+    inset 0 1px 0 rgba(255, 236, 184, 0.35);
+}
+.play-card.play-primary .pc-text b {
+  font-size: 19px;
+  color: #fff4d2;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
+}
+.play-card.play-primary .pc-text small {
+  color: #f0d7b5;
+}
+
+/* İkincil CTA: Yapay Zekaya Karşı */
+.play-card.play-ai {
+  min-height: 56px;
+  background: linear-gradient(180deg, rgba(50, 36, 24, 0.92) 0%, rgba(28, 20, 14, 0.96) 100%);
+  border: 1.5px solid rgba(206, 162, 86, 0.56);
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 230, 180, 0.14);
+}
+
+/* Üçüncül CTA: Özel Modlar */
+.play-card.play-special {
+  min-height: 54px;
+  background: linear-gradient(180deg, rgba(24, 42, 34, 0.9) 0%, rgba(14, 24, 20, 0.96) 100%);
+  border: 1.5px solid rgba(74, 196, 134, 0.48);
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.46), inset 0 1px 0 rgba(168, 255, 208, 0.14);
+}
+.play-card.play-special .pc-arrow {
+  color: rgba(110, 231, 183, 0.85);
+}
+
+#mb2.lobby-hub #st {
+  margin: 0 !important;
+  min-height: 0 !important;
+  font-size: 13px !important;
+}
+#mb2.lobby-hub #st:empty {
+  display: none !important;
+}
+
+/* BÖLGE 3: ALT OYUN DOCK BARI (MASAÜSTÜ: YÜZEN PİLL DOCK · MOBİL: TAM GENİŞLİK NATIVE BAR) */
+.menu-dock {
+  position: relative;
+  z-index: 4;
+  width: min(92vw, 520px);
+  margin: 0 auto max(14px, env(safe-area-inset-bottom, 14px));
+  padding: 6px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(24, 17, 13, 0.94) 0%, rgba(12, 8, 7, 0.97) 100%);
+  border: 1.5px solid rgba(201, 158, 78, 0.46);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 232, 180, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-sizing: border-box;
+}
+.dock-btn {
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid rgba(201, 158, 78, 0.22);
+  background: rgba(255, 255, 255, 0.03);
+  color: #e8d8b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+  padding: 0 6px;
+}
+.dock-btn:hover {
+  background: rgba(242, 195, 105, 0.12);
+  border-color: rgba(242, 195, 105, 0.55);
+  color: #fff4d6;
+}
+.dock-btn:active {
+  transform: scale(0.96);
+}
+.dock-lbl {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font: 700 13.5px/1 var(--mf);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.dock-lbl b {
+  font-size: 12px;
+  font-weight: 800;
+  color: #86efac;
+}
+
+/* OYUN MODU SEÇİM PENCERELERİ (#mb.play-sheet) */
+#mb.play-sheet {
+  width: min(94vw, 440px) !important;
+  max-width: 440px !important;
+  padding: 18px 16px 16px !important;
+}
+.ps-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ps-head {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.ps-kicker {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font: 700 11px/1.2 var(--mf);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ps-kicker.rk {
+  background: rgba(245, 200, 66, 0.16);
+  border: 1px solid rgba(245, 200, 66, 0.55);
+  color: #ffe899;
+}
+.ps-kicker.nm {
+  background: rgba(186, 200, 218, 0.14);
+  border: 1px solid rgba(186, 200, 218, 0.45);
+  color: #dbe6f2;
+}
+.ps-kicker.sp {
+  background: rgba(62, 224, 138, 0.14);
+  border: 1px solid rgba(62, 224, 138, 0.45);
+  color: #a8ffd0;
+}
+.ps-head h3 {
+  margin: 0 !important;
+  font-size: 22px !important;
+}
+.ps-body {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.ps-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 13px 15px;
+  border-radius: 11px;
+  border: 1.5px solid rgba(201, 158, 78, 0.42);
+  background: linear-gradient(180deg, rgba(40, 28, 20, 0.92), rgba(22, 15, 11, 0.96));
+  color: #f6ead2;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.13s ease, border-color 0.15s ease, filter 0.15s ease;
+}
+.ps-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(246, 207, 85, 0.8);
+  filter: brightness(1.07);
+}
+.ps-card b {
+  font: 800 16.5px/1.15 var(--mf);
+  color: #fff2d2;
+}
+.ps-card small {
+  font: 600 12px/1.3 var(--mf);
+  color: #c5b293;
+}
+.ps-card.ps-card-main {
+  background: linear-gradient(180deg, rgba(132, 38, 26, 0.92), rgba(74, 19, 13, 0.96));
+  border-color: rgba(246, 207, 85, 0.82);
+}
+.ps-card.ps-d-hard {
+  border-color: rgba(232, 138, 56, 0.65);
+}
+.ps-card.ps-d-imp {
+  background: linear-gradient(180deg, rgba(82, 22, 34, 0.92), rgba(40, 10, 18, 0.96));
+  border-color: rgba(235, 86, 112, 0.72);
+}
+.ps-card.ps-sp-vault { border-color: rgba(245, 178, 66, 0.6); }
+.ps-card.ps-sp-cursed { border-color: rgba(192, 116, 255, 0.6); }
+.ps-card.ps-sp-puzzle { border-color: rgba(62, 224, 138, 0.6); }
+
+.ps-join-box {
+  padding: 11px 13px;
+  border-radius: 11px;
+  background: rgba(12, 9, 8, 0.78);
+  border: 1px solid rgba(201, 158, 78, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.ps-join-box label {
+  font: 700 12.5px/1.1 var(--mf);
+  color: #d6c3a4;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.ps-join-row {
+  display: flex;
+  gap: 8px;
+}
+.ps-join-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 9px;
+  border: 1.5px solid rgba(201, 158, 78, 0.45);
+  background: rgba(20, 14, 12, 0.95);
+  color: #fff3d6;
+  font: 800 16px/1 var(--mf);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-align: center;
+}
+.ps-join-row .btn {
+  height: 42px;
+  padding: 0 18px !important;
+  flex-shrink: 0;
+}
+.ps-acts {
+  justify-content: center;
+  margin-top: 2px;
+}
+
+/* MOBİL ÖZEL OPTİMİZASYON (≤ 720px: SIFIR SCROLL, NATIVE OYUN DOCK, TEMİZ TOP BAR) */
+@media (max-width: 720px) {
+  #menu > #auth-bar {
+    padding: max(8px, env(safe-area-inset-top, 8px)) 10px 4px !important;
+    gap: 6px !important;
+  }
+  #menu > #auth-bar .auth-pill {
+    height: 40px !important;
+    padding: 0 9px 0 7px !important;
+    gap: 6px !important;
+  }
+  #menu > #auth-bar .ap-info b {
+    font-size: 13px !important;
+    max-width: 96px !important;
+  }
+  #menu > #auth-bar .ap-info small {
+    font-size: 10.5px !important;
+  }
+  #menu > #auth-bar .ap-streak {
+    display: none !important;
+  }
+  #menu > #auth-bar .ap-elo {
+    font-size: 12px !important;
+    padding: 3px 7px !important;
+  }
+  #menu > #auth-bar .auth-bar-right {
+    gap: 5px !important;
+  }
+  #menu > #auth-bar .auth-lb-btn {
+    height: 36px !important;
+    padding: 0 10px !important;
+    font-size: 12px !important;
+  }
+
+  #mb2.lobby-hub {
+    width: min(94vw, 400px) !important;
+    gap: clamp(8px, 1.5dvh, 14px) !important;
+  }
+  #mb2.lobby-hub .hs-title {
+    width: min(72vw, 280px) !important;
+  }
+  #mb2.lobby-hub .hs-logo-img {
+    max-height: clamp(62px, 12dvh, 96px) !important;
+  }
+  .lobby-stage {
+    padding: 11px;
+    gap: 8px;
+    border-radius: 14px;
+  }
+  .play-stack {
+    gap: 7px;
+  }
+  .play-card {
+    padding: 11px 13px;
+    border-radius: 11px;
+  }
+  .play-card.play-primary {
+    min-height: 56px;
+  }
+  .play-card.play-primary .pc-text b {
+    font-size: 16.5px;
+  }
+  .play-card.play-ai,
+  .play-card.play-special {
+    min-height: 48px;
+  }
+  .pc-text b {
+    font-size: 15.5px;
+  }
+  .pc-text small {
+    font-size: 11px;
+  }
+
+  .menu-dock {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    padding: 7px 8px max(10px, env(safe-area-inset-bottom, 10px)) !important;
+    gap: 6px !important;
+  }
+  .dock-btn {
+    height: 44px;
+    border-radius: 9px;
+  }
+  .dock-lbl {
+    font-size: 12.5px;
+  }
+}

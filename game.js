@@ -3190,7 +3190,7 @@ function applyLang(lang){
   if($('#code'))$('#code').placeholder=tr('Oda Kodu','Room Code');
   if($('#b3'))$('#b3').textContent=tr('Özel Oyuna Katıl','Join Private Match');
   if($('#b6'))$('#b6').textContent=tr('Ayarlar','Settings');
-  if($('#btut'))$('#btut').textContent=tr('Eğitim (Karga Rehberi)','Tutorial (Raven Guide)');
+  if($('#dock-tut-t'))$('#dock-tut-t').textContent=tr('Eğitim','Tutorial');
   if($('#b-vault'))$('#b-vault').textContent=tr('Ölüm Mahzeni','Death Vault');
   if($('#b-cursed'))$('#b-cursed').textContent=tr('Lanetli Masa','Cursed Table');
   if($('#b-puzzle'))$('#b-puzzle').textContent=tr('Günün Bulmacası','Daily Puzzle');
@@ -7586,6 +7586,118 @@ function openLobbyModal(){
   if($('#lob-ref'))$('#lob-ref').onclick=()=>{snd('click');updateLobbyPresence(false);renderLobbyModalBody()};
   renderLobbyModalBody();
 }
+function openOnlinePlayModal(){
+  const mb=$('#mb');if(!mb)return;
+  const isR=QUEUE_MODE==='ranked';
+  lock=true;
+  mb.classList.remove('end-mode','an-mode','set-mode','lb-mode','lob-mode','pr-mode','inv-mode');
+  mb.classList.add('auth-mode','play-sheet');
+  mb.innerHTML=`<div class="ps-wrap">
+    <div class="ps-head">
+      <span class="ps-kicker ${isR?'rk':'nm'}">${isR?tr('Dereceli Oyun · Lig & LP','Ranked Game · League & LP'):tr('Normal Oyun · Derecesiz','Normal Game · Unranked')}</span>
+      <h3>${tr('Çevrim İçi Düello','Online Duel')}</h3>
+    </div>
+    <div class="ps-body">
+      <button type="button" class="ps-card ps-card-main" id="ps-qm">
+        <b>${tr('Hızlı Maç Ara','Find Quick Match')}</b>
+        <small>${isR?tr('Dengeli dereceli rakiple anında eşleş','Match instantly against a balanced ranked opponent'):tr('Derecesiz çevrim içi rakiple hemen eşleş','Match instantly for a casual online duel')}</small>
+      </button>
+      <button type="button" class="ps-card" id="ps-host">
+        <b>${tr('Özel Oda Oluştur','Create Private Room')}</b>
+        <small>${tr('4 haneli oda kodu ve davet linki oluştur','Generate a 4-letter room code and invite link')}</small>
+      </button>
+      <div class="ps-join-box">
+        <label for="ps-code">${tr('Oda Koduyla Katıl','Join with Room Code')}</label>
+        <div class="ps-join-row">
+          <input id="ps-code" placeholder="${tr('Örn: A7K2','e.g. A7K2')}" maxlength="4" autocomplete="off">
+          <button type="button" id="ps-join" class="btn alt">${tr('Katıl','Join')}</button>
+        </div>
+      </div>
+    </div>
+    <div class="row ps-acts"><button type="button" id="ps-close" class="btn alt sm">${tr('Geri','Back')}</button></div>
+  </div>`;
+  $('#m').hidden=false;
+  const close=()=>{mb.classList.remove('auth-mode','play-sheet');$('#m').hidden=true;lock=false};
+  if($('#ps-close'))$('#ps-close').onclick=()=>{snd('click');close()};
+  if($('#ps-qm'))$('#ps-qm').onclick=()=>{snd('click');close();CURSED_RULE=null;VAULT_RUN=null;PUZZLE_ACTIVE=null;startQuickMatch()};
+  if($('#ps-host'))$('#ps-host').onclick=()=>{snd('click');if(noNet())return;close();CURSED_RULE=null;VAULT_RUN=null;PUZZLE_ACTIVE=null;IS_QUICK_MATCH=false;hostRoom()};
+  if($('#ps-join'))$('#ps-join').onclick=()=>{
+    snd('click');
+    const c=($('#ps-code')?$('#ps-code').value.trim().toUpperCase():'');
+    if(!c)return st(tr('Oda kodunu yaz','Enter room code'));
+    close();CURSED_RULE=null;VAULT_RUN=null;PUZZLE_ACTIVE=null;IS_QUICK_MATCH=false;joinRoom(c);
+  };
+  if($('#ps-code'))$('#ps-code').onkeydown=e=>{if(e.key==='Enter'&&$('#ps-join'))$('#ps-join').click()};
+}
+function openAiPlayModal(){
+  const mb=$('#mb');if(!mb)return;
+  const isR=QUEUE_MODE==='ranked';
+  lock=true;
+  mb.classList.remove('end-mode','an-mode','set-mode','lb-mode','lob-mode','pr-mode','inv-mode');
+  mb.classList.add('auth-mode','play-sheet');
+  const diffs=isR?[
+    {id:'hard',trN:'Zor',enN:'Hard',trD:'Taktiksel ve keskin kararlar · Dereceli LP kazandırır',enD:'Tactical sharp decisions · Awards Ranked LP',cls:'ps-d-hard'},
+    {id:'imp',trN:'İmkansız',enN:'Impossible',trD:'Acımasız üst düzey yapay zeka · Yüksek dereceli meydan okuma',enD:'Ruthless apex AI · High ranked challenge',cls:'ps-d-imp'}
+  ]:[
+    {id:'easy',trN:'Kolay',enN:'Easy',trD:'Kuralları kavramak için rahat tempo',enD:'Relaxed pace to learn the ropes',cls:'ps-d-easy'},
+    {id:'med',trN:'Orta',enN:'Medium',trD:'Dengeli normal düello deneyimi',enD:'Balanced casual duel experience',cls:'ps-d-med'},
+    {id:'hard',trN:'Zor',enN:'Hard',trD:'Taktiksel yapay zeka · Derecesiz antrenman',enD:'Tactical AI · Unranked practice',cls:'ps-d-hard'},
+    {id:'imp',trN:'İmkansız',enN:'Impossible',trD:'Acımasız yapay zeka · Derecesiz antrenman',enD:'Ruthless AI · Unranked practice',cls:'ps-d-imp'}
+  ];
+  const cardsHtml=diffs.map(d=>`<button type="button" class="ps-card ${d.cls}" data-ai-d="${d.id}">
+    <b>${isEn()?d.enN:d.trN}</b>
+    <small>${isEn()?d.enD:d.trD}</small>
+  </button>`).join('');
+  mb.innerHTML=`<div class="ps-wrap">
+    <div class="ps-head">
+      <span class="ps-kicker ${isR?'rk':'nm'}">${isR?tr('Dereceli Oyun · Lig & LP','Ranked Game · League & LP'):tr('Normal Oyun · Derecesiz','Normal Game · Unranked')}</span>
+      <h3>${tr('Yapay Zeka Seç','Select AI Opponent')}</h3>
+    </div>
+    <div class="ps-body ps-ai-grid ${isR?'two':''}">${cardsHtml}</div>
+    <div class="row ps-acts"><button type="button" id="ps-close" class="btn alt sm">${tr('Geri','Back')}</button></div>
+  </div>`;
+  $('#m').hidden=false;
+  const close=()=>{mb.classList.remove('auth-mode','play-sheet');$('#m').hidden=true;lock=false};
+  if($('#ps-close'))$('#ps-close').onclick=()=>{snd('click');close()};
+  mb.querySelectorAll('[data-ai-d]').forEach(b=>b.onclick=()=>{
+    snd('click');const d=b.dataset.aiD;close();
+    CURSED_RULE=null;VAULT_RUN=null;PUZZLE_ACTIVE=null;DIFF=d;MODE='bot';
+    chooseHero(h=>{MY_HERO=h;enter(start)});
+  });
+}
+function openSpecialModesModal(){
+  const mb=$('#mb');if(!mb)return;
+  lock=true;
+  mb.classList.remove('end-mode','an-mode','set-mode','lb-mode','lob-mode','pr-mode','inv-mode');
+  mb.classList.add('auth-mode','play-sheet');
+  mb.innerHTML=`<div class="ps-wrap">
+    <div class="ps-head">
+      <span class="ps-kicker sp">${tr('Özel Meydan Okumalar · Derecesiz','Special Challenges · Unranked')}</span>
+      <h3>${tr('Özel Modlar','Special Modes')}</h3>
+    </div>
+    <div class="ps-body">
+      <button type="button" class="ps-card ps-sp-vault" id="ps-vault">
+        <b>${tr('Ölüm Mahzeni','Death Vault')}</b>
+        <small>${tr('5 aşamalı roguelike koşu, kalıntılar ve Bilinmeyen boss','5-stage roguelike run, relics, and The Unknown boss')}</small>
+      </button>
+      <button type="button" class="ps-card ps-sp-cursed" id="ps-cursed">
+        <b>${tr('Haftalık Lanetli Masa','Weekly Cursed Table')}</b>
+        <small>${tr('Her hafta değişen lanetli kurallarla özel düello','Special duel with rotating weekly cursed rules')}</small>
+      </button>
+      <button type="button" class="ps-card ps-sp-puzzle" id="ps-puzzle">
+        <b>${tr('Günün Bulmacası','Daily Puzzle')}</b>
+        <small>${tr('Tek elde ölümcül Joker kombosunu çöz, günlük serini büyüt','Solve today\'s lethal Joker combo and grow your streak')}</small>
+      </button>
+    </div>
+    <div class="row ps-acts"><button type="button" id="ps-close" class="btn alt sm">${tr('Geri','Back')}</button></div>
+  </div>`;
+  $('#m').hidden=false;
+  const close=()=>{mb.classList.remove('auth-mode','play-sheet');$('#m').hidden=true;lock=false};
+  if($('#ps-close'))$('#ps-close').onclick=()=>{snd('click');close()};
+  if($('#ps-vault'))$('#ps-vault').onclick=()=>{snd('click');close();if(typeof openVaultModal==='function')openVaultModal()};
+  if($('#ps-cursed'))$('#ps-cursed').onclick=()=>{snd('click');close();if(typeof openWeeklyCursedModal==='function')openWeeklyCursedModal()};
+  if($('#ps-puzzle'))$('#ps-puzzle').onclick=()=>{snd('click');close();if(typeof openDailyPuzzleModal==='function')openDailyPuzzleModal()};
+}
 function applyQueueModeUi(){
   const mb2=$('#mb2');
   if(!mb2)return;
@@ -7600,17 +7712,24 @@ function applyQueueModeUi(){
     b.setAttribute('aria-selected',act?'true':'false');
     const bEl=b.querySelector('b'),sEl=b.querySelector('small');
     if(q==='normal'){
-      if(bEl)bEl.textContent=tr('Normal Oyun','Normal Game');
-      if(sEl)sEl.textContent=tr('Derecesiz · Tüm Botlar & PvP','Unranked · All AI & PvP');
+      if(bEl)bEl.textContent=tr('Normal','Normal');
+      if(sEl)sEl.textContent=tr('Derecesiz','Unranked');
     }else{
-      if(bEl)bEl.textContent=tr('Dereceli Oyun','Ranked Game');
-      if(sEl)sEl.textContent=tr('Lig & LP · Zor / İmkansız / PvP','League & LP · Hard / Imp / PvP');
+      if(bEl)bEl.textContent=tr('Dereceli','Ranked');
+      if(sEl)sEl.textContent=tr('Lig & LP','League & LP');
     }
   });
-  const spans=mb2.querySelectorAll('.hs-plaque > span');
-  if(spans[0])spans[0].textContent=isR?tr('Çevrim İçi — Dereceli','Online — Ranked'):tr('Çevrim İçi — Normal','Online — Normal');
-  if(spans[1])spans[1].textContent=isR?tr('Yapay Zekaya Karşı — Dereceli','VS AI — Ranked'):tr('Yapay Zekaya Karşı','VS AI');
-  if(spans[2])spans[2].textContent=tr('Özel Modlar','Special Modes');
+  if($('#play-online-t'))$('#play-online-t').textContent=isR?tr('Çevrim İçi · Dereceli','Play Online · Ranked'):tr('Çevrim İçi · Normal','Play Online · Normal');
+  if($('#play-online-s'))$('#play-online-s').textContent=tr('Hızlı Maç Ara · Özel Oda · Davet','Quick Match · Private Room · Invite');
+  if($('#play-ai-t'))$('#play-ai-t').textContent=tr('Yapay Zekaya Karşı','VS AI');
+  if($('#play-ai-s'))$('#play-ai-s').textContent=isR?tr('Zor · İmkansız (Dereceli)','Hard · Impossible (Ranked)'):tr('Kolay · Orta · Zor · İmkansız','Easy · Medium · Hard · Impossible');
+  if($('#play-special-t'))$('#play-special-t').textContent=tr('Özel Modlar','Special Modes');
+  if($('#play-special-s'))$('#play-special-s').textContent=tr('Ölüm Mahzeni · Lanetli Masa · Bulmaca','Death Vault · Cursed Table · Puzzle');
+  if($('#dock-lob-t'))$('#dock-lob-t').textContent=tr('Lobi','Lobby');
+  if($('#dock-lb-t'))$('#dock-lb-t').textContent=tr('Sıralama','Ranks');
+  if($('#dock-inv-t'))$('#dock-inv-t').textContent=tr('Envanter','Inventory');
+  if($('#dock-tut-t'))$('#dock-tut-t').textContent=tr('Eğitim','Tutorial');
+
   const strip=$('#ranked-strip');
   if(strip){
     if(!isR){strip.hidden=true;}
@@ -7623,14 +7742,14 @@ function applyQueueModeUi(){
         const pg=fl.placementGames||0;
         const pips=[0,1,2,3,4].map(i=>`<i class="rs-pip${i<pg?' done':''}"></i>`).join('');
         strip.className=`ranked-strip ${fl.cls}`;
-        strip.innerHTML=`<span class="rs-crest">${leagueCrestSvg(fl.id,34)}</span>
+        strip.innerHTML=`<span class="rs-crest">${leagueCrestSvg(fl.id,32)}</span>
           <div class="rs-mid">
             <div class="rs-top"><b>${fl.unranked?tr('Yerleştirme Maçları','Placement Matches'):escHtml(fl.name)}</b><span>${fl.unranked?`${pg}/5`:`${fl.lp} LP · ${pg}/5`}</span></div>
-            <div class="rs-pips">${pips}<em>${fl.unranked?tr('İlk maçtan sonra geçici ligin belirlenir','Provisional league assigned after 1st match'):tr('Geçici Lig · 5 maçta kesinleşir','Provisional · Finalizes at 5 games')}</em></div>
+            <div class="rs-pips">${pips}<em>${fl.unranked?tr('5 maçta ligin belirlenir','5 games to place'):tr('Geçici Lig','Provisional')}</em></div>
           </div>`;
       }else{
         strip.className=`ranked-strip ${fl.cls}`;
-        strip.innerHTML=`<span class="rs-crest">${leagueCrestSvg(fl.id,34)}</span>
+        strip.innerHTML=`<span class="rs-crest">${leagueCrestSvg(fl.id,32)}</span>
           <div class="rs-mid">
             <div class="rs-top"><b>${escHtml(fl.name)}</b><span>${fl.id==='challenger'?`${fl.lp} LP`:`${fl.lp} / ${cap} LP`}</span></div>
             <div class="rs-bar"><i style="width:${pct}%;--lg-c1:${fl.c1}"></i></div>
@@ -7642,21 +7761,24 @@ function applyQueueModeUi(){
 document.querySelectorAll('#queue-switch .qs-btn').forEach(b=>{
   b.onclick=()=>{snd('click');setQueueMode(b.dataset.q)};
 });
+if($('#play-online'))$('#play-online').onclick=()=>{snd('click');openOnlinePlayModal()};
+if($('#play-ai'))$('#play-ai').onclick=()=>{snd('click');openAiPlayModal()};
+if($('#play-special'))$('#play-special').onclick=()=>{snd('click');openSpecialModesModal()};
+if($('#dock-lob'))$('#dock-lob').onclick=()=>{snd('click');openLobbyModal()};
+if($('#dock-lb'))$('#dock-lb').onclick=()=>{snd('click');openLeaderboardModal()};
+if($('#dock-inv'))$('#dock-inv').onclick=()=>{snd('click');openInventoryModal()};
+
 function renderAuthBar(){
   const bar=$('#auth-bar');
   if(!bar)return;
-  const lobCnt=Array.isArray(LOBBY_ONLINE_LIST)?LOBBY_ONLINE_LIST.length:0;
-  const lobBtnHtml=`<button type="button" class="auth-lb-btn auth-lob-btn" id="ab-lob" title="${tr('Çevrim İçi Lobi','Online Lobby')}"><i class="lob-live-dot"></i><span>${tr('Lobi','Lobby')}</span><b id="ab-lob-cnt">${lobCnt}</b></button>`;
-  const lbBtnHtml=`<button type="button" class="auth-lb-btn" id="ab-lb" title="${tr('Lig Sıralaması','League Leaderboard')}"><span>${tr('Sıralama','Ranks')}</span></button>`;
-  const invBtnHtml=`<button type="button" class="auth-lb-btn auth-inv-btn" id="ab-inv" title="${tr('Kozmetikler ve Envanter','Cosmetics & Inventory')}"><span>${tr('Envanter','Inventory')}</span></button>`;
+  updateLobbyBadge();
+  const utilHtml=`<div class="auth-bar-right"><button type="button" class="auth-lb-btn" id="ab-guide" title="${tr('Nasıl Oynanır','How to Play')}"><span>${tr('Kurallar','Rules')}</span></button><button type="button" class="auth-lb-btn" id="ab-set" title="${tr('Ayarlar','Settings')}"><span>${tr('Ayarlar','Settings')}</span></button></div>`;
   if(!USER_ACC){
     bar.hidden=false;
-    bar.innerHTML=`<div class="auth-bar-left">${lobBtnHtml}${lbBtnHtml}${invBtnHtml}</div><div class="auth-bar-right"><button type="button" class="auth-pill auth-pill-empty" id="ab-login"><span>${tr('Giriş Yap / Kayıt Ol','Sign In / Register')}</span></button></div>`;
-    const btn=$('#ab-login'),lb=$('#ab-lb'),lob=$('#ab-lob'),inv=$('#ab-inv');
-    if(btn)btn.onclick=()=>{snd('click');openAuthModal('login',false)};
-    if(lb)lb.onclick=()=>{snd('click');openLeaderboardModal()};
-    if(lob)lob.onclick=()=>{snd('click');openLobbyModal()};
-    if(inv)inv.onclick=()=>{snd('click');openInventoryModal()};
+    bar.innerHTML=`<div class="auth-bar-left"><button type="button" class="auth-pill auth-pill-empty" id="ab-login"><span>${tr('Giriş Yap / Kayıt Ol','Sign In / Register')}</span></button></div>${utilHtml}`;
+    if($('#ab-login'))$('#ab-login').onclick=()=>{snd('click');openAuthModal('login',false)};
+    if($('#ab-guide'))$('#ab-guide').onclick=()=>{snd('click');guide()};
+    if($('#ab-set'))$('#ab-set').onclick=()=>{snd('click');settings()};
     applyQueueModeUi();
     return;
   }
@@ -7664,10 +7786,10 @@ function renderAuthBar(){
   const nm=USER_ACC.isGuest?tr('Misafir','Guest'):escHtml(USER_ACC.username);
   const stDays=Math.max(1,USER_ACC.streak||1);
   const rightPill=fl.unranked
-    ?`<span class="ap-elo">${fl.placementGames}/5 <i>${tr('MAÇ','GM')}</i></span>`
+    ?`<span class="ap-elo">${fl.placementGames}/5</span>`
     :`<span class="ap-elo">${fl.lp} <i>LP</i></span>`;
   bar.hidden=false;
-  bar.innerHTML=`<div class="auth-bar-left">${lobBtnHtml}${lbBtnHtml}${invBtnHtml}</div><div class="auth-bar-right"><button type="button" class="auth-pill ${fl.cls}" id="ab-prof" title="${tr('Profil, Lig & Günlük Seri','Profile, League & Daily Streak')}">
+  bar.innerHTML=`<div class="auth-bar-left"><button type="button" class="auth-pill ${fl.cls}" id="ab-prof" title="${tr('Profil, Lig & Günlük Seri','Profile, League & Daily Streak')}">
     <span class="ap-ic">${leagueCrestSvg(fl.id,24)}</span>
     <span class="ap-info">
       <b>${nm}</b>
@@ -7675,12 +7797,10 @@ function renderAuthBar(){
     </span>
     <span class="ap-streak" title="${tr(`${stDays} Günlük Seri`,`${stDays}-Day Streak`)}">${stDays}${tr('g','d')}</span>
     ${rightPill}
-  </button></div>`;
-  const pb=$('#ab-prof'),lb=$('#ab-lb'),lob=$('#ab-lob'),inv=$('#ab-inv');
-  if(pb)pb.onclick=()=>{snd('click');openProfileModal('overview')};
-  if(inv)inv.onclick=()=>{snd('click');openInventoryModal()};
-  if(lb)lb.onclick=()=>{snd('click');openLeaderboardModal()};
-  if(lob)lob.onclick=()=>{snd('click');openLobbyModal()};
+  </button></div>${utilHtml}`;
+  if($('#ab-prof'))$('#ab-prof').onclick=()=>{snd('click');openProfileModal('overview')};
+  if($('#ab-guide'))$('#ab-guide').onclick=()=>{snd('click');guide()};
+  if($('#ab-set'))$('#ab-set').onclick=()=>{snd('click');settings()};
   applyQueueModeUi();
 }
 /* ---------- BAŞARIMLAR, UNVANLAR, GÜNLÜK GÖREVLER, KOZMETİKLER & SEZONLAR ---------- */

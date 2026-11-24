@@ -33,7 +33,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700;800&text=0123456789&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@700&text=%3F%2B&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=20261121_perf">
-<link rel="stylesheet" href="retro.css?v=20261124_league_v1">
+<link rel="stylesheet" href="retro.css?v=20261125_aaa_lobby">
 </head>
 <body>
 <div id="splash"><img id="slogo" alt=""><b>limbigames</b></div>
@@ -61,25 +61,50 @@
 <div id="menu">
   <canvas id="hs-menu-bg" aria-hidden="true"></canvas>
   <div id="auth-bar" class="auth-bar" hidden></div>
-  <div id="mb2">
+  <div id="mb2" class="lobby-hub">
     <div class="hs-header">
       <h1 class="hs-title" aria-label="NECRODICE">
         <img class="hs-logo-img" src="necrodice_logo.png?v=20261118_logo8" alt="NECRODICE" width="920" height="281" decoding="async" fetchpriority="high">
       </h1>
     </div>
-    <div class="hs-body">
+    <div class="lobby-stage">
       <div class="queue-switch" id="queue-switch" role="tablist" aria-label="Oyun Modu">
-        <button type="button" class="qs-btn" data-q="normal" role="tab"><b>Normal Oyun</b><small>Derecesiz · Tüm Modlar</small></button>
-        <button type="button" class="qs-btn act" data-q="ranked" role="tab"><b>Dereceli Oyun</b><small>Lig &amp; LP · Zor / İmkansız / PvP</small></button>
+        <button type="button" class="qs-btn act" data-q="ranked" role="tab"><b>Dereceli</b><small>Lig &amp; LP</small></button>
+        <button type="button" class="qs-btn" data-q="normal" role="tab"><b>Normal</b><small>Derecesiz</small></button>
       </div>
       <div id="ranked-strip" class="ranked-strip" hidden></div>
-      <div class="grp hs-plaque"><span>Çevrim İçi</span><div class="row hs-online-row"><button id="b2" class="btn alt">Özel Oyun Oluştur</button><button id="bqm" class="btn alt qm-btn">Hızlı Maç Ara</button></div><div class="row hs-join-row"><input id="code" placeholder="Oda Kodu" maxlength="4"><button id="b3" class="btn alt">Özel Oyuna Katıl</button></div></div>
-      <div class="grp hs-plaque"><span>Yapay Zekaya Karşı</span><div class="row dr"><button class="d btn" data-d="easy">Kolay</button><button class="d btn" data-d="med">Orta</button><button class="d btn" data-d="hard">Zor</button><button class="d btn imp" data-d="imp">İmkansız</button></div></div>
-      <div class="grp hs-plaque hs-special-plaque"><span>Özel Modlar</span><div class="row hs-special-row"><button id="b-vault" class="btn alt">Ölüm Mahzeni</button><button id="b-cursed" class="btn alt">Lanetli Masa</button><button id="b-puzzle" class="btn alt">Günün Bulmacası</button></div></div>
+      <div class="play-stack">
+        <button type="button" id="play-online" class="play-card play-primary">
+          <span class="pc-text">
+            <b id="play-online-t">Çevrim İçi Oyna</b>
+            <small id="play-online-s">Hızlı Maç Ara · Özel Oda · Davet</small>
+          </span>
+          <span class="pc-arrow" aria-hidden="true">›</span>
+        </button>
+        <button type="button" id="play-ai" class="play-card play-ai">
+          <span class="pc-text">
+            <b id="play-ai-t">Yapay Zekaya Karşı</b>
+            <small id="play-ai-s">Zor · İmkansız</small>
+          </span>
+          <span class="pc-arrow" aria-hidden="true">›</span>
+        </button>
+        <button type="button" id="play-special" class="play-card play-special">
+          <span class="pc-text">
+            <b id="play-special-t">Özel Modlar</b>
+            <small id="play-special-s">Ölüm Mahzeni · Lanetli Masa · Günün Bulmacası</small>
+          </span>
+          <span class="pc-arrow" aria-hidden="true">›</span>
+        </button>
+      </div>
     </div>
-    <div class="row mrow hs-drawer"><button id="btut" class="btn alt sm">Eğitim</button><button id="b6" class="btn alt sm">Ayarlar</button><button id="b5" class="btn alt sm">Nasıl Oynanır</button></div>
     <p id="st"></p>
   </div>
+  <nav id="menu-dock" class="menu-dock" aria-label="Ana Gezinme">
+    <button type="button" class="dock-btn" id="dock-lob"><span class="dock-lbl"><i class="lob-live-dot"></i><span id="dock-lob-t">Lobi</span><b id="ab-lob-cnt">0</b></span></button>
+    <button type="button" class="dock-btn" id="dock-lb"><span class="dock-lbl" id="dock-lb-t">Sıralama</span></button>
+    <button type="button" class="dock-btn" id="dock-inv"><span class="dock-lbl" id="dock-inv-t">Envanter</span></button>
+    <button type="button" class="dock-btn" id="btut"><span class="dock-lbl" id="dock-tut-t">Eğitim</span></button>
+  </nav>
 </div>
 <div id="m" hidden><div id="mb"></div></div>
 <!-- Firebase SDK -->
@@ -92,6 +117,6 @@
 <script src="audio_data.js?v=20261114_tavern1"></script>
 <script src="hd.js?v=20261115_hs11"></script>
 <script src="d20_canvas.js?v=20261124_big4"></script>
-<script src="game.js?v=20261124_league_v1"></script>
+<script src="game.js?v=20261125_aaa_lobby"></script>
 </body>
 </html>
