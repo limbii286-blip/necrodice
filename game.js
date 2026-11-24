@@ -5606,7 +5606,12 @@ function tutRender(){
         deal(G);R();next();
         return;
       }
-      if(st.finish){exitGame();return}
+      if(st.finish){
+        const needReg=!USER_ACC||USER_ACC.isGuest;
+        exitGame();
+        if(needReg)setTimeout(()=>{const mn=$('#menu');if(mn&&!mn.hidden&&(!USER_ACC||USER_ACC.isGuest))openAuthModal('register',true)},680);
+        return;
+      }
       tutStep++;
       tutRender();
     };
@@ -8508,19 +8513,17 @@ function openFirstVisitWelcome(){
     <div class="sp-badge vault">${tr('Necrodice\'a Hoş Geldin','Welcome to Necrodice')}</div>
     <h3 class="sp-title">${tr('Kaderin Kartlarda, Hayatın Zarda','Fate in Cards, Life on the Die')}</h3>
     <p class="sp-desc">${tr('21\'e en yakın toplamı kur, Jokerlerle masayı tersine çevir ve düelloyu kaybedersen Ölüm Zarından sağ çıkmaya çalış. İlk kez oynuyorsan 60 saniyelik hızlı eğitimle hemen öğren!','Get closest to 21, bend the rules with Jokers, and survive the Death Dice if you lose. New here? Learn everything in 60 seconds with the interactive tutorial!')}</p>
-    <div class="row sp-acts">
-      <button type="button" id="fv-tut" class="btn alt">${tr('Hızlı Eğitimle Başla (60sn)','Start 60s Tutorial')}</button>
-      <button type="button" id="fv-play" class="btn">${tr('Zaten Biliyorum · Oyna','I Know How · Play')}</button>
-    </div>
-    <div class="row sp-acts" style="margin-top:2px">
-      <button type="button" id="fv-reg" class="btn alt">${tr('Üye Ol','Sign Up')}</button>
-      <button type="button" id="fv-login" class="btn">${tr('Giriş Yap','Sign In')}</button>
+    <div class="row sp-acts" style="flex-direction:column;width:100%;max-width:300px;gap:8px">
+      <button type="button" id="fv-tut" class="btn alt" style="width:100%">${tr('Hızlı Eğitimle Başla (60sn)','Start 60s Tutorial')}</button>
+      <div class="row" style="width:100%;gap:8px">
+        <button type="button" id="fv-reg" class="btn alt" style="flex:1">${tr('Üye Ol','Sign Up')}</button>
+        <button type="button" id="fv-login" class="btn" style="flex:1">${tr('Giriş Yap','Sign In')}</button>
+      </div>
     </div>
   </div>`;
   $('#m').hidden=false;
   const markDone=()=>{try{localStorage.setItem('nd_onboarded_v1','1')}catch(e){}};
   $('#fv-tut').onclick=()=>{snd('ok');markDone();mb.classList.remove('auth-mode');$('#m').hidden=true;lock=false;MODE='tutorial';MY_HERO='p';OPP_HERO='n';enter(startTutorial);};
-  $('#fv-play').onclick=()=>{snd('click');markDone();mb.classList.remove('auth-mode');$('#m').hidden=true;lock=false;};
   $('#fv-reg').onclick=()=>{snd('click');markDone();mb.classList.remove('auth-mode');openAuthModal('register',true);};
   $('#fv-login').onclick=()=>{snd('click');markDone();mb.classList.remove('auth-mode');openAuthModal('login',false);};
 }
