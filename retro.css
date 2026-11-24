@@ -8706,3 +8706,32 @@ body.cb .qm-vs-card.opp {
   18%  { opacity: 1; transform: translate3d(0, -10px, 0) scale(1); }
   100% { opacity: 0; transform: translate3d(0, -95px, 0) scale(0.95); }
 }
+@media (max-width: 760px) {
+  .spec-social-bar {
+    top: 44px;
+    right: 6px;
+    padding: 4px 6px;
+    gap: 4px;
+    border-radius: 9px;
+    max-width: calc(100vw - 12px);
+  }
+  .ssb-reacts,
+  .ssb-poll {
+    gap: 3px;
+  }
+  .ssb-btn.ssb-em {
+    font-size: 14px;
+    padding: 2px 5px;
+  }
+  .ssb-vote {
+    padding: 3px 6px;
+    font-size: 10px;
+  }
+  .ssb-poll-live {
+    min-width: 112px;
+    gap: 2px;
+  }
+  .ssb-pl-lbl { font-size: 9px; }
+  .ssb-pl-row { font-size: 10px; gap: 5px; }
+  .spec-float-react { font-size: 24px; }
+}

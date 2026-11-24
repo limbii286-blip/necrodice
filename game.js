@@ -3874,6 +3874,7 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
       MODE='spectator';
       st(tr('Odaya izleyici olarak katıldın.','Joined room as spectator.'));
       veil();setMusic('game');
+      setTimeout(()=>{const mn=$('#menu');if(mn&&MODE==='spectator')mn.hidden=true},460);
     }else if(m.role=='player'){
       MODE='guest';
       OPP_PROFILE={name:'',elo:1200,isGuest:true};
@@ -4425,17 +4426,31 @@ function joinRoom(directCode,fromInvite=false){
 function spectateRoom(code){
   if(noNet()||!code)return;
   const c=String(code).trim().toUpperCase();
-  leaving=false;sayT='';MODE='spectator';st(tr('Canlı maça izleyici olarak bağlanılıyor…','Connecting to live match as spectator…'));
+  try{if(conn)conn.close()}catch(e){}
+  try{if(peer)peer.destroy()}catch(e){}
+  conn=null;peer=null;
+  leaving=false;sayT='';MODE='spectator';SPEC_VOTES=[0,0];MY_SPEC_VOTE=-1;
+  st(tr('Canlı maça izleyici olarak bağlanılıyor…','Connecting to live match as spectator…'));
+  let joined=false;
+  const tmr=setTimeout(()=>{
+    if(!joined&&MODE==='spectator'){
+      try{if(conn)conn.close()}catch(e){}
+      try{if(peer)peer.destroy()}catch(e){}
+      conn=null;peer=null;MODE='bot';
+      st(tr('Canlı maça bağlanılamadı (oda kapanmış veya zaman aşımına uğramış olabilir).','Could not connect to live match (room may have closed or timed out).'));
+    }
+  },10000);
   peer=new Peer();
   peer.on('open',()=>{
     conn=peer.connect('necrodice-'+c,{reliable:true});
-    conn.on('data',onHost);
+    conn.on('data',m=>{if(m&&(m.k==='role'||m.k==='s')){joined=true;clearTimeout(tmr);}onHost(m)});
     conn.on('open',()=>{
       conn.send({k:'join_as',role:'spectator'});
     });
-    conn.on('close',()=>peerLeft(tr('Canlı yayın sona erdi.','Live broadcast ended.')));
+    conn.on('error',()=>{clearTimeout(tmr);if(!joined){MODE='bot';st(tr('Canlı maça bağlanılamadı.','Could not connect to live match.'))}});
+    conn.on('close',()=>{clearTimeout(tmr);peerLeft(tr('Canlı yayın sona erdi.','Live broadcast ended.'))});
   });
-  peer.on('error',e=>{MODE='bot';st(NETERR(e))});
+  peer.on('error',e=>{clearTimeout(tmr);MODE='bot';st(NETERR(e))});
 }
 const on=(id,f)=>{const e=document.querySelector(id);if(e)e.onclick=f}; // bir öğe yoksa diğer düğmeler yine de çalışır
 document.querySelectorAll('.d').forEach(b=>b.onclick=()=>{CURSED_RULE=null;VAULT_RUN=null;PUZZLE_ACTIVE=null;DIFF=b.dataset.d;MODE='bot';chooseHero(h=>{MY_HERO=h;enter(start)})});
