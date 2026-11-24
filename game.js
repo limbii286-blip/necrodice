@@ -3679,6 +3679,7 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     const payload={k:'spec_votes',votes:[...SPEC_VOTES]};
     if(conn&&conn.open)try{conn.send(payload)}catch(e){}
     spectators.forEach(s=>{try{if(s.open)s.send(payload)}catch(e){}});
+    if(typeof renderSpecSocialBar==='function')renderSpecSocialBar();
     return;
   }
   if(m.k=='draft_pick'){
@@ -6759,6 +6760,7 @@ function startBotSpectateHost(retry=0){
           SPEC_VOTES[m.side]=(SPEC_VOTES[m.side]||0)+1;
           const payload={k:'spec_votes',votes:[...SPEC_VOTES]};
           spectators.forEach(s=>{try{if(s.open)s.send(payload)}catch(e){}});
+          if(typeof renderSpecSocialBar==='function')renderSpecSocialBar();
         }
       });
     });
@@ -8264,19 +8266,23 @@ function shareDeathCard(card,btn){
   im.src=avSrc(card.heroId);
 }
 
-/* ---------- İZLEYİCİ ETKİLEŞİMİ (SESSİZ TEPKİ + CANLI TAHMİN OYU) ---------- */
-function showSpecReactionToast(ic,label){
+/* ---------- İZLEYİCİ ETKİLEŞİMİ (EMOJI TEPKİ + HERKESE AÇIK CANLI OYLAMA) ---------- */
+function showSpecReactionToast(ic){
   const el=document.createElement('div');
   el.className='spec-float-react';
-  el.innerHTML=`<b>${escHtml(ic||'✦')}</b><span>${escHtml(label||'')}</span>`;
-  el.style.right=(14+Math.random()*38)+'px';
+  el.textContent=String(ic||'👏').slice(0,4);
+  el.style.right=(16+Math.random()*44)+'px';
   document.body.appendChild(el);
   setTimeout(()=>{if(el.isConnected)el.remove()},1950);
 }
 function renderSpecSocialBar(){
   let bar=document.getElementById('spec-social-bar');
   const menu=$('#menu');
-  const active=(MODE==='spectator'&&G&&(!menu||menu.hidden));
+  const inMatch=!!(G&&(!menu||menu.hidden));
+  const isSpec=MODE==='spectator';
+  const tot=(SPEC_VOTES[0]||0)+(SPEC_VOTES[1]||0);
+  const showForPlayer=!isSpec&&inMatch&&tot>0;
+  const active=(isSpec&&inMatch)||showForPlayer;
   if(!active){if(bar)bar.remove();return;}
   if(!bar){
     bar=document.createElement('div');
@@ -8284,25 +8290,38 @@ function renderSpecSocialBar(){
     bar.className='spec-social-bar';
     document.body.appendChild(bar);
   }
-  const p0=(G.specMeta&&G.specMeta.p0Name)||NAMES[avKey(G,0)]||tr('Oyuncu','Player');
-  const p1=(G.specMeta&&G.specMeta.p1Name)||NAMES[avKey(G,1)]||tr('Rakip','Opponent');
-  const tot=(SPEC_VOTES[0]||0)+(SPEC_VOTES[1]||0);
-  const pct0=tot?Math.round(((SPEC_VOTES[0]||0)/tot)*100):50;
+  bar.classList.toggle('player-view',!isSpec);
+  const myNm=(USER_ACC&&!USER_ACC.isGuest&&USER_ACC.username)?USER_ACC.username:tr('Sen','You');
+  const oppNm=(OPP_PROFILE&&OPP_PROFILE.name)?OPP_PROFILE.name:(NAMES[avKey(G,1)]||tr('Rakip','Opponent'));
+  const p0=isSpec?((G.specMeta&&G.specMeta.p0Name)||NAMES[avKey(G,0)]||tr('Oyuncu','Player')):myNm;
+  const p1=isSpec?((G.specMeta&&G.specMeta.p1Name)||NAMES[avKey(G,1)]||tr('Rakip','Opponent')):oppNm;
+  const v0=MODE==='guest'?(SPEC_VOTES[1]||0):(SPEC_VOTES[0]||0);
+  const v1=MODE==='guest'?(SPEC_VOTES[0]||0):(SPEC_VOTES[1]||0);
+  const pct0=tot?Math.round((v0/tot)*100):50;
   const pct1=tot?100-pct0:50;
+  if(!isSpec){
+    bar.innerHTML=`<div class="ssb-poll-live" title="${tr('İzleyici Tahmin Oylaması','Spectator Prediction Poll')}">
+      <span class="ssb-pl-lbl">${tr('İzleyici Oyu','Poll')} (${tot})</span>
+      <div class="ssb-pl-row"><span>${escHtml(p0.slice(0,10))} <b>%${pct0}</b></span><span><b>%${pct1}</b> ${escHtml(p1.slice(0,10))}</span></div>
+      <div class="ssb-pl-bar"><i style="width:${pct0}%"></i></div>
+    </div>`;
+    return;
+  }
   bar.innerHTML=`
     <div class="ssb-reacts">
-      <button type="button" class="ssb-btn" data-ric="✦" data-rlbl="${tr('Alkış','Applause')}" title="${tr('Alkış','Applause')}">✦ ${tr('Alkış','Clap')}</button>
-      <button type="button" class="ssb-btn" data-ric="†" data-rlbl="${tr('Gerilim','Tension')}" title="${tr('Gerilim','Tension')}">† ${tr('Gerilim','Tense')}</button>
-      <button type="button" class="ssb-btn" data-ric="★" data-rlbl="${tr('Efsane','Epic')}" title="${tr('Efsane','Epic')}">★ ${tr('Efsane','Epic')}</button>
+      <button type="button" class="ssb-btn ssb-em" data-ric="👏">👏</button>
+      <button type="button" class="ssb-btn ssb-em" data-ric="🔥">🔥</button>
+      <button type="button" class="ssb-btn ssb-em" data-ric="💀">💀</button>
+      <button type="button" class="ssb-btn ssb-em" data-ric="😱">😱</button>
     </div>
     <div class="ssb-poll">
       <button type="button" class="ssb-vote${MY_SPEC_VOTE===0?' on':''}" data-v="0">${escHtml(p0.slice(0,10))} <b>%${pct0}</b></button>
       <button type="button" class="ssb-vote${MY_SPEC_VOTE===1?' on':''}" data-v="1">${escHtml(p1.slice(0,10))} <b>%${pct1}</b></button>
     </div>`;
   bar.querySelectorAll('.ssb-btn').forEach(b=>b.onclick=()=>{
-    const ic=b.dataset.ric,lbl=b.dataset.rlbl;
-    showSpecReactionToast(ic,lbl);
-    if(conn&&conn.open)try{conn.send({k:'spec_react',ic,label:lbl})}catch(e){}
+    const ic=b.dataset.ric;
+    showSpecReactionToast(ic);
+    if(conn&&conn.open)try{conn.send({k:'spec_react',ic,label:''})}catch(e){}
   });
   bar.querySelectorAll('.ssb-vote').forEach(b=>b.onclick=()=>{
     const side=+b.dataset.v;
