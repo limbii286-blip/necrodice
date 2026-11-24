@@ -10074,3 +10074,52 @@ body[data-board="gold"] main::after {
 .qs-btn.qs-locked small {
   color: #e8b86d;
 }
+
+/* 3 Kategorili Mod Seçici (Dereceli / Normal / Özel Modlar) */
+.lobby-stage .queue-switch {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.lobby-stage .qs-btn {
+  padding: 8px 4px;
+}
+.lobby-stage .qs-btn b {
+  font-size: 13.5px;
+}
+.lobby-stage .qs-btn small {
+  font-size: 10px;
+}
+.lobby-stage .qs-btn.act[data-q="special"] {
+  background:
+    linear-gradient(rgba(16, 62, 40, 0.56), rgba(8, 32, 20, 0.7)),
+    url('wood_plank.jpg?v=20261116_w2') center / 100% 100% no-repeat;
+  border-color: #6ee7b7;
+  color: #ecfdf5;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.92);
+  box-shadow: 0 3px 0 #0a140d, 0 0 14px rgba(74, 222, 128, 0.25), inset 0 1px 0 rgba(190, 255, 220, 0.35);
+}
+.play-stack[hidden] {
+  display: none !important;
+}
+.play-card.play-sp-vault {
+  background:
+    linear-gradient(rgba(82, 46, 14, 0.52), rgba(40, 22, 7, 0.66)),
+    url('wood_plank.jpg?v=20261116_w2') center / 100% 100% no-repeat;
+  border-color: #e5b44c;
+}
+.play-card.play-sp-cursed {
+  background:
+    linear-gradient(rgba(58, 22, 82, 0.56), rgba(28, 10, 42, 0.7)),
+    url('wood_plank.jpg?v=20261116_w2') center / 100% 100% no-repeat;
+  border-color: #b478e8;
+}
+.play-card.play-sp-puzzle {
+  background:
+    linear-gradient(rgba(14, 52, 34, 0.54), rgba(8, 28, 18, 0.68)),
+    url('wood_plank.jpg?v=20261116_w2') center / 100% 100% no-repeat;
+  border-color: #5cc488;
+}
+@media (max-width: 600px) {
+  .lobby-stage .qs-btn b { font-size: 12px; }
+  .lobby-stage .qs-btn small { font-size: 9.5px; }
+}

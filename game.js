@@ -6411,7 +6411,7 @@ function openRankedGuestGateModal(){
   if($('#rg-reg'))$('#rg-reg').onclick=()=>{snd('click');close();openAuthModal('register',true)};
   if($('#rg-log'))$('#rg-log').onclick=()=>{snd('click');close();openAuthModal('login',true)};
 }
-let QUEUE_MODE=(function(){try{return localStorage.getItem('nd_queue_mode')==='normal'?'normal':'ranked'}catch(e){return 'ranked'}})();
+let QUEUE_MODE=(function(){try{const v=localStorage.getItem('nd_queue_mode');return (v==='normal'||v==='special')?v:'ranked'}catch(e){return 'ranked'}})();
 function setQueueMode(m,fromUser=false){
   if(m==='ranked'&&isGuestUser(USER_ACC)){
     QUEUE_MODE='normal';
@@ -6420,7 +6420,7 @@ function setQueueMode(m,fromUser=false){
     if(fromUser)openRankedGuestGateModal();
     return;
   }
-  QUEUE_MODE=(m==='normal')?'normal':'ranked';
+  QUEUE_MODE=(m==='normal'||m==='special')?m:'ranked';
   try{localStorage.setItem('nd_queue_mode',QUEUE_MODE)}catch(e){}
   if(typeof applyQueueModeUi==='function')applyQueueModeUi();
 }
@@ -7756,12 +7756,14 @@ function applyQueueModeUi(){
   const guest=isGuestUser(USER_ACC);
   if(guest&&QUEUE_MODE==='ranked')QUEUE_MODE='normal';
   const isR=!guest&&QUEUE_MODE==='ranked';
+  const isS=QUEUE_MODE==='special';
   mb2.classList.toggle('queue-ranked',isR);
-  mb2.classList.toggle('queue-normal',!isR);
+  mb2.classList.toggle('queue-normal',!isR&&!isS);
+  mb2.classList.toggle('queue-special',isS);
   const btns=mb2.querySelectorAll('#queue-switch .qs-btn');
   btns.forEach(b=>{
     const q=b.dataset.q;
-    const act=(q==='ranked')===isR;
+    const act=(q==='ranked'&&isR)||(q==='normal'&&!isR&&!isS)||(q==='special'&&isS);
     b.classList.toggle('act',act);
     b.classList.toggle('qs-locked',guest&&q==='ranked');
     b.setAttribute('aria-selected',act?'true':'false');
@@ -7769,17 +7771,26 @@ function applyQueueModeUi(){
     if(q==='normal'){
       if(bEl)bEl.textContent=tr('Normal','Normal');
       if(sEl)sEl.textContent=tr('Derecesiz','Unranked');
+    }else if(q==='special'){
+      if(bEl)bEl.textContent=tr('Özel Modlar','Special');
+      if(sEl)sEl.textContent=tr('Meydan Okuma','Challenges');
     }else{
       if(bEl)bEl.textContent=tr('Dereceli','Ranked');
       if(sEl)sEl.textContent=guest?tr('Üyelere Özel','Members Only'):tr('Lig & LP','League & LP');
     }
   });
+  if($('#play-stack-std'))$('#play-stack-std').hidden=isS;
+  if($('#play-stack-special'))$('#play-stack-special').hidden=!isS;
   if($('#play-online-t'))$('#play-online-t').textContent=isR?tr('Çevrim İçi · Dereceli','Play Online · Ranked'):tr('Çevrim İçi · Normal','Play Online · Normal');
   if($('#play-online-s'))$('#play-online-s').textContent=tr('Hızlı Maç Ara · Özel Oda · Davet','Quick Match · Private Room · Invite');
   if($('#play-ai-t'))$('#play-ai-t').textContent=tr('Yapay Zekaya Karşı','VS AI');
   if($('#play-ai-s'))$('#play-ai-s').textContent=isR?tr('Zor · İmkansız (Dereceli)','Hard · Impossible (Ranked)'):tr('Kolay · Orta · Zor · İmkansız','Easy · Medium · Hard · Impossible');
-  if($('#play-special-t'))$('#play-special-t').textContent=tr('Özel Modlar','Special Modes');
-  if($('#play-special-s'))$('#play-special-s').textContent=tr('Ölüm Mahzeni · Lanetli Masa · Bulmaca','Death Vault · Cursed Table · Puzzle');
+  if($('#sp-vault-t'))$('#sp-vault-t').textContent=tr('Ölüm Mahzeni','Death Vault');
+  if($('#sp-vault-s'))$('#sp-vault-s').textContent=tr('5 aşamalı roguelike · Kalıntılar · Bilinmeyen Boss','5-stage roguelike · Relics · The Unknown Boss');
+  if($('#sp-cursed-t'))$('#sp-cursed-t').textContent=tr('Haftalık Lanetli Masa','Weekly Cursed Table');
+  if($('#sp-cursed-s'))$('#sp-cursed-s').textContent=tr('Her hafta değişen lanetli kurallarla özel düello','Special duel with rotating weekly cursed rules');
+  if($('#sp-puzzle-t'))$('#sp-puzzle-t').textContent=tr('Günün Bulmacası','Daily Puzzle');
+  if($('#sp-puzzle-s'))$('#sp-puzzle-s').textContent=tr('Tek elde ölümcül Joker kombosunu çöz, serini büyüt','Solve today\'s lethal Joker combo and grow your streak');
   if($('#dock-lob-t'))$('#dock-lob-t').textContent=tr('Lobi','Lobby');
   if($('#dock-lb-t'))$('#dock-lb-t').textContent=tr('Sıralama','Ranks');
   if($('#dock-inv-t'))$('#dock-inv-t').textContent=tr('Envanter','Inventory');
@@ -7818,7 +7829,9 @@ document.querySelectorAll('#queue-switch .qs-btn').forEach(b=>{
 });
 if($('#play-online'))$('#play-online').onclick=()=>{snd('click');openOnlinePlayModal()};
 if($('#play-ai'))$('#play-ai').onclick=()=>{snd('click');openAiPlayModal()};
-if($('#play-special'))$('#play-special').onclick=()=>{snd('click');openSpecialModesModal()};
+if($('#sp-vault'))$('#sp-vault').onclick=()=>{snd('click');if(typeof openVaultModal==='function')openVaultModal()};
+if($('#sp-cursed'))$('#sp-cursed').onclick=()=>{snd('click');if(typeof openWeeklyCursedModal==='function')openWeeklyCursedModal()};
+if($('#sp-puzzle'))$('#sp-puzzle').onclick=()=>{snd('click');if(typeof openDailyPuzzleModal==='function')openDailyPuzzleModal()};
 if($('#dock-lob'))$('#dock-lob').onclick=()=>{snd('click');openLobbyModal()};
 if($('#dock-lb'))$('#dock-lb').onclick=()=>{snd('click');openLeaderboardModal()};
 if($('#dock-inv'))$('#dock-inv').onclick=()=>{snd('click');openInventoryModal()};
