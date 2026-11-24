@@ -9579,28 +9579,82 @@ body[data-board="gold"] main::after {
 }
 
 .lobby-stage {
+  position: relative;
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 14px;
+  padding: 15px;
   border-radius: 16px;
+  border: 3px solid #c99e4e;
   background:
-    radial-gradient(90% 60% at 50% 0%, rgba(242, 195, 105, 0.12) 0%, transparent 70%),
-    linear-gradient(180deg, rgba(28, 19, 14, 0.88) 0%, rgba(14, 10, 8, 0.94) 100%);
-  border: 1.5px solid rgba(201, 158, 78, 0.48);
+    radial-gradient(85% 55% at 50% 6%, rgba(242, 195, 105, 0.16) 0%, transparent 72%),
+    radial-gradient(75% 50% at 50% 96%, rgba(160, 56, 36, 0.14) 0%, transparent 70%),
+    linear-gradient(180deg, rgba(48, 31, 19, 0.95) 0%, rgba(28, 18, 11, 0.97) 58%, rgba(18, 11, 7, 0.98) 100%);
   box-shadow:
-    0 20px 54px rgba(0, 0, 0, 0.82),
-    inset 0 1px 0 rgba(255, 232, 179, 0.22);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+    0 0 0 2.5px #120b06,
+    0 0 0 5px #6b4d23,
+    0 22px 54px rgba(0, 0, 0, 0.92),
+    0 0 36px rgba(212, 166, 74, 0.18),
+    inset 0 2px 0 rgba(255, 232, 179, 0.32),
+    inset 0 0 28px rgba(8, 5, 3, 0.82);
   box-sizing: border-box;
+}
+.lobby-stage::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 1px solid rgba(242, 204, 112, 0.24);
+  border-radius: 10px;
+  pointer-events: none;
+}
+.lobby-stage > * {
+  position: relative;
+  z-index: 1;
+}
+
+.lobby-stage .queue-switch {
+  background: linear-gradient(180deg, rgba(24, 15, 9, 0.95), rgba(14, 9, 5, 0.98));
+  border: 1.5px solid #8a6432;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.85), 0 1px 0 rgba(255, 224, 170, 0.16);
+}
+.lobby-stage .qs-btn {
+  background:
+    linear-gradient(rgba(18, 11, 6, 0.56), rgba(10, 6, 3, 0.68)),
+    url('wood_plank.jpg?v=20261116_w2') center / 100% 100% no-repeat;
+  border: 1.5px solid rgba(138, 100, 50, 0.45);
+  box-shadow: 0 3px 0 #140b04, inset 0 1px 0 rgba(255, 224, 175, 0.14);
+}
+.lobby-stage .qs-btn.act[data-q="ranked"] {
+  background:
+    linear-gradient(rgba(136, 84, 22, 0.48), rgba(74, 38, 10, 0.58)),
+    url('wood_plank.jpg?v=20261116_w2') center / 100% 100% no-repeat;
+  border-color: #f6cf55;
+  color: #fff5d4;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.92);
+  box-shadow: 0 3px 0 #140b04, 0 0 14px rgba(245, 200, 66, 0.3), inset 0 1px 0 rgba(255, 240, 190, 0.42);
+}
+.lobby-stage .qs-btn.act[data-q="normal"] {
+  background:
+    linear-gradient(rgba(64, 52, 42, 0.34), rgba(34, 24, 16, 0.48)),
+    url('wood_plank.jpg?v=20261116_w2') center / 100% 100% no-repeat;
+  border-color: #e6c687;
+  color: #fff6e2;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.92);
+  box-shadow: 0 3px 0 #140b04, inset 0 1px 0 rgba(255, 236, 195, 0.32);
+}
+.lobby-stage .ranked-strip {
+  background:
+    linear-gradient(rgba(22, 14, 8, 0.58), rgba(12, 7, 4, 0.72)),
+    url('wood_plank.jpg?v=20261116_w2') center / 100% 100% no-repeat;
+  border: 1.5px solid color-mix(in srgb, var(--lg-c, #c99e4e) 65%, #7a5624);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.75), 0 3px 10px rgba(0, 0, 0, 0.55);
 }
 
 .play-stack {
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 10px;
 }
 
 .play-card {
@@ -9611,18 +9665,19 @@ body[data-board="gold"] main::after {
   justify-content: space-between;
   gap: 12px;
   padding: 13px 16px;
-  border-radius: 12px;
+  border-radius: 9px;
   cursor: pointer;
   text-align: left;
   transition: transform 0.14s ease, border-color 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
   box-sizing: border-box;
 }
 .play-card:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.06);
+  transform: translateY(-2px);
+  border-color: #fde68a !important;
+  filter: brightness(1.1);
 }
 .play-card:active {
-  transform: scale(0.985);
+  transform: translateY(2px);
 }
 .pc-text {
   display: flex;
@@ -9633,15 +9688,18 @@ body[data-board="gold"] main::after {
 .pc-text b {
   font: 800 17.5px/1.15 var(--mf);
   letter-spacing: 0.03em;
-  color: #fdf4df;
+  color: #fae8c8;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.96), 0 1px 1px rgba(0, 0, 0, 0.9);
 }
 .pc-text small {
   font: 600 12px/1.25 var(--mf);
-  color: #cbb99b;
+  color: #dfd0b4;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
 }
 .pc-arrow {
   font: 700 26px/1 var(--mf);
-  color: rgba(246, 207, 85, 0.8);
+  color: #f6cf55;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
   flex-shrink: 0;
   transition: transform 0.15s ease;
 }
@@ -9649,43 +9707,54 @@ body[data-board="gold"] main::after {
   transform: translateX(3px);
 }
 
-/* Ana CTA: Çevrim İçi Oyna */
+/* Ana CTA: Kızıl Cilalı Oyma Tahta Plaka (Çevrim İçi Oyna) */
 .play-card.play-primary {
   min-height: 64px;
   background:
-    radial-gradient(85% 90% at 15% 50%, rgba(214, 62, 42, 0.42), transparent 68%),
-    linear-gradient(180deg, rgba(138, 42, 28, 0.92) 0%, rgba(76, 20, 14, 0.96) 100%);
-  border: 2px solid rgba(246, 207, 85, 0.86);
+    linear-gradient(rgba(128, 28, 16, 0.56), rgba(68, 14, 8, 0.68)),
+    url('wood_plank.jpg?v=20261116_w2') center / 100% 100% no-repeat;
+  border: 2px solid #e5b95c;
   box-shadow:
-    0 8px 24px rgba(150, 32, 20, 0.42),
-    inset 0 1px 0 rgba(255, 236, 184, 0.35);
+    0 4px 0 #1a0804,
+    0 8px 20px rgba(0, 0, 0, 0.88),
+    0 0 18px rgba(208, 72, 42, 0.28),
+    inset 0 1px 0 rgba(255, 236, 184, 0.42);
 }
 .play-card.play-primary .pc-text b {
   font-size: 19px;
-  color: #fff4d2;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
+  color: #fff6dc;
 }
 .play-card.play-primary .pc-text small {
-  color: #f0d7b5;
+  color: #f4dec0;
 }
 
-/* İkincil CTA: Yapay Zekaya Karşı */
+/* İkincil CTA: Doğal Oyma Meşe Tahta Plaka (Yapay Zekaya Karşı) */
 .play-card.play-ai {
   min-height: 56px;
-  background: linear-gradient(180deg, rgba(50, 36, 24, 0.92) 0%, rgba(28, 20, 14, 0.96) 100%);
-  border: 1.5px solid rgba(206, 162, 86, 0.56);
-  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 230, 180, 0.14);
+  background:
+    linear-gradient(rgba(20, 12, 6, 0.24), rgba(10, 6, 3, 0.4)),
+    url('wood_plank.jpg?v=20261116_w2') center / 100% 100% no-repeat;
+  border: 1.5px solid #9c7438;
+  box-shadow:
+    0 4px 0 #140b04,
+    0 7px 14px rgba(0, 0, 0, 0.86),
+    inset 0 1px 0 rgba(255, 224, 175, 0.3);
 }
 
-/* Üçüncül CTA: Özel Modlar */
+/* Üçüncül CTA: Zümrüt-Gölge Cilalı Tahta Plaka (Özel Modlar) */
 .play-card.play-special {
   min-height: 54px;
-  background: linear-gradient(180deg, rgba(24, 42, 34, 0.9) 0%, rgba(14, 24, 20, 0.96) 100%);
-  border: 1.5px solid rgba(74, 196, 134, 0.48);
-  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.46), inset 0 1px 0 rgba(168, 255, 208, 0.14);
+  background:
+    linear-gradient(rgba(14, 48, 32, 0.54), rgba(8, 28, 18, 0.68)),
+    url('wood_plank.jpg?v=20261116_w2') center / 100% 100% no-repeat;
+  border: 1.5px solid #7aa874;
+  box-shadow:
+    0 4px 0 #0a140d,
+    0 7px 14px rgba(0, 0, 0, 0.86),
+    inset 0 1px 0 rgba(190, 245, 210, 0.26);
 }
 .play-card.play-special .pc-arrow {
-  color: rgba(110, 231, 183, 0.85);
+  color: #86efac;
 }
 
 #mb2.lobby-hub #st {
@@ -9697,44 +9766,50 @@ body[data-board="gold"] main::after {
   display: none !important;
 }
 
-/* BÖLGE 3: ALT OYUN DOCK BARI (MASAÜSTÜ: YÜZEN PİLL DOCK · MOBİL: TAM GENİŞLİK NATIVE BAR) */
+/* BÖLGE 3: ALT OYUN DOCK BARI (OYMA MEŞE & ANTİK PİRİNÇ TAHTA DOCK) */
 .menu-dock {
   position: relative;
   z-index: 4;
   width: min(92vw, 520px);
   margin: 0 auto max(14px, env(safe-area-inset-bottom, 14px));
-  padding: 6px;
+  padding: 7px;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
-  border-radius: 14px;
-  background: linear-gradient(180deg, rgba(24, 17, 13, 0.94) 0%, rgba(12, 8, 7, 0.97) 100%);
-  border: 1.5px solid rgba(201, 158, 78, 0.46);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 232, 180, 0.18);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  gap: 7px;
+  border-radius: 13px;
+  background: linear-gradient(180deg, rgba(44, 28, 17, 0.96) 0%, rgba(22, 14, 9, 0.98) 100%);
+  border: 2px solid #a87c3e;
+  box-shadow:
+    0 0 0 2px #120b06,
+    0 12px 30px rgba(0, 0, 0, 0.86),
+    inset 0 1px 0 rgba(255, 232, 180, 0.28);
   box-sizing: border-box;
 }
 .dock-btn {
   height: 44px;
-  border-radius: 10px;
-  border: 1px solid rgba(201, 158, 78, 0.22);
-  background: rgba(255, 255, 255, 0.03);
-  color: #e8d8b8;
+  border-radius: 7px;
+  border: 1.5px solid #8a6432;
+  background:
+    linear-gradient(rgba(16, 10, 5, 0.24), rgba(10, 6, 3, 0.42)),
+    url('wood_plank.jpg?v=20261116_w2') center / 100% 100% no-repeat;
+  color: #fae8c8;
+  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.95);
+  box-shadow: 0 3px 0 #140b04, inset 0 1px 0 rgba(255, 224, 175, 0.24);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+  transition: border-color 0.15s ease, transform 0.12s ease, filter 0.15s ease;
   padding: 0 6px;
 }
 .dock-btn:hover {
-  background: rgba(242, 195, 105, 0.12);
-  border-color: rgba(242, 195, 105, 0.55);
-  color: #fff4d6;
+  border-color: #fde68a;
+  color: #fff9eb;
+  filter: brightness(1.12);
+  transform: translateY(-1px);
 }
 .dock-btn:active {
-  transform: scale(0.96);
+  transform: translateY(2px);
 }
 .dock-lbl {
   display: inline-flex;
@@ -9751,7 +9826,7 @@ body[data-board="gold"] main::after {
   color: #86efac;
 }
 
-/* OYUN MODU SEÇİM PENCERELERİ (#mb.play-sheet) */
+/* OYUN MODU SEÇİM PENCERELERİ (#mb.play-sheet — TAHTA PLAKA KARTLAR) */
 #mb.play-sheet {
   width: min(94vw, 440px) !important;
   max-width: 440px !important;
@@ -9808,41 +9883,53 @@ body[data-board="gold"] main::after {
   align-items: flex-start;
   gap: 3px;
   padding: 13px 15px;
-  border-radius: 11px;
-  border: 1.5px solid rgba(201, 158, 78, 0.42);
-  background: linear-gradient(180deg, rgba(40, 28, 20, 0.92), rgba(22, 15, 11, 0.96));
-  color: #f6ead2;
+  border-radius: 8px;
+  border: 1.5px solid #9c7438;
+  background:
+    linear-gradient(rgba(18, 11, 5, 0.28), rgba(10, 6, 3, 0.46)),
+    url('wood_plank.jpg?v=20261116_w2') center / 100% 100% no-repeat;
+  box-shadow: 0 4px 0 #140b04, 0 6px 14px rgba(0, 0, 0, 0.82), inset 0 1px 0 rgba(255, 224, 175, 0.26);
+  color: #fae8c8;
   cursor: pointer;
   text-align: left;
   transition: transform 0.13s ease, border-color 0.15s ease, filter 0.15s ease;
 }
 .ps-card:hover {
-  transform: translateY(-1px);
-  border-color: rgba(246, 207, 85, 0.8);
-  filter: brightness(1.07);
+  transform: translateY(-2px);
+  border-color: #fde68a;
+  filter: brightness(1.1);
+}
+.ps-card:active {
+  transform: translateY(2px);
 }
 .ps-card b {
   font: 800 16.5px/1.15 var(--mf);
-  color: #fff2d2;
+  color: #fff4da;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95);
 }
 .ps-card small {
   font: 600 12px/1.3 var(--mf);
-  color: #c5b293;
+  color: #dfd0b4;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
 }
 .ps-card.ps-card-main {
-  background: linear-gradient(180deg, rgba(132, 38, 26, 0.92), rgba(74, 19, 13, 0.96));
-  border-color: rgba(246, 207, 85, 0.82);
+  background:
+    linear-gradient(rgba(128, 28, 16, 0.56), rgba(68, 14, 8, 0.68)),
+    url('wood_plank.jpg?v=20261116_w2') center / 100% 100% no-repeat;
+  border-color: #e5b95c;
 }
 .ps-card.ps-d-hard {
-  border-color: rgba(232, 138, 56, 0.65);
+  border-color: #d48c3e;
 }
 .ps-card.ps-d-imp {
-  background: linear-gradient(180deg, rgba(82, 22, 34, 0.92), rgba(40, 10, 18, 0.96));
-  border-color: rgba(235, 86, 112, 0.72);
+  background:
+    linear-gradient(rgba(96, 18, 28, 0.58), rgba(46, 8, 14, 0.72)),
+    url('wood_plank.jpg?v=20261116_w2') center / 100% 100% no-repeat;
+  border-color: #e05a72;
 }
-.ps-card.ps-sp-vault { border-color: rgba(245, 178, 66, 0.6); }
-.ps-card.ps-sp-cursed { border-color: rgba(192, 116, 255, 0.6); }
-.ps-card.ps-sp-puzzle { border-color: rgba(62, 224, 138, 0.6); }
+.ps-card.ps-sp-vault { border-color: #e5b44c; }
+.ps-card.ps-sp-cursed { border-color: #b478e8; }
+.ps-card.ps-sp-puzzle { border-color: #5cc488; }
 
 .ps-join-box {
   padding: 11px 13px;
