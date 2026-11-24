@@ -2598,11 +2598,12 @@ function R(){
   if(typeof renderSpecSocialBar==='function')renderSpecSocialBar();
   if(MODE==='tutorial')tutApplyHighlights();
   if(MODE=='host'){
-    if(conn&&conn.open)conn.send({k:'s',v:view(G)});
+    if(conn&&conn.open)conn.send({k:'s',v:view(G),specCount:spectators.length,specNames:spectators.map(s=>s._specName||tr('Misafir','Guest'))});
   }
   if((MODE=='host'||MODE=='bot')&&spectators.length){
     const sv=specView(G);
-    spectators.forEach(s=>{try{if(s.open)s.send({k:'s',v:sv,specCount:spectators.length})}catch(e){}});
+    const sNames=spectators.map(s=>s._specName||tr('Misafir','Guest'));
+    spectators.forEach(s=>{try{if(s.open)s.send({k:'s',v:sv,specCount:spectators.length,specNames:sNames})}catch(e){}});
   }
 }
 let glogOpen=false,glogLastSig='';
@@ -3323,7 +3324,7 @@ function exitGame(){ // limbigames perdesi, sonra ilk ekrana dön
     try{spectators.forEach(s=>{try{s.close()}catch(err){}})}catch(e){}
     try{if(peer)peer.destroy()}catch(e){}
     if(typeof stopBotSpectateHost==='function')stopBotSpectateHost();
-    conn=null;spectators=[];peer=null;waitM=false;specCount=0;CURRENT_HOST_CODE='';LAST_JOIN_CODE='';
+    conn=null;spectators=[];peer=null;waitM=false;specCount=0;specNames=[];CURRENT_HOST_CODE='';LAST_JOIN_CODE='';
     if(typeof clearReconnectGrace==='function')clearReconnectGrace();
     if(typeof clearActiveMatchSnapshot==='function')clearActiveMatchSnapshot();
     if(typeof cancelQuickMatch==='function')cancelQuickMatch(true);
@@ -3409,7 +3410,7 @@ function drawFromDeck(){if(MODE==='spectator')return;const S=G;if(!S||S.turn||lo
 $('#pass').onclick=()=>{if(MODE==='spectator')return;if(G.turn==0&&!lock&&!P){if(MODE==='tutorial'&&tutStep!==7)return;recMove(G,null,$('#pass').textContent||tr('Pas','Pass'));if(MODE=='guest')conn.send({k:'pass'});else{lrnAct(G,'p');pass();if(MODE==='tutorial'&&tutStep===7)tutClearHighlights()}}};
 
 /* ---------- ONLINE (PeerJS) ---------- */
-let MODE='bot',peer,conn,spectators=[],specCount=0,waitM=false,rematchReady=[false,false],rematchHeroes=[null,null],deathContReady=[false,false],deathContGo=null;
+let MODE='bot',peer,conn,spectators=[],specCount=0,specNames=[],waitM=false,rematchReady=[false,false],rematchHeroes=[null,null],deathContReady=[false,false],deathContGo=null;
 let OPP_PROFILE={name:'',elo:1200,isGuest:true};
 function sendMyProfile(c){
   if(!c||!c.open)return;
@@ -3672,9 +3673,13 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
         return;
       }
       fromConn._role = 'spectator';
+      fromConn._specName = String(m.name||tr('Misafir','Guest')).slice(0,18);
       spectators.push(fromConn);
       fromConn.send({k:'role', role:'spectator'});
-      if(G) fromConn.send({k:'s', v:specView(G), specCount:spectators.length});
+      if(G){
+        fromConn.send({k:'s', v:specView(G), specCount:spectators.length, specNames:spectators.map(s=>s._specName||tr('Misafir','Guest'))});
+        R();
+      }
       fromConn.on('close',()=>{
         spectators=spectators.filter(x=>x!==fromConn);
         KING_QUEUE=KING_QUEUE.filter(x=>x!==fromConn);
@@ -3840,6 +3845,38 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
   }
 }
 let PENDING_INVITE_JOIN=false,specEntering=false;
+function showSpecVeil(msg){
+  let v=document.getElementById('spec-veil');
+  if(!v){
+    v=document.createElement('div');
+    v.id='spec-veil';
+    v.className='spec-veil';
+    v.innerHTML=`<img alt="" src="limbi_favicon.png?v=limbi4" decoding="async"><b>${escHtml(msg||tr('Canlı maça bağlanılıyor…','Connecting to live match…'))}</b>`;
+    document.body.appendChild(v);
+    requestAnimationFrame(()=>v.classList.add('on'));
+  }else{
+    const b=v.querySelector('b');if(b&&msg)b.textContent=msg;
+    v.classList.remove('out');v.classList.add('on');
+  }
+}
+function hideSpecVeil(){
+  const v=document.getElementById('spec-veil');
+  if(!v)return;
+  v.classList.remove('on');v.classList.add('out');
+  setTimeout(()=>{if(v.isConnected)v.remove()},380);
+}
+function revealSpecBoard(){
+  if(!G||MODE!=='spectator')return;
+  specEntering=false;
+  const mn=$('#menu');if(mn)mn.hidden=true;
+  seen.clear();seenE.clear();
+  [0,1].forEach(p=>{if(G.pl&&G.pl[p]){G.pl[p].open.forEach(c=>seen.add(c.id));G.pl[p].closed.forEach(c=>seen.add(c.id));}});
+  (G.pj||[]).forEach(e=>seenE.add(e.uid));
+  R();
+  fit();
+  if(typeof syncGlogMobilePos==='function')syncGlogMobilePos();
+  requestAnimationFrame(()=>requestAnimationFrame(()=>hideSpecVeil()));
+}
 function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
   if(m.k=='match_found'){
     PENDING_INVITE_JOIN=false;
@@ -3888,19 +3925,9 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
       specEntering=true;
       glogOpen=false;glogLastSig='';lastThiefSeq=0;
       st('');
-      veil(1100);setMusic('game');
-      setTimeout(()=>{
-        const mn=$('#menu');if(mn&&MODE==='spectator')mn.hidden=true;
-        specEntering=false;
-        if(G&&MODE==='spectator'){
-          seen.clear();seenE.clear();
-          [0,1].forEach(p=>{if(G.pl&&G.pl[p]){G.pl[p].open.forEach(c=>seen.add(c.id));G.pl[p].closed.forEach(c=>seen.add(c.id));}});
-          (G.pj||[]).forEach(e=>seenE.add(e.uid));
-          R();
-          fit();
-          if(typeof syncGlogMobilePos==='function')syncGlogMobilePos();
-        }
-      },360);
+      setMusic('game');
+      showSpecVeil(tr('Canlı yayın açılıyor…','Opening live match…'));
+      if(G)revealSpecBoard();
     }else if(m.role=='player'){
       MODE='guest';
       OPP_PROFILE={name:'',elo:1200,isGuest:true};
@@ -3935,6 +3962,7 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
   }
   if(m.k=='s'){
     if(m.specCount!=null)specCount=m.specCount;
+    if(Array.isArray(m.specNames))specNames=m.specNames;
     const prevRev=G&&G.rev,prevWin=G?G.winSide:null;
     if(!G||(G.over&&!m.v.over))LAST_MATCH_HIST=[];
     G=m.v;if(!G.over){try{document.body.classList.remove('dead')}catch(e){}}
@@ -3949,7 +3977,7 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
     const keepModalOpen=!!(G.over||(G.wait&&document.querySelector('#mb .d20-box,#mb .end-screen,#mb .tie-box')));
     if(waitM&&!keepModalOpen){$('#m').hidden=true;lock=false;waitM=false}
     if(MODE!='spectator'&&(G.turn!=0||G.wait))P=null;
-    if(specEntering){setMusic('game');return;}
+    if(specEntering){setMusic('game');revealSpecBoard();return;}
     if(!$('#menu').hidden)setTimeout(()=>{$('#menu').hidden=true},1500);
     setMusic('game');R();
   }
@@ -4455,16 +4483,22 @@ function spectateRoom(code){
   const c=String(code).trim().toUpperCase();
   try{if(conn)conn.close()}catch(e){}
   try{if(peer)peer.destroy()}catch(e){}
-  conn=null;peer=null;
-  leaving=false;sayT='';MODE='spectator';SPEC_VOTES=[0,0];MY_SPEC_VOTE=-1;
-  st(tr('Canlı maça izleyici olarak bağlanılıyor…','Connecting to live match as spectator…'));
+  conn=null;peer=null;G=null;
+  leaving=false;sayT='';MODE='spectator';specEntering=true;SPEC_VOTES=[0,0];MY_SPEC_VOTE=-1;
+  showSpecVeil(tr('Canlı maça bağlanılıyor…','Connecting to live match…'));
   let joined=false;
+  const failSpec=msg=>{
+    clearTimeout(tmr);
+    specEntering=false;
+    hideSpecVeil();
+    try{if(conn)conn.close()}catch(e){}
+    try{if(peer)peer.destroy()}catch(e){}
+    conn=null;peer=null;MODE='bot';
+    st(msg);
+  };
   const tmr=setTimeout(()=>{
     if(!joined&&MODE==='spectator'){
-      try{if(conn)conn.close()}catch(e){}
-      try{if(peer)peer.destroy()}catch(e){}
-      conn=null;peer=null;MODE='bot';
-      st(tr('Canlı maça bağlanılamadı (oda kapanmış veya zaman aşımına uğramış olabilir).','Could not connect to live match (room may have closed or timed out).'));
+      failSpec(tr('Canlı maça bağlanılamadı (oda kapanmış veya zaman aşımına uğramış olabilir).','Could not connect to live match (room may have closed or timed out).'));
     }
   },10000);
   peer=new Peer();
@@ -4472,12 +4506,13 @@ function spectateRoom(code){
     conn=peer.connect('necrodice-'+c,{reliable:true});
     conn.on('data',m=>{if(m&&(m.k==='role'||m.k==='s')){joined=true;clearTimeout(tmr);}onHost(m)});
     conn.on('open',()=>{
-      conn.send({k:'join_as',role:'spectator'});
+      const myName=(USER_ACC&&!USER_ACC.isGuest&&USER_ACC.username)?USER_ACC.username:tr('Misafir','Guest');
+      conn.send({k:'join_as',role:'spectator',name:myName});
     });
-    conn.on('error',()=>{clearTimeout(tmr);if(!joined){MODE='bot';st(tr('Canlı maça bağlanılamadı.','Could not connect to live match.'))}});
-    conn.on('close',()=>{clearTimeout(tmr);peerLeft(tr('Canlı yayın sona erdi.','Live broadcast ended.'))});
+    conn.on('error',()=>{if(!joined)failSpec(tr('Canlı maça bağlanılamadı.','Could not connect to live match.'))});
+    conn.on('close',()=>{clearTimeout(tmr);hideSpecVeil();peerLeft(tr('Canlı yayın sona erdi.','Live broadcast ended.'))});
   });
-  peer.on('error',e=>{clearTimeout(tmr);MODE='bot';st(NETERR(e))});
+  peer.on('error',e=>failSpec(NETERR(e)));
 }
 const on=(id,f)=>{const e=document.querySelector(id);if(e)e.onclick=f}; // bir öğe yoksa diğer düğmeler yine de çalışır
 document.querySelectorAll('.d').forEach(b=>b.onclick=()=>{CURSED_RULE=null;VAULT_RUN=null;PUZZLE_ACTIVE=null;DIFF=b.dataset.d;MODE='bot';chooseHero(h=>{MY_HERO=h;enter(start)})});
@@ -6799,9 +6834,13 @@ function startBotSpectateHost(retry=0){
         if(m&&m.k==='join_as'&&m.role==='spectator'){
           if(spectators.length>=MAX_SPECTATORS){c.send({k:'spec_full',max:MAX_SPECTATORS});return;}
           c._role='spectator';
+          c._specName=String(m.name||tr('Misafir','Guest')).slice(0,18);
           spectators.push(c);
           c.send({k:'role',role:'spectator'});
-          if(G)c.send({k:'s',v:specView(G),specCount:spectators.length});
+          if(G){
+            c.send({k:'s',v:specView(G),specCount:spectators.length,specNames:spectators.map(s=>s._specName||tr('Misafir','Guest'))});
+            R();
+          }
           c.on('close',()=>{spectators=spectators.filter(x=>x!==c);if(G)R();});
         }else if(m&&m.k==='spec_react'){
           const ic=String(m.ic||'✦').slice(0,4),lbl=String(m.label||'').slice(0,18);
@@ -8400,14 +8439,17 @@ function renderSpecSocialBar(){
   const pct0=tot?Math.round((v0/tot)*100):50;
   const pct1=tot?100-pct0:50;
   if(!isSpec){
-    const watchLbl=liveSpecs>0?`${tr('İzleniyorsun','Watched')} (${liveSpecs})`:`${tr('İzleyici Oyu','Poll')} (${tot})`;
+    const sList=(MODE==='host'||MODE==='bot')?spectators.map(s=>s._specName||tr('Misafir','Guest')):(Array.isArray(specNames)?specNames:[]);
+    const uniqueNames=[...new Set(sList.filter(Boolean))];
+    const fullTip=uniqueNames.length?`${tr('İzleyenler','Watchers')}: ${uniqueNames.join(', ')}`:tr('İzleyici Tahmin Oylaması','Spectator Prediction Poll');
+    const shortWatcher=uniqueNames.length===1?escHtml(uniqueNames[0].slice(0,14)):(uniqueNames.length>1?`${escHtml(uniqueNames[0].slice(0,11))} +${uniqueNames.length-1}`:(liveSpecs>0?`${tr('İzleyen','Watching')} (${liveSpecs})`:`${tr('Oylama','Poll')} (${tot})`));
     bar.innerHTML=tot>0
-      ?`<div class="ssb-poll-live" title="${tr('İzleyici Tahmin Oylaması','Spectator Prediction Poll')}">
-        <span class="ssb-pl-lbl">${watchLbl}</span>
+      ?`<div class="ssb-poll-live" title="${escHtml(fullTip)}">
+        <span class="ssb-pl-lbl">${shortWatcher}</span>
         <div class="ssb-pl-row"><span>${escHtml(p0.slice(0,8))} <b>%${pct0}</b></span><span><b>%${pct1}</b> ${escHtml(p1.slice(0,8))}</span></div>
         <div class="ssb-pl-bar"><i style="width:${pct0}%"></i></div>
       </div>`
-      :`<div class="ssb-watch-only"><i class="lob-live-dot"></i><span>${watchLbl}</span></div>`;
+      :`<div class="ssb-watch-only" title="${escHtml(fullTip)}"><i class="lob-live-dot"></i><span>${shortWatcher}</span></div>`;
     if(typeof syncGlogMobilePos==='function')syncGlogMobilePos();
     return;
   }
