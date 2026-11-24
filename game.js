@@ -7691,10 +7691,10 @@ function applyQueueModeUi(){
   });
   if($('#play-stack-std'))$('#play-stack-std').hidden=isS;
   if($('#play-stack-special'))$('#play-stack-special').hidden=!isS;
-  if($('#play-online-t'))$('#play-online-t').textContent=isR?tr('Çevrim İçi · Dereceli','Play Online · Ranked'):tr('Çevrim İçi · Normal','Play Online · Normal');
+  if($('#play-online-t'))$('#play-online-t').textContent=tr('Çevrim İçi Oyna','Play Online');
   if($('#play-online-s'))$('#play-online-s').textContent=tr('Hızlı Maç Ara · Özel Oda · Davet','Quick Match · Private Room · Invite');
   if($('#play-ai-t'))$('#play-ai-t').textContent=tr('Yapay Zekaya Karşı','VS AI');
-  if($('#play-ai-s'))$('#play-ai-s').textContent=isR?tr('Zor · İmkansız (Dereceli)','Hard · Impossible (Ranked)'):tr('Kolay · Orta · Zor · İmkansız','Easy · Medium · Hard · Impossible');
+  if($('#play-ai-s'))$('#play-ai-s').textContent=isR?tr('Zor · İmkansız','Hard · Impossible'):tr('Kolay · Orta · Zor · İmkansız','Easy · Medium · Hard · Impossible');
   if($('#sp-vault-t'))$('#sp-vault-t').textContent=tr('Ölüm Mahzeni','Death Vault');
   if($('#sp-vault-s'))$('#sp-vault-s').textContent=tr('5 aşamalı roguelike · Kalıntılar · Bilinmeyen Boss','5-stage roguelike · Relics · The Unknown Boss');
   if($('#sp-cursed-t'))$('#sp-cursed-t').textContent=tr('Haftalık Lanetli Masa','Weekly Cursed Table');

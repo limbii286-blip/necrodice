@@ -10739,3 +10739,56 @@ body[data-cardback="sovereign"] #deck, body[data-cardback="sovereign"] .c.bk { b
 .cb-prev-classic, .cb-prev-crimson, .cb-prev-ghost, .cb-prev-obsidian, .cb-prev-moonlight, .cb-prev-sovereign {
   filter: none !important;
 }
+
+/* TEK TİP DOĞAL TAHTA TEMASI (ANA EKRANDA EKSTRA RENK TİNTİ YOK) */
+.lobby-stage .qs-btn.act[data-q="ranked"],
+.lobby-stage .qs-btn.act[data-q="normal"],
+.lobby-stage .qs-btn.act[data-q="special"] {
+  background:
+    linear-gradient(rgba(36, 22, 12, 0.22), rgba(16, 10, 5, 0.38)),
+    url('wood_plank.jpg?v=20261116_w2') center / cover no-repeat !important;
+  border-color: #f6cf55 !important;
+  color: #fff6dc !important;
+  box-shadow: 0 2px 0 #140b04, 0 0 12px rgba(245, 200, 66, 0.26), inset 0 1px 0 rgba(255, 240, 190, 0.4) !important;
+}
+.play-card,
+.play-card.play-primary,
+.play-card.play-ai,
+.play-card.play-sp-vault,
+.play-card.play-sp-cursed,
+.play-card.play-sp-puzzle {
+  background:
+    linear-gradient(rgba(22, 13, 7, 0.26), rgba(10, 6, 3, 0.44)),
+    url('wood_plank.jpg?v=20261116_w2') center / cover no-repeat !important;
+  border: 1.5px solid #a87c3e !important;
+  box-shadow: 0 4px 0 #140b04, 0 12px 26px rgba(0, 0, 0, 0.82), inset 0 1px 0 rgba(255, 230, 180, 0.3) !important;
+}
+.play-card.play-primary {
+  border-width: 2px !important;
+  border-color: #dfb456 !important;
+}
+.play-card::before,
+.play-card.play-primary::before,
+.play-card.play-sp-cursed::before,
+.play-card.play-sp-puzzle::before {
+  background: linear-gradient(180deg, #f3cf7a, #9e6b24) !important;
+}
+.play-card .pc-arrow,
+.play-card.play-special .pc-arrow {
+  color: #f6cf55 !important;
+}
+.ps-card,
+.ps-card.ps-card-main,
+.ps-card.ps-d-hard,
+.ps-card.ps-d-imp,
+.ps-card.ps-sp-vault,
+.ps-card.ps-sp-cursed,
+.ps-card.ps-sp-puzzle {
+  background:
+    linear-gradient(rgba(22, 13, 7, 0.26), rgba(10, 6, 3, 0.44)),
+    url('wood_plank.jpg?v=20261116_w2') center / cover no-repeat !important;
+  border: 1.5px solid #a87c3e !important;
+}
+.ps-card.ps-card-main {
+  border-color: #e8bc5c !important;
+}
