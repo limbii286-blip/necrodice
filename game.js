@@ -7207,20 +7207,22 @@ function renderAuthBar(){
   const lobCnt=Array.isArray(LOBBY_ONLINE_LIST)?LOBBY_ONLINE_LIST.length:0;
   const lobBtnHtml=`<button type="button" class="auth-lb-btn auth-lob-btn" id="ab-lob" title="${tr('Çevrim İçi Lobi','Online Lobby')}"><i class="lob-live-dot"></i><span>${tr('Lobi','Lobby')}</span><b id="ab-lob-cnt">${lobCnt}</b></button>`;
   const lbBtnHtml=`<button type="button" class="auth-lb-btn" id="ab-lb" title="${tr('Üye ELO Sıralaması','Member ELO Leaderboard')}"><span>${tr('Sıralama','Ranks')}</span></button>`;
+  const invBtnHtml=`<button type="button" class="auth-lb-btn auth-inv-btn" id="ab-inv" title="${tr('Kozmetikler ve Envanter','Cosmetics & Inventory')}"><span>${tr('Envanter','Inventory')}</span></button>`;
   if(!USER_ACC){
     bar.hidden=false;
-    bar.innerHTML=`${lobBtnHtml}${lbBtnHtml}<button type="button" class="auth-pill auth-pill-empty" id="ab-login"><span>${tr('Giriş Yap / Kayıt Ol','Sign In / Register')}</span></button>`;
-    const btn=$('#ab-login'),lb=$('#ab-lb'),lob=$('#ab-lob');
+    bar.innerHTML=`<div class="auth-bar-left">${lobBtnHtml}${lbBtnHtml}${invBtnHtml}</div><div class="auth-bar-right"><button type="button" class="auth-pill auth-pill-empty" id="ab-login"><span>${tr('Giriş Yap / Kayıt Ol','Sign In / Register')}</span></button></div>`;
+    const btn=$('#ab-login'),lb=$('#ab-lb'),lob=$('#ab-lob'),inv=$('#ab-inv');
     if(btn)btn.onclick=()=>{snd('click');openAuthModal('login',false)};
     if(lb)lb.onclick=()=>{snd('click');openLeaderboardModal()};
     if(lob)lob.onclick=()=>{snd('click');openLobbyModal()};
+    if(inv)inv.onclick=()=>{snd('click');openInventoryModal()};
     return;
   }
   const rk=eloRank(USER_ACC.elo);
   const nm=USER_ACC.isGuest?tr('Misafir','Guest'):escHtml(USER_ACC.username);
   const stDays=Math.max(1,USER_ACC.streak||1);
   bar.hidden=false;
-  bar.innerHTML=`<div class="auth-bar-top">${lobBtnHtml}${lbBtnHtml}<button type="button" class="auth-pill ${rk.cls}" id="ab-prof" title="${tr('Profil, ELO & Günlük Seri','Profile, ELO & Daily Streak')}">
+  bar.innerHTML=`<div class="auth-bar-left">${lobBtnHtml}${lbBtnHtml}${invBtnHtml}</div><div class="auth-bar-right"><button type="button" class="auth-pill ${rk.cls}" id="ab-prof" title="${tr('Profil, ELO & Günlük Seri','Profile, ELO & Daily Streak')}">
     <span class="ap-ic">${rk.ic}</span>
     <span class="ap-info">
       <b>${nm}</b>
@@ -7228,11 +7230,10 @@ function renderAuthBar(){
     </span>
     <span class="ap-streak" title="${tr(`${stDays} Günlük Seri`,`${stDays}-Day Streak`)}">${stDays}${tr('g','d')}</span>
     <span class="ap-elo">${Math.round(USER_ACC.elo||1200)} <i>ELO</i></span>
-  </button></div>
-  <button type="button" class="auth-inv-btn" id="ab-inv" title="${tr('Kozmetikler & Envanter','Cosmetics & Inventory')}"><span>✦ ${tr('Envanter','Inventory')}</span></button>`;
+  </button></div>`;
   const pb=$('#ab-prof'),lb=$('#ab-lb'),lob=$('#ab-lob'),inv=$('#ab-inv');
   if(pb)pb.onclick=()=>{snd('click');openProfileModal('overview')};
-  if(inv)inv.onclick=()=>{snd('click');openProfileModal('style')};
+  if(inv)inv.onclick=()=>{snd('click');openInventoryModal()};
   if(lb)lb.onclick=()=>{snd('click');openLeaderboardModal()};
   if(lob)lob.onclick=()=>{snd('click');openLobbyModal()};
 }
@@ -7758,7 +7759,7 @@ function openProfileModal(initialTab='overview'){
         <button type="button" id="pr-close" class="btn alt sm">${tr('Kapat','Close')}</button>
       </div>
     </div>`;
-    mb.querySelectorAll('.pr-tabs .pr-tab').forEach(b=>b.onclick=()=>{snd('click');curTab=b.dataset.pt;renderProf(USER_ACC)});
+    mb.querySelectorAll('.pr-tabs .pr-tab').forEach(b=>b.onclick=()=>{snd('click');if(b.dataset.pt==='style'){mb.classList.remove('pr-mode');openInventoryModal();return;}curTab=b.dataset.pt;renderProf(USER_ACC)});
     mb.querySelectorAll('.cos-chip[data-ds]').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.diceSkin=b.dataset.ds;saveSession(USER_ACC);renderProf(USER_ACC)});
     mb.querySelectorAll('.cos-chip[data-fx]').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.d20Effect=b.dataset.fx;saveSession(USER_ACC);renderProf(USER_ACC)});
     mb.querySelectorAll('.cos-chip[data-bt]').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.boardTheme=b.dataset.bt;saveSession(USER_ACC);renderProf(USER_ACC)});
@@ -8530,4 +8531,157 @@ function openFirstVisitWelcome(){
   $('#fv-reg').onclick=()=>{snd('click');markDone();mb.classList.remove('auth-mode');openAuthModal('register',true);};
   $('#fv-login').onclick=()=>{snd('click');markDone();mb.classList.remove('auth-mode');openAuthModal('login',false);};
   $('#fv-guest').onclick=()=>{snd('click');markDone();mb.classList.remove('auth-mode');$('#m').hidden=true;lock=false;};
+}
+
+
+/* ---------- GELİŞMİŞ GÖRSEL ENVANTER (CANLI 3D D20 + GERÇEK OYUN VARLIKLARI) ---------- */
+function openInventoryModal(initialCat='dice'){
+  if(!USER_ACC)createGuestAccount();
+  const mb=$('#mb');if(!mb)return;
+  let cat=initialCat||'dice';
+  lock=true;
+  mb.classList.remove('end-mode','an-mode','set-mode','lb-mode','lob-mode','pr-mode');
+  mb.classList.add('auth-mode','inv-mode');
+
+  const renderInv=(acc)=>{
+    if(!acc)return;
+    const unlockedAch=new Set(acc.achievements||[]);
+    const heroImg=avSrc(MY_HERO||'c');
+    let bodyHtml='';
+
+    if(cat==='dice'){
+      const diceCards=DICE_SKINS.map(ds=>{
+        const ok=ds.req(acc),sel=(acc.diceSkin||'ruby')===ds.id;
+        return `<button type="button" class="inv-card${sel?' sel':''}${ok?'':' lock'}" data-ds="${ds.id}" ${ok?'':'disabled'}>
+          <div class="inv-stage inv-stage-d20">
+            <canvas class="inv-d20-cv" data-skin="${ds.id}" width="160" height="160"></canvas>
+          </div>
+          <div class="inv-info">
+            <b>${escHtml(isEn()?ds.enN:ds.trN)}</b>
+            <small>${sel?tr('Aktif','Equipped'):(ok?tr('Kullanmak için tıkla','Click to equip'):escHtml(isEn()?ds.enR:ds.trR))}</small>
+          </div>
+          ${sel?`<span class="inv-tag on">${tr('Seçili','Active')}</span>`:(!ok?`<span class="inv-tag lk">${tr('Kilitli','Locked')}</span>`:'')}
+        </button>`;
+      }).join('');
+      const fxCards=D20_EFFECTS.map(fx=>{
+        const ok=fx.req(acc),sel=(acc.d20Effect||'classic')===fx.id;
+        return `<button type="button" class="inv-card inv-card-sm${sel?' sel':''}${ok?'':' lock'}" data-fx="${fx.id}" ${ok?'':'disabled'}>
+          <div class="inv-stage inv-stage-fx">
+            <div class="inv-fx-demo fx-${fx.id}"><span>20</span></div>
+          </div>
+          <div class="inv-info">
+            <b>${escHtml(isEn()?fx.enN:fx.trN)}</b>
+            <small>${sel?tr('Aktif','Equipped'):(ok?tr('Kullan','Equip'):escHtml(isEn()?fx.enR:fx.trR))}</small>
+          </div>
+          ${sel?`<span class="inv-tag on">${tr('Seçili','Active')}</span>`:(!ok?`<span class="inv-tag lk">${tr('Kilitli','Locked')}</span>`:'')}
+        </button>`;
+      }).join('');
+      bodyHtml=`<div class="inv-sec-lbl">${tr('3D Ölüm Zarı (D20) Stilleri','3D Death Dice (D20) Styles')}</div>
+        <div class="inv-grid inv-grid-3">${diceCards}</div>
+        <div class="inv-sec-lbl" style="margin-top:14px">${tr('Zar İniş Efektleri','Dice Landing Effects')}</div>
+        <div class="inv-grid inv-grid-4">${fxCards}</div>`;
+    }else if(cat==='cards'){
+      const cbCards=CARD_BACKS.map(cb=>{
+        const ok=cb.req(acc),sel=(acc.cardBack||'classic')===cb.id;
+        return `<button type="button" class="inv-card${sel?' sel':''}${ok?'':' lock'}" data-cb="${cb.id}" ${ok?'':'disabled'}>
+          <div class="inv-stage inv-stage-cb">
+            <div class="inv-cb-preview cb-prev-${cb.id}"><img src="img/back.jpg" alt="" decoding="async"></div>
+          </div>
+          <div class="inv-info">
+            <b>${escHtml(isEn()?cb.enN:cb.trN)}</b>
+            <small>${sel?tr('Aktif','Equipped'):(ok?tr('Kullanmak için tıkla','Click to equip'):escHtml(isEn()?cb.enR:cb.trR))}</small>
+          </div>
+          ${sel?`<span class="inv-tag on">${tr('Seçili','Active')}</span>`:(!ok?`<span class="inv-tag lk">${tr('Kilitli','Locked')}</span>`:'')}
+        </button>`;
+      }).join('');
+      bodyHtml=`<div class="inv-sec-lbl">${tr('Oyun İçi Deste ve Kapalı Kart Arkaları','In-Game Deck & Hidden Card Backs')}</div>
+        <div class="inv-grid inv-grid-3">${cbCards}</div>`;
+    }else if(cat==='board'){
+      const btCards=BOARD_THEMES.map(bt=>{
+        const ok=bt.req(acc),sel=(acc.boardTheme||'classic')===bt.id;
+        return `<button type="button" class="inv-card inv-card-wide${sel?' sel':''}${ok?'':' lock'}" data-bt="${bt.id}" ${ok?'':'disabled'}>
+          <div class="inv-stage inv-stage-board bt-prev-${bt.id}">
+            <img src="board_gothic.jpg" alt="" decoding="async">
+          </div>
+          <div class="inv-info">
+            <b>${escHtml(isEn()?bt.enN:bt.trN)}</b>
+            <small>${sel?tr('Aktif','Equipped'):(ok?tr('Kullanmak için tıkla','Click to equip'):escHtml(isEn()?bt.enR:bt.trR))}</small>
+          </div>
+          ${sel?`<span class="inv-tag on">${tr('Seçili','Active')}</span>`:(!ok?`<span class="inv-tag lk">${tr('Kilitli','Locked')}</span>`:'')}
+        </button>`;
+      }).join('');
+      bodyHtml=`<div class="inv-sec-lbl">${tr('Savaş Masası Atmosfer Temaları','Battle Table Atmosphere Themes')}</div>
+        <div class="inv-grid inv-grid-2">${btCards}</div>`;
+    }else{
+      const frCards=PROFILE_FRAMES.map(fr=>{
+        const ok=fr.req(acc),sel=(acc.frame||'classic')===fr.id;
+        return `<button type="button" class="inv-card inv-card-sm${sel?' sel':''}${ok?'':' lock'}" data-fr="${fr.id}" ${ok?'':'disabled'}>
+          <div class="inv-stage inv-stage-fr">
+            <img class="inv-fr-av fr-${fr.id}" src="${heroImg}" alt="" decoding="async">
+          </div>
+          <div class="inv-info">
+            <b>${escHtml(isEn()?fr.enN:fr.trN)}</b>
+            <small>${sel?tr('Aktif','Equipped'):(ok?tr('Kullan','Equip'):escHtml(isEn()?fr.enR:fr.trR))}</small>
+          </div>
+          ${sel?`<span class="inv-tag on">${tr('Seçili','Active')}</span>`:(!ok?`<span class="inv-tag lk">${tr('Kilitli','Locked')}</span>`:'')}
+        </button>`;
+      }).join('');
+      const achHtml=ACHIEVEMENTS.map(a=>{
+        const ok=unlockedAch.has(a.id),eq=acc.title===a.id;
+        return `<div class="ach-row${ok?' ok':''}">
+          <span class="ach-ic">${a.ic}</span>
+          <div class="ach-txt">
+            <b>${isEn()?a.enN:a.trN}</b>
+            <small>${isEn()?a.enD:a.trD} · <em>${isEn()?a.enT:a.trT}</em></small>
+          </div>
+          ${ok?`<button type="button" class="btn sm ach-eq${eq?' alt':''}" data-title="${eq?'':a.id}">${eq?tr('Takılı','Equipped'):tr('Unvanı Tak','Equip')}</button>`:`<span class="ach-lk">${tr('Kilitli','Locked')}</span>`}
+        </div>`;
+      }).join('');
+      bodyHtml=`<div class="inv-sec-lbl">${tr('Profil Çerçeveleri','Profile Frames')}</div>
+        <div class="inv-grid inv-grid-4">${frCards}</div>
+        <div class="inv-sec-lbl" style="margin-top:14px">${tr('Başarımlar ve Unvanlar','Achievements & Titles')} (${unlockedAch.size}/${ACHIEVEMENTS.length})</div>
+        <div class="ach-list">${achHtml}</div>`;
+    }
+
+    mb.innerHTML=`<div class="inv-wrap">
+      <div class="inv-head">
+        <div>
+          <h3>${tr('Envanter','Inventory')}</h3>
+          <p>${tr('Ölüm zarı, kart arkası, masa teması ve profil çerçevelerini canlı önizleyerek kuşan','Preview and equip your Death Dice, card backs, table themes, and profile frames')}</p>
+        </div>
+        <button type="button" id="inv-close-top" class="btn sm">${tr('Kapat','Close')}</button>
+      </div>
+      <div class="inv-tabs">
+        <button type="button" class="inv-tab${cat==='dice'?' act':''}" data-ic="dice">${tr('Ölüm Zarı','Death Dice')}</button>
+        <button type="button" class="inv-tab${cat==='cards'?' act':''}" data-ic="cards">${tr('Kart Arkası','Card Backs')}</button>
+        <button type="button" class="inv-tab${cat==='board'?' act':''}" data-ic="board">${tr('Masa Teması','Table Theme')}</button>
+        <button type="button" class="inv-tab${cat==='frame'?' act':''}" data-ic="frame">${tr('Çerçeve & Unvan','Frames & Titles')}</button>
+      </div>
+      <div class="inv-scroll">${bodyHtml}</div>
+    </div>`;
+
+    // Gerçek 3D D20 canvas önizlemelerini çiz
+    if(cat==='dice'&&typeof draw3DD20==='function'){
+      const prevSkin=window.D20_SKIN;
+      const ang=(typeof getD20FaceAngles==='function')?getD20FaceAngles(20):{rx:0.6,ry:0.78,rz:0};
+      mb.querySelectorAll('.inv-d20-cv').forEach(cv=>{
+        window.D20_SKIN=cv.dataset.skin||'ruby';
+        draw3DD20(cv,ang.rx,ang.ry,ang.rz,20,false,false,false,1.0,1.0);
+      });
+      window.D20_SKIN=prevSkin;
+    }
+
+    const close=()=>{mb.classList.remove('auth-mode','inv-mode');$('#m').hidden=true;lock=false};
+    if($('#inv-close-top'))$('#inv-close-top').onclick=()=>{snd('click');close()};
+    mb.querySelectorAll('.inv-tab').forEach(b=>b.onclick=()=>{snd('click');cat=b.dataset.ic;renderInv(USER_ACC)});
+    mb.querySelectorAll('.inv-card[data-ds]').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.diceSkin=b.dataset.ds;saveSession(USER_ACC);renderInv(USER_ACC)});
+    mb.querySelectorAll('.inv-card[data-fx]').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.d20Effect=b.dataset.fx;saveSession(USER_ACC);renderInv(USER_ACC)});
+    mb.querySelectorAll('.inv-card[data-cb]').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.cardBack=b.dataset.cb;saveSession(USER_ACC);renderInv(USER_ACC)});
+    mb.querySelectorAll('.inv-card[data-bt]').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.boardTheme=b.dataset.bt;saveSession(USER_ACC);renderInv(USER_ACC)});
+    mb.querySelectorAll('.inv-card[data-fr]').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.frame=b.dataset.fr;saveSession(USER_ACC);renderInv(USER_ACC)});
+    mb.querySelectorAll('.ach-eq').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.title=b.dataset.title||'';saveSession(USER_ACC);renderInv(USER_ACC)});
+  };
+
+  renderInv(USER_ACC);
+  $('#m').hidden=false;
 }
