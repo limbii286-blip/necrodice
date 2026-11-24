@@ -9177,7 +9177,8 @@ function openFirstVisitWelcome(){
   mb.classList.remove('end-mode','an-mode','set-mode','lb-mode','lob-mode','pr-mode');
   mb.classList.add('auth-mode');
   mb.innerHTML=`<div class="sp-wrap">
-    <div class="sp-badge vault">${tr('Necrodice\'a Hoş Geldin','Welcome to Necrodice')}</div>
+    <img class="fv-logo" src="necrodice_logo.png?v=20261118_logo8" alt="NECRODICE" width="920" height="281">
+    <div class="sp-badge vault">${tr('Hoş Geldin','Welcome')}</div>
     <h3 class="sp-title">${tr('Kaderin Kartlarda, Hayatın Zarda','Fate in Cards, Life on the Die')}</h3>
     <p class="sp-desc">${tr('21\'e en yakın toplamı kur, Jokerlerle masayı tersine çevir ve düelloyu kaybedersen Ölüm Zarından sağ çıkmaya çalış. İlk kez oynuyorsan 60 saniyelik hızlı eğitimle hemen öğren!','Get closest to 21, bend the rules with Jokers, and survive the Death Dice if you lose. New here? Learn everything in 60 seconds with the interactive tutorial!')}</p>
     <div class="row sp-acts" style="flex-direction:column;width:100%;max-width:300px;gap:8px">
