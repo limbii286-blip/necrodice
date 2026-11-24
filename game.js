@@ -8016,7 +8016,7 @@ function finishDailyPuzzle(won,myTot,oppTot,T){
   </div>`;
   $('#m').hidden=false;
   if($('#sp-pz-retry'))$('#sp-pz-retry').onclick=()=>{snd('click');mb.classList.remove('auth-mode');$('#m').hidden=true;lock=false;startDailyPuzzle(pz)};
-  if($('#sp-pz-home'))$('#sp-pz-home').onclick=()=>{snd('click');mb.classList.remove('auth-mode');home()};
+  if($('#sp-pz-home'))$('#sp-pz-home').onclick=()=>{snd('click');mb.classList.remove('auth-mode');exitGame()};
 }
 
 
@@ -8085,7 +8085,7 @@ function startVaultStage(stageIdx,withVeil=false){
   else start();
 }
 function openVaultRelicPick(){
-  if(!VAULT_RUN)return home();
+  if(!VAULT_RUN)return exitGame();
   const nextStage=VAULT_RUN.stage+1;
   const avail=shuf(VAULT_RELICS.filter(r=>!VAULT_RUN.relics.includes(r.id))).slice(0,3);
   const mb=$('#mb');if(!mb)return;
@@ -8130,7 +8130,7 @@ function openVaultVictoryModal(){
   </div>`;
   $('#m').hidden=false;
   $('#sp-vv-new').onclick=()=>{snd('click');VAULT_RUN=null;openVaultModal()};
-  $('#sp-vv-home').onclick=()=>{snd('click');mb.classList.remove('auth-mode');home()};
+  $('#sp-vv-home').onclick=()=>{snd('click');mb.classList.remove('auth-mode');exitGame()};
 }
 
 

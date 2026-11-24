@@ -8418,16 +8418,30 @@ body.cb .qm-vs-card.opp {
 /* ---------- ÖZEL MODLAR (LANETLİ MASA, GÜNÜN BULMACASI, ÖLÜM MAHZENİ) ---------- */
 .hs-special-row {
   display: grid !important;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 7px !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  width: 100% !important;
+  align-items: stretch !important;
 }
-.hs-special-row .btn {
-  padding: 9px 6px !important;
-  font-size: 13px !important;
+#mb2 .hs-special-row .btn {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 44px !important;
+  padding: 10px 8px !important;
+  font-size: 16px !important;
   line-height: 1.15;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  box-sizing: border-box !important;
+}
+.sp-acts .btn {
+  min-height: 44px !important;
+  padding: 10px 18px !important;
+  font-size: 15.5px !important;
 }
 .mode-pill {
   display: inline-flex;
@@ -8571,7 +8585,8 @@ body.cb .qm-vs-card.opp {
 }
 @media (max-width: 560px) {
   .relic-grid { grid-template-columns: 1fr; }
-  .hs-special-row .btn { font-size: 12px !important; padding: 8px 4px !important; }
+  .hs-special-row { gap: 6px !important; }
+  #mb2 .hs-special-row .btn { font-size: clamp(12.5px, 3.3vw, 14.5px) !important; min-height: 42px !important; padding: 8px 5px !important; }
 }
 
 
