@@ -6170,6 +6170,36 @@ body, button, input, select, textarea {
   top: max(12px, env(safe-area-inset-top, 12px));
   right: max(14px, env(safe-area-inset-right, 14px));
   z-index: 25;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.auth-bar-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.auth-inv-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(212, 168, 85, 0.55);
+  background: linear-gradient(180deg, rgba(34, 24, 18, 0.92), rgba(16, 11, 10, 0.96));
+  color: #f5df9d;
+  font: 700 12.5px/1.2 var(--mf);
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 232, 175, 0.16);
+  transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+}
+.auth-inv-btn:hover {
+  transform: translateY(-1px);
+  border-color: #fde047;
+  color: #fff3c4;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.78), 0 0 14px rgba(245, 196, 81, 0.28);
 }
 .auth-pill {
   display: inline-flex;

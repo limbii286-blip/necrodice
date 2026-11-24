@@ -7220,7 +7220,7 @@ function renderAuthBar(){
   const nm=USER_ACC.isGuest?tr('Misafir','Guest'):escHtml(USER_ACC.username);
   const stDays=Math.max(1,USER_ACC.streak||1);
   bar.hidden=false;
-  bar.innerHTML=`${lobBtnHtml}${lbBtnHtml}<button type="button" class="auth-pill ${rk.cls}" id="ab-prof" title="${tr('Profil, ELO & Günlük Seri','Profile, ELO & Daily Streak')}">
+  bar.innerHTML=`<div class="auth-bar-top">${lobBtnHtml}${lbBtnHtml}<button type="button" class="auth-pill ${rk.cls}" id="ab-prof" title="${tr('Profil, ELO & Günlük Seri','Profile, ELO & Daily Streak')}">
     <span class="ap-ic">${rk.ic}</span>
     <span class="ap-info">
       <b>${nm}</b>
@@ -7228,9 +7228,11 @@ function renderAuthBar(){
     </span>
     <span class="ap-streak" title="${tr(`${stDays} Günlük Seri`,`${stDays}-Day Streak`)}">${stDays}${tr('g','d')}</span>
     <span class="ap-elo">${Math.round(USER_ACC.elo||1200)} <i>ELO</i></span>
-  </button>`;
-  const pb=$('#ab-prof'),lb=$('#ab-lb'),lob=$('#ab-lob');
-  if(pb)pb.onclick=()=>{snd('click');openProfileModal()};
+  </button></div>
+  <button type="button" class="auth-inv-btn" id="ab-inv" title="${tr('Kozmetikler & Envanter','Cosmetics & Inventory')}"><span>✦ ${tr('Envanter','Inventory')}</span></button>`;
+  const pb=$('#ab-prof'),lb=$('#ab-lb'),lob=$('#ab-lob'),inv=$('#ab-inv');
+  if(pb)pb.onclick=()=>{snd('click');openProfileModal('overview')};
+  if(inv)inv.onclick=()=>{snd('click');openProfileModal('style')};
   if(lb)lb.onclick=()=>{snd('click');openLeaderboardModal()};
   if(lob)lob.onclick=()=>{snd('click');openLobbyModal()};
 }
@@ -7744,7 +7746,7 @@ function openProfileModal(initialTab='overview'){
         <button type="button" class="pr-tab${curTab==='overview'?' act':''}" data-pt="overview">${tr('Genel','Overview')}</button>
         <button type="button" class="pr-tab${curTab==='quests'?' act':''}" data-pt="quests">${tr('Görevler','Quests')} ${qDoneCnt}/3</button>
         <button type="button" class="pr-tab${curTab==='heroes'?' act':''}" data-pt="heroes">${tr('Kahramanlar','Heroes')}</button>
-        <button type="button" class="pr-tab${curTab==='style'?' act':''}" data-pt="style">${tr('Stil & Başarım','Style & Badges')}</button>
+        <button type="button" class="pr-tab${curTab==='style'?' act':''}" data-pt="style">${tr('Envanter','Inventory')}</button>
       </div>
       ${tabBody}
       <div class="row pr-acts">
