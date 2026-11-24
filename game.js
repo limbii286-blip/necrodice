@@ -8519,6 +8519,7 @@ function openFirstVisitWelcome(){
         <button type="button" id="fv-reg" class="btn alt" style="flex:1">${tr('Üye Ol','Sign Up')}</button>
         <button type="button" id="fv-login" class="btn" style="flex:1">${tr('Giriş Yap','Sign In')}</button>
       </div>
+      <button type="button" id="fv-guest" class="btn sm" style="width:100%;opacity:0.86">${tr('Misafir Olarak Devam Et','Continue as Guest')}</button>
     </div>
   </div>`;
   $('#m').hidden=false;
@@ -8526,4 +8527,5 @@ function openFirstVisitWelcome(){
   $('#fv-tut').onclick=()=>{snd('ok');markDone();mb.classList.remove('auth-mode');$('#m').hidden=true;lock=false;MODE='tutorial';MY_HERO='p';OPP_HERO='n';enter(startTutorial);};
   $('#fv-reg').onclick=()=>{snd('click');markDone();mb.classList.remove('auth-mode');openAuthModal('register',true);};
   $('#fv-login').onclick=()=>{snd('click');markDone();mb.classList.remove('auth-mode');openAuthModal('login',false);};
+  $('#fv-guest').onclick=()=>{snd('click');markDone();mb.classList.remove('auth-mode');$('#m').hidden=true;lock=false;};
 }
