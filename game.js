@@ -3919,7 +3919,7 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
       if(G.vampBurn){const vb=G.vampBurn;setTimeout(()=>{if(G&&G.winSide===winW)triggerVampBurnFx(vb);},2400);}
       setTimeout(()=>{if(G&&G.winSide===winW)dustTableCards();},3400);
     }
-    const keepModalOpen=!!(G.over||document.querySelector('#mb .d20-box,#mb .end-screen,#mb .tie-box'));
+    const keepModalOpen=!!(G.over||(G.wait&&document.querySelector('#mb .d20-box,#mb .end-screen,#mb .tie-box')));
     if(waitM&&!keepModalOpen){$('#m').hidden=true;lock=false;waitM=false}
     if(MODE!='spectator'&&(G.turn!=0||G.wait))P=null;
     if(!$('#menu').hidden)setTimeout(()=>{$('#menu').hidden=true},1500);
