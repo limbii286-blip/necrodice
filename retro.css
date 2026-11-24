@@ -8744,3 +8744,79 @@ body.cb .qm-vs-card.opp {
   .ssb-pl-row { font-size: 10px; gap: 5px; }
   .spec-float-react { font-size: 24px; }
 }
+
+
+/* ---------- MASA TEMALARI & ÖLÜM ZARI İNİŞ EFEKTLERİ ---------- */
+.bt-sw,
+.fx-sw {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+.bt-classic { background: linear-gradient(135deg, #2a1d17, #6d4c32); }
+.bt-frost { background: linear-gradient(135deg, #0b2538, #67e8f9); }
+.bt-crimson { background: linear-gradient(135deg, #3b080e, #dc2626); }
+.bt-gold { background: linear-gradient(135deg, #422006, #facc15); }
+
+.fx-classic { background: radial-gradient(circle, #fde68a, #5c3a16); }
+.fx-sparks { background: radial-gradient(circle, #ff6b4a, #7f1d1d); }
+.fx-runes { background: radial-gradient(circle, #fef08a, #a16207); }
+.fx-void { background: radial-gradient(circle, #c084fc, #2e1065); }
+
+body[data-board="frost"] main::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(circle at 50% 45%, rgba(56, 189, 248, 0.08), rgba(8, 28, 48, 0.36) 80%);
+}
+body[data-board="crimson"] main::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(circle at 50% 45%, rgba(220, 38, 38, 0.1), rgba(56, 6, 12, 0.38) 80%);
+}
+body[data-board="gold"] main::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(circle at 50% 45%, rgba(250, 204, 21, 0.1), rgba(52, 28, 6, 0.32) 80%);
+}
+
+.d20-fx-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 146px;
+  height: 146px;
+  margin-left: -73px;
+  margin-top: -73px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 4;
+  animation: d20BurstFx 1.05s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.d20-fx-ring.fx-sparks {
+  border: 3px dashed rgba(255, 110, 72, 0.92);
+  box-shadow: 0 0 28px rgba(239, 68, 68, 0.85), inset 0 0 24px rgba(251, 146, 60, 0.65);
+}
+.d20-fx-ring.fx-runes {
+  border: 3px double rgba(253, 224, 71, 0.95);
+  box-shadow: 0 0 34px rgba(250, 204, 21, 0.88), inset 0 0 26px rgba(254, 240, 138, 0.55);
+}
+.d20-fx-ring.fx-void {
+  border: 3px solid rgba(192, 132, 252, 0.92);
+  box-shadow: 0 0 38px rgba(147, 51, 234, 0.9), inset 0 0 32px rgba(88, 28, 135, 0.75);
+}
+@keyframes d20BurstFx {
+  0%   { transform: scale(0.45) rotate(0deg); opacity: 0.98; }
+  60%  { transform: scale(1.22) rotate(95deg); opacity: 0.85; }
+  100% { transform: scale(1.62) rotate(165deg); opacity: 0; }
+}

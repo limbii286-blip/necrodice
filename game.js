@@ -498,6 +498,7 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
             if(isCrit){snd('win');flash();vib([80,80,200])}
             else if(isFail){snd('death');if(res=='death'){try{document.body.classList.add('dead')}catch(e){}}vib([300,100,500])}
             else{snd(res);flash()}
+            if(typeof spawnD20LandingFx==='function')spawnD20LandingFx(d);
             if(res==='death'||res==='win'){
               setTimeout(()=>{
                 const mb=document.querySelector('#mb');
@@ -6366,6 +6367,8 @@ function mergeAccountData(localAcc,cloudAcc){
     title:pri.title||sec.title||'',
     cardBack:pri.cardBack||sec.cardBack||'classic',
     diceSkin:pri.diceSkin||sec.diceSkin||'ruby',
+    boardTheme:pri.boardTheme||sec.boardTheme||'classic',
+    d20Effect:pri.d20Effect||sec.d20Effect||'classic',
     frame:pri.frame||sec.frame||'classic',
     puzzleStreak:Math.max(localAcc.puzzleStreak||0,cloudAcc.puzzleStreak||0),
     lastPuzzleDay:(localAcc.lastPuzzleDay||'')>=(cloudAcc.lastPuzzleDay||'')?(localAcc.lastPuzzleDay||''):(cloudAcc.lastPuzzleDay||''),
@@ -6532,6 +6535,8 @@ function syncAccountToCloud(acc){
     title:a.title||'',
     cardBack:a.cardBack||'classic',
     diceSkin:a.diceSkin||'ruby',
+    boardTheme:a.boardTheme||'classic',
+    d20Effect:a.d20Effect||'classic',
     frame:a.frame||'classic',
     puzzleStreak:a.puzzleStreak||0,
     lastPuzzleDay:a.lastPuzzleDay||'',
@@ -7197,6 +7202,30 @@ const DICE_SKINS=[
   {id:'spectral',trN:'Hayalet Zarı',enN:'Spectral Die',req:a=>(a.achievements||[]).includes('survivor')||(a.achievements||[]).includes('nat20')||(a.peakElo||1200)>=1400,trR:'Ölümsüz İrade / Nat 20 / 1400 ELO',enR:'Undying Will / Nat 20 / 1400 ELO'},
   {id:'void',trN:'Hiçlik Zarı',enN:'Void Die',req:a=>(a.achievements||[]).includes('imp_slayer')||(a.peakElo||1200)>=1500,trR:'İmkansız Bot Zaferi / 1500 ELO',enR:'Beat Impossible AI / 1500 ELO'}
 ];
+const BOARD_THEMES=[
+  {id:'classic',trN:'Gotik Masa',enN:'Gothic Table',req:()=>true,trR:'Varsayılan',enR:'Default'},
+  {id:'frost',trN:'Donmuş Mahzen',enN:'Frozen Vault',req:a=>((a.wins||0)+(a.unrankedWins||0))>=3||(a.peakElo||1200)>=1250,trR:'3 Zafer veya 1250 ELO',enR:'3 Wins or 1250 ELO'},
+  {id:'crimson',trN:'Kanlı Sunak',enN:'Blood Altar',req:a=>(a.peakElo||1200)>=1350||(a.achievements||[]).includes('win_streak3'),trR:'1350 ELO veya 3 Seri',enR:'1350 ELO or 3-Win Streak'},
+  {id:'gold',trN:'Altın Hazine',enN:'Golden Vault',req:a=>(a.achievements||[]).includes('imp_slayer')||(a.peakElo||1200)>=1500,trR:'İmkansız Bot Zaferi / 1500 ELO',enR:'Beat Impossible AI / 1500 ELO'}
+];
+const D20_EFFECTS=[
+  {id:'classic',trN:'Klasik Parıltı',enN:'Classic Glow',req:()=>true,trR:'Varsayılan',enR:'Default'},
+  {id:'sparks',trN:'Kızıl Kıvılcım',enN:'Crimson Sparks',req:a=>((a.wins||0)+(a.unrankedWins||0))>=2,trR:'2 Zafer',enR:'2 Wins'},
+  {id:'runes',trN:'Altın Rün Halkası',enN:'Golden Rune Ring',req:a=>(a.peakElo||1200)>=1350,trR:'1350 ELO',enR:'1350 ELO'},
+  {id:'void',trN:'Mor Hiçlik Dumanı',enN:'Void Mist',req:a=>(a.achievements||[]).includes('imp_slayer')||(a.peakElo||1200)>=1450,trR:'İmkansız Bot Zaferi / 1450 ELO',enR:'Beat Impossible AI / 1450 ELO'}
+];
+function spawnD20LandingFx(dEl){
+  try{
+    const fxId=document.body.dataset.d20fx||'classic';
+    if(!dEl||fxId==='classic'||RM)return;
+    const stg=dEl.querySelector('.d20-stage');if(!stg)return;
+    const old=stg.querySelector('.d20-fx-ring');if(old)old.remove();
+    const ring=document.createElement('div');
+    ring.className='d20-fx-ring fx-'+fxId;
+    stg.appendChild(ring);
+    setTimeout(()=>{if(ring.isConnected)ring.remove()},1150);
+  }catch(e){}
+}
 const HERO_MASTERY_TITLES={
   c:{tr:'Zamanın Tüccarı',en:'Merchant of Time'},
   p:{tr:'Veba Üstadı',en:'Plague Master'},
@@ -7245,9 +7274,13 @@ function applyCosmetics(acc){
     const cb=(acc&&acc.cardBack)||'classic';
     const fr=(acc&&acc.frame)||'classic';
     const ds=(acc&&acc.diceSkin)||'ruby';
+    const bt=(acc&&acc.boardTheme)||'classic';
+    const fx=(acc&&acc.d20Effect)||'classic';
     document.body.dataset.cardback=cb;
     document.body.dataset.frame=fr;
     document.body.dataset.diceskin=ds;
+    document.body.dataset.board=bt;
+    document.body.dataset.d20fx=fx;
     window.D20_SKIN=ds;
   }catch(e){}
 }
@@ -7588,6 +7621,18 @@ function openProfileModal(initialTab='overview'){
           <i class="ds-sw ds-${ds.id}"></i><span>${isEn()?ds.enN:ds.trN}</span>${ok?'':`<small>${tr('Kilitli','Locked')}</small>`}
         </button>`;
       }).join('');
+      const fxHtml=D20_EFFECTS.map(fx=>{
+        const ok=fx.req(acc),sel=(acc.d20Effect||'classic')===fx.id;
+        return `<button type="button" class="cos-chip${sel?' sel':''}${ok?'':' lock'}" data-fx="${fx.id}" ${ok?'':'disabled'} title="${isEn()?fx.enR:fx.trR}">
+          <i class="fx-sw fx-${fx.id}"></i><span>${isEn()?fx.enN:fx.trN}</span>${ok?'':`<small>${tr('Kilitli','Locked')}</small>`}
+        </button>`;
+      }).join('');
+      const btHtml=BOARD_THEMES.map(bt=>{
+        const ok=bt.req(acc),sel=(acc.boardTheme||'classic')===bt.id;
+        return `<button type="button" class="cos-chip${sel?' sel':''}${ok?'':' lock'}" data-bt="${bt.id}" ${ok?'':'disabled'} title="${isEn()?bt.enR:bt.trR}">
+          <i class="bt-sw bt-${bt.id}"></i><span>${isEn()?bt.enN:bt.trN}</span>${ok?'':`<small>${tr('Kilitli','Locked')}</small>`}
+        </button>`;
+      }).join('');
       const cbHtml=CARD_BACKS.map(cb=>{
         const ok=cb.req(acc),sel=(acc.cardBack||'classic')===cb.id;
         return `<button type="button" class="cos-chip${sel?' sel':''}${ok?'':' lock'}" data-cb="${cb.id}" ${ok?'':'disabled'} title="${isEn()?cb.enR:cb.trR}">
@@ -7614,6 +7659,10 @@ function openProfileModal(initialTab='overview'){
       tabBody=`<div class="pr-scroll-box pr-cos-scroll">
         <div class="pr-sec-lbl">${tr('Ölüm Zarı (D20) Stili','Death Dice (D20) Style')}</div>
         <div class="cos-grid">${dsHtml}</div>
+        <div class="pr-sec-lbl" style="margin-top:8px">${tr('Ölüm Zarı İniş Efekti','D20 Landing Effect')}</div>
+        <div class="cos-grid">${fxHtml}</div>
+        <div class="pr-sec-lbl" style="margin-top:8px">${tr('Masa Teması','Board Theme')}</div>
+        <div class="cos-grid">${btHtml}</div>
         <div class="pr-sec-lbl" style="margin-top:8px">${tr('Kart Arkası','Card Back')}</div>
         <div class="cos-grid">${cbHtml}</div>
         <div class="pr-sec-lbl" style="margin-top:8px">${tr('Profil Çerçevesi','Profile Frame')}</div>
@@ -7649,6 +7698,8 @@ function openProfileModal(initialTab='overview'){
     </div>`;
     mb.querySelectorAll('.pr-tabs .pr-tab').forEach(b=>b.onclick=()=>{snd('click');curTab=b.dataset.pt;renderProf(USER_ACC)});
     mb.querySelectorAll('.cos-chip[data-ds]').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.diceSkin=b.dataset.ds;saveSession(USER_ACC);renderProf(USER_ACC)});
+    mb.querySelectorAll('.cos-chip[data-fx]').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.d20Effect=b.dataset.fx;saveSession(USER_ACC);renderProf(USER_ACC)});
+    mb.querySelectorAll('.cos-chip[data-bt]').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.boardTheme=b.dataset.bt;saveSession(USER_ACC);renderProf(USER_ACC)});
     mb.querySelectorAll('.cos-chip[data-cb]').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.cardBack=b.dataset.cb;saveSession(USER_ACC);renderProf(USER_ACC)});
     mb.querySelectorAll('.cos-chip[data-fr]').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.frame=b.dataset.fr;saveSession(USER_ACC);renderProf(USER_ACC)});
     mb.querySelectorAll('.ach-eq').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.title=b.dataset.title||'';saveSession(USER_ACC);renderProf(USER_ACC)});
@@ -7984,13 +8035,13 @@ function openWeeklyCursedModal(){
 
 /* ---------- ÖZEL MOD 2: GÜNÜN BULMACASI (DAILY LETHAL PUZZLE) ---------- */
 const DAILY_PUZZLES=[
-  {id:'p1',trN:'Patlak Tuzak',enN:'Bust Trap',trH:'Hedef 21. Elindeki 2 Jokerden doğru olanı oynayıp Turu Bitir diyerek bu turu kazan.',enH:'Target is 21. Play the winning Joker from your hand and End Round to win.',myOpen:[7],myClosed:[9],oppOpen:[10],oppClosed:[8],hand:[3,6],myH:'p',oppH:'n'},
-  {id:'p2',trN:'Mühür Kırıcı',enN:'Seal Breaker',trH:'Rakip 19 puanda bekliyor. Mühür değiştirerek onu patlat ve turu kazan.',enH:'Opponent sits at 19. Shift the seal to make them bust and win the round.',myOpen:[11],myClosed:[6],oppOpen:[10],oppClosed:[9],hand:[10,4],myH:'c',oppH:'m'},
-  {id:'p3',trN:'Ters Kader',enN:'Reversed Fate',trH:'Toplamın 7, rakibin 19. Kuralı tersine çevirip tek hamlede kazan.',enH:'Your total is 7 vs opponent 19. Flip the winning rule in one move.',myOpen:[3],myClosed:[4],oppOpen:[10],oppClosed:[9],hand:[19,3],myH:'a',oppH:'e'},
-  {id:'p4',trN:'Gölge Yükselişi',enN:'Shadow Surge',trH:'Rakip 19 puanda. Kendi kartını dönüştürüp 21 sınırına yaklaşarak kazan.',enH:'Opponent holds 19. Transform your card to overtake them without busting.',myOpen:[8],myClosed:[7],oppOpen:[11],oppClosed:[8],hand:[7,4],myH:'w',oppH:'v'},
-  {id:'p5',trN:'Kırık Kalkan',enN:'Shattered Shield',trH:'Rakip tam 21 puanda! Onun açık kartını hedef alıp üstünlüğü ele geçir.',enH:'Opponent sits at exact 21! Target their open card to seize the win.',myOpen:[9],myClosed:[5],oppOpen:[11],oppClosed:[10],hand:[14,3],myH:'l',oppH:'n'},
-  {id:'p6',trN:'Teklerin Laneti',enN:'Curse of Odds',trH:'İki kartın da tek sayı. Doğru çarpanı kullanarak rakibin 14 puanını geç.',enH:'Both of your cards are odd. Use the right multiplier to beat 14.',myOpen:[5],myClosed:[3],oppOpen:[8],oppClosed:[6],hand:[1,3],myH:'s',oppH:'c'},
-  {id:'p7',trN:'Ölümsüz Takas',enN:'Immortal Swap',trH:'Rakibin yüksek açık kartını kendi düşük kartınla değiştirip turu kopar.',enH:'Swap your low open card with the opponent\'s high open card to win.',myOpen:[2],myClosed:[9],oppOpen:[10],oppClosed:[8],hand:[15,4],myH:'c',oppH:'a'}
+  {id:'p1',trN:'Çift Mühür Kırıcı',enN:'Twin Seal Breaker',trH:'ZOR · Tek Joker yetmez! Rakip 20, sen 19 puandasın. Doğru 2 Joker kombosunu bulup Turu Bitir.',enH:'HARD · One Joker isn\'t enough! You have 19 vs 20. Find the exact 2-Joker combo and End Round.',myOpen:[10],myClosed:[9],oppOpen:[11],oppClosed:[9],hand:[10,4,3],eff:[],myH:'c',oppH:'m'},
+  {id:'p2',trN:'Teklerin Çifte Tuzağı',enN:'Double Odd Trap',trH:'ZOR · Rakip 18, sen 9 puandasın. Tek hamle yetmez — iki Jokeri sinerjiyle birleştir.',enH:'HARD · You have 9 vs 18. A single move loses — combine 2 Jokers synergistically.',myOpen:[5],myClosed:[4],oppOpen:[8],oppClosed:[10],hand:[1,3,2],eff:[],myH:'s',oppH:'e'},
+  {id:'p3',trN:'Kapalı Aynanın Sırrı',enN:'Mirror of the Hidden',trH:'ZOR · Rakip tam 21! Onu patlatırken kendini patlamaktan kurtaran 2 hamlelik komboyu kur.',enH:'HARD · Opponent sits at exact 21! Bust them while saving yourself with a 2-card combo.',myOpen:[4],myClosed:[9],oppOpen:[10],oppClosed:[11],hand:[21,4,3],eff:[],myH:'a',oppH:'v'},
+  {id:'p4',trN:'Mühür İptali',enN:'Seal Nullifier',trH:'ZOR · Rakip masadaki +5 Jokeriyle tam 21 puanda! Önce etkisini boz, sonra üstünlüğü al.',enH:'HARD · Opponent hits 21 via their +5 Joker on table! Neutralize it first, then overtake.',myOpen:[6],myClosed:[7],oppOpen:[9],oppClosed:[7],hand:[12,3,4],eff:[{id:3,o:1,uid:901,neg:false}],myH:'w',oppH:'n'},
+  {id:'p5',trN:'Kapalılar Gölgesi',enN:'Shadow of the Hidden',trH:'ZOR · 17 vs 20 geridesin ve +5 seni patlatır. Doğru 2 Joker sırasıyla 20\'yi devir.',enH:'HARD · Trailing 17 vs 20 and +5 busts you. Use the exact 2-Joker combo to win.',myOpen:[7],myClosed:[10],oppOpen:[11],oppClosed:[9],hand:[20,3,4],eff:[],myH:'p',oppH:'m'},
+  {id:'p6',trN:'Kanlı Takas',enN:'Bloody Swap',trH:'ZOR · Sadece takas beraberlik getirir! 20 puandaki rakibi yenmek için 2 Jokerini birlikte kullan.',enH:'HARD · Swapping alone only ties! Combine 2 Jokers to defeat the 20-point opponent.',myOpen:[2],myClosed:[4],oppOpen:[9],oppClosed:[11],hand:[15,3,4],eff:[],myH:'l',oppH:'a'},
+  {id:'p7',trN:'Gölge Hırsızı',enN:'Shadow Thief',trH:'ZOR · Rakibin masadaki +5 Jokerini Hırsız ile çalıp ardından kendi elinden oynayarak kazan!',enH:'HARD · Steal the opponent\'s +5 Joker from the table with Thief, then play it yourself to win!',myOpen:[6],myClosed:[9],oppOpen:[8],oppClosed:[7],hand:[25,4],eff:[{id:3,o:1,uid:906,neg:false}],myH:'s',oppH:'v'}
 ];
 function getTodayPuzzle(){
   const d=dayKey(0);
@@ -8042,7 +8093,7 @@ function startDailyPuzzle(pz){
       {open:pz.myOpen.map(n=>({id:++uid,n})),closed:pz.myClosed.map(n=>({id:++uid,n}))},
       {open:pz.oppOpen.map(n=>({id:++uid,n})),closed:pz.oppClosed.map(n=>({id:++uid,n}))}
     ],
-    eff:[],pj:[],jUsed:[0,0],jTurn:[0,0],noJ:[false,false],
+    eff:(pz.eff||[]).map(e=>({...e})),pj:(pz.eff||[]).map(e=>({id:e.id,o:e.o,uid:e.uid})),jUsed:[0,0],jTurn:[0,0],noJ:[false,false],
     acted:false,turns:1,turn:0,baseTg:21,maxJokers:2,
     hpUsed:[true,true],hpMod:[0,0],plagueMod:[0,0],hpTgMod:0,
     oppPeek:[],oppPeek1:[],clocks:[99,99],clockMax:99,graceLeft:99,timeOut:[false,false],hadTimeout:false,
