@@ -663,11 +663,15 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
       if(rolling||finished||rl.disabled)return;
       rl.disabled=true;
       rl.classList.add('used');
-      if(MODE==='guest'&&conn&&conn.open)conn.send({k:'d20_roll'});
-      else if(MODE==='host'||MODE==='bot'){
-        if(MODE==='host'&&conn&&conn.open)conn.send({k:'d20_roll'});
-        spectators.forEach(s=>{try{if(s.open)s.send({k:'d20_roll'})}catch(e){}});
-      }
+      const sendD20=()=>{
+        if(MODE==='guest'&&conn&&conn.open)try{conn.send({k:'d20_roll'})}catch(e){}
+        else if(MODE==='host'||MODE==='bot'){
+          if(MODE==='host'&&conn&&conn.open)try{conn.send({k:'d20_roll'})}catch(e){}
+          spectators.forEach(s=>{try{if(s.open)s.send({k:'d20_roll'})}catch(e){}});
+        }
+      };
+      sendD20();
+      setTimeout(sendD20,320);
       snd('heart');
       setTimeout(runRoll,200);
     };
@@ -685,13 +689,13 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
       window._pendingD20Roll=0;
       window._triggerD20Roll();
     }else{
-      // Güvenlik ağı: rakibin zar sinyali ağda kaybolursa veya rakip ayrılırsa 7sn sonra zarı otomatik döndür (ekranda takılı kalmayı önler)
+      // Güvenlik ağı: rakibin zar sinyali ağda kaybolursa veya gecikirse 4.5sn sonra zarı otomatik döndür
       setTimeout(()=>{
         if(d.isConnected&&!rolling&&!finished){
           snd('heart');
           runRoll();
         }
-      },7000);
+      },4500);
     }
   }
 }
@@ -2853,7 +2857,8 @@ function useHeroPower(){
     execRewind(S,0);
   }else if(hid==='p'){
     if(!S.hand[0].length)return box(`<h3>${tr('Vebalı Takas','Plague Trade')}</h3><p>${tr('Elinde yakılacak Joker kartı yok.','You have no Joker cards in hand to burn.')}</p>`);
-    if(!S.jdeck.length)return box(`<h3>${tr('Vebalı Takas','Plague Trade')}</h3><p>${tr('Joker destesinde çekilecek kart kalmadı.','No Joker cards left in the deck to draw.')}</p>`);
+    const jLeft=S.jdeck?S.jdeck.length:(S.jdeckLen!=null?S.jdeckLen:1);
+    if(jLeft<=0)return box(`<h3>${tr('Vebalı Takas','Plague Trade')}</h3><p>${tr('Joker destesinde çekilecek kart kalmadı.','No Joker cards left in the deck to draw.')}</p>`);
     P={hp:'p',ks:['hand_j'],pk:[]};
     snd('info');R();
   }else if(hid==='a'){
@@ -3433,7 +3438,7 @@ function view(S){ // rakibe gidecek, gizli bilgisi temizlenmiş ve aynalanmış 
   const hu0=S.hpUsed?!!S.hpUsed[0]:false,hu1=S.hpUsed?!!S.hpUsed[1]:false;
   const visHu0=(avKey(S,0)==='w'||avKey(S,0)==='a')?false:hu0;
   return {av:f(S.av),hero:S.hero?f(S.hero):f(S.av),hpUsed:[hu1,visHu0],hpMod:S.hpMod?f(S.hpMod):[0,0],plagueMod:S.plagueMod?f(S.plagueMod):[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?f(S.uRevived):[false,false],vampUsed:S.vampUsed?f(S.vampUsed):[false,false],cWins:S.cWins?f(S.cWins):[0,0],vampBurn:S.vampBurn?{vamp:1-S.vampBurn.vamp,victim:1-S.vampBurn.victim,idx:S.vampBurn.idx,jid:S.vampBurn.jid}:null,thiefSteal:S.thiefSteal?{...S.thiefSteal,thief:1-S.thiefSteal.thief}:null,oppPeek:pk1,mast:f(S.mast),turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,reconnPause:!!S.reconnPause,turn:1-S.turn,clocks:S.clocks?f(S.clocks):[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?f(S.timeOut):[false,false],hadTimeout:!!S.hadTimeout,pts:f(S.pts),rev:S.rev,winSide:S.winSide==null?null:-S.winSide,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),jTurn:S.jTurn?f(S.jTurn):[0,0],noJ:f(S.noJ),
-    hand:[S.hand[1],S.hand[0].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
+    hand:[S.hand[1],S.hand[0].map(()=>0)],jdeckLen:(S.jdeck&&S.jdeck.length)||0,deck:S.deck.map(()=>({id:0,n:0})),
     pl:[S.pl[1],{open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:(S.rev||pk1.includes(c.id))?c.n:0,o:c.o,hpImmune:!!c.hpImmune}))}],
     eff:S.eff.map(e=>({...e,o:1-e.o})),pj:(S.pj||[]).map(e=>({...e,o:1-e.o})),log:S.log.filter(l=>!(l.p===0&&/Kuzgunun Kehaneti|Yitik Yazgı/.test(l.t||''))).slice(-30).map(l=>({...l,p:l.p<0?-1:1-l.p}))};
 }
@@ -3729,13 +3734,13 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     return;
   }
   if(m.k=='tie_roll'){
-    if(fromConn!==conn)return;
+    if(fromConn!==conn&&fromConn._role!=='player')return;
     if(!(window._triggerTieRoll&&window._triggerTieRoll()))window._pendingTieRoll=Date.now();
     spectators.forEach(s=>{try{if(s.open)s.send({k:'tie_roll'})}catch(e){}});
     return;
   }
   if(m.k=='d20_roll'){
-    if(fromConn!==conn)return;
+    if(fromConn!==conn&&fromConn._role!=='player')return;
     if(!(window._triggerD20Roll&&window._triggerD20Roll()))window._pendingD20Roll=Date.now();
     spectators.forEach(s=>{try{if(s.open)s.send({k:'d20_roll'})}catch(e){}});
     return;
@@ -4164,6 +4169,7 @@ function clearOutgoingInvite(newStatus){
 }
 function hostRoom(inviteTarget,onCodeReady){
   if(noNet())return;
+  CURSED_RULE=null;VAULT_RUN=null;PUZZLE_ACTIVE=null;
   clearOutgoingInvite('cancelled');
   MODE='host';leaving=false;sayT='';spectators=[];specCount=0;const code=Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random()*32|0]).join('');
   CURRENT_HOST_CODE=code;
@@ -4393,6 +4399,7 @@ function showJoinModal(slots, specCount){
 
 function joinRoom(directCode,fromInvite=false){
   if(noNet())return;
+  CURSED_RULE=null;VAULT_RUN=null;PUZZLE_ACTIVE=null;
   const code=(typeof directCode==='string'&&directCode.trim())?directCode.trim().toUpperCase():($('#code')?$('#code').value.trim().toUpperCase():'');
   if(!code)return st(tr('Oda kodunu yaz','Enter room code'));
   LAST_JOIN_CODE=code;
