@@ -137,17 +137,46 @@
       ctx.lineTo(s2[0], s2[1]);
       ctx.closePath();
 
-      // Mat bordo/yakut reçine tonları
+      // Zar kozmetik teması (ruby | bone | gold | void | spectral)
+      const skin = (window.D20_SKIN || 'ruby');
       const grad = ctx.createLinearGradient(s0[0], s0[1], (s1[0]+s2[0])/2, (s1[1]+s2[1])/2);
-      
+      let edgeColor = 'rgba(195, 150, 65, 0.65)';
+      let numColor = '#ffea9f';
+      let numGlow = 'rgba(255, 215, 90, 0.85)';
+
       if (isCrit) {
         grad.addColorStop(0, `rgb(${Math.min(255, (220 * diff + spec * 120)|0)}, ${Math.min(255, (170 * diff + spec * 100)|0)}, 35)`);
         grad.addColorStop(1, `rgb(${Math.min(255, (140 * diff)|0)}, ${Math.min(255, (80 * diff)|0)}, 10)`);
+        edgeColor = 'rgba(235, 210, 120, 0.9)';
       } else if (isFail) {
         grad.addColorStop(0, `rgb(${Math.min(255, (95 * diff + spec * 90)|0)}, 18, 22)`);
         grad.addColorStop(1, `rgb(${Math.min(255, (40 * diff)|0)}, 5, 8)`);
+      } else if (skin === 'bone') {
+        grad.addColorStop(0, `rgb(${Math.min(255, (232 * diff + spec * 70)|0)}, ${Math.min(255, (216 * diff + spec * 60)|0)}, ${Math.min(255, (186 * diff + spec * 45)|0)})`);
+        grad.addColorStop(1, `rgb(${Math.min(255, (158 * diff)|0)}, ${Math.min(255, (136 * diff)|0)}, ${Math.min(255, (104 * diff)|0)})`);
+        edgeColor = 'rgba(92, 66, 42, 0.78)';
+        numColor = '#5e1418';
+        numGlow = 'rgba(180, 32, 42, 0.7)';
+      } else if (skin === 'gold') {
+        grad.addColorStop(0, `rgb(${Math.min(255, (228 * diff + spec * 140)|0)}, ${Math.min(255, (178 * diff + spec * 110)|0)}, ${Math.min(255, (62 * diff + spec * 45)|0)})`);
+        grad.addColorStop(1, `rgb(${Math.min(255, (132 * diff)|0)}, ${Math.min(255, (88 * diff)|0)}, ${Math.min(255, (18 * diff)|0)})`);
+        edgeColor = 'rgba(255, 232, 150, 0.85)';
+        numColor = '#1c1006';
+        numGlow = 'rgba(255, 230, 130, 0.9)';
+      } else if (skin === 'void') {
+        grad.addColorStop(0, `rgb(${Math.min(255, (74 * diff + spec * 140)|0)}, ${Math.min(255, (28 * diff + spec * 80)|0)}, ${Math.min(255, (118 * diff + spec * 160)|0)})`);
+        grad.addColorStop(1, `rgb(${Math.min(255, (22 * diff)|0)}, ${Math.min(255, (10 * diff)|0)}, ${Math.min(255, (42 * diff)|0)})`);
+        edgeColor = 'rgba(186, 128, 255, 0.78)';
+        numColor = '#f0d8ff';
+        numGlow = 'rgba(180, 110, 255, 0.9)';
+      } else if (skin === 'spectral') {
+        grad.addColorStop(0, `rgb(${Math.min(255, (72 * diff + spec * 120)|0)}, ${Math.min(255, (158 * diff + spec * 130)|0)}, ${Math.min(255, (162 * diff + spec * 130)|0)})`);
+        grad.addColorStop(1, `rgb(${Math.min(255, (20 * diff)|0)}, ${Math.min(255, (64 * diff)|0)}, ${Math.min(255, (74 * diff)|0)})`);
+        edgeColor = 'rgba(175, 240, 245, 0.78)';
+        numColor = '#e6ffff';
+        numGlow = 'rgba(120, 235, 240, 0.9)';
       } else {
-        // Mat kadife bordo / koyu kızıl ton
+        // Mat kadife bordo / koyu kızıl ton (Kanlı Yakut)
         grad.addColorStop(0, `rgb(${Math.min(255, (190 * diff + spec * 130)|0)}, ${Math.min(255, (22 * diff)|0)}, 36)`);
         grad.addColorStop(1, `rgb(${Math.min(255, (90 * diff)|0)}, 8, 14)`);
       }
@@ -156,7 +185,7 @@
       ctx.fill();
 
       // Mat antika pirinç çerçeve kenarları
-      ctx.strokeStyle = isCrit ? 'rgba(235, 210, 120, 0.9)' : 'rgba(195, 150, 65, 0.65)';
+      ctx.strokeStyle = edgeColor;
       ctx.lineWidth = 2.0;
       ctx.lineJoin = 'round';
       ctx.stroke();
@@ -189,15 +218,15 @@
 
         // Gold relief text with engraving shadow & subtle burst glow when popping
         if (isTargetFace && textPop > 1.05) {
-          ctx.shadowColor = isCrit ? 'rgba(255, 235, 120, 0.95)' : isFail ? 'rgba(255, 60, 60, 0.85)' : 'rgba(255, 215, 90, 0.85)';
+          ctx.shadowColor = isCrit ? 'rgba(255, 235, 120, 0.95)' : isFail ? 'rgba(255, 60, 60, 0.85)' : numGlow;
           ctx.shadowBlur = 10 * textPop;
         } else {
-          ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+          ctx.shadowColor = skin === 'bone' || skin === 'gold' ? 'rgba(255, 245, 220, 0.35)' : 'rgba(0, 0, 0, 0.9)';
           ctx.shadowBlur = 4;
         }
         ctx.shadowOffsetX = 1;
         ctx.shadowOffsetY = 2;
-        ctx.fillStyle = isCrit ? '#ffffff' : (isTargetFace && textPop > 1.05) ? '#fff8db' : '#ffea9f';
+        ctx.fillStyle = isCrit ? '#ffffff' : (isTargetFace && textPop > 1.05 && skin !== 'bone' && skin !== 'gold') ? '#fff8db' : numColor;
         ctx.fillText(numStr, 0, 0);
 
         if (isCrit || (isTargetFace && textPop > 1.05)) {

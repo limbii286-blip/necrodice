@@ -667,11 +667,18 @@ const DUEL_CLOCK_INIT=33; // Her sırası gelen oyuncunun 33 saniyesi vardır
 const ONLINE_CLOCK_INIT=33;
 const initClockSec=()=>((MODE==='host'||MODE==='guest'||MODE==='spectator')?ONLINE_CLOCK_INIT:DUEL_CLOCK_INIT);
 const GRACE_INIT=5;       // İlk düello ve geçişlerde jokerlere bakmak için 5 saniye hazırlık süresi
+let CURSED_RULE=null,VAULT_RUN=null,PUZZLE_ACTIVE=null;
 function newBO3(S){
   const cs=initClockSec();
   if(!S.stats)S.stats={rounds:[0,0,0],draws:[0,0],jokers:[0,0],d20Surv:[0,0],startAt:Date.now()};
   S.dj=[];S.jdeck=shuf(range(24));
-  S.hand=[0,1].map(p=>avKey(S,p)==='s'?[...S.jdeck.splice(0,3),25]:S.jdeck.splice(0,4));
+  const baseHand=(CURSED_RULE&&CURSED_RULE.id==='three_jokers')?5:4;
+  const vaultExtraJ=(VAULT_RUN&&VAULT_RUN.relics&&VAULT_RUN.relics.includes('extra_joker'))?1:0;
+  S.maxJokers=(CURSED_RULE&&CURSED_RULE.id==='three_jokers')?3:((VAULT_RUN&&VAULT_RUN.relics&&VAULT_RUN.relics.includes('triple_play'))?3:2);
+  S.hand=[0,1].map(p=>{
+    const cnt=baseHand+(p===0?vaultExtraJ:0);
+    return avKey(S,p)==='s'?[...S.jdeck.splice(0,Math.max(1,cnt-1)),25]:S.jdeck.splice(0,cnt);
+  });
   S.pts=[0,0];S.rounds=0;S.res=[];S.log=[];
   S.hpUsed=[false,false];S.d20Bonus=[0,0];
   S.clocks=[cs,cs];
@@ -680,9 +687,23 @@ function newBO3(S){
 }
 function deal(S){
   S.deck=shuf(range(11).map(n=>({id:++S.u,n})));
-  S.pl=[0,1].map(()=>({open:[S.deck.pop()],closed:[S.deck.pop()]}));
+  if(CURSED_RULE&&CURSED_RULE.id==='two_closed'){
+    S.pl=[0,1].map(()=>({open:[S.deck.pop()],closed:[S.deck.pop(),S.deck.pop()]}));
+  }else{
+    S.pl=[0,1].map(()=>({open:[S.deck.pop()],closed:[S.deck.pop()]}));
+  }
+  S.baseTg=(CURSED_RULE&&CURSED_RULE.id==='rand_tg')?[17,21,24][Math.random()*3|0]:21;
+  if(CURSED_RULE&&CURSED_RULE.id==='blood_dice'&&S.jdeck&&S.jdeck.length){
+    [0,1].forEach(p=>{if(S.jdeck.length&&S.hand[p].length<6)S.hand[p].push(S.jdeck.pop())});
+  }
+  if(VAULT_RUN&&VAULT_RUN.relics&&VAULT_RUN.relics.includes('high_closed_joker')&&S.pl[0].closed.some(c=>c.n>=10)&&S.jdeck&&S.jdeck.length&&S.hand[0].length<6){
+    S.hand[0].push(S.jdeck.pop());
+  }
   S.eff=[];S.pj=[];S.jUsed=[0,0];S.jTurn=[0,0];S.noJ=[false,false];S.acted=false;S.turns=0;
   S.hpMod=[0,0];S.plagueMod=[0,0];S.hpTgMod=0;S.oppPeek=[];S.oppPeek1=[];S.botPeekVal=null;S.botScry=null;S.vampBurn=null;S.thiefSteal=null;
+  if(VAULT_RUN&&VAULT_RUN.relics&&VAULT_RUN.relics.includes('blood_peek')&&S.pl[1].closed.length){
+    S.oppPeek.push(S.pl[1].closed[0].id);
+  }
   S.turn=S.pl[0].open[0].n<S.pl[1].open[0].n?0:1;
   S.wait=false;S.rev=false;S.winSide=null;S.timeOut=[false,false];S.hadTimeout=false;S.dead=[];S.pa=[0,0];S.st={pb:0,ob:0,px:0};
   const cs=initClockSec();
@@ -702,7 +723,7 @@ function total(S,p,wc=true){
   return t;
 }
 const TGS=new Set([8,9,10,11,19]),tgE=S=>S.eff.filter(e=>!e.neg&&TGS.has(e.id)).pop(),lowW=S=>{const e=tgE(S);return !!e&&e.id==19}; // hedef değiştirenlerden SON oynanan geçerli
-function tg(S){const e=tgE(S);const base=e&&e.id<19?{8:27,9:24,10:17,11:15}[e.id]:21;return base+(S.hpTgMod||0)}
+function tg(S){const e=tgE(S);const base=e&&e.id<19?{8:27,9:24,10:17,11:15}[e.id]:(S.baseTg||21);return base+(S.hpTgMod||0)}
 function outc(S,p){ // p açısından: 1 kazan, 0 berabere, -1 kaybet
   const a=total(S,p),b=total(S,1-p),T=tg(S);
   if(lowW(S))return Math.sign(b-a);
@@ -719,7 +740,7 @@ function opts(S,p,k){
   if(k=='hand_j')return S.hand[p].map((_,i)=>i);
   if(k=='sign')return [1,-1];
 }
-const playable=(S,p,id)=>S.jUsed[p]<2&&!S.noJ[p]&&S.hand[p].includes(id)&&(NEED[id]||[]).every(k=>opts(S,p,k).length)&&(id!=5||S.deck.length>0);
+const playable=(S,p,id)=>S.jUsed[p]<(S.maxJokers||2)&&!S.noJ[p]&&S.hand[p].includes(id)&&(NEED[id]||[]).every(k=>opts(S,p,k).length)&&(id!=5||S.deck.length>0);
 function play(S,p,id,pk){
   const q=1-p;
   const find=cid=>{for(const x of S.pl)for(const z of ['open','closed']){const i=x[z].findIndex(c=>c.id==cid);if(i>=0)return[x[z],i]}};
@@ -1278,6 +1299,7 @@ function bot(){
 /* ---------- AKIŞ ---------- */
 function pass(fromTimeout=false){
   const S=G;P=null;S.graceLeft=0;
+  if(PUZZLE_ACTIVE){endRound();return;}
   S.log.push({p:S.turn,t:fromTimeout?'süresi bitti — sıra rakibe geçti':'pas dedi'});
   if(S.turn==1&&!fromTimeout)talk('pass',0,.35);
   const opp=1-S.turn;
@@ -1717,6 +1739,13 @@ function heroVampTie(vampIdx){
 }
 function endRound(){
   const S=G,a=[total(S,0),total(S,1)],T=tg(S);
+  if(PUZZLE_ACTIVE){
+    const won=outc(S,0)>0;
+    S.wait=true;S.rev=true;S.winSide=won?1:-1;S.over=true;
+    R();snd(won?'win':'lose');lock=true;
+    setTimeout(()=>{if(typeof finishDailyPuzzle==='function')finishDailyPuzzle(won,a[0],a[1],T);},950);
+    return;
+  }
   let r=outc(S,0),tankedSide=-1,vampBurn=null;
   if(r!==0){
     const loser=r<0?0:1;
@@ -1791,7 +1820,12 @@ function endRound(){
       if(j[0]!=j[1]){L=j[0]<j[1]?0:1;how='joker'}
       else{let x,y;do{x=d20();y=d20()}while(x==y);L=x<y?0:1;hx=[x,y];tieFirst=MODE==='bot'?0:(Math.random()<0.5?0:1);how='zar'}
     }
-    const th=TH[Math.min(S.bo,3)],rawRoll=d20(),hpB=avKey(S,L)==='m'?2:0,execPen=avKey(S,1-L)==='n'?-2:0,roll=Math.max(1,Math.min(20,rawRoll+hpB+execPen)),surv=roll>=th;
+    const extraNeed=(CURSED_RULE&&CURSED_RULE.id==='blood_dice')?2:0;
+    const th=Math.min(20,TH[Math.min(S.bo,3)]+extraNeed);
+    let rawRoll=d20();
+    if(L===0&&rawRoll===1&&VAULT_RUN&&VAULT_RUN.relics&&VAULT_RUN.relics.includes('reroll_one')&&!S._vRerolled){S._vRerolled=true;rawRoll=d20();}
+    const vaultD20B=(L===0&&VAULT_RUN&&VAULT_RUN.relics&&VAULT_RUN.relics.includes('iron_fate'))?2:0;
+    const hpB=(avKey(S,L)==='m'?2:0)+vaultD20B,execPen=avKey(S,1-L)==='n'?-2:0,roll=Math.max(1,Math.min(20,rawRoll+hpB+execPen)),surv=roll>=th;
     const mk=(v,roll,surv,rawOv)=>{const rr=rawOv!=null?rawOv:rawRoll;
       const duelWinnerTxt=isEn()?(L==v?'Opponent won the duel.':'You won the duel.'):`Düelloyu ${L==v?'rakip kazandı.':'sen kazandın.'}`;
       const howTxt=how=='joker'?`<br><span class="d20-how">${tr('Joker sayısına göre.','By remaining jokers.')}</span>`:how=='zar'?`<br><span class="d20-how">${tr(`Beraberlik zarı: ${hx[v]}–${hx[1-v]}`,`Tiebreaker dice: ${hx[v]}–${hx[1-v]}`)}</span>`:'';
@@ -1824,7 +1858,16 @@ function endRound(){
         if(rig){S.rigDone=true;S.hpUsed[1]=true;impSave(mk(0,1,false,1),()=>M(mk(0,20,true,20),lb,go))}
         else if(uRev){S.uRevived=S.uRevived||[false,false];S.uRevived[L]=true;S.hpUsed[L]=true;impSave(mk(0,roll,false),()=>MM(v=>mk(v,20,true,20),lb,go),tr('Hiçlik seni geri çevirdi… Bir kez daha ölümden döndün!','The Void refused you… You have returned from death once more!'))}
         else MM(full,lb,go)}
-      else{S.over=true;lrnGame(L==0);rematchReady=[false,false];rematchHeroes=[null,null];MM(full,tr('Yeniden Oyna','Play Again'),()=>chooseHero(hid=>{if(MODE==='host'){MY_HERO=hid;rematchReady[0]=true;rematchHeroes[0]=hid;checkStartOnlineRematch()}else{MY_HERO=hid;start()}},()=>{$('#menu').hidden=false;setMusic('menu')}),null,true)}
+      else{S.over=true;lrnGame(L==0);rematchReady=[false,false];rematchHeroes=[null,null];
+        if(VAULT_RUN){
+          const vWon=(L===1);
+          if(vWon&&USER_ACC){USER_ACC.vaultBest=Math.max(USER_ACC.vaultBest||0,VAULT_RUN.stage+1);if(VAULT_RUN.stage>=4)USER_ACC.vaultWins=(USER_ACC.vaultWins||0)+1;saveSession(USER_ACC);}
+          const vLbl=vWon?(VAULT_RUN.stage>=4?tr('Mahzen Zaferi (5/5)','Vault Victory (5/5)'):tr(`Kalıntı Seç (${VAULT_RUN.stage+2}/5)`,`Pick Relic (${VAULT_RUN.stage+2}/5)`)):tr('Mahzene Yeniden Gir','Retry Death Vault');
+          MM(full,vLbl,()=>{if(vWon){if(VAULT_RUN.stage>=4)openVaultVictoryModal();else openVaultRelicPick();}else{VAULT_RUN=null;openVaultModal();}},null,true);
+        }else{
+          MM(full,tr('Yeniden Oyna','Play Again'),()=>chooseHero(hid=>{if(MODE==='host'){MY_HERO=hid;rematchReady[0]=true;rematchHeroes[0]=hid;checkStartOnlineRematch()}else{MY_HERO=hid;start()}},()=>{$('#menu').hidden=false;setMusic('menu')}),null,true);
+        }
+      }
     };
     if(how=='zar'){
       const tieFn=v=>{
@@ -1924,7 +1967,7 @@ const HP_IC={
   v:hpImg('v'),
   u:hpImg('u')
 };
-function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}glogOpen=false;glogLastSig='';LAST_MATCH_HIST=[];rematchReady=[false,false];rematchHeroes=[null,null];deathContReady=[false,false];deathContGo=null;const botPool=HEROES.filter(h=>!h.bossOnly||DIFF==='imp').map(h=>h.id),oppH=MODE=='bot'?botPool[Math.floor(Math.random()*botPool.length)]:(OPP_HERO||'n');G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],vampUsed:[false,false],cWins:[0,0],vampBurn:null,mast:[0,0]};prevAv[0]=prevAv[1]=undefined;prevHpAnim=[false,false];lastThiefSeq=0;newBO3(G);deal(G);if(MODE==='bot'&&typeof startBotSpectateHost==='function')startBotSpectateHost();if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();runAfterDeal(G)}
+function start(){hiPreload();setMusic('game');try{document.body.classList.remove('dead')}catch(e){}glogOpen=false;glogLastSig='';LAST_MATCH_HIST=[];rematchReady=[false,false];rematchHeroes=[null,null];deathContReady=[false,false];deathContGo=null;const botPool=HEROES.filter(h=>!h.bossOnly||DIFF==='imp').map(h=>h.id),oppH=(VAULT_RUN&&VAULT_RUN.oppHero)?VAULT_RUN.oppHero:(MODE=='bot'?botPool[Math.floor(Math.random()*botPool.length)]:(OPP_HERO||'n'));G={u:0,bo:0,log:[],over:false,used:[],av:[MY_HERO,oppH],hero:[MY_HERO,oppH],uRevived:[false,false],vampUsed:[false,false],cWins:[0,0],vampBurn:null,mast:[0,0]};prevAv[0]=prevAv[1]=undefined;prevHpAnim=[false,false];lastThiefSeq=0;newBO3(G);deal(G);if(MODE==='bot'&&typeof startBotSpectateHost==='function')startBotSpectateHost();if(learning())armPick();sayT='';sayAt=0;botGen++;thinkOn=false;talk('hello',2);R();runAfterDeal(G)}
 
 /* ---------- ARAYÜZ ---------- */
 const cand=()=>P?opts(G,0,P.ks[P.pk.length]):[];
@@ -2377,14 +2420,17 @@ function R(){
   const pips=[0,1,2].map(i=>`<span class="pip ${res[i]==null?(i==S.rounds?'now':''):res[i]>0?'w':res[i]<0?'l':'d'}"></span>`).join('');
   const sk=TH.map((t,i)=>`<span class="sk${i<bi?' past':i==bi?' cur':''}" title="${tr(`D20 Ölüm Eşiği: ${t} veya üstü atmalısın`,`D20 Death Threshold: Roll ${t} or higher`)}">${IC.skull}<small>${t}</small></span>`).join('');
   const isSpec=MODE=='spectator';
-  setH('#hdr',`<div class="hs sks">${sk}</div><div class="hc"><span class="lab">${tr('Düello','Duel')} ${S.bo+1}</span><span class="pips">${pips}</span></div><div class="hg"><button class="gear" data-g="1" aria-label="${tr('Ayarlar','Settings')}">${IC.gear}<span>${tr('Ayarlar','Settings')}</span></button></div>`);
+  const modeBadge=CURSED_RULE?`<span class="mode-pill cursed" title="${escHtml(isEn()?CURSED_RULE.enD:CURSED_RULE.trD)}">${escHtml(isEn()?CURSED_RULE.enN:CURSED_RULE.trN)}</span>`:(VAULT_RUN?`<span class="mode-pill vault">${tr(`Mahzen ${VAULT_RUN.stage+1}/5`,`Vault ${VAULT_RUN.stage+1}/5`)}</span>`:(PUZZLE_ACTIVE?`<span class="mode-pill puzzle">${tr('Günün Bulmacası','Daily Puzzle')}</span>`:''));
+  setH('#hdr',`<div class="hs sks">${sk}</div><div class="hc"><span class="lab">${tr('Düello','Duel')} ${S.bo+1}</span><span class="pips">${pips}</span>${modeBadge}</div><div class="hg"><button class="gear" data-g="1" aria-label="${tr('Ayarlar','Settings')}">${IC.gear}<span>${tr('Ayarlar','Settings')}</span></button></div>`);
   const oppHidZero=!S.rev&&act(S,20)&&S.pl[1].closed.length>0;
   const oppClosedKnown=!!(S.rev||oppHidZero||(S.pl[1].closed.length&&S.pl[1].closed.every(c=>c.o!=null||(S.oppPeek&&S.oppPeek.includes(c.id)))));
   const my=!isSpec&&S.turn==0&&!lock&&!S.wait,mt=total(S,0),ot=total(S,1,oppClosedKnown),bust=!low&&mt>T,obust=oppClosedKnown&&!low&&ot>T,seal=T+(low?'L':'');
   const exact=!low&&mt===T,oexact=oppClosedKnown&&!low&&ot===T;
   const jp=n=>`<span class="jpips" title="${tr(`Bu tur kalan joker hakkı ${n}/2`,`Jokers left this round: ${n}/2`)}">${[0,1].map(i=>`<i${i<n?' class="on"':''}></i>`).join('')}</span>`;
   const avh=p=>{const k=avKey(S,p),now=performance.now();if(prevAv[p]!==undefined&&prevAv[p]!==k)morphT[p]=now;prevAv[p]=k;
-    const el=(now-morphT[p])/1000,mo=morphT[p]&&el<1.1,fp=HERO_FOCUS[k]||'50% 25%';return `<img class="av${mo?' morph':''}" data-av="${p}" style="object-position:${fp};${mo?`animation-delay:-${el.toFixed(2)}s`:''}" src="${avSrc(k)}" alt="">`};
+    const el=(now-morphT[p])/1000,mo=morphT[p]&&el<1.1,fp=HERO_FOCUS[k]||'50% 25%';
+    const mCls=(p===0&&!isSpec&&typeof getHeroMastery==='function'&&typeof USER_ACC!=='undefined'&&USER_ACC)?((t=>t?` mastery-${t}`:'')(getHeroMastery(USER_ACC,k).tier)):'';
+    return `<img class="av${mo?' morph':''}${mCls}" data-av="${p}" style="object-position:${fp};${mo?`animation-delay:-${el.toFixed(2)}s`:''}" src="${avSrc(k)}" alt="">`};
   const av0=avh(0),av1=avh(1);
   const p0Char=NAMES[avKey(S,0)]||tr('Lanetli Tüccar','Cursed Merchant');
   const p1Char=NAMES[avKey(S,1)]||tr('Kara Şövalye','Dark Knight');
@@ -2466,7 +2512,7 @@ function R(){
     const jim=pr.querySelector('.pr-jcard');
     if(jim)hi(jim,P.id);
   }
-  const ends=S.turns>0&&!S.acted; // karşı taraf hamle yapmadan pas/süre bitirdiyse şimdi pas dersem tur biter
+  const ends=(S.turns>0&&!S.acted)||!!PUZZLE_ACTIVE; // karşı taraf hamle yapmadan pas/süre bitirdiyse şimdi pas dersem tur biter
   $('#pass').disabled=isSpec||!(my&&!P);
   if(isSpec){
     $('#pass').style.display='none';
@@ -2630,8 +2676,8 @@ function startJoker(id){if(MODE==='spectator')return;if(MODE==='tutorial'&&(tutS
 const HERO_FOCUS={c:'44% 28%',p:'56% 24%',n:'64% 25%',a:'50% 24%',s:'48% 25%',e:'52% 28%',m:'50% 30%',w:'45% 23%',l:'68% 28%',v:'50% 25%'};
 function chooseHero(onPick,onCancel){
   lock=true;
-  const cards=HEROES.filter(h=>!h.bossOnly).map(h=>{const dl=h.desc.length,dc=dl<=55?'hpc-desc-lg':dl<=105?'hpc-desc-md':'hpc-desc-sm';return `<button class="hero-pick-card${MY_HERO===h.id?' sel':''}" data-pick-hero="${h.id}">
-    <div class="hpc-art"><img class="hpc-av" src="${avSrc(h.id)}" alt="${h.name}" decoding="async" style="object-position:${HERO_FOCUS[h.id]||'50% 25%'};transform-origin:${HERO_FOCUS[h.id]||'50% 25%'}"></div>
+  const cards=HEROES.filter(h=>!h.bossOnly).map(h=>{const dl=h.desc.length,dc=dl<=55?'hpc-desc-lg':dl<=105?'hpc-desc-md':'hpc-desc-sm';const mst=(typeof getHeroMastery==='function'&&typeof USER_ACC!=='undefined'&&USER_ACC)?getHeroMastery(USER_ACC,h.id):{tier:0,roman:'',w:0};return `<button class="hero-pick-card${MY_HERO===h.id?' sel':''}${mst.tier?` mastery-${mst.tier}`:''}" data-pick-hero="${h.id}">
+    <div class="hpc-art">${mst.tier?`<span class="hpc-mst m${mst.tier}" title="${tr(`Ustalık ${mst.roman} (${mst.w} Zafer)`,`Mastery ${mst.roman} (${mst.w} Wins)`)}">${mst.roman}</span>`:''}<img class="hpc-av" src="${avSrc(h.id)}" alt="${h.name}" decoding="async" style="object-position:${HERO_FOCUS[h.id]||'50% 25%'};transform-origin:${HERO_FOCUS[h.id]||'50% 25%'}"></div>
     <div class="hpc-body">
       <div class="hpc-name">${h.name}</div>
       <div class="hpc-pw"><span class="hpc-ic">${HP_IC[h.id]}</span><b>${h.hpName}</b></div>
@@ -3044,6 +3090,9 @@ function applyLang(lang){
   if($('#b3'))$('#b3').textContent=tr('Özel Oyuna Katıl','Join Private Match');
   if($('#b6'))$('#b6').textContent=tr('Ayarlar','Settings');
   if($('#btut'))$('#btut').textContent=tr('Eğitim (Karga Rehberi)','Tutorial (Raven Guide)');
+  if($('#b-vault'))$('#b-vault').textContent=tr('Ölüm Mahzeni','Death Vault');
+  if($('#b-cursed'))$('#b-cursed').textContent=tr('Lanetli Masa','Cursed Table');
+  if($('#b-puzzle'))$('#b-puzzle').textContent=tr('Günün Bulmacası','Daily Puzzle');
   if($('#b4'))$('#b4').textContent=tr('Joker Kodeksi','Joker Codex');
   if($('#b5'))$('#b5').textContent=tr('Nasıl Oynanır','How to Play');
   if($('#b7'))$('#b7').textContent=tr('İngilizceye Geç','Türkçeye Geç');
@@ -3212,7 +3261,7 @@ function exitGame(){ // limbigames perdesi, sonra ilk ekrana dön
     if(typeof clearReconnectGrace==='function')clearReconnectGrace();
     if(typeof clearActiveMatchSnapshot==='function')clearActiveMatchSnapshot();
     if(typeof cancelQuickMatch==='function')cancelQuickMatch(true);
-    if(G)G.over=true;G=null;MODE='bot';sayT='';try{document.body.classList.remove('dead')}catch(e){}
+    if(G)G.over=true;G=null;MODE='bot';CURSED_RULE=null;VAULT_RUN=null;PUZZLE_ACTIVE=null;sayT='';try{document.body.classList.remove('dead')}catch(e){}
     st('');$('#menu').hidden=false;lock=false;setMusic('menu');
     if(typeof updateLobbyPresence==='function')updateLobbyPresence(false);
   },460);
@@ -4272,7 +4321,7 @@ function spectateRoom(code){
   peer.on('error',e=>{MODE='bot';st(NETERR(e))});
 }
 const on=(id,f)=>{const e=document.querySelector(id);if(e)e.onclick=f}; // bir öğe yoksa diğer düğmeler yine de çalışır
-document.querySelectorAll('.d').forEach(b=>b.onclick=()=>{DIFF=b.dataset.d;MODE='bot';chooseHero(h=>{MY_HERO=h;enter(start)})});
+document.querySelectorAll('.d').forEach(b=>b.onclick=()=>{CURSED_RULE=null;VAULT_RUN=null;PUZZLE_ACTIVE=null;DIFF=b.dataset.d;MODE='bot';chooseHero(h=>{MY_HERO=h;enter(start)})});
 on('#btut',()=>{MODE='tutorial';MY_HERO='p';OPP_HERO='n';enter(startTutorial)});
 on('#b4',codex);on('#b5',guide);on('#b6',settings);on('#b7',toggleLang);
 document.addEventListener('keydown',e=>{
@@ -4291,7 +4340,10 @@ document.addEventListener('keydown',e=>{
 });
 try{if(RM)document.body.classList.add('rm');if(CB)document.body.classList.add('cb');if(!CRT)document.documentElement.classList.add('nocrt')}catch(e){}
 try{$('#slogo').src='limbi_favicon.png?v=limbi4'}catch(e){}setTimeout(()=>{const s=$('#splash');s&&s.remove()},3550);
-on('#b2',()=>{if(noNet())return;IS_QUICK_MATCH=false;hostRoom()});on('#b3',()=>{IS_QUICK_MATCH=false;joinRoom()});on('#bqm',()=>{snd('click');startQuickMatch()});
+on('#b2',()=>{if(noNet())return;CURSED_RULE=null;VAULT_RUN=null;PUZZLE_ACTIVE=null;IS_QUICK_MATCH=false;hostRoom()});on('#b3',()=>{CURSED_RULE=null;VAULT_RUN=null;PUZZLE_ACTIVE=null;IS_QUICK_MATCH=false;joinRoom()});on('#bqm',()=>{snd('click');CURSED_RULE=null;VAULT_RUN=null;PUZZLE_ACTIVE=null;startQuickMatch()});
+on('#b-cursed',()=>{snd('click');openWeeklyCursedModal()});
+on('#b-puzzle',()=>{snd('click');if(typeof openDailyPuzzleModal==='function')openDailyPuzzleModal()});
+on('#b-vault',()=>{snd('click');if(typeof openVaultModal==='function')openVaultModal()});
 
 /* ---------- SÜRÜKLENEBİLİR KARTLAR İÇİN ORTAK SMOOTH LERP DÖNGÜSÜ ---------- */
 function createSmoothDragLoop(onFrame){
@@ -6171,7 +6223,12 @@ function mergeAccountData(localAcc,cloudAcc){
     achievements:[...achSet],
     title:pri.title||sec.title||'',
     cardBack:pri.cardBack||sec.cardBack||'classic',
+    diceSkin:pri.diceSkin||sec.diceSkin||'ruby',
     frame:pri.frame||sec.frame||'classic',
+    puzzleStreak:Math.max(localAcc.puzzleStreak||0,cloudAcc.puzzleStreak||0),
+    lastPuzzleDay:(localAcc.lastPuzzleDay||'')>=(cloudAcc.lastPuzzleDay||'')?(localAcc.lastPuzzleDay||''):(cloudAcc.lastPuzzleDay||''),
+    vaultBest:Math.max(localAcc.vaultBest||0,cloudAcc.vaultBest||0),
+    vaultWins:Math.max(localAcc.vaultWins||0,cloudAcc.vaultWins||0),
     heroStats:hStats,
     quests,
     history,
@@ -6332,7 +6389,12 @@ function syncAccountToCloud(acc){
     achievements:Array.isArray(a.achievements)?a.achievements:[],
     title:a.title||'',
     cardBack:a.cardBack||'classic',
+    diceSkin:a.diceSkin||'ruby',
     frame:a.frame||'classic',
+    puzzleStreak:a.puzzleStreak||0,
+    lastPuzzleDay:a.lastPuzzleDay||'',
+    vaultBest:a.vaultBest||0,
+    vaultWins:a.vaultWins||0,
     heroStats:a.heroStats||{},
     quests:a.quests||null,
     _sig:a._sig||computeAccountSig(a),
@@ -6510,8 +6572,8 @@ function recordMatchElo(S,won){
   acc.winStreak=won?((acc.winStreak||0)+1):0;
   const myJokersUsed=(S.stats&&S.stats.jokers)?(S.stats.jokers[0]||0):0;
   const myD20Surv=(S.stats&&S.stats.d20Surv)?(S.stats.d20Surv[0]||0):0;
-  // Kolay ve Orta bot puan vermez / düşürmez (derecesiz antrenman) ama maç geçmişine ve istatistiklere kaydedilir
-  if(MODE==='bot'&&(DIFF==='easy'||DIFF==='med')){
+  // Kolay, Orta bot ve Özel Modlar (Lanetli Masa / Ölüm Mahzeni / Bulmaca) ELO değiştirmez (derecesiz) ama geçmişe ve görevlere kaydedilir
+  if((MODE==='bot'&&(DIFF==='easy'||DIFF==='med'))||CURSED_RULE||VAULT_RUN||PUZZLE_ACTIVE){
     acc.unrankedMatches=(acc.unrankedMatches||0)+1;
     if(won)acc.unrankedWins=(acc.unrankedWins||0)+1;
     else acc.unrankedLosses=(acc.unrankedLosses||0)+1;
@@ -6970,10 +7032,39 @@ const ACHIEVEMENTS=[
 const CARD_BACKS=[
   {id:'classic',trN:'Klasik Kemik',enN:'Classic Bone',req:()=>true,trR:'Varsayılan',enR:'Default'},
   {id:'crimson',trN:'Kızıl Mühür',enN:'Crimson Seal',req:a=>((a.wins||0)+(a.unrankedWins||0))>=3||(a.peakElo||1200)>=1250,trR:'3 Zafer veya 1250 ELO',enR:'3 Wins or 1250 ELO'},
+  {id:'ghost',trN:'Hayalet Örtü',enN:'Ghost Shroud',req:a=>(a.achievements||[]).includes('survivor')||((a.wins||0)+(a.unrankedWins||0))>=5,trR:'5 Zafer veya Ölümsüz İrade',enR:'5 Wins or Undying Will'},
   {id:'obsidian',trN:'Obsidyen Altın',enN:'Obsidian Gold',req:a=>(a.peakElo||1200)>=1400,trR:'1400 ELO (Kan Efendisi)',enR:'1400 ELO (Blood Lord)'},
   {id:'moonlight',trN:'Ay Işığı Rünü',enN:'Moonlight Rune',req:a=>(a.achievements||[]).includes('imp_slayer')||(a.peakElo||1200)>=1500,trR:'İmkansız Bot Zaferi / 1500 ELO',enR:'Beat Impossible AI / 1500 ELO'},
   {id:'sovereign',trN:'Ölümsüz Hükümdar',enN:'Undying Sovereign',req:a=>(a.peakElo||1200)>=1600,trR:'1600 ELO (Ölüm Büyücüsü)',enR:'1600 ELO (Necromancer)'}
 ];
+const DICE_SKINS=[
+  {id:'ruby',trN:'Kanlı Yakut',enN:'Blood Ruby',req:()=>true,trR:'Varsayılan',enR:'Default'},
+  {id:'bone',trN:'Antik Kemik',enN:'Ancient Bone',req:a=>((a.wins||0)+(a.unrankedWins||0))>=2||(a.achievements||[]).includes('veteran10'),trR:'2 Zafer',enR:'2 Wins'},
+  {id:'gold',trN:'Altın Rünlü',enN:'Golden Rune',req:a=>(a.peakElo||1200)>=1350||(a.achievements||[]).includes('win_streak3'),trR:'1350 ELO veya 3 Seri',enR:'1350 ELO or 3-Win Streak'},
+  {id:'spectral',trN:'Hayalet Zarı',enN:'Spectral Die',req:a=>(a.achievements||[]).includes('survivor')||(a.achievements||[]).includes('nat20')||(a.peakElo||1200)>=1400,trR:'Ölümsüz İrade / Nat 20 / 1400 ELO',enR:'Undying Will / Nat 20 / 1400 ELO'},
+  {id:'void',trN:'Hiçlik Zarı',enN:'Void Die',req:a=>(a.achievements||[]).includes('imp_slayer')||(a.peakElo||1200)>=1500,trR:'İmkansız Bot Zaferi / 1500 ELO',enR:'Beat Impossible AI / 1500 ELO'}
+];
+const HERO_MASTERY_TITLES={
+  c:{tr:'Zamanın Tüccarı',en:'Merchant of Time'},
+  p:{tr:'Veba Üstadı',en:'Plague Master'},
+  n:{tr:'Kara Ferman',en:'Dark Decree'},
+  a:{tr:'Yazgı Kraliçesi',en:'Queen of Fate'},
+  s:{tr:'Gölge Büyücüsü',en:'Shadow Archmage'},
+  e:{tr:'Buzul Muhafızı',en:'Glacial Warden'},
+  m:{tr:'Ölümün Elçisi',en:'Herald of Death'},
+  w:{tr:'Kuzgun Kahini',en:'Raven Oracle'},
+  l:{tr:'Kanlı Alfa',en:'Blood Alpha'},
+  v:{tr:'Ebedi Vampir',en:'Eternal Vampire'},
+  u:{tr:'Hiçlik Hükümdarı',en:'Void Sovereign'}
+};
+function getHeroMastery(acc,hid){
+  const w=(acc&&acc.heroStats&&acc.heroStats[hid]&&acc.heroStats[hid].w)||0;
+  const tier=w>=30?3:w>=15?2:w>=5?1:0;
+  const next=w>=30?30:w>=15?30:w>=5?15:5;
+  const roman=tier===3?'III':tier===2?'II':tier===1?'I':'';
+  const name=tier===3?tr('Efsane','Legend'):tier===2?tr('Usta','Master'):tier===1?tr('Kıdemli','Veteran'):tr('Çırak','Novice');
+  return {w,tier,next,roman,name};
+}
 const PROFILE_FRAMES=[
   {id:'classic',trN:'Antik Bronz',enN:'Ancient Bronze',req:()=>true,trR:'Varsayılan',enR:'Default'},
   {id:'crimson',trN:'Kanlı Yakut',enN:'Blood Ruby',req:a=>((a.wins||0)+(a.unrankedWins||0))>=2,trR:'2 Zafer',enR:'2 Wins'},
@@ -6988,6 +7079,11 @@ const DAILY_QUEST_POOL=[
   {id:'ranked1',trN:'1 Dereceli Maç Oyna',enN:'Play 1 Ranked Match',goal:1,ic:'✦'}
 ];
 function getTitleLabel(id){
+  if(!id)return '';
+  if(String(id).startsWith('m_')){
+    const mt=HERO_MASTERY_TITLES[String(id).slice(2)];
+    return mt?(isEn()?mt.en:mt.tr):'';
+  }
   const a=ACHIEVEMENTS.find(x=>x.id===id);
   return a?(isEn()?a.enT:a.trT):'';
 }
@@ -6995,8 +7091,11 @@ function applyCosmetics(acc){
   try{
     const cb=(acc&&acc.cardBack)||'classic';
     const fr=(acc&&acc.frame)||'classic';
+    const ds=(acc&&acc.diceSkin)||'ruby';
     document.body.dataset.cardback=cb;
     document.body.dataset.frame=fr;
+    document.body.dataset.diceskin=ds;
+    window.D20_SKIN=ds;
   }catch(e){}
 }
 let HOLD_UNLOCK_TOASTS=false,QUEUED_UNLOCK_TOASTS=[];
@@ -7307,23 +7406,35 @@ function openProfileModal(initialTab='overview'){
         hist.forEach(h=>{if(h.myHero){if(!hs[h.myHero])hs[h.myHero]={w:0,l:0};if(h.won)hs[h.myHero].w++;else hs[h.myHero].l++}});
       }
       const rows=Object.entries(hs).map(([hid,st])=>({hid,w:st.w||0,l:st.l||0,tot:(st.w||0)+(st.l||0)})).filter(x=>x.tot>0).sort((a,b)=>b.tot-a.tot||b.w-a.w);
-      tabBody=`<div class="pr-sec-lbl">${tr('Kahraman Performansı','Hero Performance')}</div>
+      tabBody=`<div class="pr-sec-lbl">${tr('Kahraman Ustalığı & Performans','Hero Mastery & Performance')}</div>
       <div class="pr-scroll-box">
         ${rows.length?rows.map(r=>{
           const hObj=HERO_MAP[r.hid];
           const hName=hObj?hObj.name:r.hid;
           const hWr=Math.round((r.w/r.tot)*100);
-          return `<div class="hs-stat-row">
-            <img src="${avSrc(r.hid)}" alt="${escHtml(hName)}">
+          const mst=getHeroMastery(acc,r.hid);
+          const mstPct=mst.tier>=3?100:Math.min(100,Math.round((r.w/mst.next)*100));
+          const mTitleId='m_'+r.hid,mTitleTxt=getTitleLabel(mTitleId),eqM=acc.title===mTitleId;
+          const mBadge=mst.tier?`<span class="mst-pill m${mst.tier}">${mst.name} ${mst.roman}</span>`:`<span class="mst-pill m0">${r.w}/${mst.next}</span>`;
+          const mBtn=mst.tier&&mTitleTxt?`<button type="button" class="btn sm ach-eq${eqM?' alt':''}" data-title="${eqM?'':mTitleId}" title="${escHtml(mTitleTxt)}">${eqM?tr('Takılı','Equipped'):escHtml(mTitleTxt)}</button>`:'';
+          return `<div class="hs-stat-row${mst.tier?` mastery-${mst.tier}`:''}">
+            <img class="${mst.tier?`mastery-${mst.tier}`:''}" src="${avSrc(r.hid)}" alt="${escHtml(hName)}">
             <div class="hs-stat-info">
-              <div class="q-top"><b>${escHtml(hName)}</b><span>%${hWr} (${r.w}${tr('G','W')} / ${r.l}${tr('M','L')})</span></div>
-              <div class="q-bar"><i style="width:${hWr}%"></i></div>
+              <div class="q-top"><b>${escHtml(hName)} ${mBadge}</b><span>%${hWr} (${r.w}${tr('G','W')} / ${r.l}${tr('M','L')})</span></div>
+              <div class="q-bar"><i style="width:${mstPct}%"></i></div>
             </div>
+            ${mBtn}
           </div>`;
         }).join(''):`<div class="pr-hempty">${tr('Kahraman istatistiği için en az 1 maç oyna.','Play at least 1 match to track hero stats.')}</div>`}
       </div>`;
     }else{
       const unlocked=new Set(acc.achievements||[]);
+      const dsHtml=DICE_SKINS.map(ds=>{
+        const ok=ds.req(acc),sel=(acc.diceSkin||'ruby')===ds.id;
+        return `<button type="button" class="cos-chip${sel?' sel':''}${ok?'':' lock'}" data-ds="${ds.id}" ${ok?'':'disabled'} title="${isEn()?ds.enR:ds.trR}">
+          <i class="ds-sw ds-${ds.id}"></i><span>${isEn()?ds.enN:ds.trN}</span>${ok?'':`<small>${tr('Kilitli','Locked')}</small>`}
+        </button>`;
+      }).join('');
       const cbHtml=CARD_BACKS.map(cb=>{
         const ok=cb.req(acc),sel=(acc.cardBack||'classic')===cb.id;
         return `<button type="button" class="cos-chip${sel?' sel':''}${ok?'':' lock'}" data-cb="${cb.id}" ${ok?'':'disabled'} title="${isEn()?cb.enR:cb.trR}">
@@ -7348,7 +7459,9 @@ function openProfileModal(initialTab='overview'){
         </div>`;
       }).join('');
       tabBody=`<div class="pr-scroll-box pr-cos-scroll">
-        <div class="pr-sec-lbl">${tr('Kart Arkası','Card Back')}</div>
+        <div class="pr-sec-lbl">${tr('Ölüm Zarı (D20) Stili','Death Dice (D20) Style')}</div>
+        <div class="cos-grid">${dsHtml}</div>
+        <div class="pr-sec-lbl" style="margin-top:8px">${tr('Kart Arkası','Card Back')}</div>
         <div class="cos-grid">${cbHtml}</div>
         <div class="pr-sec-lbl" style="margin-top:8px">${tr('Profil Çerçevesi','Profile Frame')}</div>
         <div class="cos-grid">${frHtml}</div>
@@ -7362,7 +7475,7 @@ function openProfileModal(initialTab='overview'){
         <div class="pr-badge ${rk.cls} ${frCls}">${rk.ic}</div>
         <div class="pr-titles">
           <h3>${nm}${eqTitle?` <span class="pr-eq-title">«${escHtml(eqTitle)}»</span>`:''}</h3>
-          <div class="pr-rank">${rk.name} · <b>${Math.round(acc.elo||1200)} ELO</b> · <span class="pr-st-tag">${stCur} ${tr('Gün Seri','Day Streak')}</span></div>
+          <div class="pr-rank">${rk.name} · <b>${Math.round(acc.elo||1200)} ELO</b> · <span class="pr-st-tag">${stCur} ${tr('Gün Seri','Day Streak')}</span>${(acc.puzzleStreak||0)>0?` · <span class="pr-st-tag">${tr('Bulmaca','Puzzle')}: ${acc.puzzleStreak}</span>`:''}</div>
         </div>
       </div>
       <div class="pr-tabs">
@@ -7382,6 +7495,7 @@ function openProfileModal(initialTab='overview'){
       </div>
     </div>`;
     mb.querySelectorAll('.pr-tabs .pr-tab').forEach(b=>b.onclick=()=>{snd('click');curTab=b.dataset.pt;renderProf(USER_ACC)});
+    mb.querySelectorAll('.cos-chip[data-ds]').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.diceSkin=b.dataset.ds;saveSession(USER_ACC);renderProf(USER_ACC)});
     mb.querySelectorAll('.cos-chip[data-cb]').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.cardBack=b.dataset.cb;saveSession(USER_ACC);renderProf(USER_ACC)});
     mb.querySelectorAll('.cos-chip[data-fr]').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.frame=b.dataset.fr;saveSession(USER_ACC);renderProf(USER_ACC)});
     mb.querySelectorAll('.ach-eq').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.title=b.dataset.title||'';saveSession(USER_ACC);renderProf(USER_ACC)});
@@ -7655,3 +7769,264 @@ function openAuthModal(initialTab='login',isUpgrade=false){
     },sp?2150:220);
   }
 })();
+
+
+/* ---------- ÖZEL MOD 1: HAFTALIK LANETLİ MASA ---------- */
+const WEEKLY_CURSES=[
+  {id:'rand_tg',ic:'◈',trN:'Değişken Mühür',enN:'Shifting Seal',trD:'Her tur hedef sayı rastgele 17, 21 veya 24 olarak mühürlenir.',enD:'Each round, the target number shifts randomly to 17, 21, or 24.'},
+  {id:'two_closed',ic:'☾',trN:'Çifte Sır',enN:'Double Secret',trD:'Her iki oyuncu da her tura 2 kapalı sayı kartıyla başlar.',enD:'Both players start every round with 2 hidden number cards.'},
+  {id:'three_jokers',ic:'✦',trN:'Kaos Eli',enN:'Hand of Chaos',trD:'Her düelloya 5 Jokerle başlanır ve her turda en fazla 3 Joker oynanabilir.',enD:'Start each duel with 5 Jokers and play up to 3 Jokers per round.'},
+  {id:'blood_dice',ic:'†',trN:'Kanlı Kader',enN:'Bloody Fate',trD:'Ölüm Zarı eşiği her aşamada +2 daha zordur; her tur başında iki taraf da 1 ekstra Joker çeker.',enD:'Death Dice target is +2 harder; both players draw 1 extra Joker at the start of each round.'}
+];
+function getCurrentWeeklyCurse(){
+  const now=new Date();
+  const weekNum=Math.floor((Date.UTC(now.getFullYear(),now.getMonth(),now.getDate())-Date.UTC(2026,0,5))/(7*86400000));
+  const idx=((weekNum%WEEKLY_CURSES.length)+WEEKLY_CURSES.length)%WEEKLY_CURSES.length;
+  return {...WEEKLY_CURSES[idx],weekNum:weekNum+1};
+}
+function openWeeklyCursedModal(){
+  const c=getCurrentWeeklyCurse();
+  const mb=$('#mb');
+  if(!mb)return;
+  lock=true;
+  mb.classList.remove('end-mode','an-mode','set-mode','lb-mode','lob-mode','pr-mode');
+  mb.classList.add('auth-mode');
+  mb.innerHTML=`<div class="sp-wrap">
+    <div class="sp-badge cursed">${tr('Haftalık Lanetli Masa','Weekly Cursed Table')} · ${tr('Hafta','Week')} #${c.weekNum}</div>
+    <h3 class="sp-title">${c.ic} ${escHtml(isEn()?c.enN:c.trN)}</h3>
+    <p class="sp-desc">${escHtml(isEn()?c.enD:c.trD)}</p>
+    <div class="sp-meta">${tr('Derecesiz özel kural · Zor yapay zekaya karşı · Görevler işler','Unranked special rule · Against Hard AI · Counts toward quests')}</div>
+    <div class="row sp-acts">
+      <button type="button" id="sp-cursed-go" class="btn alt">${tr('Lanetli Masaya Otur','Enter Cursed Table')}</button>
+      <button type="button" id="sp-cursed-x" class="btn sm">${tr('Kapat','Close')}</button>
+    </div>
+  </div>`;
+  $('#m').hidden=false;
+  const close=()=>{mb.classList.remove('auth-mode');$('#m').hidden=true;lock=false};
+  $('#sp-cursed-x').onclick=()=>{snd('click');close()};
+  $('#sp-cursed-go').onclick=()=>{
+    snd('ok');
+    close();
+    VAULT_RUN=null;PUZZLE_ACTIVE=null;
+    CURSED_RULE=c;
+    DIFF='hard';MODE='bot';
+    chooseHero(h=>{MY_HERO=h;enter(start)},()=>{CURSED_RULE=null;});
+  };
+}
+
+
+/* ---------- ÖZEL MOD 2: GÜNÜN BULMACASI (DAILY LETHAL PUZZLE) ---------- */
+const DAILY_PUZZLES=[
+  {id:'p1',trN:'Patlak Tuzak',enN:'Bust Trap',trH:'Hedef 21. Elindeki 2 Jokerden doğru olanı oynayıp Turu Bitir diyerek bu turu kazan.',enH:'Target is 21. Play the winning Joker from your hand and End Round to win.',myOpen:[7],myClosed:[9],oppOpen:[10],oppClosed:[8],hand:[3,6],myH:'p',oppH:'n'},
+  {id:'p2',trN:'Mühür Kırıcı',enN:'Seal Breaker',trH:'Rakip 19 puanda bekliyor. Mühür değiştirerek onu patlat ve turu kazan.',enH:'Opponent sits at 19. Shift the seal to make them bust and win the round.',myOpen:[11],myClosed:[6],oppOpen:[10],oppClosed:[9],hand:[10,4],myH:'c',oppH:'m'},
+  {id:'p3',trN:'Ters Kader',enN:'Reversed Fate',trH:'Toplamın 7, rakibin 19. Kuralı tersine çevirip tek hamlede kazan.',enH:'Your total is 7 vs opponent 19. Flip the winning rule in one move.',myOpen:[3],myClosed:[4],oppOpen:[10],oppClosed:[9],hand:[19,3],myH:'a',oppH:'e'},
+  {id:'p4',trN:'Gölge Yükselişi',enN:'Shadow Surge',trH:'Rakip 19 puanda. Kendi kartını dönüştürüp 21 sınırına yaklaşarak kazan.',enH:'Opponent holds 19. Transform your card to overtake them without busting.',myOpen:[8],myClosed:[7],oppOpen:[11],oppClosed:[8],hand:[7,4],myH:'w',oppH:'v'},
+  {id:'p5',trN:'Kırık Kalkan',enN:'Shattered Shield',trH:'Rakip tam 21 puanda! Onun açık kartını hedef alıp üstünlüğü ele geçir.',enH:'Opponent sits at exact 21! Target their open card to seize the win.',myOpen:[9],myClosed:[5],oppOpen:[11],oppClosed:[10],hand:[14,3],myH:'l',oppH:'n'},
+  {id:'p6',trN:'Teklerin Laneti',enN:'Curse of Odds',trH:'İki kartın da tek sayı. Doğru çarpanı kullanarak rakibin 14 puanını geç.',enH:'Both of your cards are odd. Use the right multiplier to beat 14.',myOpen:[5],myClosed:[3],oppOpen:[8],oppClosed:[6],hand:[1,3],myH:'s',oppH:'c'},
+  {id:'p7',trN:'Ölümsüz Takas',enN:'Immortal Swap',trH:'Rakibin yüksek açık kartını kendi düşük kartınla değiştirip turu kopar.',enH:'Swap your low open card with the opponent\'s high open card to win.',myOpen:[2],myClosed:[9],oppOpen:[10],oppClosed:[8],hand:[15,4],myH:'c',oppH:'a'}
+];
+function getTodayPuzzle(){
+  const d=dayKey(0);
+  let h=0;for(let i=0;i<d.length;i++)h=(h*31+d.charCodeAt(i))>>>0;
+  return {...DAILY_PUZZLES[h%DAILY_PUZZLES.length],day:d};
+}
+function openDailyPuzzleModal(){
+  const pz=getTodayPuzzle();
+  const solved=!!(USER_ACC&&USER_ACC.lastPuzzleDay===pz.day);
+  const stVal=(USER_ACC&&USER_ACC.puzzleStreak)||0;
+  const mb=$('#mb');if(!mb)return;
+  lock=true;
+  mb.classList.remove('end-mode','an-mode','set-mode','lb-mode','lob-mode','pr-mode');
+  mb.classList.add('auth-mode');
+  mb.innerHTML=`<div class="sp-wrap">
+    <div class="sp-badge puzzle">${tr('Günün Bulmacası','Daily Lethal Puzzle')} · ${pz.day}</div>
+    <h3 class="sp-title">✦ ${escHtml(isEn()?pz.enN:pz.trN)}</h3>
+    <p class="sp-desc">${escHtml(isEn()?pz.enH:pz.trH)}</p>
+    <div class="sp-meta">${tr('Bulmaca Serin','Puzzle Streak')}: <b>${stVal} ${tr('Gün','Days')}</b>${solved?` · <span style="color:#86efac">${tr('Bugün Çözüldü ✔','Solved Today ✔')}</span>`:''}</div>
+    <div class="row sp-acts">
+      <button type="button" id="sp-pz-go" class="btn alt">${solved?tr('Tekrar Oyna','Replay'):tr('Bulmacayı Başlat','Start Puzzle')}</button>
+      <button type="button" id="sp-pz-x" class="btn sm">${tr('Kapat','Close')}</button>
+    </div>
+  </div>`;
+  $('#m').hidden=false;
+  const close=()=>{mb.classList.remove('auth-mode');$('#m').hidden=true;lock=false};
+  $('#sp-pz-x').onclick=()=>{snd('click');close()};
+  $('#sp-pz-go').onclick=()=>{
+    snd('ok');close();
+    CURSED_RULE=null;VAULT_RUN=null;
+    PUZZLE_ACTIVE=pz;
+    enter(()=>startDailyPuzzle(pz));
+  };
+}
+function startDailyPuzzle(pz){
+  hiPreload();setMusic('game');
+  try{document.body.classList.remove('dead')}catch(e){}
+  glogOpen=false;glogLastSig='';LAST_MATCH_HIST=[];
+  MODE='bot';DIFF='med';MY_HERO=pz.myH||'p';OPP_HERO=pz.oppH||'n';
+  let uid=100;
+  G={
+    u:200,bo:0,rounds:0,pts:[0,0],res:[],over:false,wait:false,rev:false,winSide:null,
+    av:[MY_HERO,OPP_HERO],hero:[MY_HERO,OPP_HERO],uRevived:[false,false],vampUsed:[false,false],
+    cWins:[0,0],vampBurn:null,thiefSteal:null,mast:[0,0],
+    deck:[{id:++uid,n:1},{id:++uid,n:4}],
+    jdeck:[],dj:[],used:[],
+    hand:[pz.hand.slice(),[]],
+    pl:[
+      {open:pz.myOpen.map(n=>({id:++uid,n})),closed:pz.myClosed.map(n=>({id:++uid,n}))},
+      {open:pz.oppOpen.map(n=>({id:++uid,n})),closed:pz.oppClosed.map(n=>({id:++uid,n}))}
+    ],
+    eff:[],pj:[],jUsed:[0,0],jTurn:[0,0],noJ:[false,false],
+    acted:false,turns:1,turn:0,baseTg:21,maxJokers:2,
+    hpUsed:[true,true],hpMod:[0,0],plagueMod:[0,0],hpTgMod:0,
+    oppPeek:[],oppPeek1:[],clocks:[99,99],clockMax:99,graceLeft:99,timeOut:[false,false],hadTimeout:false,
+    log:[{p:-1,t:`— ${isEn()?pz.enN:pz.trN} —`},{p:0,t:isEn()?pz.enH:pz.trH}]
+  };
+  G.pl[0].closed.forEach(c=>peek.add(c.id));
+  prevAv[0]=prevAv[1]=undefined;prevHpAnim=[false,false];lastThiefSeq=0;
+  sayT='';botGen++;thinkOn=false;
+  R();
+}
+function finishDailyPuzzle(won,myTot,oppTot,T){
+  const pz=PUZZLE_ACTIVE||getTodayPuzzle();
+  if(won&&USER_ACC){
+    const today=pz.day||dayKey(0);
+    if(USER_ACC.lastPuzzleDay!==today){
+      const yest=dayKey(-1);
+      USER_ACC.puzzleStreak=(USER_ACC.lastPuzzleDay===yest?((USER_ACC.puzzleStreak||0)+1):1);
+      USER_ACC.lastPuzzleDay=today;
+      saveSession(USER_ACC);
+    }
+  }
+  const stVal=(USER_ACC&&USER_ACC.puzzleStreak)||0;
+  const mb=$('#mb');if(!mb)return;
+  lock=true;
+  mb.classList.remove('end-mode','an-mode','set-mode','lb-mode','lob-mode','pr-mode');
+  mb.classList.add('auth-mode');
+  mb.innerHTML=`<div class="sp-wrap">
+    <div class="sp-badge puzzle">${tr('Günün Bulmacası','Daily Lethal Puzzle')}</div>
+    <h3 class="sp-title">${won?tr('Bulmaca Çözüldü!','Puzzle Solved!'):tr('Hamle Yetersiz Kaldı','Not Quite Lethal')}</h3>
+    <p class="sp-desc">${tr(`Skorun: ${myTot} · Rakip: ${oppTot} (Hedef: ${T})`,`Your total: ${myTot} · Opponent: ${oppTot} (Target: ${T})`)}</p>
+    <div class="sp-meta">${tr('Bulmaca Serin','Puzzle Streak')}: <b>${stVal} ${tr('Gün','Days')}</b></div>
+    <div class="row sp-acts">
+      ${won?'':`<button type="button" id="sp-pz-retry" class="btn alt">${tr('Tekrar Dene','Try Again')}</button>`}
+      <button type="button" id="sp-pz-home" class="btn${won?' alt':''}">${tr('Ana Menü','Main Menu')}</button>
+    </div>
+  </div>`;
+  $('#m').hidden=false;
+  if($('#sp-pz-retry'))$('#sp-pz-retry').onclick=()=>{snd('click');mb.classList.remove('auth-mode');$('#m').hidden=true;lock=false;startDailyPuzzle(pz)};
+  if($('#sp-pz-home'))$('#sp-pz-home').onclick=()=>{snd('click');mb.classList.remove('auth-mode');home()};
+}
+
+
+/* ---------- ÖZEL MOD 3: ÖLÜM MAHZENİ (ROGUELIKE PvE) ---------- */
+const VAULT_STAGES=[
+  {diff:'easy',trN:'1. Oda · Mahzen Bekçisi',enN:'Chamber 1 · Vault Guard'},
+  {diff:'med',trN:'2. Oda · Kanlı Tüccar',enN:'Chamber 2 · Blood Broker'},
+  {diff:'hard',trN:'3. Oda · Gölgeler Salonu',enN:'Chamber 3 · Hall of Shadows'},
+  {diff:'hard',trN:'4. Oda · Lanetli Sunak',enN:'Chamber 4 · Cursed Altar'},
+  {diff:'imp',boss:true,oppHero:'u',trN:'5. Oda · SON BOSS: Bilinmeyen',enN:'Chamber 5 · FINAL BOSS: The Unknown'}
+];
+const VAULT_RELICS=[
+  {id:'extra_joker',ic:'◈',trN:'Karanlık Kese',enN:'Dark Satchel',trD:'Her düelloya +1 ekstra Joker ile başla.',enD:'Start every duel with +1 extra Joker.'},
+  {id:'reroll_one',ic:'✦',trN:'Kırık Kader Zarı',enN:'Shattered Fate Die',trD:'Ölüm Zarında 1 atarsan bir kez otomatik yeniden at.',enD:'Automatically reroll once if you roll a 1 on Death Dice.'},
+  {id:'high_closed_joker',ic:'☾',trN:'Yüksek Sır',enN:'High Secret',trD:'Kapalı kartın 10 veya 11 gelirse anında +1 Joker çek.',enD:'If your hidden card is 10 or 11, draw +1 Joker immediately.'},
+  {id:'iron_fate',ic:'†',trN:'Demir Mühür',enN:'Iron Seal',trD:'Attığın her Ölüm Zarına kalıcı +2 bonus kazan.',enD:'Gain a permanent +2 bonus to all your Death Dice rolls.'},
+  {id:'triple_play',ic:'★',trN:'Hızlı El',enN:'Swift Hand',trD:'Her turda en fazla 3 Joker oynayabilirsin.',enD:'You may play up to 3 Jokers per round.'},
+  {id:'blood_peek',ic:'❖',trN:'Kuzgun Gözü',enN:'Raven Eye',trD:'Her turun başında rakibin kapalı kartı sana görünür olur.',enD:'Opponent\'s hidden card is revealed to you at the start of every round.'}
+];
+function vaultTrackHtml(curStage){
+  return `<div class="vault-track">${VAULT_STAGES.map((st,i)=>`<div class="vt-node${i<curStage?' done':i===curStage?' cur':''}${st.boss?' boss':''}"><span class="vt-dot">${i<curStage?'✔':st.boss?'♛':(i+1)}</span><span>${st.boss?'Boss':(i+1)}</span></div>`).join('')}</div>`;
+}
+function vaultRelicBarHtml(relics){
+  if(!relics||!relics.length)return '';
+  return `<div class="vault-relic-bar">${relics.map(rid=>{const r=VAULT_RELICS.find(x=>x.id===rid);return r?`<span class="vr-chip" title="${escHtml(isEn()?r.enD:r.trD)}">${r.ic} ${escHtml(isEn()?r.enN:r.trN)}</span>`:''}).join('')}</div>`;
+}
+function openVaultModal(){
+  const best=(USER_ACC&&USER_ACC.vaultBest)||0;
+  const wins=(USER_ACC&&USER_ACC.vaultWins)||0;
+  const mb=$('#mb');if(!mb)return;
+  lock=true;
+  mb.classList.remove('end-mode','an-mode','set-mode','lb-mode','lob-mode','pr-mode');
+  mb.classList.add('auth-mode');
+  mb.innerHTML=`<div class="sp-wrap">
+    <div class="sp-badge vault">${tr('Tek Kişilik Roguelike','Solo Roguelike Mode')}</div>
+    <h3 class="sp-title">♛ ${tr('Ölüm Mahzeni','Death Vault')}</h3>
+    <p class="sp-desc">${tr('Kahramanını seç ve 5 aşamalı giderek zorlaşan Mahzen\'e in. Her zaferden sonra 3 Kalıcı Kalıntıdan 1 tanesini seçip güçlen ve sonunda Bilinmeyen\'i alt et.','Pick your hero and descend through 5 escalating chambers. Choose 1 of 3 permanent Relics after each victory and defeat The Unknown.')}</p>
+    ${vaultTrackHtml(0)}
+    <div class="sp-meta">${tr('En İyi Aşama','Best Chamber')}: <b>${best}/5</b> · ${tr('Mahzen Zaferi','Vault Clears')}: <b>${wins}</b></div>
+    <div class="row sp-acts">
+      <button type="button" id="sp-v-go" class="btn alt">${tr('Mahzene İn','Enter the Vault')}</button>
+      <button type="button" id="sp-v-x" class="btn sm">${tr('Kapat','Close')}</button>
+    </div>
+  </div>`;
+  $('#m').hidden=false;
+  const close=()=>{mb.classList.remove('auth-mode');$('#m').hidden=true;lock=false};
+  $('#sp-v-x').onclick=()=>{snd('click');close()};
+  $('#sp-v-go').onclick=()=>{
+    snd('ok');close();
+    CURSED_RULE=null;PUZZLE_ACTIVE=null;
+    chooseHero(h=>{
+      MY_HERO=h;
+      VAULT_RUN={stage:0,hero:h,relics:[],oppHero:''};
+      startVaultStage(0,true);
+    },()=>{VAULT_RUN=null;});
+  };
+}
+function startVaultStage(stageIdx,withVeil=false){
+  if(!VAULT_RUN)return;
+  const stCfg=VAULT_STAGES[Math.min(stageIdx,VAULT_STAGES.length-1)];
+  const pool=HEROES.filter(h=>!h.bossOnly&&h.id!==MY_HERO).map(h=>h.id);
+  VAULT_RUN.stage=stageIdx;
+  VAULT_RUN.oppHero=stCfg.oppHero||pool[Math.floor(Math.random()*pool.length)];
+  DIFF=stCfg.diff;MODE='bot';MY_HERO=VAULT_RUN.hero;
+  if(withVeil)enter(start);
+  else start();
+}
+function openVaultRelicPick(){
+  if(!VAULT_RUN)return home();
+  const nextStage=VAULT_RUN.stage+1;
+  const avail=shuf(VAULT_RELICS.filter(r=>!VAULT_RUN.relics.includes(r.id))).slice(0,3);
+  const mb=$('#mb');if(!mb)return;
+  lock=true;
+  mb.classList.remove('end-mode','an-mode','set-mode','lb-mode','lob-mode','pr-mode');
+  mb.classList.add('auth-mode');
+  const stCfg=VAULT_STAGES[Math.min(nextStage,VAULT_STAGES.length-1)];
+  mb.innerHTML=`<div class="sp-wrap">
+    <div class="sp-badge vault">${tr(`Oda ${VAULT_RUN.stage+1} Temizlendi!`,`Chamber ${VAULT_RUN.stage+1} Cleared!`)}</div>
+    <h3 class="sp-title">${tr('Bir Kalıntı Seç','Choose a Relic')}</h3>
+    ${vaultTrackHtml(nextStage)}
+    ${vaultRelicBarHtml(VAULT_RUN.relics)}
+    <div class="relic-grid">${avail.map(r=>`<button type="button" class="relic-card" data-rid="${r.id}"><span class="relic-ic">${r.ic}</span><b>${escHtml(isEn()?r.enN:r.trN)}</b><small>${escHtml(isEn()?r.enD:r.trD)}</small></button>`).join('')}</div>
+    <div class="sp-meta">${tr('Sıradaki Rakip','Next Chamber')}: <b>${escHtml(isEn()?stCfg.enN:stCfg.trN)}</b></div>
+  </div>`;
+  $('#m').hidden=false;
+  mb.querySelectorAll('.relic-card[data-rid]').forEach(b=>b.onclick=()=>{
+    snd('ok');
+    VAULT_RUN.relics.push(b.dataset.rid);
+    mb.classList.remove('auth-mode');$('#m').hidden=true;lock=false;
+    startVaultStage(nextStage,false);
+  });
+}
+function openVaultVictoryModal(){
+  const relics=(VAULT_RUN&&VAULT_RUN.relics)||[];
+  const wins=(USER_ACC&&USER_ACC.vaultWins)||1;
+  const mb=$('#mb');if(!mb)return;
+  lock=true;
+  mb.classList.remove('end-mode','an-mode','set-mode','lb-mode','lob-mode','pr-mode');
+  mb.classList.add('auth-mode');
+  mb.innerHTML=`<div class="sp-wrap">
+    <div class="sp-badge vault">♛ ${tr('Ölüm Mahzeni Fethedildi!','Death Vault Conquered!')}</div>
+    <h3 class="sp-title">${tr('Bilinmeyen Yenildi!','The Unknown Defeated!')}</h3>
+    <p class="sp-desc">${tr('5 odanın tamamını aşıp Ölüm Mahzeni\'nden zaferle çıktın.','You cleared all 5 chambers and emerged victorious from the Death Vault.')}</p>
+    ${vaultTrackHtml(5)}
+    ${vaultRelicBarHtml(relics)}
+    <div class="sp-meta">${tr('Toplam Mahzen Zaferin','Total Vault Clears')}: <b>${wins}</b></div>
+    <div class="row sp-acts">
+      <button type="button" id="sp-vv-new" class="btn alt">${tr('Yeni Koşu','New Run')}</button>
+      <button type="button" id="sp-vv-home" class="btn sm">${tr('Ana Menü','Main Menu')}</button>
+    </div>
+  </div>`;
+  $('#m').hidden=false;
+  $('#sp-vv-new').onclick=()=>{snd('click');VAULT_RUN=null;openVaultModal()};
+  $('#sp-vv-home').onclick=()=>{snd('click');mb.classList.remove('auth-mode');home()};
+}
