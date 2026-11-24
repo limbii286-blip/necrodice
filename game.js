@@ -757,13 +757,14 @@ const act=(S,id)=>S.eff.some(e=>e.id==id&&!e.neg);
 function total(S,p,wc=true){
   const pm=(S.plagueMod&&S.plagueMod[p])||0;
   const f=(c,cl)=>{const b=Math.max(0,(c.o??c.n)+pm);if(c.hpImmune)return b;let v=b;if(act(S,1)&&b%2)v=b*2;else if(act(S,2)&&b%2==0)v=b/2; // x2: tekler iki katı, ÷2: çiftler yarısı (ikisi birlikte olunca da her kart yalnızca bir kez etkilenir)
-    if(cl){if(act(S,20))return 0;if(act(S,21))v*=2}return v};
+    if(cl){if(clZero(S))return 0;if(clDbl(S))v*=2}return v};
   let t=0;S.pl[p].open.forEach(c=>t+=f(c,0));if(wc)S.pl[p].closed.forEach(c=>t+=f(c,1));
   S.eff.forEach(e=>{if(e.neg||e.o!=p)return;if(e.id==3)t+=5;if(e.id==4)t-=5;if(e.id==22)t+=e.s*S.deck.length});
   if(S.hpMod&&S.hpMod[p])t+=S.hpMod[p];
   return t;
 }
 const TGS=new Set([8,9,10,11,19]),tgE=S=>S.eff.filter(e=>!e.neg&&TGS.has(e.id)).pop(),lowW=S=>{const e=tgE(S);return !!e&&e.id==19}; // hedef değiştirenlerden SON oynanan geçerli
+const CLS=new Set([20,21]),clE=S=>S.eff.filter(e=>!e.neg&&CLS.has(e.id)).pop(),clZero=S=>{const e=clE(S);return !!e&&e.id==20},clDbl=S=>{const e=clE(S);return !!e&&e.id==21}; // kapalı kart kuralında da SON oynanan geçerli
 function tg(S){const e=tgE(S);const base=e&&e.id<19?{8:27,9:24,10:17,11:15}[e.id]:(S.baseTg||21);return base+(S.hpTgMod||0)}
 function outc(S,p){ // p açısından: 1 kazan, 0 berabere, -1 kaybet
   const a=total(S,p),b=total(S,1-p),T=tg(S);
@@ -881,7 +882,7 @@ function listC(S,p,prm){
   const cost=matchPoint&&prm.deepRoll?0.015:(S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc);
   const HI_THIEF=new Set([6,7,14,16,17,18,23,24]);
   const oppOpen=total(S,1-p,false);
-  const q=1-p,activeTg=tgE(S);
+  const q=1-p,activeTg=tgE(S),activeCl=clE(S);
   if(!S.noJ[p])new Set(S.hand[p]).forEach(id=>{
     if(!playable(S,p,id))return;
     if(id==22&&S.deck.length===0)return; // deste boşken ±0 anlamsız
@@ -894,6 +895,7 @@ function listC(S,p,prm){
         const ef=S.eff.find(e=>e.uid==pk[0]);
         if(!ef||(ef.o===p&&!TGS.has(ef.id)))return;
         if(TGS.has(ef.id)&&activeTg&&ef.uid!==activeTg.uid)return; // zaten geçersiz kalmış eski hedef jokeri
+        if(CLS.has(ef.id)&&activeCl&&ef.uid!==activeCl.uid)return; // zaten geçersiz kalmış eski kapalı kart jokeri
       }
       if((id==5||id==14)&&!low&&oppOpen>Tg)return; // rakip zaten açıktan patlamışsa kart verip/imha edip kurtarma
       const T=clone(S);T.log=[];T.deck=shuf(pool.map(n=>({id:++T.u,n}))).slice(0,S.deck.length);
@@ -2468,7 +2470,7 @@ function R(){
   const isSpec=MODE=='spectator';
   const modeBadge=CURSED_RULE?`<span class="mode-pill cursed" title="${escHtml(isEn()?CURSED_RULE.enD:CURSED_RULE.trD)}">${escHtml(isEn()?CURSED_RULE.enN:CURSED_RULE.trN)}</span>`:(VAULT_RUN?`<span class="mode-pill vault">${tr(`Mahzen ${VAULT_RUN.stage+1}/5`,`Vault ${VAULT_RUN.stage+1}/5`)}</span>`:(PUZZLE_ACTIVE?`<span class="mode-pill puzzle">${tr('Günün Bulmacası','Daily Puzzle')}</span>`:''));
   setH('#hdr',`<div class="hs sks">${sk}</div><div class="hc"><span class="lab">${tr('Düello','Duel')} ${S.bo+1}</span><span class="pips">${pips}</span>${modeBadge}</div><div class="hg"><button class="gear" data-g="1" aria-label="${tr('Ayarlar','Settings')}">${IC.gear}<span>${tr('Ayarlar','Settings')}</span></button></div>`);
-  const oppHidZero=!S.rev&&act(S,20)&&S.pl[1].closed.length>0;
+  const oppHidZero=!S.rev&&clZero(S)&&S.pl[1].closed.length>0;
   const oppClosedKnown=!!(S.rev||oppHidZero||(S.pl[1].closed.length&&S.pl[1].closed.every(c=>c.o!=null||(S.oppPeek&&S.oppPeek.includes(c.id)))));
   const my=!isSpec&&S.turn==0&&!lock&&!S.wait,mt=total(S,0),ot=total(S,1,oppClosedKnown),bust=!low&&mt>T,obust=oppClosedKnown&&!low&&ot>T,seal=T+(low?'L':'');
   const exact=!low&&mt===T,oexact=oppClosedKnown&&!low&&ot===T;
@@ -2517,8 +2519,8 @@ function R(){
   const oppSub=isSpec?((S.specMeta&&S.specMeta.p1Sub)?escHtml(S.specMeta.p1Sub):''):(MODE==='bot'?oppBotSub:(MODE==='tutorial'?tr('Eğitim','Tutorial'):`${oppOnlineName} · ${oppOnlineElo} ELO`));
   const cCnt1=S.pl[1].open.length+S.pl[1].closed.length;
   setH('#opp',`${oppHandHtml}<div class="who">${av1}${hpBtn1}<div class="nm"><b>${p1Name}</b><span class="meta nick">${oppSub}</span></div><div class="tot${obust?' bust':oexact?' exact':''}"><small>${tr('Toplam','Total')}</small><div class="tl"><b>${lastTot[1]}</b>${oppHidZero?'<i class="pq">+</i><b>0</b>':oppClosedKnown?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards${cCnt1>=6?' cards-2row':''}${cCnt1>=9?' cards-dense':''}">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!(S.rev||c.o!=null||(S.oppPeek&&S.oppPeek.includes(c.id))),S.rev)).join('')}</div>`);
-  const activeTg=tgE(S);
-  const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x,isSup=!e.neg&&TGS.has(e.id)&&activeTg&&e.uid!==activeTg.uid;return `<span class="e${BLOCK.has(e.id)?'':' used'}${e.neg||isSup?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${(k=='eff'||k=='steal_j')&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}"><img src="${IMG.j[e.id]}" alt=""></span>`};
+  const activeTg=tgE(S),activeCl=clE(S);
+  const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x,isSup=!e.neg&&((TGS.has(e.id)&&activeTg&&e.uid!==activeTg.uid)||(CLS.has(e.id)&&activeCl&&e.uid!==activeCl.uid));return `<span class="e${BLOCK.has(e.id)?'':' used'}${e.neg||isSup?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${(k=='eff'||k=='steal_j')&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}"><img src="${IMG.j[e.id]}" alt=""></span>`};
   $('#deck b').textContent=S.deck.length;
   const drawLocked=S.eff.some(e=>e.id==23&&!e.neg&&e.o!=0);
   $('#deck').classList.toggle('can-draw',!isSpec&&my&&!P&&canDraw(S,0));
@@ -5694,7 +5696,7 @@ function exactEndgameEval(S,action){
   if(peeked&&cl.n>0)seenN.add(cl.n);
   const pool=range(11).filter(n=>!seenN.has(n));
   if(!oppPassed&&pool.length>6)return null;
-  const Tg=tg(S),low=lowW(S),noBust=act(S,20);
+  const Tg=tg(S),low=lowW(S),noBust=clZero(S);
   const myBase=total(S,0,true),oppOpenBase=total(S,1,false);
   const oppDist=[];
   if(!cl){
@@ -5865,7 +5867,7 @@ function classifyMove(loss,isSame,brilliant){
 function explainMoveV3(S,played,best,loss,odds,wpBest,wpPlayed){
   if(loss<=3)return '';
   const low=lowW(S),Tg=tg(S),oppOpen=total(S,1,false);
-  if(!best&&!low&&oppOpen>Tg&&!act(S,20)){
+  if(!best&&!low&&oppOpen>Tg&&!clZero(S)){
     return tr(`Rakip açıktan ${oppOpen}/${Tg} ile patlamışken kaynak harcamadan pas geçmek %${wpBest} kazanma şansı veriyordu.`,`Opponent was visibly busted (${oppOpen}/${Tg}); standing gave ${wpBest}% win odds without spending resources.`);
   }
   if(played&&played.t==='d'&&!best){
