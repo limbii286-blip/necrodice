@@ -9979,3 +9979,11 @@ body[data-board="gold"] main::after {
     font-size: 12.5px;
   }
 }
+
+.qs-btn.qs-locked {
+  opacity: 0.58;
+  border-color: rgba(201, 158, 78, 0.22);
+}
+.qs-btn.qs-locked small {
+  color: #e8b86d;
+}

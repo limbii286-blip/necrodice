@@ -2508,8 +2508,9 @@ function R(){
   const isMob=window.matchMedia&&window.matchMedia('(max-width: 760px), (hover: none) and (pointer: coarse)').matches;
   const hpBtn0=isSpec?`<span class="hp-btn opp-hp${hpObj0.passive?' passive':''}${hpUsed0?' used':!cReady?' locked':''}" data-hp-id="${myHId}" data-hp-side="0">${HP_IC[myHId]||HP_IC.c}${cProg}${hpDot0}</span>`:`<button id="hp-btn" class="hp-btn${hpObj0.passive?' passive':''}${hpUsed0?' used':canHp?' ready':''}" data-hp="1" data-hp-id="${myHId}" data-hp-side="0" aria-disabled="${!canHp}">${HP_IC[myHId]||HP_IC.c}${cProg}${hpDot0}</button>`;
   const hpBtn1=`<span class="hp-btn opp-hp${hpObj1.passive?' passive':''}${hpUsed1?' used':!cReady1?' locked':''}${(oppHId==='w'||oppHId==='a')?' secret-hp':''}" data-hp-id="${oppHId}" data-hp-side="1">${HP_IC[oppHId]||HP_IC.c}${cProg1}${hpDot1}</span>`;
-  const myFl=(typeof getAccountLeague==='function'&&typeof USER_ACC!=='undefined'&&USER_ACC)?getAccountLeague(USER_ACC):null;
-  const myBaseName=(typeof USER_ACC!=='undefined'&&USER_ACC&&!USER_ACC.isGuest&&USER_ACC.username)?escHtml(USER_ACC.username):tr('Misafir','Guest');
+  const myGuest=typeof isGuestUser==='function'?isGuestUser(USER_ACC):(!USER_ACC||USER_ACC.isGuest);
+  const myFl=(!myGuest&&typeof getAccountLeague==='function')?getAccountLeague(USER_ACC):null;
+  const myBaseName=(!myGuest&&USER_ACC&&USER_ACC.username)?escHtml(USER_ACC.username):tr('Misafir','Guest');
   const myNick=myFl?`${myBaseName} · ${myFl.unranked?tr('Derecesiz','Unranked'):myFl.name}`:myBaseName;
   const p0Sub=isSpec?((S.specMeta&&S.specMeta.p0Sub)?escHtml(S.specMeta.p0Sub):''):myNick;
   const oppBotSub=(DIFF==='easy'?tr('Kolay Bot','Easy Bot'):DIFF==='med'?tr('Orta Bot','Medium Bot'):DIFF==='hard'?tr('Zor Bot','Hard Bot'):tr('İmkansız Bot','Impossible Bot'));
@@ -2913,15 +2914,23 @@ function buildEndScreenHtml(S,v,L,roll,th){
   let eloHtml='';
   if(eloRes){
     if(eloRes.unranked){
-      const fl=eloRes.afterLg||getAccountLeague(USER_ACC);
-      eloHtml=`<div class="end-elo-bar unranked">
-        <span class="end-lg-crest">${leagueCrestSvg(fl.id,30)}</span>
-        <div class="end-lg-mid">
-          <b class="end-lg-name">${tr('Normal Oyun','Normal Match')}</b>
-          <small class="end-lg-sub">${tr('Derecesiz · Lig puanı etkilenmedi','Unranked · No League LP change')}</small>
-        </div>
-        <span class="end-elo-d">0 LP</span>
-      </div>`;
+      const isG=isGuestUser(USER_ACC);
+      const fl=!isG?(eloRes.afterLg||getAccountLeague(USER_ACC)):null;
+      eloHtml=isG
+        ?`<div class="end-elo-bar unranked">
+          <div class="end-lg-mid">
+            <b class="end-lg-name">${tr('Normal Oyun · Misafir','Normal Match · Guest')}</b>
+            <small class="end-lg-sub">${tr('Misafir hesaplarda lig ve puan kaydedilmez','Guest accounts do not track leagues or points')}</small>
+          </div>
+        </div>`
+        :`<div class="end-elo-bar unranked">
+          <span class="end-lg-crest">${leagueCrestSvg(fl.id,30)}</span>
+          <div class="end-lg-mid">
+            <b class="end-lg-name">${tr('Normal Oyun','Normal Match')}</b>
+            <small class="end-lg-sub">${tr('Derecesiz · Lig puanı etkilenmedi','Unranked · No League LP change')}</small>
+          </div>
+          <span class="end-elo-d">0 LP</span>
+        </div>`;
     }else{
       const fl=eloRes.afterLg||getAccountLeague(USER_ACC);
       const cap=fl.lpCap||100;
@@ -3453,12 +3462,13 @@ let OPP_PROFILE={name:'',elo:1200,isGuest:true};
 function sendMyProfile(c){
   if(!c||!c.open)return;
   const acc=(typeof USER_ACC!=='undefined'&&USER_ACC)?USER_ACC:null;
-  const name=(acc&&!acc.isGuest&&acc.username)?acc.username:tr('Misafir','Guest');
-  const elo=acc&&typeof acc.elo==='number'?Math.round(acc.elo):1200;
-  const fl=(acc&&typeof getAccountLeague==='function')?getAccountLeague(acc):null;
+  const guest=isGuestUser(acc);
+  const name=(!guest&&acc.username)?acc.username:tr('Misafir','Guest');
+  const elo=(!guest&&typeof acc.elo==='number')?Math.round(acc.elo):1200;
+  const fl=(!guest&&typeof getAccountLeague==='function')?getAccountLeague(acc):null;
   const leagueName=fl?(fl.unranked?tr('Derecesiz','Unranked'):fl.name):'';
-  const leagueId=fl?fl.id:'unranked';
-  try{c.send({k:'profile',name,elo,leagueName,leagueId,queueMode:QUEUE_MODE,isGuest:!(acc&&!acc.isGuest)})}catch(e){}
+  const leagueId=fl?fl.id:'guest';
+  try{c.send({k:'profile',name,elo,leagueName,leagueId,queueMode:guest?'normal':QUEUE_MODE,isGuest:guest})}catch(e){}
 }
 function showDeathContWait(){
   box(`<h3>${tr('Hazırsın','Ready')}</h3><p>${tr('Rakibin devam etmesi bekleniyor…','Waiting for opponent to continue…')}</p>`,false);
@@ -3563,13 +3573,15 @@ function showQuickMatchFound(isHost,oppName,oppElo,secs=10){
   clearOnlineDraft();
   matchFoundActive=true;
   IS_QUICK_MATCH=false;
-  const myName=(USER_ACC&&!USER_ACC.isGuest)?USER_ACC.username:tr('Misafir','Guest');
-  const myFl=USER_ACC?getAccountLeague(USER_ACC):formatLeague(null,false);
-  const myLgLabel=myFl.unranked?tr('Derecesiz','Unranked'):`${myFl.name} · ${myFl.lp} LP`;
+  const myGuest=isGuestUser(USER_ACC);
+  const myName=(!myGuest&&USER_ACC&&USER_ACC.username)?USER_ACC.username:tr('Misafir','Guest');
+  const myFl=!myGuest?getAccountLeague(USER_ACC):null;
+  const myLgLabel=myGuest?tr('Misafir','Guest'):(myFl.unranked?tr('Derecesiz','Unranked'):`${myFl.name} · ${myFl.lp} LP`);
   const oName=String(oppName||tr('Misafir','Guest')).slice(0,22);
+  const oGuest=oName===tr('Misafir','Guest');
   const oElo=Math.max(400,Math.min(4000,Math.round(+oppElo||1200)));
-  const oLg=eloRank(oElo);
-  OPP_PROFILE={name:oName,elo:oElo,leagueName:oLg.name,leagueId:oLg.id,isGuest:oName===tr('Misafir','Guest')};
+  const oLg=oGuest?{name:tr('Misafir','Guest'),id:'guest'}:eloRank(oElo);
+  OPP_PROFILE={name:oName,elo:oElo,leagueName:oGuest?'':oLg.name,leagueId:oLg.id,isGuest:oGuest};
   let left=Math.max(1,secs|0);
   try{snd('turn');}catch(e){}
   st('');
@@ -6367,8 +6379,47 @@ function hashPass(p){
   return ((h1>>>0).toString(16).padStart(8,'0'))+((h2>>>0).toString(16).padStart(8,'0'));
 }
 /* ---------- LİG, GİZLİ MMR, LP, YERLEŞTİRME & ÇİFTE TERFİ SİSTEMİ ---------- */
+function isGuestUser(acc){
+  return !acc||!!acc.isGuest||!isRegisteredMember(acc);
+}
+function openRankedGuestGateModal(){
+  const mb=$('#mb');if(!mb)return;
+  lock=true;
+  mb.classList.remove('end-mode','an-mode','set-mode','lb-mode','lob-mode','pr-mode','inv-mode','play-sheet');
+  mb.classList.add('auth-mode','play-sheet');
+  mb.innerHTML=`<div class="ps-wrap">
+    <div class="ps-head">
+      <span class="ps-kicker rk">${tr('Üyelere Özel','Members Only')}</span>
+      <h3>${tr('Dereceli Oyun İçin Üye Ol','Sign Up for Ranked Play')}</h3>
+    </div>
+    <p style="text-align:center;color:#e6d5b5;font-size:15px;line-height:1.45;margin:2px 0 6px">${tr('Misafir hesapların ligi veya puanı yoktur ve yalnızca <b>Normal Oyun</b> oynayabilirler. 5 yerleştirme maçına girip liglerde yükselmek için ücretsiz hesap oluştur.','Guest accounts have no league or points and can only play <b>Normal Games</b>. Create a free account to play placements and climb the leagues.')}</p>
+    <div class="ps-body">
+      <button type="button" class="ps-card ps-card-main" id="rg-reg">
+        <b>${tr('Ücretsiz Üye Ol','Create Free Account')}</b>
+        <small>${tr('Lig sistemini, LP ilerlemesini ve sıralamayı aç','Unlock Leagues, LP progression, and Leaderboard')}</small>
+      </button>
+      <button type="button" class="ps-card" id="rg-log">
+        <b>${tr('Giriş Yap','Sign In')}</b>
+        <small>${tr('Mevcut hesabınla dereceli maçlara devam et','Continue ranked play with your existing account')}</small>
+      </button>
+    </div>
+    <div class="row ps-acts"><button type="button" id="rg-close" class="btn alt sm">${tr('Normal Oyunda Kal','Stay in Normal Mode')}</button></div>
+  </div>`;
+  $('#m').hidden=false;
+  const close=()=>{mb.classList.remove('auth-mode','play-sheet');$('#m').hidden=true;lock=false};
+  if($('#rg-close'))$('#rg-close').onclick=()=>{snd('click');close()};
+  if($('#rg-reg'))$('#rg-reg').onclick=()=>{snd('click');close();openAuthModal('register',true)};
+  if($('#rg-log'))$('#rg-log').onclick=()=>{snd('click');close();openAuthModal('login',true)};
+}
 let QUEUE_MODE=(function(){try{return localStorage.getItem('nd_queue_mode')==='normal'?'normal':'ranked'}catch(e){return 'ranked'}})();
-function setQueueMode(m){
+function setQueueMode(m,fromUser=false){
+  if(m==='ranked'&&isGuestUser(USER_ACC)){
+    QUEUE_MODE='normal';
+    try{localStorage.setItem('nd_queue_mode','normal')}catch(e){}
+    if(typeof applyQueueModeUi==='function')applyQueueModeUi();
+    if(fromUser)openRankedGuestGateModal();
+    return;
+  }
   QUEUE_MODE=(m==='normal')?'normal':'ranked';
   try{localStorage.setItem('nd_queue_mode',QUEUE_MODE)}catch(e){}
   if(typeof applyQueueModeUi==='function')applyQueueModeUi();
@@ -6911,6 +6962,7 @@ function createGuestAccount(){
   return acc;
 }
 function isMatchRanked(){
+  if(isGuestUser(USER_ACC))return false;
   if(MODE==='tutorial'||MODE==='spectator')return false;
   if(CURSED_RULE||VAULT_RUN||PUZZLE_ACTIVE)return false;
   if(QUEUE_MODE!=='ranked')return false;
@@ -7701,7 +7753,9 @@ function openSpecialModesModal(){
 function applyQueueModeUi(){
   const mb2=$('#mb2');
   if(!mb2)return;
-  const isR=QUEUE_MODE==='ranked';
+  const guest=isGuestUser(USER_ACC);
+  if(guest&&QUEUE_MODE==='ranked')QUEUE_MODE='normal';
+  const isR=!guest&&QUEUE_MODE==='ranked';
   mb2.classList.toggle('queue-ranked',isR);
   mb2.classList.toggle('queue-normal',!isR);
   const btns=mb2.querySelectorAll('#queue-switch .qs-btn');
@@ -7709,6 +7763,7 @@ function applyQueueModeUi(){
     const q=b.dataset.q;
     const act=(q==='ranked')===isR;
     b.classList.toggle('act',act);
+    b.classList.toggle('qs-locked',guest&&q==='ranked');
     b.setAttribute('aria-selected',act?'true':'false');
     const bEl=b.querySelector('b'),sEl=b.querySelector('small');
     if(q==='normal'){
@@ -7716,7 +7771,7 @@ function applyQueueModeUi(){
       if(sEl)sEl.textContent=tr('Derecesiz','Unranked');
     }else{
       if(bEl)bEl.textContent=tr('Dereceli','Ranked');
-      if(sEl)sEl.textContent=tr('Lig & LP','League & LP');
+      if(sEl)sEl.textContent=guest?tr('Üyelere Özel','Members Only'):tr('Lig & LP','League & LP');
     }
   });
   if($('#play-online-t'))$('#play-online-t').textContent=isR?tr('Çevrim İçi · Dereceli','Play Online · Ranked'):tr('Çevrim İçi · Normal','Play Online · Normal');
@@ -7759,7 +7814,7 @@ function applyQueueModeUi(){
   }
 }
 document.querySelectorAll('#queue-switch .qs-btn').forEach(b=>{
-  b.onclick=()=>{snd('click');setQueueMode(b.dataset.q)};
+  b.onclick=()=>{snd('click');setQueueMode(b.dataset.q,true)};
 });
 if($('#play-online'))$('#play-online').onclick=()=>{snd('click');openOnlinePlayModal()};
 if($('#play-ai'))$('#play-ai').onclick=()=>{snd('click');openAiPlayModal()};
@@ -7782,8 +7837,23 @@ function renderAuthBar(){
     applyQueueModeUi();
     return;
   }
+  const guest=isGuestUser(USER_ACC);
+  if(guest){
+    bar.hidden=false;
+    bar.innerHTML=`<div class="auth-bar-left"><button type="button" class="auth-pill rk-unr" id="ab-prof" title="${tr('Misafir Profili · Üye Ol','Guest Profile · Sign Up')}">
+      <span class="ap-info">
+        <b>${tr('Misafir','Guest')}</b>
+        <small>${tr('Normal Oyun','Normal Play')}</small>
+      </span>
+    </button></div>${utilHtml}`;
+    if($('#ab-prof'))$('#ab-prof').onclick=()=>{snd('click');openProfileModal('overview')};
+    if($('#ab-guide'))$('#ab-guide').onclick=()=>{snd('click');guide()};
+    if($('#ab-set'))$('#ab-set').onclick=()=>{snd('click');settings()};
+    applyQueueModeUi();
+    return;
+  }
   const fl=getAccountLeague(USER_ACC);
-  const nm=USER_ACC.isGuest?tr('Misafir','Guest'):escHtml(USER_ACC.username);
+  const nm=escHtml(USER_ACC.username);
   const stDays=Math.max(1,USER_ACC.streak||1);
   const rightPill=fl.unranked
     ?`<span class="ap-elo">${fl.placementGames}/5</span>`
@@ -8200,8 +8270,9 @@ function openProfileModal(initialTab='overview'){
           }).join('')
         :`<div class="pr-hempty">${tr('Henüz kayıtlı maç bulunmuyor.','No recorded matches yet.')}</div>`;
       const subGames=uMatches>0?` (${rMatches} ${tr('Dereceli','Ranked')} · ${uMatches} ${tr('Normal','Normal')})`:'';
-      const curLigTxt=fl.unranked?tr(`Yerleştirme (${fl.placementGames}/5)`,`Placements (${fl.placementGames}/5)`):`${fl.name} · ${fl.lp} LP`;
-      const pkLigTxt=fl.unranked?tr('Derecesiz','Unranked'):`${pkFl.name}`;
+      const isG=isGuestUser(acc);
+      const curLigTxt=isG?tr('Üyelik Gerekli','Sign Up Required'):(fl.unranked?tr(`Yerleştirme (${fl.placementGames}/5)`,`Placements (${fl.placementGames}/5)`):`${fl.name} · ${fl.lp} LP`);
+      const pkLigTxt=isG?tr('Yok','None'):(fl.unranked?tr('Derecesiz','Unranked'):`${pkFl.name}`);
       tabBody=`<div class="pr-grid">
         <div class="pr-stat"><span>${tr('Güncel Lig','Current League')}</span><b>${escHtml(curLigTxt)}</b></div>
         <div class="pr-stat"><span>${tr('Zirve Lig','Peak League')}</span><b>${escHtml(pkLigTxt)}</b></div>
@@ -8314,12 +8385,13 @@ function openProfileModal(initialTab='overview'){
       </div>`;
     }
 
+    const isGProf=isGuestUser(acc);
     mb.innerHTML=`<div class="pr-wrap">
       <div class="pr-head">
-        <div class="pr-badge ${fl.cls} ${frCls}">${leagueCrestSvg(fl.id,46)}</div>
+        <div class="pr-badge ${isGProf?'rk-unr':fl.cls} ${frCls}">${isGProf?'—':leagueCrestSvg(fl.id,46)}</div>
         <div class="pr-titles">
           <h3>${nm}${eqTitle?` <span class="pr-eq-title">«${escHtml(eqTitle)}»</span>`:''}</h3>
-          <div class="pr-rank">${escHtml(fl.name)}${fl.unranked?` · <b>${fl.placementGames}/5 ${tr('Yerleştirme','Placements')}</b>`:` · <b>${fl.lp} LP</b>${fl.provisional?` <em>(${tr('Geçici','Prov.')} ${fl.placementGames}/5)</em>`:''}`} · <span class="pr-st-tag">${stCur} ${tr('Gün Seri','Day Streak')}</span>${(acc.puzzleStreak||0)>0?` · <span class="pr-st-tag">${tr('Bulmaca','Puzzle')}: ${acc.puzzleStreak}</span>`:''}</div>
+          <div class="pr-rank">${isGProf?tr('Normal Oyun · Lig & Puan Yok','Normal Play · No League or Points'):`${escHtml(fl.name)}${fl.unranked?` · <b>${fl.placementGames}/5 ${tr('Yerleştirme','Placements')}</b>`:` · <b>${fl.lp} LP</b>${fl.provisional?` <em>(${tr('Geçici','Prov.')} ${fl.placementGames}/5)</em>`:''}`}`} · <span class="pr-st-tag">${stCur} ${tr('Gün Seri','Day Streak')}</span>${(acc.puzzleStreak||0)>0?` · <span class="pr-st-tag">${tr('Bulmaca','Puzzle')}: ${acc.puzzleStreak}</span>`:''}</div>
         </div>
       </div>
       <div class="pr-tabs">
