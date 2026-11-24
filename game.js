@@ -8452,13 +8452,17 @@ function openFirstVisitWelcome(){
     <p class="sp-desc">${tr('21\'e en yakın toplamı kur, Jokerlerle masayı tersine çevir ve düelloyu kaybedersen Ölüm Zarından sağ çıkmaya çalış. İlk kez oynuyorsan 60 saniyelik hızlı eğitimle hemen öğren!','Get closest to 21, bend the rules with Jokers, and survive the Death Dice if you lose. New here? Learn everything in 60 seconds with the interactive tutorial!')}</p>
     <div class="row sp-acts">
       <button type="button" id="fv-tut" class="btn alt">${tr('Hızlı Eğitimle Başla (60sn)','Start 60s Tutorial')}</button>
-      <button type="button" id="fv-play" class="btn sm">${tr('Zaten Biliyorum · Oyna','I Know How · Play')}</button>
+      <button type="button" id="fv-play" class="btn">${tr('Zaten Biliyorum · Oyna','I Know How · Play')}</button>
     </div>
-    <button type="button" id="fv-login" class="btn sm" style="margin-top:4px;opacity:0.8">${tr('Hesabım Var · Giriş Yap','Have an Account · Sign In')}</button>
+    <div class="row sp-acts" style="margin-top:2px">
+      <button type="button" id="fv-reg" class="btn alt">${tr('Üye Ol','Sign Up')}</button>
+      <button type="button" id="fv-login" class="btn">${tr('Giriş Yap','Sign In')}</button>
+    </div>
   </div>`;
   $('#m').hidden=false;
   const markDone=()=>{try{localStorage.setItem('nd_onboarded_v1','1')}catch(e){}};
   $('#fv-tut').onclick=()=>{snd('ok');markDone();mb.classList.remove('auth-mode');$('#m').hidden=true;lock=false;MODE='tutorial';MY_HERO='p';OPP_HERO='n';enter(startTutorial);};
   $('#fv-play').onclick=()=>{snd('click');markDone();mb.classList.remove('auth-mode');$('#m').hidden=true;lock=false;};
+  $('#fv-reg').onclick=()=>{snd('click');markDone();mb.classList.remove('auth-mode');openAuthModal('register',true);};
   $('#fv-login').onclick=()=>{snd('click');markDone();mb.classList.remove('auth-mode');openAuthModal('login',false);};
 }
