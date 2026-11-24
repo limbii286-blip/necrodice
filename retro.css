@@ -10728,3 +10728,14 @@ body[data-board="gold"] main::after {
 .bt-prev-classic img {
   filter: none !important;
 }
+
+/* GERÇEK ÖZEL ÇİZİM KART ARKALARI (FİLTRESİZ, GERÇEK RENK & DOKU) */
+body[data-cardback="classic"] #deck, body[data-cardback="classic"] .c.bk { background-image: url('img/cb_classic.jpg?v=20261125_cb1') !important; filter: none !important; }
+body[data-cardback="crimson"] #deck, body[data-cardback="crimson"] .c.bk { background-image: url('img/cb_crimson.jpg?v=20261125_cb1') !important; filter: none !important; }
+body[data-cardback="ghost"] #deck, body[data-cardback="ghost"] .c.bk { background-image: url('img/cb_ghost.jpg?v=20261125_cb1') !important; filter: none !important; }
+body[data-cardback="obsidian"] #deck, body[data-cardback="obsidian"] .c.bk { background-image: url('img/cb_obsidian.jpg?v=20261125_cb1') !important; filter: none !important; }
+body[data-cardback="moonlight"] #deck, body[data-cardback="moonlight"] .c.bk { background-image: url('img/cb_moonlight.jpg?v=20261125_cb1') !important; filter: none !important; }
+body[data-cardback="sovereign"] #deck, body[data-cardback="sovereign"] .c.bk { background-image: url('img/cb_sovereign.jpg?v=20261125_cb1') !important; filter: none !important; }
+.cb-prev-classic, .cb-prev-crimson, .cb-prev-ghost, .cb-prev-obsidian, .cb-prev-moonlight, .cb-prev-sovereign {
+  filter: none !important;
+}

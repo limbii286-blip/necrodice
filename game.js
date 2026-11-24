@@ -7897,6 +7897,14 @@ const BOARD_IMG_MAP={
   crimson:'board_crimson.jpg?v=20261125_b1',
   gold:'board_gold.jpg?v=20261125_b1'
 };
+const CARDBACK_IMG_MAP={
+  classic:'img/cb_classic.jpg?v=20261125_cb1',
+  crimson:'img/cb_crimson.jpg?v=20261125_cb1',
+  ghost:'img/cb_ghost.jpg?v=20261125_cb1',
+  obsidian:'img/cb_obsidian.jpg?v=20261125_cb1',
+  moonlight:'img/cb_moonlight.jpg?v=20261125_cb1',
+  sovereign:'img/cb_sovereign.jpg?v=20261125_cb1'
+};
 function applyCosmetics(acc){
   try{
     const cb=(acc&&acc.cardBack)||'classic';
@@ -7910,6 +7918,8 @@ function applyCosmetics(acc){
     document.body.dataset.board=bt;
     document.body.dataset.d20fx=fx;
     window.D20_SKIN=ds;
+    const cbUrl=CARDBACK_IMG_MAP[cb]||CARDBACK_IMG_MAP.classic;
+    document.documentElement.style.setProperty('--bn',`url("${cbUrl}")`);
     const bgCvs=document.getElementById('lor-valley-bg');
     if(bgCvs){
       const imgUrl=BOARD_IMG_MAP[bt]||BOARD_IMG_MAP.classic;
@@ -9169,9 +9179,10 @@ function openInventoryModal(initialCat='dice'){
     }else if(cat==='cards'){
       const cbCards=CARD_BACKS.map(cb=>{
         const ok=cb.req(acc),sel=(acc.cardBack||'classic')===cb.id;
+        const cbImg=(typeof CARDBACK_IMG_MAP!=='undefined'&&CARDBACK_IMG_MAP[cb.id])||'img/cb_classic.jpg?v=20261125_cb1';
         return `<button type="button" class="inv-card${sel?' sel':''}${ok?'':' lock'}" data-cb="${cb.id}" ${ok?'':'disabled'}>
           <div class="inv-stage inv-stage-cb">
-            <div class="inv-cb-preview cb-prev-${cb.id}"><img src="img/back.jpg" alt="" decoding="async"></div>
+            <div class="inv-cb-preview cb-prev-${cb.id}"><img src="${cbImg}" alt="" decoding="async"></div>
           </div>
           <div class="inv-info">
             <b>${escHtml(isEn()?cb.enN:cb.trN)}</b>
