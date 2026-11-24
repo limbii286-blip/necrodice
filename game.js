@@ -3837,7 +3837,7 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     R();
   }
 }
-let PENDING_INVITE_JOIN=false;
+let PENDING_INVITE_JOIN=false,specEntering=false;
 function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
   if(m.k=='match_found'){
     PENDING_INVITE_JOIN=false;
@@ -3883,9 +3883,22 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
     $('#m').hidden = true; lock = false;
     if(m.role=='spectator'){
       MODE='spectator';
-      st(tr('Odaya izleyici olarak katıldın.','Joined room as spectator.'));
-      veil();setMusic('game');
-      setTimeout(()=>{const mn=$('#menu');if(mn&&MODE==='spectator')mn.hidden=true},460);
+      specEntering=true;
+      glogOpen=false;glogLastSig='';lastThiefSeq=0;
+      st('');
+      veil(1100);setMusic('game');
+      setTimeout(()=>{
+        const mn=$('#menu');if(mn&&MODE==='spectator')mn.hidden=true;
+        specEntering=false;
+        if(G&&MODE==='spectator'){
+          seen.clear();seenE.clear();
+          [0,1].forEach(p=>{if(G.pl&&G.pl[p]){G.pl[p].open.forEach(c=>seen.add(c.id));G.pl[p].closed.forEach(c=>seen.add(c.id));}});
+          (G.pj||[]).forEach(e=>seenE.add(e.uid));
+          R();
+          fit();
+          if(typeof syncGlogMobilePos==='function')syncGlogMobilePos();
+        }
+      },360);
     }else if(m.role=='player'){
       MODE='guest';
       OPP_PROFILE={name:'',elo:1200,isGuest:true};
@@ -3934,6 +3947,7 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
     const keepModalOpen=!!(G.over||(G.wait&&document.querySelector('#mb .d20-box,#mb .end-screen,#mb .tie-box')));
     if(waitM&&!keepModalOpen){$('#m').hidden=true;lock=false;waitM=false}
     if(MODE!='spectator'&&(G.turn!=0||G.wait))P=null;
+    if(specEntering){setMusic('game');return;}
     if(!$('#menu').hidden)setTimeout(()=>{$('#menu').hidden=true},1500);
     setMusic('game');R();
   }
