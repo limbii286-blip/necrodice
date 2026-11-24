@@ -126,10 +126,12 @@ body:has(#menu:not([hidden])) #fl {
   inset: 0 !important;
   width: 100vw !important;
   height: 100dvh !important;
-  padding: clamp(8px, 2dvh, 22px) clamp(10px, 2.5vw, 32px) !important;
+  padding: max(64px, calc(env(safe-area-inset-top, 12px) + 52px)) clamp(10px, 2.5vw, 32px) clamp(10px, 2dvh, 22px) !important;
+  box-sizing: border-box !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  overflow-y: auto !important;
   background: #080608 !important;
   overflow: hidden !important;
   z-index: 35 !important;
