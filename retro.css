@@ -10706,3 +10706,25 @@ body[data-board="gold"] main::after {
     box-sizing: border-box !important;
   }
 }
+
+/* GERÇEK ÖZEL ÇİZİM SAVAŞ MASALARI (DONMUŞ MAHZEN, KANLI SUNAK, ALTIN HAZİNE) */
+body[data-board="frost"] #lor-valley-bg {
+  background: #060b12 url('board_frost.jpg?v=20261125_b1') center / cover no-repeat !important;
+}
+body[data-board="crimson"] #lor-valley-bg {
+  background: #0d0507 url('board_crimson.jpg?v=20261125_b1') center / cover no-repeat !important;
+}
+body[data-board="gold"] #lor-valley-bg {
+  background: #0c0905 url('board_gold.jpg?v=20261125_b1') center / cover no-repeat !important;
+}
+body[data-board="frost"] main::after,
+body[data-board="crimson"] main::after,
+body[data-board="gold"] main::after {
+  background: none !important;
+}
+.bt-prev-frost img,
+.bt-prev-crimson img,
+.bt-prev-gold img,
+.bt-prev-classic img {
+  filter: none !important;
+}

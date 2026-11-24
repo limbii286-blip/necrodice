@@ -7891,6 +7891,12 @@ function getTitleLabel(id){
   const a=ACHIEVEMENTS.find(x=>x.id===id);
   return a?(isEn()?a.enT:a.trT):'';
 }
+const BOARD_IMG_MAP={
+  classic:'board_gothic.jpg?v=20261115_sym1',
+  frost:'board_frost.jpg?v=20261125_b1',
+  crimson:'board_crimson.jpg?v=20261125_b1',
+  gold:'board_gold.jpg?v=20261125_b1'
+};
 function applyCosmetics(acc){
   try{
     const cb=(acc&&acc.cardBack)||'classic';
@@ -7904,6 +7910,11 @@ function applyCosmetics(acc){
     document.body.dataset.board=bt;
     document.body.dataset.d20fx=fx;
     window.D20_SKIN=ds;
+    const bgCvs=document.getElementById('lor-valley-bg');
+    if(bgCvs){
+      const imgUrl=BOARD_IMG_MAP[bt]||BOARD_IMG_MAP.classic;
+      bgCvs.style.background=`url('${imgUrl}') center/cover no-repeat #070508`;
+    }
   }catch(e){}
 }
 let HOLD_UNLOCK_TOASTS=false,QUEUED_UNLOCK_TOASTS=[];
@@ -9174,9 +9185,10 @@ function openInventoryModal(initialCat='dice'){
     }else if(cat==='board'){
       const btCards=BOARD_THEMES.map(bt=>{
         const ok=bt.req(acc),sel=(acc.boardTheme||'classic')===bt.id;
+        const bImg=(typeof BOARD_IMG_MAP!=='undefined'&&BOARD_IMG_MAP[bt.id])||'board_gothic.jpg';
         return `<button type="button" class="inv-card inv-card-wide${sel?' sel':''}${ok?'':' lock'}" data-bt="${bt.id}" ${ok?'':'disabled'}>
           <div class="inv-stage inv-stage-board bt-prev-${bt.id}">
-            <img src="board_gothic.jpg" alt="" decoding="async">
+            <img src="${bImg}" alt="" decoding="async">
           </div>
           <div class="inv-info">
             <b>${escHtml(isEn()?bt.enN:bt.trN)}</b>
