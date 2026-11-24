@@ -2508,15 +2508,14 @@ function R(){
   const isMob=window.matchMedia&&window.matchMedia('(max-width: 760px), (hover: none) and (pointer: coarse)').matches;
   const hpBtn0=isSpec?`<span class="hp-btn opp-hp${hpObj0.passive?' passive':''}${hpUsed0?' used':!cReady?' locked':''}" data-hp-id="${myHId}" data-hp-side="0">${HP_IC[myHId]||HP_IC.c}${cProg}${hpDot0}</span>`:`<button id="hp-btn" class="hp-btn${hpObj0.passive?' passive':''}${hpUsed0?' used':canHp?' ready':''}" data-hp="1" data-hp-id="${myHId}" data-hp-side="0" aria-disabled="${!canHp}">${HP_IC[myHId]||HP_IC.c}${cProg}${hpDot0}</button>`;
   const hpBtn1=`<span class="hp-btn opp-hp${hpObj1.passive?' passive':''}${hpUsed1?' used':!cReady1?' locked':''}${(oppHId==='w'||oppHId==='a')?' secret-hp':''}" data-hp-id="${oppHId}" data-hp-side="1">${HP_IC[oppHId]||HP_IC.c}${cProg1}${hpDot1}</span>`;
-  const myElo=Math.round((typeof USER_ACC!=='undefined'&&USER_ACC&&typeof USER_ACC.elo==='number')?USER_ACC.elo:1200);
+  const myFl=(typeof getAccountLeague==='function'&&typeof USER_ACC!=='undefined'&&USER_ACC)?getAccountLeague(USER_ACC):null;
   const myBaseName=(typeof USER_ACC!=='undefined'&&USER_ACC&&!USER_ACC.isGuest&&USER_ACC.username)?escHtml(USER_ACC.username):tr('Misafir','Guest');
-  const myNick=`${myBaseName} · ${myElo} ELO`;
+  const myNick=myFl?`${myBaseName} · ${myFl.unranked?tr('Derecesiz','Unranked'):myFl.name}`:myBaseName;
   const p0Sub=isSpec?((S.specMeta&&S.specMeta.p0Sub)?escHtml(S.specMeta.p0Sub):''):myNick;
-  const oppBotElo=DIFF==='hard'?'1320 ELO':DIFF==='imp'?'1550 ELO':tr('Derecesiz','Unranked');
-  const oppBotSub=(DIFF==='easy'?tr('Kolay Bot','Easy Bot'):DIFF==='med'?tr('Orta Bot','Medium Bot'):DIFF==='hard'?tr('Zor Bot','Hard Bot'):tr('İmkansız Bot','Impossible Bot'))+` · ${oppBotElo}`;
-  const oppOnlineElo=Math.round((OPP_PROFILE&&typeof OPP_PROFILE.elo==='number')?OPP_PROFILE.elo:1200);
+  const oppBotSub=(DIFF==='easy'?tr('Kolay Bot','Easy Bot'):DIFF==='med'?tr('Orta Bot','Medium Bot'):DIFF==='hard'?tr('Zor Bot','Hard Bot'):tr('İmkansız Bot','Impossible Bot'));
   const oppOnlineName=(OPP_PROFILE&&OPP_PROFILE.name)?escHtml(OPP_PROFILE.name):tr('Çevrim İçi','Online');
-  const oppSub=isSpec?((S.specMeta&&S.specMeta.p1Sub)?escHtml(S.specMeta.p1Sub):''):(MODE==='bot'?oppBotSub:(MODE==='tutorial'?tr('Eğitim','Tutorial'):`${oppOnlineName} · ${oppOnlineElo} ELO`));
+  const oppOnlineLg=(OPP_PROFILE&&OPP_PROFILE.leagueName)?escHtml(OPP_PROFILE.leagueName):'';
+  const oppSub=isSpec?((S.specMeta&&S.specMeta.p1Sub)?escHtml(S.specMeta.p1Sub):''):(MODE==='bot'?oppBotSub:(MODE==='tutorial'?tr('Eğitim','Tutorial'):(oppOnlineLg?`${oppOnlineName} · ${oppOnlineLg}`:oppOnlineName)));
   const cCnt1=S.pl[1].open.length+S.pl[1].closed.length;
   setH('#opp',`${oppHandHtml}<div class="who">${av1}${hpBtn1}<div class="nm"><b>${p1Name}</b><span class="meta nick">${oppSub}</span></div><div class="tot${obust?' bust':oexact?' exact':''}"><small>${tr('Toplam','Total')}</small><div class="tl"><b>${lastTot[1]}</b>${oppHidZero?'<i class="pq">+</i><b>0</b>':oppClosedKnown?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards${cCnt1>=6?' cards-2row':''}${cCnt1>=9?' cards-dense':''}">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!(S.rev||c.o!=null||(S.oppPeek&&S.oppPeek.includes(c.id))),S.rev)).join('')}</div>`);
   const activeTg=tgE(S),activeCl=clE(S);
@@ -2911,17 +2910,54 @@ function buildEndScreenHtml(S,v,L,roll,th){
   const titleTxt=isSpec?tr('Maç Bitti!','Match Over!'):(won?tr('Zafer!','Victory!'):tr('Mağlubiyet!','Defeat!'));
   const crestImgSrc=(won||isSpec)?'end_win_crest.png?v=20261123_wide2':'end_lose_crest.png?v=20261123_wide2';
   const eloRes=(!isSpec&&v===0&&MODE!=='tutorial'&&typeof recordMatchElo==='function')?recordMatchElo(S,won):null;
-  const eloHtml=eloRes?(eloRes.unranked
-    ?`<div class="end-elo-bar unranked">
-      <span class="end-elo-rk">${eloRes.rank.ic} ${eloRes.rank.name}</span>
-      <span class="end-elo-val"><b>${eloRes.before}</b> ELO</span>
-      <span class="end-elo-d">${tr('Derecesiz','Unranked')}</span>
-    </div>`
-    :`<div class="end-elo-bar ${eloRes.delta>=0?'pos':'neg'}">
-      <span class="end-elo-rk">${eloRes.rank.ic} ${eloRes.rank.name}</span>
-      <span class="end-elo-val">${eloRes.before} → <b>${eloRes.after}</b></span>
-      <span class="end-elo-d">${eloRes.delta>=0?'+':''}${eloRes.delta} ELO</span>
-    </div>`):'';
+  let eloHtml='';
+  if(eloRes){
+    if(eloRes.unranked){
+      const fl=eloRes.afterLg||getAccountLeague(USER_ACC);
+      eloHtml=`<div class="end-elo-bar unranked">
+        <span class="end-lg-crest">${leagueCrestSvg(fl.id,30)}</span>
+        <div class="end-lg-mid">
+          <b class="end-lg-name">${tr('Normal Oyun','Normal Match')}</b>
+          <small class="end-lg-sub">${tr('Derecesiz · Lig puanı etkilenmedi','Unranked · No League LP change')}</small>
+        </div>
+        <span class="end-elo-d">0 LP</span>
+      </div>`;
+    }else{
+      const fl=eloRes.afterLg||getAccountLeague(USER_ACC);
+      const cap=fl.lpCap||100;
+      const pct=fl.id==='challenger'?100:Math.max(0,Math.min(100,Math.round((fl.lp/cap)*100)));
+      const dSign=eloRes.lpDelta>0?'+':'';
+      const dTxt=eloRes.placementMatch&&!won
+        ?tr('0 LP (Koruma)','0 LP (Shield)')
+        :(eloRes.shieldUsed?tr('0 LP (Koruma)','0 LP (Shield)'):`${dSign}${eloRes.lpDelta} LP`);
+      const subParts=[];
+      if(eloRes.placementMatch&&eloRes.placementMatch<5){
+        subParts.push(tr(`Yerleştirme ${eloRes.placementMatch}/5 · Geçici Lig`,`Placement ${eloRes.placementMatch}/5 · Provisional`));
+      }else if(eloRes.placementComplete){
+        subParts.push(tr('5/5 Yerleştirme Tamamlandı!','5/5 Placements Complete!'));
+      }else{
+        subParts.push(fl.id==='challenger'?`${fl.lp} LP`:`${fl.lp} / ${cap} LP`);
+      }
+      if(won&&eloRes.speedBonus>=2)subParts.push(tr('Hızlı Zafer Bonusu','Fast Victory Bonus'));
+      if(eloRes.demoted)subParts.push(tr('Küme Düşüldü','Demoted'));
+      const promoBanner=(eloRes.doublePromoted||eloRes.promoted||eloRes.placementComplete)?`<div class="end-promo-banner ${fl.cls}${eloRes.doublePromoted?' dbl':''}">
+        <div class="epb-crest">${leagueCrestSvg(fl.id,54)}</div>
+        <div class="epb-txt">
+          <span class="epb-kicker">${eloRes.doublePromoted?tr('ÇİFTE TERFİ! (+2 KÜME)','DOUBLE PROMOTION! (+2 DIVISIONS)'):(eloRes.placementComplete?tr('LİGİN BELİRLENDİ!','LEAGUE ASSIGNED!'):(eloRes.placementMatch===1?tr('GEÇİCİ LİGİN BELİRLENDİ!','PROVISIONAL LEAGUE SET!'):tr('LİG YÜKSELDİN!','PROMOTED!')))}</span>
+          <b class="epb-rank">${escHtml(fl.name)}</b>
+          ${(eloRes.beforeLg&&!eloRes.beforeLg.unranked&&eloRes.beforeLg.name!==fl.name)?`<small class="epb-from">${escHtml(eloRes.beforeLg.name)} → ${escHtml(fl.name)}</small>`:''}
+        </div>
+      </div>`:'';
+      eloHtml=`${promoBanner}<div class="end-elo-bar ${fl.cls} ${eloRes.lpDelta>0?'pos':eloRes.lpDelta<0?'neg':'neu'}">
+        <span class="end-lg-crest">${leagueCrestSvg(fl.id,36)}</span>
+        <div class="end-lg-mid">
+          <div class="end-lg-top"><b class="end-lg-name">${escHtml(fl.name)}${fl.provisional?` <em>${tr('Geçici','Prov.')}</em>`:''}</b><span class="end-elo-d">${dTxt}</span></div>
+          <div class="end-lp-track"><i class="end-lp-fill" style="width:${pct}%;--lg-c1:${fl.c1}"></i></div>
+          <small class="end-lg-sub">${subParts.join(' · ')}</small>
+        </div>
+      </div>`;
+    }
+  }
   LAST_DEATH_CARD={won,isSpec,heroId:featH,heroName:featNm,oppLabel:typeof getOppLabel==='function'?getOppLabel(S):tr('Rakip','Opponent'),rw,rl,rt,roll,th,elo:eloRes?(eloRes.unranked?eloRes.before:eloRes.after):Math.round((USER_ACC&&USER_ACC.elo)||1200),delta:(eloRes&&!eloRes.unranked)?eloRes.delta:0,playerName:(USER_ACC&&!USER_ACC.isGuest&&USER_ACC.username)?USER_ACC.username:tr('Misafir','Guest'),durTxt};
   const guestCta=(!isSpec&&USER_ACC&&USER_ACC.isGuest)?`<button type="button" class="end-save-cta" id="end-save-guest"><span>${tr("İsmini kaydet, ELO'nu ve başarımlarını koru","Save your name to keep your ELO & badges")}</span><b>${tr('Üye Ol','Sign Up')}</b></button>`:'';
   return `<div class="end-screen hs-victory ${isSpec?'spec':won?'win':'lose'}" data-res="${isSpec?'spec':won?'win':'lose'}">
@@ -3267,7 +3303,9 @@ function settings(tab){
     if(!G||G.over||MODE==='tutorial'||MODE==='spectator'){onYes();return}
     const loss=(typeof peekLossElo==='function')?peekLossElo(G):0;
     const eloWarn=loss<0
-      ?`<p class="leave-elo-warn">${tr(`Bu dereceli bir maç. Şimdi ayrılırsan mağlubiyet sayılacak ve <b>${loss} ELO</b> kaybedeceksin.`,`This is a ranked match. Leaving now counts as a defeat and you will lose <b>${loss} ELO</b>.`)}</p>`
+      ?`<p class="leave-elo-warn">${loss===-1
+        ?tr('Bu bir <b>Dereceli Yerleştirme</b> maçı. Şimdi ayrılırsan mağlubiyet sayılacak.','This is a <b>Ranked Placement</b> match. Leaving now counts as a defeat.')
+        :tr(`Bu dereceli bir maç. Şimdi ayrılırsan mağlubiyet sayılacak ve yaklaşık <b>${loss} LP</b> kaybedeceksin.`,`This is a ranked match. Leaving now counts as a defeat and you will lose roughly <b>${loss} LP</b>.`)}</p>`
       :'';
     box(`<h3>${tr('Aktif Oyundan Ayrıl','Leave Active Match')}</h3>
       <p>${tr('Aktif bir oyundasın. Ayrılmak istediğine emin misin?','You are currently in an active match. Are you sure you want to leave?')}</p>
@@ -3417,7 +3455,10 @@ function sendMyProfile(c){
   const acc=(typeof USER_ACC!=='undefined'&&USER_ACC)?USER_ACC:null;
   const name=(acc&&!acc.isGuest&&acc.username)?acc.username:tr('Misafir','Guest');
   const elo=acc&&typeof acc.elo==='number'?Math.round(acc.elo):1200;
-  try{c.send({k:'profile',name,elo,isGuest:!(acc&&!acc.isGuest)})}catch(e){}
+  const fl=(acc&&typeof getAccountLeague==='function')?getAccountLeague(acc):null;
+  const leagueName=fl?(fl.unranked?tr('Derecesiz','Unranked'):fl.name):'';
+  const leagueId=fl?fl.id:'unranked';
+  try{c.send({k:'profile',name,elo,leagueName,leagueId,queueMode:QUEUE_MODE,isGuest:!(acc&&!acc.isGuest)})}catch(e){}
 }
 function showDeathContWait(){
   box(`<h3>${tr('Hazırsın','Ready')}</h3><p>${tr('Rakibin devam etmesi bekleniyor…','Waiting for opponent to continue…')}</p>`,false);
@@ -3458,13 +3499,13 @@ function view(S){ // rakibe gidecek, gizli bilgisi temizlenmiş ve aynalanmış 
 }
 function specView(S){ // izleyicilere gidecek durum: izlenen oyuncunun (0) gözünden canlı görünüm (kendi eli + kapalı kartı bakılabilir, rakip kapalı kartı gizli)
   const pk0=S.oppPeek0||[];
-  const myElo=Math.round((typeof USER_ACC!=='undefined'&&USER_ACC&&typeof USER_ACC.elo==='number')?USER_ACC.elo:1200);
+  const myFl=(typeof getAccountLeague==='function'&&typeof USER_ACC!=='undefined'&&USER_ACC)?getAccountLeague(USER_ACC):null;
   const myNm=(typeof USER_ACC!=='undefined'&&USER_ACC&&!USER_ACC.isGuest&&USER_ACC.username)?USER_ACC.username:tr('Misafir','Guest');
-  const botElo=DIFF==='hard'?'1320 ELO':DIFF==='imp'?'1550 ELO':tr('Derecesiz','Unranked');
+  const mySub=myFl?`${myNm} · ${myFl.unranked?tr('Derecesiz','Unranked'):myFl.name}`:myNm;
   const botNm=DIFF==='easy'?tr('Kolay Bot','Easy Bot'):DIFF==='med'?tr('Orta Bot','Medium Bot'):DIFF==='hard'?tr('Zor Bot','Hard Bot'):tr('İmkansız Bot','Impossible Bot');
   const oppNm=MODE==='bot'?botNm:((OPP_PROFILE&&OPP_PROFILE.name)?OPP_PROFILE.name:tr('Rakip','Opponent'));
-  const oppElo=Math.round((OPP_PROFILE&&typeof OPP_PROFILE.elo==='number')?OPP_PROFILE.elo:1200);
-  const oppSub=MODE==='bot'?`${botNm} · ${botElo}`:`${oppNm} · ${oppElo} ELO`;
+  const oppLg=(OPP_PROFILE&&OPP_PROFILE.leagueName)?OPP_PROFILE.leagueName:'';
+  const oppSub=MODE==='bot'?botNm:(oppLg?`${oppNm} · ${oppLg}`:oppNm);
   return {
     av:[S.av[0],S.av[1]],hero:S.hero?[...S.hero]:[S.av[0],S.av[1]],hpUsed:S.hpUsed?[...S.hpUsed]:[false,false],hpMod:S.hpMod?[...S.hpMod]:[0,0],plagueMod:S.plagueMod?[...S.plagueMod]:[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?[...S.uRevived]:[false,false],vampUsed:S.vampUsed?[...S.vampUsed]:[false,false],cWins:S.cWins?[...S.cWins]:[0,0],vampBurn:S.vampBurn?{...S.vampBurn}:null,thiefSteal:S.thiefSteal?{...S.thiefSteal}:null,oppPeek:[...pk0],mast:[S.mast[0],S.mast[1]],turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,reconnPause:!!S.reconnPause,turn:S.turn,clocks:S.clocks?[...S.clocks]:[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?[...S.timeOut]:[false,false],hadTimeout:!!S.hadTimeout,pts:S.pts,rev:S.rev,winSide:S.winSide,res:S.res,jUsed:S.jUsed,jTurn:S.jTurn?[...S.jTurn]:[0,0],noJ:S.noJ,
     hand:[S.hand[0].slice(),S.hand[1].map(()=>0)],deck:S.deck.map(()=>({id:0,n:0})),
@@ -3472,7 +3513,7 @@ function specView(S){ // izleyicilere gidecek durum: izlenen oyuncunun (0) göz�
       {open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:c.n,o:c.o,hpImmune:!!c.hpImmune}))},
       {open:S.pl[1].open,closed:S.pl[1].closed.map(c=>({id:c.id,n:(S.rev||pk0.includes(c.id))?c.n:0,o:c.o,hpImmune:!!c.hpImmune}))}
     ],
-    specMeta:{p0Name:myNm,p0Sub:`${myNm} · ${myElo} ELO`,p1Name:oppNm,p1Sub:oppSub},
+    specMeta:{p0Name:myNm,p0Sub:mySub,p1Name:oppNm,p1Sub:oppSub},
     eff:S.eff.map(e=>({...e})),pj:(S.pj||[]).map(e=>({...e})),log:S.log.slice(-30).map(l=>({...l}))
   };
 }
@@ -3523,25 +3564,27 @@ function showQuickMatchFound(isHost,oppName,oppElo,secs=10){
   matchFoundActive=true;
   IS_QUICK_MATCH=false;
   const myName=(USER_ACC&&!USER_ACC.isGuest)?USER_ACC.username:tr('Misafir','Guest');
-  const myElo=Math.round((USER_ACC&&USER_ACC.elo)||1200);
+  const myFl=USER_ACC?getAccountLeague(USER_ACC):formatLeague(null,false);
+  const myLgLabel=myFl.unranked?tr('Derecesiz','Unranked'):`${myFl.name} · ${myFl.lp} LP`;
   const oName=String(oppName||tr('Misafir','Guest')).slice(0,22);
   const oElo=Math.max(400,Math.min(4000,Math.round(+oppElo||1200)));
-  OPP_PROFILE={name:oName,elo:oElo,isGuest:oName===tr('Misafir','Guest')};
+  const oLg=eloRank(oElo);
+  OPP_PROFILE={name:oName,elo:oElo,leagueName:oLg.name,leagueId:oLg.id,isGuest:oName===tr('Misafir','Guest')};
   let left=Math.max(1,secs|0);
   try{snd('turn');}catch(e){}
   st('');
   box(`<div class="qm-found-box">
     <h3 class="qm-found-title">${tr(`${escHtml(oName)} ile eşleştin!`,`Matched with ${escHtml(oName)}!`)}</h3>
-    <p class="qm-found-sub">${tr('Kahraman seçim ekranına gidiliyor.','Heading to hero selection.')}</p>
+    <p class="qm-found-sub">${QUEUE_MODE==='ranked'?tr('Dereceli · Kahraman seçim ekranına gidiliyor.','Ranked · Heading to hero selection.'):tr('Normal Oyun · Kahraman seçim ekranına gidiliyor.','Normal Game · Heading to hero selection.')}</p>
     <div class="qm-vs-stack">
       <div class="qm-vs-card me">
         <b class="qm-vs-name">${escHtml(myName)}</b>
-        <span class="qm-vs-elo">${myElo} ELO</span>
+        <span class="qm-vs-elo">${escHtml(myLgLabel)}</span>
       </div>
       <div class="qm-vs-sep"><span>VS</span></div>
       <div class="qm-vs-card opp">
         <b class="qm-vs-name">${escHtml(oName)}</b>
-        <span class="qm-vs-elo">${oElo} ELO</span>
+        <span class="qm-vs-elo">${escHtml(oLg.name)}</span>
       </div>
     </div>
     <div class="qm-vs-cd"><b id="qm-cd-num">${left}</b><span>${tr('saniye','seconds')}</span></div>
@@ -3745,6 +3788,8 @@ function onGuest(m, fromConn){ // host: misafirin istekleri veya izleyiciden gel
     OPP_PROFILE={
       name:String(m.name||tr('Misafir','Guest')).slice(0,22),
       elo:Math.max(400,Math.min(4000,Math.round(+m.elo||1200))),
+      leagueName:String(m.leagueName||'').slice(0,28),
+      leagueId:String(m.leagueId||'unranked').slice(0,16),
       isGuest:!!m.isGuest
     };
     if(!m.ack)sendMyProfile(fromConn);
@@ -3941,8 +3986,11 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
     OPP_PROFILE={
       name:String(m.name||tr('Misafir','Guest')).slice(0,22),
       elo:Math.max(400,Math.min(4000,Math.round(+m.elo||1200))),
+      leagueName:String(m.leagueName||'').slice(0,28),
+      leagueId:String(m.leagueId||'unranked').slice(0,16),
       isGuest:!!m.isGuest
     };
+    if(m.queueMode==='normal'||m.queueMode==='ranked')QUEUE_MODE=m.queueMode;
     if(G)R();
     return;
   }
@@ -6318,14 +6366,168 @@ function hashPass(p){
   }
   return ((h1>>>0).toString(16).padStart(8,'0'))+((h2>>>0).toString(16).padStart(8,'0'));
 }
-function eloRank(elo){
-  const e=Math.round(elo||1200);
-  if(e>=1800)return {ic:'♛',name:tr('Ölümsüz Hükümdar','Undying Sovereign'),cls:'rk-sov'};
-  if(e>=1600)return {ic:'✦',name:tr('Ölüm Büyücüsü','Necromancer'),cls:'rk-nec'};
-  if(e>=1400)return {ic:'◈',name:tr('Kan Efendisi','Blood Lord'),cls:'rk-bld'};
-  if(e>=1200)return {ic:'❖',name:tr('Kara Şövalye','Dark Knight'),cls:'rk-knt'};
-  if(e>=1000)return {ic:'☾',name:tr('Gölge Gezgini','Shadow Walker'),cls:'rk-shd'};
-  return {ic:'†',name:tr('Kemik Çırağı','Bone Initiate'),cls:'rk-bon'};
+/* ---------- LİG, GİZLİ MMR, LP, YERLEŞTİRME & ÇİFTE TERFİ SİSTEMİ ---------- */
+let QUEUE_MODE=(function(){try{return localStorage.getItem('nd_queue_mode')==='normal'?'normal':'ranked'}catch(e){return 'ranked'}})();
+function setQueueMode(m){
+  QUEUE_MODE=(m==='normal')?'normal':'ranked';
+  try{localStorage.setItem('nd_queue_mode',QUEUE_MODE)}catch(e){}
+  if(typeof applyQueueModeUi==='function')applyQueueModeUi();
+}
+const LEAGUE_TIERS=[
+  {id:'bronze',    idx:0, tr:'Bronz',        en:'Bronze',     apex:false, c1:'#d89253', c2:'#7a4018', c3:'#f4c48c', glow:'rgba(205,127,50,.48)'},
+  {id:'silver',    idx:1, tr:'Gümüş',        en:'Silver',     apex:false, c1:'#dde6f0', c2:'#647488', c3:'#ffffff', glow:'rgba(198,214,232,.46)'},
+  {id:'gold',      idx:2, tr:'Altın',        en:'Gold',       apex:false, c1:'#f6cf55', c2:'#8e5d10', c3:'#fff0a8', glow:'rgba(245,200,66,.52)'},
+  {id:'emerald',   idx:3, tr:'Zümrüt',       en:'Emerald',    apex:false, c1:'#3ee08a', c2:'#0e5c34', c3:'#a8ffd0', glow:'rgba(46,204,113,.50)'},
+  {id:'diamond',   idx:4, tr:'Elmas',        en:'Diamond',    apex:false, c1:'#6be0ff', c2:'#1b5d9e', c3:'#d6f7ff', glow:'rgba(92,214,255,.55)'},
+  {id:'master',    idx:5, tr:'Ustalık',      en:'Master',     apex:true,  c1:'#c97cff', c2:'#561a8c', c3:'#f0d4ff', glow:'rgba(192,116,255,.58)'},
+  {id:'challenger',idx:6, tr:'Şampiyonluk',  en:'Challenger', apex:true,  c1:'#ffe066', c2:'#c93622', c3:'#7ef3ff', glow:'rgba(255,214,82,.68)'}
+];
+const DIV_ROMAN=['','I','II','III','IV']; // div: 4=IV (en alt), 1=I (en üst)
+const MASTER_PROMO_LP=200; // Ustalık -> Şampiyonluk terfi eşiği
+
+function leagueStepIndex(tier,div){
+  const t=Math.max(0,Math.min(6,tier|0));
+  if(t<5){
+    const d=Math.max(1,Math.min(4,div|0));
+    return t*4+(4-d); // 0=Bronz IV ... 19=Elmas I
+  }
+  return t===5?20:21; // 20=Ustalık, 21=Şampiyonluk
+}
+function stepIndexToLeague(step){
+  const s=Math.max(0,Math.min(21,step|0));
+  if(s<20){
+    const tier=Math.floor(s/4);
+    const div=4-(s%4);
+    return {tier,div};
+  }
+  return {tier:s===20?5:6,div:1};
+}
+function leagueToMmr(tier,div,lp=0){
+  const step=leagueStepIndex(tier,div);
+  if(step<20)return 800+step*80+Math.round((Math.max(0,Math.min(100,lp))/100)*80);
+  if(step===20)return 2400+Math.round((Math.max(0,lp)/MASTER_PROMO_LP)*250);
+  return 2650+Math.round(Math.max(0,lp)*1.2);
+}
+function mmrToLeague(mmr){
+  const e=Math.max(600,Math.round(mmr||1200));
+  if(e>=2650)return {tier:6,div:1,lp:Math.min(999,Math.round((e-2650)/1.2))};
+  if(e>=2400)return {tier:5,div:1,lp:Math.min(MASTER_PROMO_LP-1,Math.round(((e-2400)/250)*MASTER_PROMO_LP))};
+  const offset=Math.max(0,e-800);
+  const step=Math.min(19,Math.floor(offset/80));
+  const rem=offset-step*80;
+  const {tier,div}=stepIndexToLeague(step);
+  return {tier,div,lp:Math.max(0,Math.min(99,Math.round((rem/80)*100)))};
+}
+function leagueScoreKey(lg){
+  if(!lg||lg.unranked)return -1;
+  return leagueStepIndex(lg.tier,lg.div)*10000+Math.max(0,lg.lp|0);
+}
+function ensureLeagueState(acc){
+  if(!acc)return {unranked:true,provisional:false,placementGames:0,placementWins:0,tier:0,div:4,lp:0,peakTier:0,peakDiv:4,peakLp:0,demoteShield:0};
+  if(acc.league&&typeof acc.league==='object'&&typeof acc.league.placementGames==='number'){
+    const lg=acc.league;
+    lg.tier=Math.max(0,Math.min(6,lg.tier|0));
+    lg.div=lg.tier>=5?1:Math.max(1,Math.min(4,lg.div|0));
+    lg.lp=Math.max(0,lg.lp|0);
+    lg.placementGames=Math.max(0,Math.min(5,lg.placementGames|0));
+    lg.placementWins=Math.max(0,Math.min(lg.placementGames,lg.placementWins|0));
+    lg.unranked=lg.placementGames===0;
+    lg.provisional=lg.placementGames>0&&lg.placementGames<5;
+    if(typeof lg.peakTier!=='number'){lg.peakTier=lg.tier;lg.peakDiv=lg.div;lg.peakLp=lg.lp;}
+    if(typeof lg.demoteShield!=='number')lg.demoteShield=0;
+    return lg;
+  }
+  const m=acc.matches||0;
+  if(m<=0){
+    acc.league={unranked:true,provisional:false,placementGames:0,placementWins:0,tier:0,div:4,lp:0,peakTier:0,peakDiv:4,peakLp:0,demoteShield:0};
+    return acc.league;
+  }
+  const cur=mmrToLeague(acc.elo||1200);
+  const pk=mmrToLeague(Math.max(acc.peakElo||1200,acc.elo||1200));
+  const pg=Math.min(5,m);
+  acc.league={
+    unranked:false,
+    provisional:pg<5,
+    placementGames:pg,
+    placementWins:Math.min(pg,acc.wins||0),
+    tier:cur.tier,div:cur.div,lp:cur.lp,
+    peakTier:pk.tier,peakDiv:pk.div,peakLp:pk.lp,
+    demoteShield:1
+  };
+  return acc.league;
+}
+function leagueCrestSvg(tierId,size=28){
+  const t=LEAGUE_TIERS.find(x=>x.id===tierId);
+  const id='lg_'+String(tierId||'unr')+'_'+size+'_'+(Math.random().toString(36).slice(2,6));
+  if(!t){
+    return `<svg class="lg-svg lg-unr" width="${size}" height="${size}" viewBox="0 0 64 64" aria-hidden="true">
+      <defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#8a9099"/><stop offset="100%" stop-color="#3c424a"/></linearGradient></defs>
+      <path d="M32 6 L54 15 V33 C54 46 43 55 32 59 C21 55 10 46 10 33 V15 Z" fill="url(#${id})" stroke="#a8b0ba" stroke-width="2.5"/>
+      <path d="M32 13 L47 19 V32 C47 41 39 48 32 51 C25 48 17 41 17 32 V19 Z" fill="#17191d" stroke="#666d78" stroke-width="1.5"/>
+      <path d="M32 21 L39 32 L32 43 L25 32 Z" fill="#6f7782" opacity=".75"/>
+    </svg>`;
+  }
+  const innerGlyphs={
+    bronze:`<path d="M32 19 L41 32 L32 45 L23 32 Z" fill="${t.c3}" opacity=".9"/><path d="M32 24 L37 32 L32 40 L27 32 Z" fill="${t.c2}"/>`,
+    silver:`<path d="M19 25 L32 17 L45 25 L39 39 L32 46 L25 39 Z" fill="${t.c1}" opacity=".92"/><path d="M32 21 L38 31 L32 41 L26 31 Z" fill="${t.c3}"/>`,
+    gold:`<path d="M20 35 L23 22 L32 28 L41 22 L44 35 L32 45 Z" fill="${t.c3}"/><circle cx="32" cy="34" r="4" fill="${t.c2}"/>`,
+    emerald:`<polygon points="32,16 44,28 38,45 26,45 20,28" fill="${t.c3}" opacity=".95"/><polygon points="32,21 39,29 35,41 29,41 25,29" fill="${t.c2}"/>`,
+    diamond:`<polygon points="32,15 46,31 32,48 18,31" fill="${t.c3}"/><polygon points="32,20 40,31 32,42 24,31" fill="${t.c1}"/><polygon points="32,25 36,31 32,37 28,31" fill="#ffffff"/>`,
+    master:`<path d="M18 33 L25 19 L32 27 L39 19 L46 33 L32 47 Z" fill="${t.c3}"/><circle cx="32" cy="32" r="5.5" fill="${t.c2}" stroke="#fff" stroke-width="1.4"/>`,
+    challenger:`<path d="M16 32 L22 17 L32 25 L42 17 L48 32 L32 49 Z" fill="${t.c1}" stroke="#fff" stroke-width="1.2"/><polygon points="32,22 38,32 32,42 26,32" fill="${t.c3}"/><circle cx="32" cy="32" r="3.2" fill="#fff"/>`
+  };
+  const crown=t.idx>=5?`<path d="M22 11 L27 5 L32 10 L37 5 L42 11 Z" fill="${t.c3}" stroke="${t.c2}" stroke-width="1.2"/>`:'';
+  return `<svg class="lg-svg lg-${t.id}" width="${size}" height="${size}" viewBox="0 0 64 64" aria-hidden="true">
+    <defs>
+      <linearGradient id="${id}a" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${t.c3}"/><stop offset="45%" stop-color="${t.c1}"/><stop offset="100%" stop-color="${t.c2}"/></linearGradient>
+      <linearGradient id="${id}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1b1512"/><stop offset="100%" stop-color="#0b0908"/></linearGradient>
+    </defs>
+    ${crown}
+    <path d="M32 7 L54 16 V33 C54 46 43 55 32 59 C21 55 10 46 10 33 V16 Z" fill="url(#${id}a)" stroke="${t.c3}" stroke-width="2.2"/>
+    <path d="M32 13 L48 19.5 V32.5 C48 42 40 49 32 52.5 C24 49 16 42 16 32.5 V19.5 Z" fill="url(#${id}b)" stroke="${t.c1}" stroke-width="1.4"/>
+    ${innerGlyphs[t.id]||''}
+  </svg>`;
+}
+function formatLeague(lg,withLp=false){
+  if(!lg||lg.unranked){
+    const pg=(lg&&lg.placementGames)||0;
+    return {
+      id:'unranked',tier:-1,div:0,lp:0,
+      name:tr('Derecesiz','Unranked'),
+      shortName:tr('Derecesiz','Unranked'),
+      fullLabel:tr(`Derecesiz (${pg}/5)`,`Unranked (${pg}/5)`),
+      lpCap:100,cls:'rk-unr',c1:'#8a9099',glow:'rgba(140,148,160,.35)',
+      unranked:true,provisional:false,placementGames:pg
+    };
+  }
+  const t=LEAGUE_TIERS[Math.max(0,Math.min(6,lg.tier|0))]||LEAGUE_TIERS[0];
+  const nm=isEn()?t.en:t.tr;
+  const rom=t.apex?'':(' '+(DIV_ROMAN[lg.div]||'IV'));
+  const lp=Math.max(0,lg.lp|0);
+  const lpCap=t.id==='master'?MASTER_PROMO_LP:100;
+  const provTag=lg.provisional?` (${tr('Geçici','Prov.')})`:'';
+  return {
+    id:t.id,tier:t.idx,div:t.apex?1:(lg.div||4),lp,lpCap,
+    name:nm+rom,
+    shortName:nm+rom,
+    fullLabel:nm+rom+(withLp?` · ${lp} LP`:'')+provTag,
+    cls:'rk-'+t.id,c1:t.c1,glow:t.glow,
+    unranked:false,provisional:!!lg.provisional,placementGames:lg.placementGames||5
+  };
+}
+function getAccountLeague(acc){
+  if(!acc)return formatLeague(null,false);
+  const lg=ensureLeagueState(acc);
+  return formatLeague(lg,false);
+}
+function eloRank(eloOrAcc){
+  if(eloOrAcc&&typeof eloOrAcc==='object'){
+    const fl=getAccountLeague(eloOrAcc);
+    return {ic:leagueCrestSvg(fl.id,22),name:fl.name,cls:fl.cls,id:fl.id,fl};
+  }
+  const cur=mmrToLeague(eloOrAcc||1200);
+  const fl=formatLeague({...cur,unranked:false,provisional:false,placementGames:5},false);
+  return {ic:leagueCrestSvg(fl.id,22),name:fl.name,cls:fl.cls,id:fl.id,fl};
 }
 function loadLocalUsers(){
   try{return JSON.parse(localStorage.getItem(AUTH_LOCAL_KEY)||'{}')||{}}catch(e){return {}}
@@ -6431,6 +6633,7 @@ function mergeAccountData(localAcc,cloudAcc){
     vaultBest:Math.max(localAcc.vaultBest||0,cloudAcc.vaultBest||0),
     vaultWins:Math.max(localAcc.vaultWins||0,cloudAcc.vaultWins||0),
     heroStats:hStats,
+    league:pri.league||sec.league||null,
     quests,
     history,
     createdAt:Math.min(localAcc.createdAt||Date.now(),cloudAcc.createdAt||Date.now()),
@@ -6599,6 +6802,7 @@ function syncAccountToCloud(acc){
     vaultBest:a.vaultBest||0,
     vaultWins:a.vaultWins||0,
     heroStats:a.heroStats||{},
+    league:a.league||null,
     quests:a.quests||null,
     _sig:a._sig||computeAccountSig(a),
     history:(a.history||[]).slice(0,AUTH_HIST_MAX),
@@ -6613,10 +6817,10 @@ function syncAccountToCloud(acc){
         const cloud=snap.data();
         if(cloud&&cloud.key===acc.key){
           finalAcc=mergeAccountData(acc,cloud);
-          // Eğer iki cihazda farklı yeni dereceli maçlar oynandıysa ELO'yu tüm birleşik geçmişten tutarlı hesapla
+          // Eğer iki cihazda farklı yeni dereceli maçlar oynandıysa gizli MMR'ı birleşik geçmişten tutarlı hesapla
           const rkHist=(finalAcc.history||[]).filter(h=>h&&!h.unranked);
-          if(rkHist.length>0&&rkHist.length===finalAcc.matches){
-            const calcElo=Math.max(400,Math.min(3000,1200+rkHist.reduce((s,h)=>s+(+h.delta||0),0)));
+          if(rkHist.length>0&&rkHist.length===finalAcc.matches&&rkHist.every(h=>h.mmrDelta!=null||h.lpDelta==null)){
+            const calcElo=Math.max(400,Math.min(3000,1200+rkHist.reduce((s,h)=>s+(h.mmrDelta!=null?+h.mmrDelta:(+h.delta||0)),0)));
             finalAcc.elo=calcElo;
             finalAcc.peakElo=Math.max(finalAcc.peakElo||1200,calcElo);
           }
@@ -6706,11 +6910,19 @@ function createGuestAccount(){
   showStreakToast(1,false);
   return acc;
 }
+function isMatchRanked(){
+  if(MODE==='tutorial'||MODE==='spectator')return false;
+  if(CURSED_RULE||VAULT_RUN||PUZZLE_ACTIVE)return false;
+  if(QUEUE_MODE!=='ranked')return false;
+  if(MODE==='bot'&&(DIFF==='easy'||DIFF==='med'))return false;
+  return true;
+}
 function getOppElo(){
+  // Yapay zeka gizli MMR'ı (oyuncuya hiçbir yerde gösterilmez, sadece MMR/LP hesabında kullanılır)
   if(MODE==='bot'){
-    if(DIFF==='hard')return 1320;
-    if(DIFF==='imp')return 1550;
-    return 0; // Kolay ve Orta bot derecesizdir (0 ELO)
+    if(DIFF==='hard')return 1220; // Gizli Gümüş II-III seviyesi
+    if(DIFF==='imp')return 1760;  // Gizli Zümrüt IV seviyesi
+    return 0;
   }
   return (OPP_PROFILE&&typeof OPP_PROFILE.elo==='number'&&OPP_PROFILE.elo>=400)?Math.round(OPP_PROFILE.elo):1200;
 }
@@ -6723,30 +6935,57 @@ function getOppLabel(S){
     if(DIFF==='hard')return `${hName} (${tr('Zor','Hard')})`;
     if(DIFF==='imp')return `${hName} (${tr('İmkansız','Impossible')})`;
   }
-  if(OPP_PROFILE&&OPP_PROFILE.name)return `${OPP_PROFILE.name} (${Math.round(OPP_PROFILE.elo||1200)})`;
+  if(OPP_PROFILE&&OPP_PROFILE.name)return OPP_PROFILE.name;
   return tr('Çevrim İçi Rakip','Online Opponent');
 }
-function calcEloDelta(before,matches,won){
-  const oppElo=getOppElo();
-  const expected=1/(1+Math.pow(10,(oppElo-before)/400));
-  let K=(matches||0)<15?32:24;
-  if(MODE==='bot'&&DIFF==='hard')K=14;      // Zor bot: düşük K
-  else if(MODE==='bot'&&DIFF==='imp')K=20;  // İmkansız bot: dengeli anti-farm K
+function calcHiddenMmrDelta(acc,won,ctx={}){
+  const before=Math.round((acc&&acc.elo)||1200);
+  const oppMmr=getOppElo();
+  const expected=1/(1+Math.pow(10,(oppMmr-before)/400));
+  const lg=ensureLeagueState(acc);
+  const matches=acc.matches||0;
+  const wins=acc.wins||0;
+  const wr=matches>=5?(wins/matches):0.5;
+  const streak=acc.winStreak||0;
+  let K=(lg.placementGames<5)?68:(matches<15?36:26);
+  if(MODE==='bot'&&DIFF==='hard')K=Math.round(K*0.72);
+  else if(MODE==='bot'&&DIFF==='imp')K=Math.round(K*0.88);
   let delta=Math.round(K*((won?1:0)-expected));
+  // Kazanma oranı momentumu (LoL gizli MMR mantığı)
+  if(matches>=5){
+    if(won&&wr>=0.60)delta+=Math.min(6,Math.round((wr-0.55)*22));
+    else if(!won&&wr<=0.42)delta-=Math.min(5,Math.round((0.45-wr)*20));
+  }
+  // Hızlı / baskın galibiyet bonusu (küçük ama hissedilir)
+  let speedBonus=0;
   if(won){
-    const minGain=(MODE==='bot'&&DIFF==='hard')?3:4;
+    const sec=ctx.sec||240,rw=ctx.rw||0,rl=ctx.rl||0;
+    if(sec<=120)speedBonus+=3;
+    else if(sec<=185)speedBonus+=2;
+    else if(sec<=250)speedBonus+=1;
+    if(rw>=2&&rl===0)speedBonus+=1;
+    delta+=speedBonus;
+    if(streak>=3)delta+=Math.min(8,(streak-2)*2);
+    const minGain=(MODE==='bot'&&DIFF==='hard')?5:6;
     if(delta<minGain)delta=minGain;
   }else{
-    const minLoss=(MODE==='bot'&&DIFF==='imp')?-6:(MODE==='bot'&&DIFF==='hard')?-5:-4;
+    const minLoss=(MODE==='bot'&&DIFF==='imp')?-8:-6;
     if(delta>minLoss)delta=minLoss;
   }
-  return delta;
+  return {delta,speedBonus};
+}
+function calcEloDelta(before,matches,won){
+  const tmp={elo:before,matches,wins:Math.round(matches*0.5),winStreak:0,league:{placementGames:Math.min(5,matches)}};
+  return calcHiddenMmrDelta(tmp,won,{}).delta;
 }
 function peekLossElo(S){
-  if(!S||S._eloRes||MODE==='tutorial'||MODE==='spectator')return 0;
-  if(MODE==='bot'&&(DIFF==='easy'||DIFF==='med'))return 0;
+  if(!S||S._eloRes||!isMatchRanked())return 0;
   const acc=USER_ACC||{elo:1200,matches:0};
-  return calcEloDelta(Math.round(acc.elo||1200),acc.matches||0,false);
+  const lg=ensureLeagueState(acc);
+  if(lg.placementGames<5)return -1; // Yerleştirmede mağlubiyet sayılır (LP düşmez ama maç kaybedilir)
+  const visMmr=leagueToMmr(lg.tier,lg.div,lg.lp);
+  const mmrGap=(acc.elo||1200)-visMmr;
+  return Math.max(-28,Math.min(-10,Math.round(-18+mmrGap*0.055)));
 }
 function recordMatchElo(S,won){
   if(typeof clearActiveMatchSnapshot==='function')clearActiveMatchSnapshot();
@@ -6754,7 +6993,8 @@ function recordMatchElo(S,won){
   if(S._eloRes)return S._eloRes;
   if(!USER_ACC)createGuestAccount();
   const acc=USER_ACC;
-  const before=Math.round(acc.elo||1200);
+  const lg=ensureLeagueState(acc);
+  const beforeMmr=Math.round(acc.elo||1200);
   let rw=0,rl=0;
   if(S.stats&&Array.isArray(S.stats.rounds)){
     rw=S.stats.rounds[0]||0;
@@ -6763,6 +7003,7 @@ function recordMatchElo(S,won){
     rw=S.res.filter(x=>x>0).length;
     rl=S.res.filter(x=>x<0).length;
   }
+  const sec=Math.max(10,Math.round((Date.now()-((S.stats&&S.stats.startAt)||Date.now()))/1000));
   const score=(rw||rl)?`${rw}-${rl}`:'';
   const myHero=(S.hero&&S.hero[0])||MY_HERO||'';
   const oppHero=(S.hero&&S.hero[1])||'';
@@ -6775,34 +7016,174 @@ function recordMatchElo(S,won){
   acc.winStreak=won?((acc.winStreak||0)+1):0;
   const myJokersUsed=(S.stats&&S.stats.jokers)?(S.stats.jokers[0]||0):0;
   const myD20Surv=(S.stats&&S.stats.d20Surv)?(S.stats.d20Surv[0]||0):0;
-  // Kolay, Orta bot ve Özel Modlar (Lanetli Masa / Ölüm Mahzeni / Bulmaca) ELO değiştirmez (derecesiz) ama geçmişe ve görevlere kaydedilir
-  if((MODE==='bot'&&(DIFF==='easy'||DIFF==='med'))||CURSED_RULE||VAULT_RUN||PUZZLE_ACTIVE){
+
+  // Normal Oyun, Kolay/Orta Bot ve Özel Modlar derecesizdir (LP / Lig / MMR değişmez)
+  if(!isMatchRanked()){
     acc.unrankedMatches=(acc.unrankedMatches||0)+1;
     if(won)acc.unrankedWins=(acc.unrankedWins||0)+1;
     else acc.unrankedLosses=(acc.unrankedLosses||0)+1;
     acc.history=acc.history||[];
-    acc.history.unshift({ts:Date.now(),opp:getOppLabel(),won:!!won,delta:0,elo:before,unranked:true,mode:MODE,diff:DIFF,score,myHero,oppHero});
+    acc.history.unshift({ts:Date.now(),opp:getOppLabel(S),won:!!won,delta:0,lpDelta:0,mmrDelta:0,elo:beforeMmr,unranked:true,mode:MODE,diff:DIFF,score,myHero,oppHero});
     if(acc.history.length>AUTH_HIST_MAX)acc.history.length=AUTH_HIST_MAX;
     if(typeof progressQuest==='function'){progressQuest('play2',1,true);if(won)progressQuest('win1',1,true)}
     if(typeof evaluateAchievements==='function')evaluateAchievements(acc,{won,mode:MODE,diff:DIFF,myJokersUsed,myD20Surv});
     saveSession(acc);
-    S._eloRes={before,after:before,delta:0,rank:eloRank(before),unranked:true};
+    const curFl=formatLeague(lg,false);
+    S._eloRes={before:beforeMmr,after:beforeMmr,delta:0,lpBefore:lg.lp,lpAfter:lg.lp,lpDelta:0,beforeLg:curFl,afterLg:curFl,rank:eloRank(acc),unranked:true};
     return S._eloRes;
   }
-  const delta=calcEloDelta(before,acc.matches||0,won);
-  const after=Math.max(400,before+delta);
-  acc.elo=after;
-  acc.peakElo=Math.max(acc.peakElo||before,after);
+
+  // --- DERECELİ MAÇ: GİZLİ MMR + LİG / LP / YERLEŞTİRME / ÇİFTE TERFİ ---
+  const beforeLg=formatLeague(lg,false);
+  const lpBefore=lg.unranked?0:(lg.lp|0);
+  const {delta:mmrDelta,speedBonus}=calcHiddenMmrDelta(acc,won,{sec,rw,rl});
+  const afterMmr=Math.max(600,Math.min(3400,beforeMmr+mmrDelta));
+  acc.elo=afterMmr;
+  acc.peakElo=Math.max(acc.peakElo||beforeMmr,afterMmr);
   acc.matches=(acc.matches||0)+1;
   if(won)acc.wins=(acc.wins||0)+1;
   else acc.losses=(acc.losses||0)+1;
+
+  let lpDelta=0,promoted=false,doublePromoted=false,demoted=false,shieldUsed=false;
+  let placementMatch=0,placementComplete=false;
+
+  if(lg.placementGames<5){
+    // 5 Maçlık Yerleştirme Süreci (LoL mantığı)
+    lg.placementGames++;
+    placementMatch=lg.placementGames;
+    if(won)lg.placementWins=(lg.placementWins||0)+1;
+
+    if(lg.placementGames===1){
+      // 1. Maçtan sonra geçici lige yerleştir (biraz muhafazakâr başlangıç + esnek tırmanış)
+      const seedMmr=Math.max(820,afterMmr-(won?150:260));
+      const seeded=mmrToLeague(seedMmr);
+      lg.unranked=false;
+      lg.provisional=true;
+      lg.tier=Math.min(3,seeded.tier); // İlk maçta en fazla Zümrüt IV
+      lg.div=seeded.div;
+      lg.lp=won?Math.max(25,Math.min(78,seeded.lp+20)):Math.max(0,Math.min(35,seeded.lp));
+      lg.demoteShield=2;
+      lpDelta=lg.lp;
+      promoted=true;
+    }else{
+      if(won){
+        const visMmr=leagueToMmr(lg.tier,lg.div,lg.lp);
+        const gap=afterMmr-visMmr;
+        const pGain=Math.max(42,Math.min(82,Math.round(52+gap*0.08+speedBonus*2+(acc.winStreak>=3?6:0))));
+        lpDelta=pGain;
+        lg.lp+=pGain;
+        let step=leagueStepIndex(lg.tier,lg.div);
+        while(step<19&&lg.lp>=100){
+          lg.lp-=100;
+          step++;
+          promoted=true;
+        }
+        const nl=stepIndexToLeague(step);
+        lg.tier=nl.tier;lg.div=nl.div;
+      }else{
+        // LoL yerleştirme kuralı: yerleştirmede mağlubiyet LP düşürmez, sadece gizli MMR ayarlanır
+        lpDelta=0;
+      }
+      if(lg.placementGames>=5){
+        lg.provisional=false;
+        placementComplete=true;
+        lg.demoteShield=3;
+      }
+    }
+  }else{
+    // Normal Dereceli Maç (5 yerleştirme sonrası)
+    const visMmr=leagueToMmr(lg.tier,lg.div,lg.lp);
+    const mmrGap=afterMmr-visMmr;
+    const wr=acc.matches>0?(acc.wins/acc.matches):0.5;
+
+    if(won){
+      const spLp=speedBonus>=3?3:(speedBonus>=2?2:(speedBonus>=1?1:0));
+      const stLp=acc.winStreak>=4?3:(acc.winStreak>=3?2:0);
+      lpDelta=Math.max(13,Math.min(38,Math.round(20+mmrGap*0.065+spLp+stLp)));
+      lg.lp+=lpDelta;
+
+      let step=leagueStepIndex(lg.tier,lg.div);
+      const promoCap=(step===20)?MASTER_PROMO_LP:100;
+      if(step<21&&lg.lp>=promoCap){
+        const overflow=lg.lp-promoCap;
+        // Çifte Terfi (+2 Küme) Algoritması: Zor, kazanılmış ve MMR+Seri+WR temelli
+        const canDouble=(
+          step<=17 && // En fazla Elmas III -> Elmas I atlayabilir (Ustalık/Şampiyonluk atlanmaz)
+          acc.matches>=6 &&
+          (
+            (mmrGap>=210 && acc.winStreak>=4 && wr>=0.66) ||
+            (mmrGap>=300 && acc.winStreak>=3 && wr>=0.60) ||
+            (acc.winStreak>=6 && mmrGap>=150 && wr>=0.70)
+          )
+        );
+        if(canDouble){
+          step=Math.min(19,step+2);
+          doublePromoted=true;
+          promoted=true;
+          lg.lp=Math.min(40,overflow);
+          lg.demoteShield=3;
+        }else{
+          step=Math.min(21,step+1);
+          promoted=true;
+          lg.lp=Math.min(99,overflow);
+          lg.demoteShield=2;
+        }
+        const nl=stepIndexToLeague(step);
+        lg.tier=nl.tier;lg.div=nl.div;
+      }
+    }else{
+      lpDelta=Math.max(-28,Math.min(-10,Math.round(-18+mmrGap*0.055)));
+      if(lg.lp>0){
+        // 0 LP üstündeyken tek mağlubiyette lig düşülmez, önce 0 LP'ye iner (LoL kuralı)
+        lg.lp=Math.max(0,lg.lp+lpDelta);
+      }else{
+        let step=leagueStepIndex(lg.tier,lg.div);
+        if(step>0){
+          if((lg.demoteShield||0)>0){
+            lg.demoteShield--;
+            shieldUsed=true;
+          }else{
+            step--;
+            const nl=stepIndexToLeague(step);
+            lg.tier=nl.tier;lg.div=nl.div;
+            lg.lp=(step===20)?(MASTER_PROMO_LP-35):75;
+            lg.demoteShield=1;
+            demoted=true;
+          }
+        }
+      }
+    }
+  }
+
+  // Zirve Lig güncelle
+  const curScore=leagueScoreKey(lg);
+  const pkScore=leagueScoreKey({unranked:false,tier:lg.peakTier||0,div:lg.peakDiv||4,lp:lg.peakLp||0});
+  if(curScore>pkScore){
+    lg.peakTier=lg.tier;lg.peakDiv=lg.div;lg.peakLp=lg.lp;
+  }
+
+  const afterLg=formatLeague(lg,false);
   acc.history=acc.history||[];
-  acc.history.unshift({ts:Date.now(),opp:getOppLabel(),won:!!won,delta,elo:after,unranked:false,mode:MODE,diff:MODE==='bot'?DIFF:'pvp',score,myHero,oppHero});
+  acc.history.unshift({
+    ts:Date.now(),opp:getOppLabel(S),won:!!won,
+    delta:lpDelta,lpDelta,mmrDelta,elo:afterMmr,
+    leagueLabel:afterLg.name,lpAfter:lg.lp,
+    promoted,doublePromoted,demoted,placementMatch,
+    unranked:false,mode:MODE,diff:MODE==='bot'?DIFF:'pvp',score,myHero,oppHero
+  });
   if(acc.history.length>AUTH_HIST_MAX)acc.history.length=AUTH_HIST_MAX;
   if(typeof progressQuest==='function'){progressQuest('play2',1,true);progressQuest('ranked1',1,true);if(won)progressQuest('win1',1,true)}
   if(typeof evaluateAchievements==='function')evaluateAchievements(acc,{won,mode:MODE,diff:DIFF,myJokersUsed,myD20Surv});
   saveSession(acc);
-  S._eloRes={before,after,delta,rank:eloRank(after),unranked:false};
+  S._eloRes={
+    before:beforeMmr,after:afterMmr,delta:lpDelta,mmrDelta,
+    lpBefore,lpAfter:lg.lp,lpDelta,
+    beforeLg,afterLg,
+    promoted,doublePromoted,demoted,shieldUsed,
+    placementMatch,placementComplete,provisional:!!lg.provisional,
+    speedBonus,
+    rank:eloRank(acc),unranked:false
+  };
   return S._eloRes;
 }
 let LOBBY_ONLINE_LIST=[];
@@ -7024,11 +7405,14 @@ async function startQuickMatch(){
   const myPid=getMyPresenceId();
   const myElo=Math.round((USER_ACC&&USER_ACC.elo)||1200);
   const myName=(USER_ACC&&!USER_ACC.isGuest)?USER_ACC.username:tr('Misafir','Guest');
+  const myFl=getAccountLeague(USER_ACC);
+  const qMode=QUEUE_MODE==='normal'?'normal':'ranked';
+  const myRankTxt=myFl.unranked?tr(`Yerleştirme (${myFl.placementGames}/5)`,`Placements (${myFl.placementGames}/5)`):`${myFl.name} · ${myFl.lp} LP`;
   let secs=0;
   const renderWait=(msg)=>{
     box(`<div class="lobby-box">
-      <h3 style="margin-bottom:8px">${tr('Dereceli Rakip Aranıyor','Searching for Ranked Match')}</h3>
-      <p style="color:var(--bone);font-size:16px;margin-bottom:8px">${tr(`Senin ELO: <b>${myElo}</b> · En yakın rakip aranıyor…`,`Your ELO: <b>${myElo}</b> · Finding closest opponent…`)}</p>
+      <h3 style="margin-bottom:8px">${qMode==='ranked'?tr('Dereceli Rakip Aranıyor','Searching for Ranked Match'):tr('Normal Maç Rakibi Aranıyor','Searching for Normal Match')}</h3>
+      <p style="color:var(--bone);font-size:16px;margin-bottom:8px">${qMode==='ranked'?tr(`Ligin: <b>${escHtml(myRankTxt)}</b> · Dengeli rakip aranıyor…`,`Your League: <b>${escHtml(myRankTxt)}</b> · Finding balanced opponent…`):tr('Derecesiz maç için rakip aranıyor…','Finding opponent for unranked match…')}</p>
       <div class="lobby-spinner"><i></i><i></i><i></i></div>
       <p id="lobbyStatus" style="font-size:15px;color:#a0b8a4;margin-top:10px">${msg||`${tr('Geçen süre','Elapsed')}: ${secs}s`}</p>
     </div>`,true);
@@ -7045,7 +7429,8 @@ async function startQuickMatch(){
     const cands=[];
     snap.forEach(doc=>{
       const d=doc.data();
-      if(d&&d.pid&&d.pid!==myPid&&d.roomCode&&d.createdAt&&(now-d.createdAt)<=90000){
+      const candMode=(d&&d.queueMode==='normal')?'normal':'ranked';
+      if(d&&d.pid&&d.pid!==myPid&&d.roomCode&&candMode===qMode&&d.createdAt&&(now-d.createdAt)<=90000){
         cands.push({id:doc.id,...d});
       }
     });
@@ -7061,7 +7446,7 @@ async function startQuickMatch(){
         });
         if(claimed){
           const ls=$('#lobbyStatus');
-          if(ls)ls.textContent=tr(`Rakip bulundu: ${cand.name} (${cand.elo} ELO)! Bağlanılıyor…`,`Match found: ${cand.name} (${cand.elo} ELO)! Connecting…`);
+          if(ls)ls.textContent=tr(`Rakip bulundu: ${cand.name}! Bağlanılıyor…`,`Match found: ${cand.name}! Connecting…`);
           joinRoom(cand.roomCode,true);
           return;
         }
@@ -7071,7 +7456,7 @@ async function startQuickMatch(){
     hostRoom(null,code=>{
       QM_DOC_ID=myPid;
       const qRef=fbDb.collection('lobby_queue').doc(myPid);
-      qRef.set({pid:myPid,name:myName,elo:myElo,roomCode:code,status:'waiting',createdAt:Date.now()}).catch(()=>{});
+      qRef.set({pid:myPid,name:myName,elo:myElo,queueMode:qMode,roomCode:code,status:'waiting',createdAt:Date.now()}).catch(()=>{});
       QM_TIMER=setInterval(()=>{
         secs++;
         const ls=$('#lobbyStatus');
@@ -7201,12 +7586,68 @@ function openLobbyModal(){
   if($('#lob-ref'))$('#lob-ref').onclick=()=>{snd('click');updateLobbyPresence(false);renderLobbyModalBody()};
   renderLobbyModalBody();
 }
+function applyQueueModeUi(){
+  const mb2=$('#mb2');
+  if(!mb2)return;
+  const isR=QUEUE_MODE==='ranked';
+  mb2.classList.toggle('queue-ranked',isR);
+  mb2.classList.toggle('queue-normal',!isR);
+  const btns=mb2.querySelectorAll('#queue-switch .qs-btn');
+  btns.forEach(b=>{
+    const q=b.dataset.q;
+    const act=(q==='ranked')===isR;
+    b.classList.toggle('act',act);
+    b.setAttribute('aria-selected',act?'true':'false');
+    const bEl=b.querySelector('b'),sEl=b.querySelector('small');
+    if(q==='normal'){
+      if(bEl)bEl.textContent=tr('Normal Oyun','Normal Game');
+      if(sEl)sEl.textContent=tr('Derecesiz · Tüm Botlar & PvP','Unranked · All AI & PvP');
+    }else{
+      if(bEl)bEl.textContent=tr('Dereceli Oyun','Ranked Game');
+      if(sEl)sEl.textContent=tr('Lig & LP · Zor / İmkansız / PvP','League & LP · Hard / Imp / PvP');
+    }
+  });
+  const spans=mb2.querySelectorAll('.hs-plaque > span');
+  if(spans[0])spans[0].textContent=isR?tr('Çevrim İçi — Dereceli','Online — Ranked'):tr('Çevrim İçi — Normal','Online — Normal');
+  if(spans[1])spans[1].textContent=isR?tr('Yapay Zekaya Karşı — Dereceli','VS AI — Ranked'):tr('Yapay Zekaya Karşı','VS AI');
+  if(spans[2])spans[2].textContent=tr('Özel Modlar','Special Modes');
+  const strip=$('#ranked-strip');
+  if(strip){
+    if(!isR){strip.hidden=true;}
+    else{
+      strip.hidden=false;
+      const fl=USER_ACC?getAccountLeague(USER_ACC):formatLeague(null,false);
+      const cap=fl.lpCap||100;
+      const pct=fl.unranked?0:(fl.id==='challenger'?100:Math.max(0,Math.min(100,Math.round((fl.lp/cap)*100))));
+      if(fl.unranked||fl.provisional){
+        const pg=fl.placementGames||0;
+        const pips=[0,1,2,3,4].map(i=>`<i class="rs-pip${i<pg?' done':''}"></i>`).join('');
+        strip.className=`ranked-strip ${fl.cls}`;
+        strip.innerHTML=`<span class="rs-crest">${leagueCrestSvg(fl.id,34)}</span>
+          <div class="rs-mid">
+            <div class="rs-top"><b>${fl.unranked?tr('Yerleştirme Maçları','Placement Matches'):escHtml(fl.name)}</b><span>${fl.unranked?`${pg}/5`:`${fl.lp} LP · ${pg}/5`}</span></div>
+            <div class="rs-pips">${pips}<em>${fl.unranked?tr('İlk maçtan sonra geçici ligin belirlenir','Provisional league assigned after 1st match'):tr('Geçici Lig · 5 maçta kesinleşir','Provisional · Finalizes at 5 games')}</em></div>
+          </div>`;
+      }else{
+        strip.className=`ranked-strip ${fl.cls}`;
+        strip.innerHTML=`<span class="rs-crest">${leagueCrestSvg(fl.id,34)}</span>
+          <div class="rs-mid">
+            <div class="rs-top"><b>${escHtml(fl.name)}</b><span>${fl.id==='challenger'?`${fl.lp} LP`:`${fl.lp} / ${cap} LP`}</span></div>
+            <div class="rs-bar"><i style="width:${pct}%;--lg-c1:${fl.c1}"></i></div>
+          </div>`;
+      }
+    }
+  }
+}
+document.querySelectorAll('#queue-switch .qs-btn').forEach(b=>{
+  b.onclick=()=>{snd('click');setQueueMode(b.dataset.q)};
+});
 function renderAuthBar(){
   const bar=$('#auth-bar');
   if(!bar)return;
   const lobCnt=Array.isArray(LOBBY_ONLINE_LIST)?LOBBY_ONLINE_LIST.length:0;
   const lobBtnHtml=`<button type="button" class="auth-lb-btn auth-lob-btn" id="ab-lob" title="${tr('Çevrim İçi Lobi','Online Lobby')}"><i class="lob-live-dot"></i><span>${tr('Lobi','Lobby')}</span><b id="ab-lob-cnt">${lobCnt}</b></button>`;
-  const lbBtnHtml=`<button type="button" class="auth-lb-btn" id="ab-lb" title="${tr('Üye ELO Sıralaması','Member ELO Leaderboard')}"><span>${tr('Sıralama','Ranks')}</span></button>`;
+  const lbBtnHtml=`<button type="button" class="auth-lb-btn" id="ab-lb" title="${tr('Lig Sıralaması','League Leaderboard')}"><span>${tr('Sıralama','Ranks')}</span></button>`;
   const invBtnHtml=`<button type="button" class="auth-lb-btn auth-inv-btn" id="ab-inv" title="${tr('Kozmetikler ve Envanter','Cosmetics & Inventory')}"><span>${tr('Envanter','Inventory')}</span></button>`;
   if(!USER_ACC){
     bar.hidden=false;
@@ -7216,26 +7657,31 @@ function renderAuthBar(){
     if(lb)lb.onclick=()=>{snd('click');openLeaderboardModal()};
     if(lob)lob.onclick=()=>{snd('click');openLobbyModal()};
     if(inv)inv.onclick=()=>{snd('click');openInventoryModal()};
+    applyQueueModeUi();
     return;
   }
-  const rk=eloRank(USER_ACC.elo);
+  const fl=getAccountLeague(USER_ACC);
   const nm=USER_ACC.isGuest?tr('Misafir','Guest'):escHtml(USER_ACC.username);
   const stDays=Math.max(1,USER_ACC.streak||1);
+  const rightPill=fl.unranked
+    ?`<span class="ap-elo">${fl.placementGames}/5 <i>${tr('MAÇ','GM')}</i></span>`
+    :`<span class="ap-elo">${fl.lp} <i>LP</i></span>`;
   bar.hidden=false;
-  bar.innerHTML=`<div class="auth-bar-left">${lobBtnHtml}${lbBtnHtml}${invBtnHtml}</div><div class="auth-bar-right"><button type="button" class="auth-pill ${rk.cls}" id="ab-prof" title="${tr('Profil, ELO & Günlük Seri','Profile, ELO & Daily Streak')}">
-    <span class="ap-ic">${rk.ic}</span>
+  bar.innerHTML=`<div class="auth-bar-left">${lobBtnHtml}${lbBtnHtml}${invBtnHtml}</div><div class="auth-bar-right"><button type="button" class="auth-pill ${fl.cls}" id="ab-prof" title="${tr('Profil, Lig & Günlük Seri','Profile, League & Daily Streak')}">
+    <span class="ap-ic">${leagueCrestSvg(fl.id,24)}</span>
     <span class="ap-info">
       <b>${nm}</b>
-      <small>${rk.name}</small>
+      <small>${escHtml(fl.name)}${fl.provisional?` · ${fl.placementGames}/5`:''}</small>
     </span>
     <span class="ap-streak" title="${tr(`${stDays} Günlük Seri`,`${stDays}-Day Streak`)}">${stDays}${tr('g','d')}</span>
-    <span class="ap-elo">${Math.round(USER_ACC.elo||1200)} <i>ELO</i></span>
+    ${rightPill}
   </button></div>`;
   const pb=$('#ab-prof'),lb=$('#ab-lb'),lob=$('#ab-lob'),inv=$('#ab-inv');
   if(pb)pb.onclick=()=>{snd('click');openProfileModal('overview')};
   if(inv)inv.onclick=()=>{snd('click');openInventoryModal()};
   if(lb)lb.onclick=()=>{snd('click');openLeaderboardModal()};
   if(lob)lob.onclick=()=>{snd('click');openLobbyModal()};
+  applyQueueModeUi();
 }
 /* ---------- BAŞARIMLAR, UNVANLAR, GÜNLÜK GÖREVLER, KOZMETİKLER & SEZONLAR ---------- */
 const ACHIEVEMENTS=[
@@ -7460,7 +7906,7 @@ async function openLeaderboardModal(activeTab='rank'){
   const season=getCurrentSeason();
   mb.innerHTML=`<div class="lb-wrap">
     <div class="lb-head">
-      <h3>${tr('ELO Sıralaması','ELO Leaderboard')}</h3>
+      <h3>${tr('Lig Sıralaması','League Leaderboard')}</h3>
       <p class="lb-sub">${season.label} · ${tr(`${season.daysLeft} gün kaldı`,`${season.daysLeft}d left`)}</p>
     </div>
     <div class="lb-loading">${tr('Sıralama yükleniyor…','Loading leaderboard…')}</div>
@@ -7471,12 +7917,18 @@ async function openLeaderboardModal(activeTab='rank'){
   if($('#lb-close'))$('#lb-close').onclick=()=>{snd('click');close()};
 
   const byKey=new Map();
+  const packUser=(u,k)=>{
+    const clone={elo:Math.round(u.elo||1200),matches:u.matches||((u.wins||0)+(u.losses||0)),wins:u.wins||0,losses:u.losses||0,league:u.league||null};
+    const lg=ensureLeagueState(clone);
+    const fl=formatLeague(lg,false);
+    return {key:k,username:u.username,elo:clone.elo,wins:u.wins||0,losses:u.losses||0,streak:u.streak||1,title:u.title||'',lg,fl,score:leagueScoreKey(lg)};
+  };
   try{
     const localMap=loadLocalUsers();
     Object.values(localMap).forEach(u=>{
       if(isRegisteredMember(u)){
         const k=u.key||normUserKey(u.username);
-        if(k)byKey.set(k,{key:k,username:u.username,elo:Math.round(u.elo||1200),wins:u.wins||0,losses:u.losses||0,streak:u.streak||1,title:u.title||''});
+        if(k)byKey.set(k,packUser(u,k));
       }
     });
   }catch(e){}
@@ -7488,7 +7940,7 @@ async function openLeaderboardModal(activeTab='rank'){
         const u=doc.data();
         if(isRegisteredMember(u)){
           const k=u.key||doc.id||normUserKey(u.username);
-          byKey.set(k,{key:k,username:u.username,elo:Math.round(u.elo||1200),wins:u.wins||0,losses:u.losses||0,streak:u.streak||1,title:u.title||''});
+          byKey.set(k,packUser(u,k));
         }
       });
     }catch(e){}
@@ -7498,7 +7950,7 @@ async function openLeaderboardModal(activeTab='rank'){
     }catch(e){}
   }
   if(!mb.classList.contains('lb-mode'))return;
-  const list=[...byKey.values()].sort((a,b)=>(b.elo-a.elo)||(b.wins-a.wins)||a.username.localeCompare(b.username));
+  const list=[...byKey.values()].sort((a,b)=>(b.score-a.score)||(b.elo-a.elo)||(b.wins-a.wins)||a.username.localeCompare(b.username));
   const myKey=isRegisteredMember(USER_ACC)?(USER_ACC.key||normUserKey(USER_ACC.username)):'';
   const myIdx=myKey?list.findIndex(u=>u.key===myKey):-1;
 
@@ -7512,22 +7964,23 @@ async function openLeaderboardModal(activeTab='rank'){
     if(curTab==='rank'){
       const rowsHtml=list.length?list.map((u,i)=>{
         const pos=i+1;
-        const rk=eloRank(u.elo);
+        const fl=u.fl;
         const isMe=!!(myKey&&u.key===myKey);
         const med=`#${pos}`;
         const tTag=u.title?`<span class="lb-title-tag">${escHtml(getTitleLabel(u.title))}</span> · `:'';
+        const rightDisp=fl.unranked?`${fl.placementGames}/5 <i>${tr('MAÇ','GM')}</i>`:`${fl.lp} <i>LP</i>`;
         return `<div class="lb-row${pos<=3?' top'+pos:''}${isMe?' me':''}">
           <span class="lb-pos">${med}</span>
-          <span class="lb-rk" title="${rk.name}">${rk.ic}</span>
+          <span class="lb-rk" title="${escHtml(fl.name)}">${leagueCrestSvg(fl.id,28)}</span>
           <div class="lb-u">
             <b>${escHtml(u.username)}${isMe?` <em>(${tr('Sen','You')})</em>`:''}</b>
-            <small>${tTag}${u.wins}${tr('G','W')} / ${u.losses}${tr('M','L')} · ${Math.max(1,u.streak||1)}${tr('g seri','d streak')}</small>
+            <small><span class="lb-lg-tag ${fl.cls}">${escHtml(fl.name)}</span> · ${tTag}${u.wins}${tr('G','W')} / ${u.losses}${tr('M','L')}</small>
           </div>
-          <span class="lb-elo">${u.elo} <i>ELO</i></span>
+          <span class="lb-elo">${rightDisp}</span>
         </div>`;
       }).join(''):`<div class="lb-empty">${tr('Henüz kayıtlı üye bulunmuyor. İlk sırayı almak için üye ol!','No registered members yet. Register to claim #1!')}</div>`;
       const myBarHtml=myIdx>=0
-        ?`<div class="lb-my-bar">${tr('Senin Sıran','Your Rank')}: <b>#${myIdx+1}</b> / ${list.length} · <b>${list[myIdx].elo} ELO</b></div>`
+        ?`<div class="lb-my-bar">${tr('Senin Sıran','Your Rank')}: <b>#${myIdx+1}</b> / ${list.length} · <b>${escHtml(list[myIdx].fl.name)} (${list[myIdx].fl.lp} LP)</b></div>`
         :(USER_ACC&&USER_ACC.isGuest?`<div class="lb-my-bar guest">${tr('Sıralamaya girmek için üye ol!','Register to appear on the leaderboard!')}</div>`:'');
       bodyHtml=`<div class="lb-list">${rowsHtml}</div>${myBarHtml}`;
     }else{
@@ -7535,20 +7988,20 @@ async function openLeaderboardModal(activeTab='rank'){
       const liveChamp=leader
         ?`<div class="hof-card live">
             <div class="hof-s">${season.label} · <span>${tr('Güncel Lider','Current Leader')}</span></div>
-            <div class="hof-name">♛ ${escHtml(leader.username)}</div>
-            <div class="hof-meta">${leader.elo} ELO · ${leader.wins}${tr('G','W')} / ${leader.losses}${tr('M','L')} · ${tr(`${season.daysLeft} gün sonra taçlanır`,`crowned in ${season.daysLeft}d`)}</div>
+            <div class="hof-name">${leagueCrestSvg(leader.fl.id,24)} ${escHtml(leader.username)}</div>
+            <div class="hof-meta">${escHtml(leader.fl.name)} · ${leader.fl.lp} LP · ${leader.wins}${tr('G','W')} / ${leader.losses}${tr('M','L')} · ${tr(`${season.daysLeft} gün sonra taçlanır`,`crowned in ${season.daysLeft}d`)}</div>
           </div>`
         :`<div class="lb-empty">${tr('Bu sezon henüz lider yok.','No season leader yet.')}</div>`;
       const pastHtml=hofList.map(h=>`<div class="hof-card">
         <div class="hof-s">${escHtml(h.label||(`Sezon ${h.seasonNum}`))}</div>
-        <div class="hof-name">♛ ${escHtml(h.champion)}</div>
-        <div class="hof-meta">${Math.round(h.elo||1200)} ELO</div>
+        <div class="hof-name">${escHtml(h.champion)}</div>
+        <div class="hof-meta">${escHtml(h.leagueName||eloRank(h.elo||1200).name)}</div>
       </div>`).join('');
       bodyHtml=`<div class="lb-list">${liveChamp}${pastHtml}</div>`;
     }
     mb.innerHTML=`<div class="lb-wrap">
       <div class="lb-head">
-        <h3>${tr('ELO Sıralaması','ELO Leaderboard')}</h3>
+        <h3>${tr('Lig Sıralaması','League Leaderboard')}</h3>
         <p class="lb-sub">${season.label} · ${tr(`${list.length} üye · ${season.daysLeft} gün kaldı`,`${list.length} members · ${season.daysLeft}d left`)}</p>
       </div>
       ${tabsHtml}
@@ -7588,7 +8041,9 @@ function openProfileModal(initialTab='overview'){
   const renderProf=(acc)=>{
     ensureDailyQuests(acc);
     evaluateAchievements(acc,{});
-    const rk=eloRank(acc.elo);
+    const lg=ensureLeagueState(acc);
+    const fl=formatLeague(lg,false);
+    const pkFl=lg.unranked?fl:formatLeague({unranked:false,tier:lg.peakTier,div:lg.peakDiv,lp:lg.peakLp,placementGames:5},false);
     const nm=acc.isGuest?tr('Misafir Oyuncu','Guest Player'):escHtml(acc.username);
     const eqTitle=acc.title?getTitleLabel(acc.title):'';
     const frCls='fr-'+(acc.frame||'classic');
@@ -7611,21 +8066,25 @@ function openProfileModal(initialTab='overview'){
               oppDisp=`${NAMES[h.oppHero]} (${tr('İmkansız','Impossible')})`;
             }
             const rightHtml=h.unranked
-              ?`<b class="pr-hunr">${tr('Antrenman','Unranked')} <i>(0 ELO)</i></b>`
-              :`<b>${h.delta>=0?'+':''}${h.delta} ELO <i>(${h.elo})</i></b>`;
+              ?`<b class="pr-hunr">${tr('Normal Oyun','Normal')} <i>(0 LP)</i></b>`
+              :(h.lpDelta!=null
+                ?`<b>${h.lpDelta>0?'+':''}${h.lpDelta} LP <i>(${escHtml(h.leagueLabel||fl.name)})</i></b>`
+                :`<b>${h.delta>=0?'+':''}${h.delta} <i>(${tr('Eski Sezon','Legacy')})</i></b>`);
             return `<div class="pr-hrow ${h.won?'w':'l'}${h.unranked?' unr':''}">
               <div class="pr-hl">
-                <span>${h.won?tr('Zafer','Win'):tr('Mağlubiyet','Loss')} · ${escHtml(oppDisp)}${sc}</span>
+                <span>${h.won?tr('Zafer','Win'):tr('Mağlubiyet','Loss')} · ${escHtml(oppDisp)}${sc}${h.doublePromoted?` <em>(+2 ${tr('Küme','Div')})</em>`:h.promoted?` <em>(${tr('Terfi','Promo')})</em>`:''}</span>
                 ${tm?`<small class="pr-htm">${tm}</small>`:''}
               </div>
               ${rightHtml}
             </div>`;
           }).join('')
         :`<div class="pr-hempty">${tr('Henüz kayıtlı maç bulunmuyor.','No recorded matches yet.')}</div>`;
-      const subGames=uMatches>0?` (${rMatches} ${tr('Dereceli','Ranked')} · ${uMatches} ${tr('Antrenman','Practice')})`:'';
+      const subGames=uMatches>0?` (${rMatches} ${tr('Dereceli','Ranked')} · ${uMatches} ${tr('Normal','Normal')})`:'';
+      const curLigTxt=fl.unranked?tr(`Yerleştirme (${fl.placementGames}/5)`,`Placements (${fl.placementGames}/5)`):`${fl.name} · ${fl.lp} LP`;
+      const pkLigTxt=fl.unranked?tr('Derecesiz','Unranked'):`${pkFl.name}`;
       tabBody=`<div class="pr-grid">
-        <div class="pr-stat"><span>${tr('Güncel ELO','Current ELO')}</span><b>${Math.round(acc.elo||1200)}</b></div>
-        <div class="pr-stat"><span>${tr('Zirve ELO','Peak ELO')}</span><b>${Math.round(acc.peakElo||acc.elo||1200)}</b></div>
+        <div class="pr-stat"><span>${tr('Güncel Lig','Current League')}</span><b>${escHtml(curLigTxt)}</b></div>
+        <div class="pr-stat"><span>${tr('Zirve Lig','Peak League')}</span><b>${escHtml(pkLigTxt)}</b></div>
         <div class="pr-stat"><span>${tr('Galibiyet / Mağlubiyet','Wins / Losses')}</span><b>${totWins} / ${totLosses}</b></div>
         <div class="pr-stat"><span>${tr('Kazanma Oranı','Win Rate')}</span><b>%${wr}</b></div>
         <div class="pr-stat pr-stat-fire"><span>${tr('Günlük Seri','Daily Streak')}</span><b>${stCur} ${tr('Gün','Days')}</b></div>
@@ -7737,10 +8196,10 @@ function openProfileModal(initialTab='overview'){
 
     mb.innerHTML=`<div class="pr-wrap">
       <div class="pr-head">
-        <div class="pr-badge ${rk.cls} ${frCls}">${rk.ic}</div>
+        <div class="pr-badge ${fl.cls} ${frCls}">${leagueCrestSvg(fl.id,46)}</div>
         <div class="pr-titles">
           <h3>${nm}${eqTitle?` <span class="pr-eq-title">«${escHtml(eqTitle)}»</span>`:''}</h3>
-          <div class="pr-rank">${rk.name} · <b>${Math.round(acc.elo||1200)} ELO</b> · <span class="pr-st-tag">${stCur} ${tr('Gün Seri','Day Streak')}</span>${(acc.puzzleStreak||0)>0?` · <span class="pr-st-tag">${tr('Bulmaca','Puzzle')}: ${acc.puzzleStreak}</span>`:''}</div>
+          <div class="pr-rank">${escHtml(fl.name)}${fl.unranked?` · <b>${fl.placementGames}/5 ${tr('Yerleştirme','Placements')}</b>`:` · <b>${fl.lp} LP</b>${fl.provisional?` <em>(${tr('Geçici','Prov.')} ${fl.placementGames}/5)</em>`:''}`} · <span class="pr-st-tag">${stCur} ${tr('Gün Seri','Day Streak')}</span>${(acc.puzzleStreak||0)>0?` · <span class="pr-st-tag">${tr('Bulmaca','Puzzle')}: ${acc.puzzleStreak}</span>`:''}</div>
         </div>
       </div>
       <div class="pr-tabs">

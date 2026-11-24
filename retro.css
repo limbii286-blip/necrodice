@@ -9150,3 +9150,317 @@ body[data-board="gold"] main::after {
   .inv-stage-cb { height: 118px; }
   .inv-cb-preview { width: 68px; height: 100px; }
 }
+
+/* ==========================================================================
+   AAA LİG SİSTEMİ, NORMAL/DERECELİ MOD SEÇİCİ & TERFİ KUTLAMASI (DESKTOP + MOBİL)
+   ========================================================================== */
+.lg-svg {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.7));
+}
+.ap-ic .lg-svg { display: block; }
+.lb-rk .lg-svg { display: block; }
+.pr-badge .lg-svg { display: block; }
+
+/* Lig Renk Sınıfları */
+.rk-bronze { --lg-c: #d89253; --lg-glow: rgba(205, 127, 50, 0.45); }
+.rk-silver { --lg-c: #dde6f0; --lg-glow: rgba(198, 214, 232, 0.45); }
+.rk-gold { --lg-c: #f6cf55; --lg-glow: rgba(245, 200, 66, 0.5); }
+.rk-emerald { --lg-c: #3ee08a; --lg-glow: rgba(46, 204, 113, 0.48); }
+.rk-diamond { --lg-c: #6be0ff; --lg-glow: rgba(92, 214, 255, 0.54); }
+.rk-master { --lg-c: #c97cff; --lg-glow: rgba(192, 116, 255, 0.56); }
+.rk-challenger { --lg-c: #ffe066; --lg-glow: rgba(255, 214, 82, 0.65); }
+.rk-unr { --lg-c: #9ca3af; --lg-glow: rgba(156, 163, 175, 0.35); }
+
+.lb-lg-tag {
+  font-weight: 700;
+  color: var(--lg-c, #e5c685);
+}
+
+/* Ana Menü Normal vs Dereceli Mod Seçici */
+.queue-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 5px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(16, 11, 10, 0.92), rgba(10, 7, 7, 0.96));
+  border: 1.5px solid rgba(201, 160, 88, 0.38);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 230, 180, 0.08);
+  margin-bottom: 2px;
+}
+.qs-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  border: 1.5px solid transparent;
+  background: rgba(255, 255, 255, 0.02);
+  color: #a8967c;
+  cursor: pointer;
+  transition: transform 0.14s ease, border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+  text-align: center;
+}
+.qs-btn b {
+  font: 800 15.5px/1.15 var(--mf);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.qs-btn small {
+  font: 600 11px/1.2 var(--mf);
+  opacity: 0.78;
+}
+.qs-btn:hover {
+  background: rgba(255, 230, 180, 0.05);
+  color: #e6d5b5;
+}
+.qs-btn.act[data-q="normal"] {
+  background: linear-gradient(180deg, rgba(64, 72, 82, 0.62), rgba(32, 37, 44, 0.85));
+  border-color: rgba(186, 200, 218, 0.65);
+  color: #f3f7fc;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+.qs-btn.act[data-q="ranked"] {
+  background: linear-gradient(180deg, rgba(132, 86, 24, 0.72), rgba(66, 36, 12, 0.9));
+  border-color: rgba(246, 207, 85, 0.88);
+  color: #fff2c6;
+  box-shadow: 0 0 18px rgba(245, 200, 66, 0.25), 0 4px 14px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 240, 180, 0.28);
+}
+
+/* Dereceli Modda Kolay & Orta Botları Gizle, Zor & İmkansız'ı 2 Eşit Sütun Yap */
+#mb2.queue-ranked .d[data-d="easy"],
+#mb2.queue-ranked .d[data-d="med"] {
+  display: none !important;
+}
+#mb2.queue-ranked .dr {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+/* Ana Menü Dereceli Lig Şeridi */
+.ranked-strip {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 8px 13px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, rgba(24, 17, 14, 0.94), rgba(16, 12, 11, 0.92));
+  border: 1.5px solid color-mix(in srgb, var(--lg-c, #e5c685) 55%, rgba(255, 255, 255, 0.08));
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.48), inset 0 0 20px color-mix(in srgb, var(--lg-glow, rgba(245, 200, 66, 0.2)) 40%, transparent);
+}
+.rs-crest {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.rs-mid {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rs-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.rs-top b {
+  font: 800 15px/1.15 var(--mf);
+  color: var(--lg-c, #f6cf55);
+  letter-spacing: 0.03em;
+}
+.rs-top span {
+  font: 700 12.5px/1 var(--mf);
+  color: #efe2c6;
+  white-space: nowrap;
+}
+.rs-bar {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.rs-bar > i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--lg-c1, #f6cf55) 75%, #fff), var(--lg-c1, #f6cf55));
+  box-shadow: 0 0 10px var(--lg-glow, rgba(245, 200, 66, 0.5));
+  transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.rs-pips {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.rs-pip {
+  width: 16px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.rs-pip.done {
+  background: linear-gradient(90deg, #f6cf55, #ffe999);
+  border-color: #fff2b2;
+  box-shadow: 0 0 8px rgba(246, 207, 85, 0.55);
+}
+.rs-pips em {
+  font-style: normal;
+  font: 600 11px/1.2 var(--mf);
+  color: #b7a78e;
+  margin-left: 4px;
+}
+
+/* Maç Sonu Lig, LP Bar & Terfi Kutlama Ekranı */
+@keyframes promoBannerIn {
+  0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+  65% { opacity: 1; transform: scale(1.03) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes lpFillGrow {
+  from { transform: scaleX(0); transform-origin: left center; }
+  to { transform: scaleX(1); transform-origin: left center; }
+}
+.end-promo-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 0 auto 10px;
+  padding: 12px 16px;
+  max-width: 440px;
+  border-radius: 13px;
+  background: radial-gradient(circle at 25% 50%, color-mix(in srgb, var(--lg-glow, rgba(246, 207, 85, 0.4)) 75%, transparent), rgba(18, 12, 11, 0.96) 72%);
+  border: 2px solid var(--lg-c, #f6cf55);
+  box-shadow: 0 0 28px var(--lg-glow, rgba(246, 207, 85, 0.45)), 0 10px 26px rgba(0, 0, 0, 0.65);
+  animation: promoBannerIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.end-promo-banner.dbl {
+  border-color: #ffe875;
+  box-shadow: 0 0 38px rgba(255, 224, 102, 0.68), 0 12px 30px rgba(0, 0, 0, 0.72);
+}
+.epb-crest {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 0 12px var(--lg-glow, rgba(246, 207, 85, 0.65)));
+}
+.epb-txt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 2px;
+}
+.epb-kicker {
+  font: 800 11.5px/1.1 var(--mf);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #ffe999;
+}
+.end-promo-banner.dbl .epb-kicker {
+  color: #7ef3ff;
+  text-shadow: 0 0 10px rgba(126, 243, 255, 0.6);
+}
+.epb-rank {
+  font: 800 22px/1.1 var(--mf);
+  color: var(--lg-c, #f6cf55);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+.epb-from {
+  font: 600 12px/1.2 var(--mf);
+  color: #d6c5a7;
+}
+
+.end-elo-bar {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  max-width: 440px;
+  margin: 0 auto 10px;
+  padding: 10px 14px !important;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(24, 17, 15, 0.94), rgba(14, 10, 9, 0.96));
+  border: 1.5px solid color-mix(in srgb, var(--lg-c, #c9a058) 55%, rgba(255, 255, 255, 0.1));
+}
+.end-lg-crest {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.end-lg-mid {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+.end-lg-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.end-lg-name {
+  font: 800 16px/1.15 var(--mf);
+  color: var(--lg-c, #f4e4c4);
+}
+.end-lg-name em {
+  font-style: normal;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(255, 230, 170, 0.14);
+  color: #f3d79b;
+  margin-left: 4px;
+}
+.end-lp-track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.end-lp-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--lg-c1, #f6cf55) 70%, #fff), var(--lg-c1, #f6cf55));
+  box-shadow: 0 0 10px var(--lg-glow, rgba(245, 200, 66, 0.5));
+  animation: lpFillGrow 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.end-lg-sub {
+  font: 600 11.5px/1.2 var(--mf);
+  color: #b7a78e;
+}
+.end-elo-bar.neu .end-elo-d {
+  color: #d6c5a7;
+}
+
+@media (max-width: 600px) {
+  .queue-switch { gap: 6px; padding: 4px; }
+  .qs-btn { padding: 7px 6px; }
+  .qs-btn b { font-size: 13.5px; }
+  .qs-btn small { font-size: 10px; }
+  .ranked-strip { padding: 7px 10px; gap: 9px; }
+  .rs-top b { font-size: 13.5px; }
+  .rs-top span { font-size: 11.5px; }
+  .end-promo-banner { padding: 10px 12px; gap: 10px; }
+  .epb-rank { font-size: 18px; }
+  .end-elo-bar { padding: 8px 10px !important; gap: 9px; }
+  .end-lg-name { font-size: 14px; }
+}
