@@ -2657,12 +2657,22 @@ function syncGlogMobileSize(){
       el.style.setProperty('--glog-mob-h',Math.round(hr&&hr.height>16?hr.height:ref.height)+'px');
       el.style.setProperty('--glog-mob-l','6px');
       el.style.setProperty('--glog-mob-t',Math.round(ref.bottom+5)+'px');
+      const ssb=document.getElementById('spec-social-bar');
+      if(ssb){
+        const gr=el.getBoundingClientRect();
+        ssb.style.left='6px';
+        ssb.style.right='auto';
+        ssb.style.top=Math.round((gr.bottom||ref.bottom+34)+4)+'px';
+        ssb.style.width=Math.round(ref.width)+'px';
+      }
     }
   }else{
     el.style.removeProperty('--glog-mob-w');
     el.style.removeProperty('--glog-mob-h');
     el.style.removeProperty('--glog-mob-l');
     el.style.removeProperty('--glog-mob-t');
+    const ssb=document.getElementById('spec-social-bar');
+    if(ssb){ssb.style.left='';ssb.style.right='';ssb.style.top='';ssb.style.width='';}
   }
 }
 window.addEventListener('resize',syncGlogMobileSize);
@@ -8303,7 +8313,8 @@ function renderSpecSocialBar(){
   const inMatch=!!(G&&(!menu||menu.hidden));
   const isSpec=MODE==='spectator';
   const tot=(SPEC_VOTES[0]||0)+(SPEC_VOTES[1]||0);
-  const showForPlayer=!isSpec&&inMatch&&tot>0;
+  const liveSpecs=Math.max(spectators?spectators.length:0,specCount||0);
+  const showForPlayer=!isSpec&&inMatch&&(tot>0||liveSpecs>0);
   const active=(isSpec&&inMatch)||showForPlayer;
   if(!active){if(bar)bar.remove();return;}
   if(!bar){
@@ -8322,11 +8333,15 @@ function renderSpecSocialBar(){
   const pct0=tot?Math.round((v0/tot)*100):50;
   const pct1=tot?100-pct0:50;
   if(!isSpec){
-    bar.innerHTML=`<div class="ssb-poll-live" title="${tr('İzleyici Tahmin Oylaması','Spectator Prediction Poll')}">
-      <span class="ssb-pl-lbl">${tr('İzleyici Oyu','Poll')} (${tot})</span>
-      <div class="ssb-pl-row"><span>${escHtml(p0.slice(0,10))} <b>%${pct0}</b></span><span><b>%${pct1}</b> ${escHtml(p1.slice(0,10))}</span></div>
-      <div class="ssb-pl-bar"><i style="width:${pct0}%"></i></div>
-    </div>`;
+    const watchLbl=liveSpecs>0?`${tr('İzleniyorsun','Watched')} (${liveSpecs})`:`${tr('İzleyici Oyu','Poll')} (${tot})`;
+    bar.innerHTML=tot>0
+      ?`<div class="ssb-poll-live" title="${tr('İzleyici Tahmin Oylaması','Spectator Prediction Poll')}">
+        <span class="ssb-pl-lbl">${watchLbl}</span>
+        <div class="ssb-pl-row"><span>${escHtml(p0.slice(0,8))} <b>%${pct0}</b></span><span><b>%${pct1}</b> ${escHtml(p1.slice(0,8))}</span></div>
+        <div class="ssb-pl-bar"><i style="width:${pct0}%"></i></div>
+      </div>`
+      :`<div class="ssb-watch-only"><i class="lob-live-dot"></i><span>${watchLbl}</span></div>`;
+    if(typeof syncGlogMobilePos==='function')syncGlogMobilePos();
     return;
   }
   bar.innerHTML=`
@@ -8351,6 +8366,7 @@ function renderSpecSocialBar(){
     if(conn&&conn.open)try{conn.send({k:'spec_vote',side})}catch(e){}
     renderSpecSocialBar();
   });
+  if(typeof syncGlogMobilePos==='function')syncGlogMobilePos();
 }
 
 /* ---------- KRAL MASASI (WINNER STAYS) ROTASYONU ---------- */

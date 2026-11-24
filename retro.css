@@ -8626,9 +8626,18 @@ body.cb .qm-vs-card.opp {
   padding: 8px 10px;
   border-radius: 12px;
   border: 1px solid rgba(212, 168, 85, 0.45);
-  background: rgba(14, 10, 12, 0.88);
-  backdrop-filter: blur(6px);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.72);
+  background: rgba(14, 10, 12, 0.92);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.72);
+  box-sizing: border-box;
+}
+.ssb-watch-only {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font: 700 10.5px/1.1 var(--mf);
+  color: #f3e4c6;
+  white-space: nowrap;
 }
 .ssb-reacts,
 .ssb-poll {
