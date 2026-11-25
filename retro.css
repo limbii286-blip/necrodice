@@ -10794,6 +10794,22 @@ body[data-cardback="sovereign"] #deck, body[data-cardback="sovereign"] .c.bk { b
 }
 
 /* ==========================================================================
+   CLS DÜZELTMESİ: #auth-bar başlangıçta [hidden] olduğu için grid'den düşüyor,
+   kalan iki çocuk (lobby + dock) 1. ve 2. satıra kayıyor; bar JS ile açılınca
+   tüm lobi ~390px aşağı zıplıyordu (ölçülen CLS 0.46). Açık grid-row ataması
+   ile hiçbir koşulda satır kayması olmaz.
+   ========================================================================== */
+#menu > #auth-bar {
+  grid-row: 1 !important;
+}
+#menu #mb2 {
+  grid-row: 2 !important;
+}
+#menu > #menu-dock {
+  grid-row: 3 !important;
+}
+
+/* ==========================================================================
    MOBİL: NECRODICE LOGOSU + MOD SEKMELERİ (Dereceli/Normal/Özel Modlar) +
    OYUN KARTLARI (Çevrim İçi Oyna / Yapay Zekaya Karşı) EKRANA TAM ORTALI
    --------------------------------------------------------------------------
