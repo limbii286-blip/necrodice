@@ -10792,3 +10792,161 @@ body[data-cardback="sovereign"] #deck, body[data-cardback="sovereign"] .c.bk { b
 .ps-card.ps-card-main {
   border-color: #e8bc5c !important;
 }
+
+/* ==========================================================================
+   MOBİL: NECRODICE LOGOSU + MOD SEKMELERİ (Dereceli/Normal/Özel Modlar) +
+   OYUN KARTLARI (Çevrim İçi Oyna / Yapay Zekaya Karşı) EKRANA TAM ORTALI
+   --------------------------------------------------------------------------
+   1) DİKEY: #menu grid satırları "auto 1fr auto" idi. Üst HUD (52px) ile alt
+      dock (63px) yükseklikleri farklı olduğu için orta blok ekranın merkezinin
+      ~5.5px ÜSTÜNDE kalıyordu. Satırlar "1fr auto 1fr" yapıldığında üst ve alt
+      satır eşit yükseklikte olur → orta blok TAM dikey merkeze oturur.
+   2) YATAY: retro.css:7106'daki "#menu #mb2 { margin: auto 0 !important }"
+      (2 id → daha yüksek özgüllük) yatay auto margin'leri sıfırlayıp bloğu
+      sola yaslıyordu (merkez 195 yerine 187.2px). "#menu #mb2.lobby-hub"
+      seçicisi ile sol/sağ margin auto + justify-self: center geri verildi.
+   3) Satırlar 1fr olduğu için üst bar ve dock "stretch" ile gerilmesin diye
+      auth-bar üste, dock alta hizalandı (tahta dokuları bozulmaz).
+   ========================================================================== */
+@media (max-width: 820px) {
+  #menu {
+    grid-template-rows: 1fr auto 1fr !important;
+  }
+  #menu > #auth-bar {
+    align-self: start !important;
+  }
+  #menu > #menu-dock {
+    align-self: end !important;
+  }
+  #menu #mb2.lobby-hub {
+    margin: 0 auto !important;
+    justify-self: center !important;
+    align-self: center !important;
+    /* Üst/alt iç boşluk eşitlenir → içerik kutularının optik merkezi de tam ortada */
+    padding-top: clamp(10px, 1.5dvh, 12px) !important;
+  }
+  #menu #mb2.lobby-hub .hs-header,
+  #menu #mb2.lobby-hub .hs-title,
+  #menu #mb2.lobby-hub .lobby-stage {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+}
+
+/* MOBİL YATAY (LANDSCAPE) KOMPAKT: Alçak ekranlarda logo + sekmeler + kartlar
+   kısalır ki blok hem sığsın hem de tam merkezde kalsın (taşma/kayma yok) */
+@media (max-width: 820px) and (max-height: 520px) and (orientation: landscape) {
+  #menu #mb2.lobby-hub {
+    gap: 7px !important;
+    padding: 8px 12px !important;
+  }
+  #menu #mb2.lobby-hub .hs-title {
+    width: min(46vw, 300px) !important;
+  }
+  #menu #mb2.lobby-hub .hs-logo-img {
+    max-height: 58px !important;
+  }
+  .lobby-stage {
+    gap: 7px !important;
+  }
+  .play-stack {
+    gap: 7px !important;
+  }
+  .play-card {
+    padding: 8px 14px 8px 16px !important;
+  }
+  .play-card.play-primary {
+    min-height: 48px !important;
+  }
+  .play-card.play-ai,
+  .play-card.play-sp-vault,
+  .play-card.play-sp-cursed,
+  .play-card.play-sp-puzzle {
+    min-height: 42px !important;
+  }
+  .pc-text b {
+    font-size: 14px !important;
+  }
+  .pc-text small {
+    font-size: 10.5px !important;
+  }
+  .lobby-stage .queue-switch {
+    padding: 3px !important;
+  }
+  .lobby-stage .qs-btn {
+    padding: 5px 4px !important;
+  }
+  .lobby-stage .qs-btn b {
+    font-size: 11.5px !important;
+  }
+  .lobby-stage .qs-btn small {
+    font-size: 9px !important;
+  }
+  .lobby-stage .ranked-strip {
+    padding: 5px 10px !important;
+  }
+}
+
+/* MOBİL YATAY — ÇOK ALÇAK EKRAN (≤400px yükseklik): kart alt açıklamaları
+   gizlenir, logo küçülür → blok üst HUD ile alt dock arasına tam ortalanır */
+@media (max-width: 820px) and (max-height: 400px) and (orientation: landscape) {
+  #menu #mb2.lobby-hub {
+    gap: 6px !important;
+    padding: 6px 12px !important;
+  }
+  #menu #mb2.lobby-hub .hs-logo-img {
+    max-height: 46px !important;
+  }
+  .play-stack {
+    gap: 6px !important;
+  }
+  .play-card {
+    padding: 7px 12px 7px 14px !important;
+  }
+  .play-card.play-primary {
+    min-height: 42px !important;
+  }
+  .play-card.play-ai,
+  .play-card.play-sp-vault,
+  .play-card.play-sp-cursed,
+  .play-card.play-sp-puzzle {
+    min-height: 38px !important;
+  }
+  .pc-text small {
+    display: none !important;
+  }
+  .lobby-stage .qs-btn small {
+    display: none !important;
+  }
+  .lobby-stage .qs-btn {
+    padding: 4px 4px !important;
+  }
+}
+
+/* MOBİL YATAY — EKRAN YÜKSEKLİĞİ ≤360px (örn. 568x320): son kompakt kademe */
+@media (max-width: 820px) and (max-height: 360px) and (orientation: landscape) {
+  #menu #mb2.lobby-hub {
+    gap: 4px !important;
+    padding: 2px 10px !important;
+  }
+  #menu #mb2.lobby-hub .hs-logo-img {
+    max-height: 32px !important;
+  }
+  .play-stack {
+    gap: 5px !important;
+  }
+  .play-card.play-primary {
+    min-height: 38px !important;
+  }
+  .play-card.play-ai,
+  .play-card.play-sp-vault,
+  .play-card.play-sp-cursed,
+  .play-card.play-sp-puzzle {
+    min-height: 34px !important;
+  }
+  .pc-text b {
+    font-size: 13px !important;
+  }
+}
+
+
