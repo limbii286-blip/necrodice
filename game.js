@@ -96,7 +96,7 @@ function playM(){
   }
   if(NOF){startSyn();return}
   const list=MU[curM],fn=list[0];
-  const cs=['tavern_bg.mp3','./tavern_bg.mp3',typeof GOTHIC_MUSIC_DATA!='undefined'?GOTHIC_MUSIC_DATA:'','audio/'+fn,fn,'/audio/'+fn].filter(Boolean);
+  const cs=['tavern_bg.m4a','./tavern_bg.m4a','tavern_bg.mp3','./tavern_bg.mp3',typeof GOTHIC_MUSIC_DATA!='undefined'?GOTHIC_MUSIC_DATA:'','audio/'+fn,fn,'/audio/'+fn].filter(Boolean);
 
   function spawnTrack(src,fadeIn){
     const el=new Audio(),g=AC.createGain(),t=AC.currentTime;

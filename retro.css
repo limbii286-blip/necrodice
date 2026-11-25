@@ -10810,6 +10810,24 @@ body[data-cardback="sovereign"] #deck, body[data-cardback="sovereign"] .c.bk { b
 }
 
 /* ==========================================================================
+   DİKEY MERKEZLEME (TÜM EKRANLAR): grid satırları "auto 1fr auto" iken üst bar
+   (masaüstünde 62px) ile alt dock (76px) yükseklikleri farklı olduğundan lobi
+   bloğu ekran merkezinin 5–7px üstünde kalıyordu (ölçüm: 390×844 → 5.5px,
+   1440×900 → 7.0px). "1fr auto 1fr" ile üst/alt satırlar eşitlenir → blok
+   matematiksel olarak TAM merkeze oturur. Bar ve dock gerilmesin diye
+   align-self verilir (tahta dokuları bozulmaz).
+   ========================================================================== */
+#menu {
+  grid-template-rows: 1fr auto 1fr !important;
+}
+#menu > #auth-bar {
+  align-self: start !important;
+}
+#menu > #menu-dock {
+  align-self: end !important;
+}
+
+/* ==========================================================================
    MOBİL: NECRODICE LOGOSU + MOD SEKMELERİ (Dereceli/Normal/Özel Modlar) +
    OYUN KARTLARI (Çevrim İçi Oyna / Yapay Zekaya Karşı) EKRANA TAM ORTALI
    --------------------------------------------------------------------------
