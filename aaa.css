@@ -402,27 +402,19 @@ select:focus-visible,
     inset 0 1px 3px rgba(0, 0, 0, 0.72);
 }
 #hdr .pip.w {
-  border-color: #86efac;
-  background: radial-gradient(circle at 34% 30%, #bbf7d0 0%, #22c55e 52%, #15803d 100%);
-  box-shadow:
-    0 0 8px rgba(34, 197, 94, 0.65),
-    inset 0 1px 2px rgba(255, 255, 255, 0.45),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.35);
+  border-color: #93c99b;
+  background: #4e8c58;
+  box-shadow: none;
 }
 #hdr .pip.l {
-  border-color: #fca5a5;
-  background: radial-gradient(circle at 34% 30%, #fecaca 0%, #ef4444 52%, #b91c1c 100%);
-  box-shadow:
-    0 0 8px rgba(239, 68, 68, 0.65),
-    inset 0 1px 2px rgba(255, 255, 255, 0.4),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.4);
+  border-color: #dc8686;
+  background: #a63a3a;
+  box-shadow: none;
 }
 #hdr .pip.d {
-  border-color: #9e917c;
-  background: radial-gradient(circle at 34% 30%, #8e8270 0%, #4e463c 54%, #221d18 100%);
-  box-shadow:
-    inset 0 1px 2px rgba(240, 228, 206, 0.24),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.55);
+  border-color: #a89c88;
+  background: #6b6356;
+  box-shadow: none;
 }
 
 #hdr .hg .gear {
