@@ -1538,18 +1538,16 @@ html::after {
 @media (min-width: 761px) {
   #opp.zone {
     justify-content: flex-end;
+    gap: clamp(23px, calc(2.15dvh + 10px), 33px);
     padding-top: max(2px, env(safe-area-inset-top, 2px)) !important;
+  }
+  #me.zone {
+    gap: clamp(23px, calc(2.15dvh + 10px), 33px);
   }
   #opp.zone .opp-jhand {
     margin-top: -16px;
-    margin-bottom: -2px;
+    margin-bottom: -12px;
     transform: translateY(-22px);
-  }
-  #opp.zone .who {
-    transform: translateY(-10px);
-  }
-  #me.zone .who {
-    transform: translateY(10px);
   }
 }
 .opp-jhand .oj {
@@ -1747,7 +1745,7 @@ body.dragging-joker #fx::after {
 /* Sağ Kanat: Skor / Toplam (Kutu içi kutu olmadan temiz hizalı) */
 .who .tot {
   order: 3;
-  justify-self: end;
+  justify-self: center;
   align-self: center;
   display: flex;
   flex-direction: column;
@@ -1755,8 +1753,8 @@ body.dragging-joker #fx::after {
   justify-content: center;
   gap: 5px;
   text-align: center;
-  min-width: 108px;
-  padding: 0 0 0 10px;
+  min-width: 0;
+  padding: 0;
   background: none;
   border: none;
   border-radius: 0;
@@ -3074,7 +3072,7 @@ body.dragging-joker #fx::after {
   .who .av {
     width: clamp(68px, 9.72dvh, 82px) !important;
     height: clamp(68px, 9.72dvh, 82px) !important;
-    margin: -14px 0 -10px !important;
+    margin: -12px 0 !important;
     align-self: center !important;
     justify-self: center !important;
   }
@@ -3091,25 +3089,23 @@ body.dragging-joker #fx::after {
   }
   .who .tot {
     position: relative;
-    justify-self: end;
-    align-self: stretch;
-    min-width: 74px !important;
-    padding: 0 6px !important;
-    gap: 0 !important;
+    justify-self: center !important;
+    align-self: center !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    gap: 2px !important;
     justify-content: center !important;
   }
   .who .tot small {
-    position: absolute;
-    top: 3px;
-    left: 50%;
-    transform: translateX(-50%);
+    position: static !important;
+    transform: none !important;
     font-size: 10px !important;
     line-height: 1 !important;
     white-space: nowrap;
   }
   .who .tot > b,
   .who .tot .tl {
-    margin-top: 7px;
+    margin-top: 0 !important;
   }
   .who .tot .tl {
     min-width: 60px;
@@ -3126,21 +3122,29 @@ body.dragging-joker #fx::after {
     flex-wrap: nowrap !important;
     width: 100%;
     max-width: 100%;
-    height: calc(var(--mch) + 8px) !important;
-    min-height: calc(var(--mch) + 8px) !important;
+    height: calc(var(--mch) + 10px) !important;
+    min-height: calc(var(--mch) + 10px) !important;
     justify-content: center;
     align-content: center;
     align-items: center !important;
     gap: 4px !important;
-    padding: 2px !important;
+    padding: 0 2px !important;
     margin-top: 0 !important;
     margin-bottom: 0 !important;
+  }
+  #opp .cards {
+    align-items: flex-end !important;
+    padding: 0 2px 10px !important;
+  }
+  #me .cards {
+    align-items: flex-start !important;
+    padding: 10px 2px 0 !important;
   }
   .cards.cards-2row {
     flex-wrap: nowrap !important;
     gap: 3px !important;
-    height: calc(var(--mch) + 8px) !important;
-    min-height: calc(var(--mch) + 8px) !important;
+    height: calc(var(--mch) + 10px) !important;
+    min-height: calc(var(--mch) + 10px) !important;
   }
   .cards.cards-2row .c {
     flex: 0 1 clamp(42px, 11.4vw, 56px) !important;
@@ -3330,15 +3334,15 @@ body.dragging-joker #fx::after {
 
 #fx .seal .ora-seal {
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + 6px);
   left: 50%;
   transform: translateX(-50%);
-  padding: 2px 8px;
+  padding: 4px 10px;
   border-radius: 999px;
   background: rgba(18, 12, 9, 0.95);
   border: 1.5px solid #e6c36a;
   color: #fde68a;
-  font: 800 12px/1.1 var(--mf);
+  font: 800 15px/1.15 var(--mf);
   white-space: nowrap;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.9), 0 0 10px rgba(230, 195, 106, 0.45);
   pointer-events: none;
@@ -3588,17 +3592,17 @@ body.dragging-joker #fx::after {
 }
 .ora-tot {
   position: absolute;
-  bottom: calc(100% + 4px);
+  bottom: calc(100% + 6px);
   left: 50%;
   transform: translateX(-50%);
   display: inline-block;
   margin-left: 0;
-  padding: 2px 7px;
+  padding: 4px 11px;
   border-radius: 999px;
   background: rgba(24, 17, 11, 0.94);
   border: 1.5px solid #e6c36a;
   color: #fde68a;
-  font: 800 14px/1.1 var(--mf);
+  font: 800 18px/1.15 var(--mf);
   letter-spacing: 0.4px;
   white-space: nowrap;
   pointer-events: none;
@@ -3618,15 +3622,15 @@ body.dragging-joker #fx::after {
 }
 #fx .seal .ora-seal {
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + 6px);
   left: 50%;
   transform: translateX(-50%);
-  padding: 2px 8px;
+  padding: 4px 10px;
   border-radius: 999px;
   background: rgba(18, 12, 9, 0.95);
   border: 1.5px solid #e6c36a;
   color: #fde68a;
-  font: 800 12px/1.1 var(--mf);
+  font: 800 15px/1.15 var(--mf);
   white-space: nowrap;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.9), 0 0 10px rgba(230, 195, 106, 0.45);
   pointer-events: none;
@@ -3642,8 +3646,8 @@ body.dragging-joker #fx::after {
   top: 50%;
   transform: translateY(-50%);
   z-index: 4;
-  width: clamp(46px, 6.2dvh, 56px);
-  height: clamp(46px, 6.2dvh, 56px);
+  width: clamp(54px, 7.2dvh, 66px);
+  height: clamp(54px, 7.2dvh, 66px);
   padding: 0;
   border-radius: 50%;
   background: transparent;
@@ -3721,8 +3725,8 @@ body.dragging-joker #fx::after {
 .who .hp-btn.used,
 .who .hp-btn.opp-hp.used,
 .who .hp-btn.opp-hp:not(.passive):not(.used):not(.locked):not(.secret-hp) {
-  width: clamp(46px, 6.2dvh, 56px);
-  height: clamp(46px, 6.2dvh, 56px);
+  width: clamp(54px, 7.2dvh, 66px);
+  height: clamp(54px, 7.2dvh, 66px);
   opacity: 1;
   filter: none;
   box-shadow: 0 5px 14px rgba(0, 0, 0, 0.85);

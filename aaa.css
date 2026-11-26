@@ -467,15 +467,6 @@ select:focus-visible,
     inset 0 1px 0 rgba(255, 234, 184, 0.3),
     inset 0 -4px 12px rgba(0, 0, 0, 0.82) !important;
 }
-.who::before {
-  content: "";
-  position: absolute;
-  inset: 4px;
-  border-radius: 10px;
-  border: 1px solid rgba(245, 210, 134, 0.2);
-  pointer-events: none;
-  z-index: 0;
-}
 .who > * {
   z-index: 1;
 }
@@ -490,9 +481,6 @@ select:focus-visible,
     inset 0 1px 0 rgba(255, 242, 198, 0.46),
     inset 0 -4px 12px rgba(0, 0, 0, 0.82) !important;
 }
-#me.act .who::before {
-  border-color: rgba(255, 224, 148, 0.36);
-}
 
 #opp.act .who {
   border-color: #d66048 !important;
@@ -503,9 +491,6 @@ select:focus-visible,
     0 0 26px rgba(204, 68, 52, 0.4),
     inset 0 1px 0 rgba(255, 206, 188, 0.36),
     inset 0 -4px 12px rgba(0, 0, 0, 0.82) !important;
-}
-#opp.act .who::before {
-  border-color: rgba(234, 118, 96, 0.32);
 }
 
 /* Sculpted Brass Portrait Bezel (.who .av) */
@@ -572,7 +557,8 @@ select:focus-visible,
   letter-spacing: 0.15em !important;
   color: #d6bf96 !important;
 }
-.who .tot b {
+.who .tot b,
+.who .tot .pq {
   font-family: var(--df) !important;
   font-weight: 800 !important;
   color: #fff8e4 !important;

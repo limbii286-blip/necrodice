@@ -2753,7 +2753,7 @@ function R(){
   const hpBtn0=isSpec?`<span class="hp-btn opp-hp${hpObj0.passive?' passive':''}${hpUsed0?' used':!cReady?' locked':''}" data-hp-id="${myHId}" data-hp-side="0">${HP_IC[myHId]||HP_IC.c}${cProg}${hpDot0}</span>`:`<button id="hp-btn" class="hp-btn${hpObj0.passive?' passive':''}${hpUsed0?' used':canHp?' ready':''}" data-hp="1" data-hp-id="${myHId}" data-hp-side="0" aria-disabled="${!canHp}">${HP_IC[myHId]||HP_IC.c}${cProg}${hpDot0}</button>`;
   const hpBtn1=`<span class="hp-btn opp-hp${hpObj1.passive?' passive':''}${hpUsed1?' used':!cReady1?' locked':''}${(oppHId==='w'||oppHId==='a')?' secret-hp':''}" data-hp-id="${oppHId}" data-hp-side="1">${HP_IC[oppHId]||HP_IC.c}${cProg1}${hpDot1}</span>`;
   const myGuest=typeof isGuestUser==='function'?isGuestUser(USER_ACC):(!USER_ACC||USER_ACC.isGuest);
-  const myFl=(!myGuest&&typeof getAccountLeague==='function')?getAccountLeague(USER_ACC):null;
+  const myFl=(typeof getAccountLeague==='function'&&USER_ACC)?getAccountLeague(USER_ACC):null;
   const myBaseName=(!myGuest&&USER_ACC&&USER_ACC.username)?USER_ACC.username:tr('Misafir','Guest');
   const myNick=myFl?`${myBaseName} · ${myFl.unranked?tr('Derecesiz','Unranked'):myFl.name}`:myBaseName;
   const p0Sub=isSpec?((S.specMeta&&S.specMeta.p0Sub)?S.specMeta.p0Sub:''):myNick;
@@ -6685,6 +6685,10 @@ function leagueScoreKey(lg){
 }
 function ensureLeagueState(acc){
   if(!acc)return {unranked:true,provisional:false,placementGames:0,placementWins:0,tier:0,div:4,lp:0,peakTier:0,peakDiv:4,peakLp:0,demoteShield:0};
+  if(isGuestUser(acc)&&(!acc.league||typeof acc.league!=='object'||acc.league.unranked)){
+    acc.league={unranked:false,provisional:false,placementGames:5,placementWins:0,tier:0,div:2,lp:0,peakTier:0,peakDiv:2,peakLp:0,demoteShield:1};
+    return acc.league;
+  }
   if(acc.league&&typeof acc.league==='object'&&typeof acc.league.placementGames==='number'){
     const lg=acc.league;
     lg.tier=Math.max(0,Math.min(6,lg.tier|0));
@@ -7152,8 +7156,9 @@ function createGuestAccount(){
     key:'',
     username:tr('Misafir','Guest'),
     isGuest:true,
-    elo:1200,
-    peakElo:1200,
+    elo:960,
+    peakElo:960,
+    league:{unranked:false,provisional:false,placementGames:5,placementWins:0,tier:0,div:2,lp:0,peakTier:0,peakDiv:2,peakLp:0,demoteShield:1},
     wins:0,
     losses:0,
     matches:0,
@@ -8056,11 +8061,13 @@ function renderAuthBar(){
   }
   const guest=isGuestUser(USER_ACC);
   if(guest){
+    const gFl=getAccountLeague(USER_ACC);
     bar.hidden=false;
-    bar.innerHTML=`<div class="auth-bar-left"><button type="button" class="auth-pill rk-unr" id="ab-prof" title="${tr('Misafir Profili · Üye Ol','Guest Profile · Sign Up')}">
+    bar.innerHTML=`<div class="auth-bar-left"><button type="button" class="auth-pill ${gFl.cls}" id="ab-prof" title="${tr('Misafir Profili · Üye Ol','Guest Profile · Sign Up')}">
+      <span class="ap-ic">${leagueCrestSvg(gFl.id,24)}</span>
       <span class="ap-info">
         <b>${tr('Misafir','Guest')}</b>
-        <small>${tr('Normal Oyun','Normal Play')}</small>
+        <small>${escHtml(gFl.name)} · ${tr('Normal Oyun','Normal Play')}</small>
       </span>
     </button></div>${utilHtml}`;
     if($('#ab-prof'))$('#ab-prof').onclick=()=>{snd('click');openProfileModal('overview')};
@@ -8104,7 +8111,8 @@ const ACHIEVEMENTS=[
   {id:'daily3',ic:'☾',trN:'Sadık Düellocu',enN:'Devoted Duelist',trD:'3 günlük giriş serisine ulaş',enD:'Reach a 3-day login streak',trT:'Ebedi Nöbetçi',enT:'Eternal Sentinel'}
 ];
 const CARD_BACKS=[
-  {id:'classic',trN:'Klasik Kemik',enN:'Classic Bone',req:()=>true,trR:'Varsayılan',enR:'Default'},
+  {id:'classic',trN:'Klasik',enN:'Classic',req:()=>true,trR:'Varsayılan',enR:'Default'},
+  {id:'bone',trN:'Klasik Kemik',enN:'Classic Bone',req:()=>true,trR:'Ücretsiz Kozmetik',enR:'Free Cosmetic'},
   {id:'crimson',trN:'Kızıl Mühür',enN:'Crimson Seal',req:a=>((a.wins||0)+(a.unrankedWins||0))>=3||(a.peakElo||1200)>=1250,trR:'3 Zafer veya 1250 ELO',enR:'3 Wins or 1250 ELO'},
   {id:'ghost',trN:'Hayalet Örtü',enN:'Ghost Shroud',req:a=>(a.achievements||[]).includes('survivor')||((a.wins||0)+(a.unrankedWins||0))>=5,trR:'5 Zafer veya Ölümsüz İrade',enR:'5 Wins or Undying Will'},
   {id:'obsidian',trN:'Obsidyen Altın',enN:'Obsidian Gold',req:a=>(a.peakElo||1200)>=1400,trR:'1400 ELO (Kan Efendisi)',enR:'1400 ELO (Blood Lord)'},
@@ -8193,6 +8201,7 @@ const BOARD_IMG_MAP={
 };
 const CARDBACK_IMG_MAP={
   classic:'img/cb_classic.jpg?v=20261126_cb_orig2',
+  bone:'img/cb_bone.jpg?v=20261126_cb_bone1',
   crimson:'img/cb_crimson.jpg?v=20261125_cb1',
   ghost:'img/cb_ghost.jpg?v=20261125_cb1',
   obsidian:'img/cb_obsidian.jpg?v=20261125_cb1',
