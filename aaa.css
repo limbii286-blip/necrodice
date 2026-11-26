@@ -402,20 +402,20 @@ select:focus-visible,
     inset 0 1px 3px rgba(0, 0, 0, 0.72);
 }
 #hdr .pip.w {
-  border-color: #7ea37d;
-  background: radial-gradient(circle at 34% 30%, #5e8f64 0%, #2d5a37 52%, #132818 100%);
+  border-color: #86efac;
+  background: radial-gradient(circle at 34% 30%, #bbf7d0 0%, #22c55e 52%, #15803d 100%);
   box-shadow:
-    0 0 8px rgba(46, 102, 58, 0.42),
-    inset 0 1px 2px rgba(222, 238, 214, 0.28),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.55);
+    0 0 8px rgba(34, 197, 94, 0.65),
+    inset 0 1px 2px rgba(255, 255, 255, 0.45),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.35);
 }
 #hdr .pip.l {
-  border-color: #a84e52;
-  background: radial-gradient(circle at 34% 30%, #a0383d 0%, #6b1a1f 52%, #2b090c 100%);
+  border-color: #fca5a5;
+  background: radial-gradient(circle at 34% 30%, #fecaca 0%, #ef4444 52%, #b91c1c 100%);
   box-shadow:
-    0 0 8px rgba(132, 30, 36, 0.46),
-    inset 0 1px 2px rgba(242, 200, 194, 0.24),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.6);
+    0 0 8px rgba(239, 68, 68, 0.65),
+    inset 0 1px 2px rgba(255, 255, 255, 0.4),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.4);
 }
 #hdr .pip.d {
   border-color: #9e917c;
@@ -538,21 +538,21 @@ select:focus-visible,
   transform: scale(1.05);
 }
 
-/* Frameless Hero Power Icons with Simple Minimal Black Border */
+/* Frameless Hero Power Icons (no outer border/clipping so .hp-dot renders cleanly) */
 .who .hp-btn {
-  overflow: hidden !important;
-  border: 2.5px solid #090705 !important;
-  background: #090705 !important;
+  overflow: visible !important;
+  border: none !important;
+  background: transparent !important;
   box-shadow: 0 5px 14px rgba(0, 0, 0, 0.88) !important;
 }
 .hpc-ic:has(.hp-art),
 .hp-mc-ic:has(.hp-art),
 .d20-mod-pill .mod-ic:has(.hp-art) {
-  border: 2px solid #090705 !important;
-  background: #090705 !important;
+  border: none !important;
+  background: transparent !important;
 }
 .hp-art {
-  transform: scale(1.04);
+  transform: none;
 }
 
 /* Engraved Cinzel Hero Typography & Sculpted Score Total */
