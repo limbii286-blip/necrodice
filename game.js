@@ -2573,6 +2573,7 @@ function syncCardsEl(cardsEl,specs,cCnt){
         node.decoding='sync';
         node.src=IMG.n[sp.c.n];
         node.alt=String(sp.c.n);
+        numHD(sp.c.n)(u=>{if(node.isConnected&&node.src!==u)node.src=u;});
       }else{
         node=document.createElement('div');
         node.className='c'+(sp.back?' bk':'');
@@ -3267,8 +3268,8 @@ const numHD=n=>cb=>{
 };
 const backHD=cb=>{
   const cbKey=(typeof USER_ACC!=='undefined'&&USER_ACC&&USER_ACC.cardBack)||'classic';
-  const equipped=(typeof CARDBACK_IMG_MAP!=='undefined'&&CARDBACK_IMG_MAP[cbKey])||'img/cb_classic.jpg?v=20261125_cb4';
-  hq('bk_'+cbKey+'_v3',[equipped,'img/cb_classic.jpg?v=20261125_cb4'],cb);
+  const equipped=(typeof CARDBACK_IMG_MAP!=='undefined'&&CARDBACK_IMG_MAP[cbKey])||'img/cb_classic.jpg?v=20261126_cb_orig1';
+  hq('bk_'+cbKey+'_v4',[equipped,'img/cb_classic.jpg?v=20261126_cb_orig1'],cb);
 };
 const HERO_LORE_TR={
   c:'Karanlık pazarlarda kemik ve altın tartıp terazisine hile karıştıran lanetli bezirgân.',
@@ -8192,7 +8193,7 @@ const BOARD_IMG_MAP={
   gold:'board_gold.jpg?v=20261125_b1'
 };
 const CARDBACK_IMG_MAP={
-  classic:'img/cb_classic.jpg?v=20261125_cb4',
+  classic:'img/cb_classic.jpg?v=20261126_cb_orig1',
   crimson:'img/cb_crimson.jpg?v=20261125_cb1',
   ghost:'img/cb_ghost.jpg?v=20261125_cb1',
   obsidian:'img/cb_obsidian.jpg?v=20261125_cb1',
@@ -9473,7 +9474,7 @@ function openInventoryModal(initialCat='dice'){
     }else if(cat==='cards'){
       const cbCards=CARD_BACKS.map(cb=>{
         const ok=cb.req(acc),sel=(acc.cardBack||'classic')===cb.id;
-        const cbImg=(typeof CARDBACK_IMG_MAP!=='undefined'&&CARDBACK_IMG_MAP[cb.id])||'img/cb_classic.jpg?v=20261125_cb4';
+        const cbImg=(typeof CARDBACK_IMG_MAP!=='undefined'&&CARDBACK_IMG_MAP[cb.id])||'img/cb_classic.jpg?v=20261126_cb_orig1';
         return `<button type="button" class="inv-card${sel?' sel':''}${ok?'':' lock'}" data-cb="${cb.id}" ${ok?'':'disabled'}>
           <div class="inv-stage inv-stage-cb">
             <div class="inv-cb-preview cb-prev-${cb.id}"><img src="${cbImg}" alt="" decoding="async"></div>
