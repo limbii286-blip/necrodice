@@ -1949,11 +1949,13 @@ function impSave(html,cont,msg){ // BİLİNMEYEN ölecekken: zar düşer, sahne 
     if(d.classList.contains('finished')){clearInterval(w);setTimeout(()=>cutscene(msg,()=>{$('#mb').classList.remove('rig');cont()}),1000)}},120);
 }
 let entering=false;
+const VEIL_LOGO_SRC='limbi_favicon.png?v=limbi4';
+const _veilLogoPre=(()=>{try{const i=new Image();i.src=VEIL_LOGO_SRC;if(i.decode)i.decode().catch(()=>{});return i}catch(e){return null}})();
 function veil(ms=1600){
   const v=document.createElement('div');
   v.className='veil';
   v.style.animationDuration=ms+'ms';
-  v.innerHTML=`<img alt="" src="limbi_favicon.png?v=limbi4" decoding="async" style="animation-duration:${ms}ms"><b>limbigames</b>`;
+  v.innerHTML=`<img alt="" src="${VEIL_LOGO_SRC}" width="165" height="165" decoding="sync" style="animation-duration:${ms}ms"><b>limbigames</b>`;
   document.body.appendChild(v);
   setTimeout(()=>v.remove(),ms+80);
 }

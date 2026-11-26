@@ -785,7 +785,10 @@ body:has(#menu:not([hidden])) #fl {
 }
 #slogo, .veil img {
   width: min(44vw, 165px);
+  aspect-ratio: 1 / 1;
   height: auto;
+  object-fit: cover;
+  display: block;
   border-radius: 50%;
   border: 2px solid #9c783e;
   box-shadow: 0 0 35px rgba(196, 154, 82, 0.28);
