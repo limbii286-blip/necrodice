@@ -3266,13 +3266,13 @@ body.dragging-joker #fx::after {
     justify-content: flex-end !important;
     gap: calc(clamp(24px, 3.75dvh, 32px) + 5px) !important;
     padding-top: 0 !important;
-    padding-bottom: clamp(76px, 10.8dvh, 96px) !important;
+    padding-bottom: clamp(78px, 11.2dvh, 98px) !important;
   }
   #me.zone .who {
     margin-top: 0 !important;
   }
   #hand {
-    bottom: max(2px, env(safe-area-inset-bottom, 2px)) !important;
+    bottom: max(8px, env(safe-area-inset-bottom, 8px)) !important;
     gap: 7px !important;
     padding: 2px 6px 0 !important;
     max-width: calc(100vw - 8px) !important;
@@ -3639,8 +3639,8 @@ body.dragging-joker #fx::after {
   top: 50%;
   transform: translateY(-50%);
   z-index: 4;
-  width: clamp(56px, 8dvh, 72px);
-  height: clamp(56px, 8dvh, 72px);
+  width: clamp(46px, 6.2dvh, 56px);
+  height: clamp(46px, 6.2dvh, 56px);
   padding: 0;
   border-radius: 50%;
   background: transparent;
@@ -3718,8 +3718,8 @@ body.dragging-joker #fx::after {
 .who .hp-btn.used,
 .who .hp-btn.opp-hp.used,
 .who .hp-btn.opp-hp:not(.passive):not(.used):not(.locked):not(.secret-hp) {
-  width: clamp(56px, 8dvh, 72px);
-  height: clamp(56px, 8dvh, 72px);
+  width: clamp(46px, 6.2dvh, 56px);
+  height: clamp(46px, 6.2dvh, 56px);
   opacity: 1;
   filter: none;
   box-shadow: 0 5px 14px rgba(0, 0, 0, 0.85);
@@ -3754,8 +3754,8 @@ body.cb .hp-dot.on {
 }
 @media (max-width: 760px) {
   .hp-dot {
-    width: 13px;
-    height: 13px;
+    width: 11px;
+    height: 11px;
     right: -1px;
     bottom: -1px;
   }
@@ -4430,8 +4430,8 @@ body.cb .hp-dot.on {
   .who .hp-btn.passive,
   .who .hp-btn.used {
     left: calc(50% + clamp(34px, 4.86dvh, 41px) + 4px) !important;
-    width: 44px !important;
-    height: 44px !important;
+    width: 38px !important;
+    height: 38px !important;
     pointer-events: auto !important;
     cursor: pointer !important;
   }
@@ -6103,7 +6103,8 @@ body, button, input, select, textarea {
 }
 .set-close-btn {
   width: 100%;
-  height: 42px;
+  min-height: 42px;
+  height: auto;
 }
 @media (max-width: 520px) {
   /* Tüm oyun tek sabit font ailesi (Cinzel) */
@@ -10769,7 +10770,7 @@ body[data-board="gold"] main::after {
 }
 
 /* GERÇEK ÖZEL ÇİZİM KART ARKALARI (FİLTRESİZ, GERÇEK RENK & DOKU) */
-body[data-cardback="classic"] #deck, body[data-cardback="classic"] .c.bk { background-image: url('img/cb_classic.jpg?v=20261126_cb_orig1') !important; filter: none !important; }
+body[data-cardback="classic"] #deck, body[data-cardback="classic"] .c.bk { background-image: url('img/cb_classic.jpg?v=20261126_cb_orig2') !important; filter: none !important; }
 body[data-cardback="crimson"] #deck, body[data-cardback="crimson"] .c.bk { background-image: url('img/cb_crimson.jpg?v=20261125_cb1') !important; filter: none !important; }
 body[data-cardback="ghost"] #deck, body[data-cardback="ghost"] .c.bk { background-image: url('img/cb_ghost.jpg?v=20261125_cb1') !important; filter: none !important; }
 body[data-cardback="obsidian"] #deck, body[data-cardback="obsidian"] .c.bk { background-image: url('img/cb_obsidian.jpg?v=20261125_cb1') !important; filter: none !important; }

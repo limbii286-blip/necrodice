@@ -3268,8 +3268,8 @@ const numHD=n=>cb=>{
 };
 const backHD=cb=>{
   const cbKey=(typeof USER_ACC!=='undefined'&&USER_ACC&&USER_ACC.cardBack)||'classic';
-  const equipped=(typeof CARDBACK_IMG_MAP!=='undefined'&&CARDBACK_IMG_MAP[cbKey])||'img/cb_classic.jpg?v=20261126_cb_orig1';
-  hq('bk_'+cbKey+'_v4',[equipped,'img/cb_classic.jpg?v=20261126_cb_orig1'],cb);
+  const equipped=(typeof CARDBACK_IMG_MAP!=='undefined'&&CARDBACK_IMG_MAP[cbKey])||'img/cb_classic.jpg?v=20261126_cb_orig2';
+  hq('bk_'+cbKey+'_v5',[equipped,'img/cb_classic.jpg?v=20261126_cb_orig2'],cb);
 };
 const HERO_LORE_TR={
   c:'Karanlık pazarlarda kemik ve altın tartıp terazisine hile karıştıran lanetli bezirgân.',
@@ -7895,13 +7895,13 @@ function openAiPlayModal(){
   mb.classList.remove('end-mode','an-mode','set-mode','lb-mode','lob-mode','pr-mode','inv-mode');
   mb.classList.add('auth-mode','play-sheet');
   const diffs=isR?[
-    {id:'hard',trN:'Zor',enN:'Hard',trD:'Taktiksel ve keskin kararlar · Dereceli LP kazandırır',enD:'Tactical sharp decisions · Awards Ranked LP',cls:'ps-d-hard'},
-    {id:'imp',trN:'İmkansız',enN:'Impossible',trD:'Acımasız üst düzey yapay zeka · Yüksek dereceli meydan okuma',enD:'Ruthless apex AI · High ranked challenge',cls:'ps-d-imp'}
+    {id:'hard',trN:'Zor',enN:'Hard',trD:'Taktiksel ve keskin kararlar',enD:'Tactical sharp decisions',cls:'ps-d-hard'},
+    {id:'imp',trN:'İmkansız',enN:'Impossible',trD:'Acımasız üst düzey yapay zeka',enD:'Ruthless apex AI',cls:'ps-d-imp'}
   ]:[
-    {id:'easy',trN:'Kolay',enN:'Easy',trD:'Kuralları kavramak için rahat tempo',enD:'Relaxed pace to learn the ropes',cls:'ps-d-easy'},
-    {id:'med',trN:'Orta',enN:'Medium',trD:'Dengeli normal düello deneyimi',enD:'Balanced casual duel experience',cls:'ps-d-med'},
-    {id:'hard',trN:'Zor',enN:'Hard',trD:'Taktiksel yapay zeka · Derecesiz antrenman',enD:'Tactical AI · Unranked practice',cls:'ps-d-hard'},
-    {id:'imp',trN:'İmkansız',enN:'Impossible',trD:'Acımasız yapay zeka · Derecesiz antrenman',enD:'Ruthless AI · Unranked practice',cls:'ps-d-imp'}
+    {id:'easy',trN:'Kolay',enN:'Easy',trD:'Rahat tempo',enD:'Relaxed pace',cls:'ps-d-easy'},
+    {id:'med',trN:'Orta',enN:'Medium',trD:'Dengeli düello',enD:'Balanced duel',cls:'ps-d-med'},
+    {id:'hard',trN:'Zor',enN:'Hard',trD:'Taktiksel yapay zeka',enD:'Tactical AI',cls:'ps-d-hard'},
+    {id:'imp',trN:'İmkansız',enN:'Impossible',trD:'Acımasız yapay zeka',enD:'Ruthless AI',cls:'ps-d-imp'}
   ];
   const cardsHtml=diffs.map(d=>`<button type="button" class="ps-card ${d.cls}" data-ai-d="${d.id}">
     <b>${isEn()?d.enN:d.trN}</b>
@@ -7909,7 +7909,6 @@ function openAiPlayModal(){
   </button>`).join('');
   mb.innerHTML=`<div class="ps-wrap">
     <div class="ps-head">
-      <span class="ps-kicker ${isR?'rk':'nm'}">${isR?tr('Dereceli Oyun · Lig & LP','Ranked Game · League & LP'):tr('Normal Oyun · Derecesiz','Normal Game · Unranked')}</span>
       <h3>${tr('Yapay Zeka Seç','Select AI Opponent')}</h3>
     </div>
     <div class="ps-body ps-ai-grid ${isR?'two':''}">${cardsHtml}</div>
@@ -8190,7 +8189,7 @@ const BOARD_IMG_MAP={
   gold:'board_gold.jpg?v=20261125_b1'
 };
 const CARDBACK_IMG_MAP={
-  classic:'img/cb_classic.jpg?v=20261126_cb_orig1',
+  classic:'img/cb_classic.jpg?v=20261126_cb_orig2',
   crimson:'img/cb_crimson.jpg?v=20261125_cb1',
   ghost:'img/cb_ghost.jpg?v=20261125_cb1',
   obsidian:'img/cb_obsidian.jpg?v=20261125_cb1',
@@ -9471,7 +9470,7 @@ function openInventoryModal(initialCat='dice'){
     }else if(cat==='cards'){
       const cbCards=CARD_BACKS.map(cb=>{
         const ok=cb.req(acc),sel=(acc.cardBack||'classic')===cb.id;
-        const cbImg=(typeof CARDBACK_IMG_MAP!=='undefined'&&CARDBACK_IMG_MAP[cb.id])||'img/cb_classic.jpg?v=20261126_cb_orig1';
+        const cbImg=(typeof CARDBACK_IMG_MAP!=='undefined'&&CARDBACK_IMG_MAP[cb.id])||'img/cb_classic.jpg?v=20261126_cb_orig2';
         return `<button type="button" class="inv-card${sel?' sel':''}${ok?'':' lock'}" data-cb="${cb.id}" ${ok?'':'disabled'}>
           <div class="inv-stage inv-stage-cb">
             <div class="inv-cb-preview cb-prev-${cb.id}"><img src="${cbImg}" alt="" decoding="async"></div>

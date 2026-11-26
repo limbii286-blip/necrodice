@@ -32,9 +32,14 @@ select:focus-visible,
 .btn.alt {
   position: relative;
   overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   font-family: var(--df) !important;
   font-weight: 700 !important;
   font-size: 15px !important;
+  line-height: 1.15 !important;
   letter-spacing: 0.07em !important;
   color: #fff3d6 !important;
   padding: 10px 22px !important;
