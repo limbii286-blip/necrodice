@@ -8003,29 +8003,26 @@ function applyQueueModeUi(){
 
   const strip=$('#ranked-strip');
   if(strip){
-    if(!isR){strip.hidden=true;}
-    else{
-      strip.hidden=false;
-      const fl=USER_ACC?getAccountLeague(USER_ACC):formatLeague(null,false);
-      const cap=fl.lpCap||100;
-      const pct=fl.unranked?0:(fl.id==='challenger'?100:Math.max(0,Math.min(100,Math.round((fl.lp/cap)*100))));
-      if(fl.unranked||fl.provisional){
-        const pg=fl.placementGames||0;
-        const pips=[0,1,2,3,4].map(i=>`<i class="rs-pip${i<pg?' done':''}"></i>`).join('');
-        strip.className=`ranked-strip ${fl.cls}`;
-        strip.innerHTML=`<span class="rs-crest">${leagueCrestSvg(fl.id,32)}</span>
-          <div class="rs-mid">
-            <div class="rs-top"><b>${fl.unranked?tr('Yerleştirme Maçları','Placement Matches'):escHtml(fl.name)}</b><span>${fl.unranked?`${pg}/5`:`${fl.lp} LP · ${pg}/5`}</span></div>
-            <div class="rs-pips">${pips}<em>${fl.unranked?tr('5 maçta ligin belirlenir','5 games to place'):tr('Geçici Lig','Provisional')}</em></div>
-          </div>`;
-      }else{
-        strip.className=`ranked-strip ${fl.cls}`;
-        strip.innerHTML=`<span class="rs-crest">${leagueCrestSvg(fl.id,32)}</span>
-          <div class="rs-mid">
-            <div class="rs-top"><b>${escHtml(fl.name)}</b><span>${fl.id==='challenger'?`${fl.lp} LP`:`${fl.lp} / ${cap} LP`}</span></div>
-            <div class="rs-bar"><i style="width:${pct}%;--lg-c1:${fl.c1}"></i></div>
-          </div>`;
-      }
+    strip.hidden=false;
+    const fl=USER_ACC?getAccountLeague(USER_ACC):formatLeague(null,false);
+    const cap=fl.lpCap||100;
+    const pct=fl.unranked?0:(fl.id==='challenger'?100:Math.max(0,Math.min(100,Math.round((fl.lp/cap)*100))));
+    if(fl.unranked||fl.provisional){
+      const pg=fl.placementGames||0;
+      const pips=[0,1,2,3,4].map(i=>`<i class="rs-pip${i<pg?' done':''}"></i>`).join('');
+      strip.className=`ranked-strip ${fl.cls}`;
+      strip.innerHTML=`<span class="rs-crest">${leagueCrestSvg(fl.id,32)}</span>
+        <div class="rs-mid">
+          <div class="rs-top"><b>${fl.unranked?tr('Yerleştirme Maçları','Placement Matches'):escHtml(fl.name)}</b><span>${fl.unranked?`${pg}/5`:`${fl.lp} LP · ${pg}/5`}</span></div>
+          <div class="rs-pips">${pips}<em>${fl.unranked?tr('5 maçta ligin belirlenir','5 games to place'):tr('Geçici Lig','Provisional')}</em></div>
+        </div>`;
+    }else{
+      strip.className=`ranked-strip ${fl.cls}`;
+      strip.innerHTML=`<span class="rs-crest">${leagueCrestSvg(fl.id,32)}</span>
+        <div class="rs-mid">
+          <div class="rs-top"><b>${escHtml(fl.name)}</b><span>${fl.id==='challenger'?`${fl.lp} LP`:`${fl.lp} / ${cap} LP`}</span></div>
+          <div class="rs-bar"><i style="width:${pct}%;--lg-c1:${fl.c1}"></i></div>
+        </div>`;
     }
   }
 }
