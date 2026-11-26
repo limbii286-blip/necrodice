@@ -13,8 +13,8 @@ const NEED={6:['any'],7:['any'],12:['eff'],13:['my'],14:['opp'],15:['my','opp'],
 const KTXT_TR={any:'bir sayı kartı seç',my:'kendi açık kartını seç',opp:'rakibin açık kartını seç',eff:'etkisiz kılınacak jokeri seç',sign:'ekle mi çıkar mı?',steal_j:'yerden çalınacak jokeri seç'};
 const KTXT_EN={any:'select a number card',my:'select your open card',opp:'select opponent\'s open card',eff:'select a joker to negate',sign:'add or subtract?',steal_j:'select a used joker to steal'};
 let KTXT={...KTXT_TR};
-const THIEF_SVG_TR='img/j/25.png?v=20261126_frame2';
-const THIEF_SVG_EN='img/j/25_en.png?v=20261126_frame2';
+const THIEF_SVG_TR='img/j/25.png?v=20261126_frame3';
+const THIEF_SVG_EN='img/j/25_en.png?v=20261126_frame3';
 if(typeof IMG!=='undefined'&&IMG.j){IMG.j[25]=THIEF_SVG_TR;if(IMG.j_tr)IMG.j_tr[25]=THIEF_SVG_TR;if(IMG.j_en)IMG.j_en[25]=THIEF_SVG_EN;}
 const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 const range=n=>[...Array(n)].map((_,i)=>i+1);
@@ -207,8 +207,8 @@ function hiLoad(id,cb){
     i=HC[cacheKey]=new Image();
     const pd=String(id).padStart(2,'0');
     const cs=LANG==='en'
-      ?['img/j_en/'+id+'.png?v=20261126_frame2',IMG.j_en&&IMG.j_en[id]?IMG.j_en[id]:'img/j/'+id+'.png?v=20261126_frame2']
-      :['img/j/'+id+'.png?v=20261126_frame2','img/j/'+id+'.webp','j'+id+'.webp',id+'.webp','img/j'+id+'.webp','img/j/'+pd+'.webp','/img/j/'+id+'.webp','img/j/'+id+'.jpg','img/j/'+id+'.avif','img/j/j'+id+'.webp','jokers/'+id+'.webp'];
+      ?['img/j_en/'+id+'.png?v=20261126_frame3',IMG.j_en&&IMG.j_en[id]?IMG.j_en[id]:'img/j/'+id+'.png?v=20261126_frame3']
+      :['img/j/'+id+'.png?v=20261126_frame3','img/j/'+id+'.webp','j'+id+'.webp',id+'.webp','img/j'+id+'.webp','img/j/'+pd+'.webp','/img/j/'+id+'.webp','img/j/'+id+'.jpg','img/j/'+id+'.avif','img/j/j'+id+'.webp','jokers/'+id+'.webp'];
     i._i=0;
     i.onload=()=>{AUD.hd='ok';try{i.decode&&i.decode().catch(()=>{})}catch(e){}};
     if(LANG!=='en'&&typeof HDJ!='undefined'&&HDJ[id])cs.unshift(HDJ[id]);
@@ -3262,7 +3262,7 @@ function zoom(o){ // {src, hd:cb=>…, cls, cap, sub, btn, fn}
   el.onclick=e=>{const zb=e.target.closest&&e.target.closest('[data-zb]');close();if(zb&&o.fn)o.fn()}; // her yere dokunmak kapatır
 }
 const numHD=n=>cb=>{
-  const cs=[`img/n/${n}.png?v=20261126_frame2`,`img/n/${n}.jpg?v=20261126_frame2`];
+  const cs=[`img/n/${n}.png?v=20261126_frame3`,`img/n/${n}.jpg?v=20261126_frame3`];
   hq('n_'+n+'_v3',cs,cb);
 };
 const backHD=cb=>{
