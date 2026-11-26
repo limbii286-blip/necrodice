@@ -207,8 +207,8 @@ function hiLoad(id,cb){
     i=HC[cacheKey]=new Image();
     const pd=String(id).padStart(2,'0');
     const cs=LANG==='en'
-      ?['img/j_en/'+id+'.png?v=20261126_jtxt1',IMG.j_en&&IMG.j_en[id]?IMG.j_en[id]:'img/j/'+id+'.png?v=20261126_jtxt1']
-      :['img/j/'+id+'.png?v=20261126_jtxt1','img/j/'+id+'.webp','j'+id+'.webp',id+'.webp','img/j'+id+'.webp','img/j/'+pd+'.webp','/img/j/'+id+'.webp','img/j/'+id+'.jpg','img/j/'+id+'.avif','img/j/j'+id+'.webp','jokers/'+id+'.webp'];
+      ?['img/j_en/'+id+'.png?v=20261126_jblk1',IMG.j_en&&IMG.j_en[id]?IMG.j_en[id]:'img/j/'+id+'.png?v=20261126_jblk1']
+      :['img/j/'+id+'.png?v=20261126_jblk1','img/j/'+id+'.webp','j'+id+'.webp',id+'.webp','img/j'+id+'.webp','img/j/'+pd+'.webp','/img/j/'+id+'.webp','img/j/'+id+'.jpg','img/j/'+id+'.avif','img/j/j'+id+'.webp','jokers/'+id+'.webp'];
     i._i=0;
     i.onload=()=>{AUD.hd='ok';try{i.decode&&i.decode().catch(()=>{})}catch(e){}};
     if(LANG!=='en'&&typeof HDJ!='undefined'&&HDJ[id])cs.unshift(HDJ[id]);
