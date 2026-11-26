@@ -227,8 +227,8 @@ function hiPreload(){
   const baseDelay=entering?1700:350;
   range(24).forEach((id,n)=>setTimeout(()=>hiLoad(id),baseDelay+n*90));
 } // tüm HD jokerler ve oyun sonu armaları geçiş sonrasında arka planda yumuşakça yüklenir
-function hi(el,id){if(!el)return;if(id===25){if(IMG.j&&IMG.j[25])el.src=IMG.j[25];return}const fb=IMG.j[id];el.onerror=()=>{el.onerror=null;if(fb)el.src=fb}; // HD açılmazsa gömülü görsele dön
-  hiLoad(id,u=>{if(el.isConnected)el.src=u})}
+function hi(el,id){if(!el)return;if(id===25){if(IMG.j&&IMG.j[25]&&el.src!==IMG.j[25])el.src=IMG.j[25];return}const fb=IMG.j[id];el.onerror=()=>{el.onerror=null;if(fb)el.src=fb}; // HD açılmazsa gömülü görsele dön
+  hiLoad(id,u=>{if(el.isConnected&&el.src!==u)el.src=u})}
 function tone(f,d,ty='sine',v=.12,w=0,sl=0){const a=ac(),t=a.currentTime+w,o=a.createOscillator(),g=a.createGain();o.type=ty;o.frequency.setValueAtTime(f,t);if(sl)o.frequency.linearRampToValueAtTime(Math.max(30,f+sl),t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(SG);o.start(t);o.stop(t+d)}
 function noise(d,v=.2,hp=2500,w=0){const a=ac(),t=a.currentTime+w,n=a.sampleRate*d|0,b=a.createBuffer(1,n,a.sampleRate),x=b.getChannelData(0);for(let i=0;i<n;i++)x[i]=Math.random()*2-1;const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=b;f.type='highpass';f.frequency.value=hp;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);s.connect(f);f.connect(g);g.connect(SG);s.start(t)}
 let lastDrawSnd=0;
@@ -2501,9 +2501,32 @@ function syncWhoBox(whoEl,cfg){
     if(cfg.onAvClick!==undefined)av.onclick=cfg.onAvClick;
   }
   const hpSlot=whoEl.querySelector(':scope > .hp-slot');
-  if(hpSlot&&hpSlot._h!==cfg.hpHtml){
-    hpSlot.innerHTML=cfg.hpHtml;
-    hpSlot._h=cfg.hpHtml;
+  if(hpSlot){
+    const curBtn=hpSlot.firstElementChild;
+    const m=cfg.hpMeta;
+    const sameBtn=curBtn&&m&&curBtn.tagName===m.tag&&curBtn.dataset.hpId===m.id&&curBtn.dataset.hpSide===String(cfg.side);
+    if(sameBtn){
+      curBtn.classList.toggle('passive',!!m.passive);
+      curBtn.classList.toggle('used',!!m.used);
+      curBtn.classList.toggle('ready',!!m.ready);
+      curBtn.classList.toggle('locked',!!m.locked);
+      curBtn.classList.toggle('secret-hp',!!m.secret);
+      if(m.tag==='BUTTON')curBtn.setAttribute('aria-disabled',String(!m.ready));
+      const progEl=curBtn.querySelector('.hp-prog');
+      if(m.prog){
+        if(progEl){if(progEl.textContent!==m.prog)progEl.textContent=m.prog;}
+        else{const p=document.createElement('i');p.className='hp-prog';p.textContent=m.prog;curBtn.appendChild(p);}
+      }else if(progEl)progEl.remove();
+      const dotEl=curBtn.querySelector('.hp-dot');
+      if(m.dot){
+        if(dotEl){dotEl.className=`hp-dot ${m.dot}`;}
+        else{const d=document.createElement('i');d.className=`hp-dot ${m.dot}`;curBtn.appendChild(d);}
+      }else if(dotEl)dotEl.remove();
+      hpSlot._h=cfg.hpHtml;
+    }else if(hpSlot._h!==cfg.hpHtml){
+      hpSlot.innerHTML=cfg.hpHtml;
+      hpSlot._h=cfg.hpHtml;
+    }
   }
   const nmB=whoEl.querySelector(':scope > .nm > b');
   if(nmB&&nmB.textContent!==cfg.name)nmB.textContent=cfg.name;
@@ -2592,6 +2615,87 @@ function syncCardsEl(cardsEl,specs,cCnt){
     }
   }
 }
+function syncEffEl(el,items,mkSpec){
+  if(!el)return;
+  const byUid=new Map();
+  for(const ch of [...el.children]){
+    const u=ch.dataset.e;
+    if(u)byUid.set(u,ch);
+  }
+  const desired=[];
+  for(const x of items){
+    const sp=mkSpec(x);
+    const key=String(sp.uid);
+    let node=byUid.get(key);
+    if(!node){
+      node=document.createElement('span');
+      node.dataset.e=key;
+      const im=document.createElement('img');
+      im.src=IMG.j[sp.id];
+      im.alt='';
+      node.appendChild(im);
+    }
+    node.className=`e${sp.block?'':' used'}${sp.neg?' neg':''}${sp.mine?' mine':' opp'}${sp.seen?'':' newc'}${sp.hl?' hl':''}`;
+    desired.push(node);
+  }
+  const keep=new Set(desired);
+  for(const ch of [...el.children]){if(!keep.has(ch))ch.remove();}
+  for(let i=0;i<desired.length;i++){
+    if(el.children[i]!==desired[i])el.insertBefore(desired[i],el.children[i]||null);
+  }
+  el._h=null;
+}
+function syncHandEl(handEl,ids,isSpec,k,my,S){
+  if(!handEl)return;
+  const n=ids.length;
+  const prev=[...handEl.children].filter(ch=>ch.classList.contains('jslot'));
+  if(prev.length!==handEl.children.length){handEl.innerHTML='';prev.length=0;}
+  const canReuse=prev.length===n&&prev.every((slot,i)=>{
+    const im=slot.querySelector('img.j');
+    const id=ids[i];
+    return im&&(id?im.dataset.j===String(id):(isSpec&&!im.dataset.j));
+  });
+  if(canReuse){
+    prev.forEach((slot,i)=>{
+      const id=ids[i],im=slot.querySelector('img.j');
+      const rot=`${((i-(n-1)/2)*5).toFixed(1)}deg`;
+      if(im.style.getPropertyValue('--r')!==rot)im.style.setProperty('--r',rot);
+      if(isSpec){
+        im.className='j spec-ro';
+      }else{
+        const cls=`j${k==='hand_j'?' hl':(my&&!P&&playable(S,0,id)?'':' dim')}`;
+        if(im.className!==cls)im.className=cls;
+        if(im.dataset.jidx!==String(i))im.dataset.jidx=String(i);
+      }
+    });
+    return;
+  }
+  const frag=document.createDocumentFragment();
+  ids.forEach((id,i)=>{
+    const slot=document.createElement('span');
+    slot.className='jslot';
+    const im=document.createElement('img');
+    im.draggable=false;
+    im.alt='';
+    im.style.setProperty('--r',`${((i-(n-1)/2)*5).toFixed(1)}deg`);
+    if(isSpec){
+      im.className='j spec-ro';
+      if(id){im.dataset.j=String(id);im.dataset.jidx=String(i);im.src=IMG.j[id];hi(im,+id);}
+      else{im.src=IMG.bj;}
+    }else{
+      im.className=`j${k==='hand_j'?' hl':(my&&!P&&playable(S,0,id)?'':' dim')}`;
+      im.dataset.j=String(id);
+      im.dataset.jidx=String(i);
+      im.src=IMG.j[id];
+      hi(im,+id);
+    }
+    slot.appendChild(im);
+    frag.appendChild(slot);
+  });
+  handEl.innerHTML='';
+  handEl.appendChild(frag);
+  handEl._h=null;
+}
 function R(){
   if(!G)return;
   watch();
@@ -2643,6 +2747,8 @@ function R(){
   const cProg1=(oppHId==='c'&&!cReady1)?`<i class="hp-prog">${Math.min(3,cWins1)}/3</i>`:'';
   const hpDot0=(!hpObj0.passive&&!cProg)?`<i class="hp-dot ${(!hpUsed0&&cReady)?'on':'off'}"></i>`:'';
   const hpDot1=(!hpObj1.passive&&!cProg1&&oppHId!=='w'&&oppHId!=='a')?`<i class="hp-dot ${(!hpUsed1&&cReady1)?'on':'off'}"></i>`:'';
+  const hpMeta0={tag:isSpec?'SPAN':'BUTTON',id:myHId,passive:!!hpObj0.passive,used:!!hpUsed0,ready:isSpec?false:!!canHp,locked:isSpec?!cReady:false,secret:false,prog:(myHId==='c'&&!cReady)?`${Math.min(3,cWins0)}/3`:'',dot:(!hpObj0.passive&&!cProg)?((!hpUsed0&&cReady)?'on':'off'):''};
+  const hpMeta1={tag:'SPAN',id:oppHId,passive:!!hpObj1.passive,used:!!hpUsed1,ready:false,locked:!cReady1,secret:(oppHId==='w'||oppHId==='a'),prog:(oppHId==='c'&&!cReady1)?`${Math.min(3,cWins1)}/3`:'',dot:(!hpObj1.passive&&!cProg1&&oppHId!=='w'&&oppHId!=='a')?((!hpUsed1&&cReady1)?'on':'off'):''};
   const hpBtn0=isSpec?`<span class="hp-btn opp-hp${hpObj0.passive?' passive':''}${hpUsed0?' used':!cReady?' locked':''}" data-hp-id="${myHId}" data-hp-side="0">${HP_IC[myHId]||HP_IC.c}${cProg}${hpDot0}</span>`:`<button id="hp-btn" class="hp-btn${hpObj0.passive?' passive':''}${hpUsed0?' used':canHp?' ready':''}" data-hp="1" data-hp-id="${myHId}" data-hp-side="0" aria-disabled="${!canHp}">${HP_IC[myHId]||HP_IC.c}${cProg}${hpDot0}</button>`;
   const hpBtn1=`<span class="hp-btn opp-hp${hpObj1.passive?' passive':''}${hpUsed1?' used':!cReady1?' locked':''}${(oppHId==='w'||oppHId==='a')?' secret-hp':''}" data-hp-id="${oppHId}" data-hp-side="1">${HP_IC[oppHId]||HP_IC.c}${cProg1}${hpDot1}</span>`;
   const myGuest=typeof isGuestUser==='function'?isGuestUser(USER_ACC):(!USER_ACC||USER_ACC.isGuest);
@@ -2662,7 +2768,7 @@ function R(){
     const oppHandInner=S.hand[1].map((_,i)=>`<img class="oj" style="--r:${((i-(S.hand[1].length-1)/2)*4.5).toFixed(1)}deg" src="${IMG.bj}" alt="">`).join('');
     if(oppZ.jhand._h!==oppHandInner){oppZ.jhand.innerHTML=oppHandInner;oppZ.jhand._h=oppHandInner;}
     const oppSufHtml=oppHidZero?'<i class="pq">+</i><b>0</b>':oppClosedKnown?'':'<i class="pq">+</i><i class="pq">?</i>';
-    syncWhoBox(oppZ.who,{side:1,avSrc:av1m.src,fp:av1m.fp,mo:av1m.mo,el:av1m.el,mCls:av1m.mCls,hpHtml:hpBtn1,name:p1Name,sub:oppSub,bust:obust,exact:oexact,totLbl,sufHtml:oppSufHtml});
+    syncWhoBox(oppZ.who,{side:1,avSrc:av1m.src,fp:av1m.fp,mo:av1m.mo,el:av1m.el,mCls:av1m.mCls,hpHtml:hpBtn1,hpMeta:hpMeta1,name:p1Name,sub:oppSub,bust:obust,exact:oexact,totLbl,sufHtml:oppSufHtml});
     const cCnt1=S.pl[1].open.length+S.pl[1].closed.length;
     const oppSpecs=[
       ...S.pl[1].open.map(c=>mkCardSpec(c,false,false,false,false)).reverse(),
@@ -2672,7 +2778,7 @@ function R(){
     syncCardsEl(oppZ.cards,oppSpecs,cCnt1);
   }
   const activeTg=tgE(S),activeCl=clE(S);
-  const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x,isSup=!e.neg&&((TGS.has(e.id)&&activeTg&&e.uid!==activeTg.uid)||(CLS.has(e.id)&&activeCl&&e.uid!==activeCl.uid));return `<span class="e${BLOCK.has(e.id)?'':' used'}${e.neg||isSup?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${(k=='eff'||k=='steal_j')&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}"><img src="${IMG.j[e.id]}" alt=""></span>`};
+  const effSpec=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x,isSup=!e.neg&&((TGS.has(e.id)&&activeTg&&e.uid!==activeTg.uid)||(CLS.has(e.id)&&activeCl&&e.uid!==activeCl.uid));return {uid:e.uid,id:e.id,block:BLOCK.has(e.id),neg:!!(e.neg||isSup),mine:e.o==0,seen:seenE.has(e.uid),hl:(k=='eff'||k=='steal_j')&&cn.includes(e.uid)}};
   $('#deck b').textContent=S.deck.length;
   const drawLocked=S.eff.some(e=>e.id==23&&!e.neg&&e.o!=0);
   $('#deck').classList.toggle('can-draw',!isSpec&&my&&!P&&canDraw(S,0));
@@ -2685,8 +2791,8 @@ function R(){
     const r=(chipEl||fbEl)&&((chipEl||fbEl).getBoundingClientRect());
     pendingThief={...S.thiefSteal,fromRect:r?{left:r.left,top:r.top,width:r.width,height:r.height}:null};
   }
-  setH('#jo',(S.pj||[]).filter(x=>x.o==1).map(chip).join(''));
-  setH('#jm',(S.pj||[]).filter(x=>x.o==0).map(chip).join(''));
+  syncEffEl($('#jo'),(S.pj||[]).filter(x=>x.o==1),effSpec);
+  syncEffEl($('#jm'),(S.pj||[]).filter(x=>x.o==0),effSpec);
   const sl=$('#seal'),sc=(T!=21||low?' alt':'')+(low?' low':'')+(S.turn==0?' turn-me':' turn-op');
   if(!sl._o){sl._o=1;sl.addEventListener('animationend',()=>sl.classList.remove('stamp'))}
   if(sl._c!==sc){sl._c=sc;sl.className='seal'+sc+(sl.classList.contains('stamp')?' stamp':'')}
@@ -2695,7 +2801,7 @@ function R(){
   $('#me').className='zone'+(my?' act':'')+(S.winSide!=null?(S.winSide<0?' round-lose':S.winSide===0?' round-tie':''):'');
   const meZ=ensureZoneParts('#me',false);
   if(meZ){
-    syncWhoBox(meZ.who,{side:0,avSrc:av0m.src,fp:av0m.fp,mo:av0m.mo,el:av0m.el,mCls:av0m.mCls,hpHtml:hpBtn0,name:p0Name,sub:p0Sub,bust,exact,totLbl,onAvClick:isSpec?null:(e=>{e.stopPropagation();toggleEmoteMenu()})});
+    syncWhoBox(meZ.who,{side:0,avSrc:av0m.src,fp:av0m.fp,mo:av0m.mo,el:av0m.el,mCls:av0m.mCls,hpHtml:hpBtn0,hpMeta:hpMeta0,name:p0Name,sub:p0Sub,bust,exact,totLbl,onAvClick:isSpec?null:(e=>{e.stopPropagation();toggleEmoteMenu()})});
     const cCnt0=S.pl[0].open.length+S.pl[0].closed.length;
     const meSpecs=[
       ...S.pl[0].open.map(c=>mkCardSpec(c,false,false,false,false)).reverse(),
@@ -2728,16 +2834,8 @@ function R(){
     $('#pass').style.display='';
     $('#pass').textContent=ends?tr('Turu Bitir','End Round'):tr('Pas','Pass');$('#pass').className='btn sm'+(ends?'':' alt');
   }
-  const n=S.hand[0].length;
   $('#hand').classList.toggle('joker-locked',!!(S.noJ&&S.noJ[0]));
-  if(isSpec){
-    const sh=S.hand[0]||[];
-    setH('#hand',sh.map((id,i)=>id?`<span class="jslot"><img class="j spec-ro" draggable="false" style="--r:${((i-(sh.length-1)/2)*5).toFixed(1)}deg" data-j="${id}" data-jidx="${i}" src="${IMG.j[id]}" alt=""></span>`:`<span class="jslot"><img class="j spec-ro" draggable="false" style="--r:${((i-(sh.length-1)/2)*5).toFixed(1)}deg" src="${IMG.bj}" alt=""></span>`).join(''));
-    document.querySelectorAll('#hand .j[data-j]').forEach(im=>hi(im,+im.dataset.j));
-  }else{
-    setH('#hand',S.hand[0].map((id,i)=>`<span class="jslot"><img class="j${k==='hand_j'?' hl':(my&&!P&&playable(S,0,id)?'':' dim')}" draggable="false" style="--r:${((i-(n-1)/2)*5).toFixed(1)}deg" data-j="${id}" data-jidx="${i}" src="${IMG.j[id]}" alt=""></span>`).join(''));
-    document.querySelectorAll('#hand .j[data-j]').forEach(im=>hi(im,+im.dataset.j));
-  }
+  syncHandEl($('#hand'),S.hand[0]||[],isSpec,k,my,S);
   if(pendingThief)playThiefStealAnim(pendingThief);
   count(document.querySelector('#me .tot b'),lastTot[0],mt);count(document.querySelector('#opp .tot b'),lastTot[1],ot);lastTot=[mt,ot];
   (S.pj||[]).forEach(e=>seenE.add(e.uid));S.hand[0].forEach(id=>hiLoad(id));
