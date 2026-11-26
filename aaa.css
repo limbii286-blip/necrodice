@@ -1,0 +1,759 @@
+/* ==========================================================================
+   NECRODICE — AAA CARVED TAVERN WOOD & ANTIQUE BRASS UI CRAFT
+   Uniform natural carved oak wood tone across every panel, plaque, and button
+   (zero color tints), elevated with Cinzel display typography, brass inlay
+   bevels, hover metallic glint, faceted jewel pips, and sculpted portrait rims.
+   ========================================================================== */
+
+:root {
+  --df: 'Cinzel', 'Alegreya', Georgia, serif;
+  --bf: 'Alegreya', Georgia, serif;
+  --aaa-brass: #c99a4a;
+  --aaa-brass-bright: #f4d382;
+  --aaa-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --wood-tex: url('wood_plank.jpg?v=20261116_w2') center / cover no-repeat;
+  --wood-shade: linear-gradient(180deg, rgba(22, 13, 7, 0.28) 0%, rgba(10, 6, 3, 0.48) 100%);
+  --wood-shade-deep: linear-gradient(180deg, rgba(20, 12, 6, 0.44) 0%, rgba(10, 6, 3, 0.64) 100%);
+  --wood-sheen: radial-gradient(100% 95% at 50% 0%, rgba(255, 226, 168, 0.14), transparent 64%);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--aaa-brass-bright) !important;
+  outline-offset: 2px !important;
+}
+
+/* ==========================================================================
+   1. GLOBAL CARVED WOOD & BRASS BUTTONS (.btn & .btn.alt)
+   ========================================================================== */
+.btn,
+.btn.alt {
+  position: relative;
+  overflow: hidden;
+  font-family: var(--df) !important;
+  font-weight: 700 !important;
+  font-size: 15px !important;
+  letter-spacing: 0.07em !important;
+  color: #fff3d6 !important;
+  padding: 10px 22px !important;
+  border: 1.5px solid #a87d3e !important;
+  border-radius: 8px !important;
+  background: var(--wood-sheen), var(--wood-shade), var(--wood-tex) !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95) !important;
+  box-shadow:
+    0 3px 0 #140a04,
+    0 8px 20px rgba(0, 0, 0, 0.78),
+    inset 0 1px 0 rgba(255, 232, 180, 0.3),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.52) !important;
+  transition: transform 0.15s var(--aaa-ease), border-color 0.18s ease, box-shadow 0.2s ease, filter 0.16s ease !important;
+}
+.btn:not(.alt) {
+  border-color: #d4a652 !important;
+}
+.btn:hover:not(:disabled),
+.btn.alt:hover:not(:disabled) {
+  border-color: var(--aaa-brass-bright) !important;
+  color: #fffaf0 !important;
+  filter: brightness(1.09);
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 0 #140a04,
+    0 12px 24px rgba(0, 0, 0, 0.85),
+    0 0 16px rgba(236, 188, 92, 0.26),
+    inset 0 1px 0 rgba(255, 240, 200, 0.42) !important;
+}
+.btn:active:not(:disabled),
+.btn.alt:active:not(:disabled) {
+  transform: translateY(2px) scale(0.985) !important;
+  box-shadow:
+    0 1px 0 #140a04,
+    0 4px 10px rgba(0, 0, 0, 0.82),
+    inset 0 2px 6px rgba(0, 0, 0, 0.55) !important;
+}
+.btn.sm {
+  padding: 7px 14px !important;
+  font-size: 13px !important;
+  letter-spacing: 0.055em !important;
+}
+
+/* ==========================================================================
+   2. AAA TAVERN LOBBY (#menu) — UNIFORM NATURAL WOOD & BURNISHED BRASS
+   ========================================================================== */
+#menu::before {
+  background:
+    radial-gradient(64% 56% at 50% 46%, rgba(10, 6, 3, 0.34) 0%, rgba(6, 4, 2, 0.32) 64%, rgba(5, 3, 2, 0.72) 100%),
+    linear-gradient(180deg, rgba(8, 5, 3, 0.62) 0%, transparent 18%, transparent 80%, rgba(6, 4, 2, 0.78) 100%) !important;
+}
+
+#mb2.lobby-hub .hs-logo-img {
+  max-height: clamp(78px, 13.5dvh, 124px) !important;
+  filter:
+    drop-shadow(0 10px 22px rgba(0, 0, 0, 0.94))
+    drop-shadow(0 0 14px rgba(196, 152, 76, 0.14)) !important;
+}
+
+/* Top Auth Bar */
+#menu > #auth-bar .auth-pill,
+#menu > #auth-bar .auth-lb-btn {
+  background: var(--wood-sheen), var(--wood-shade), var(--wood-tex) !important;
+  border: 1.5px solid #a87d3e !important;
+  border-radius: 10px !important;
+  box-shadow:
+    0 3px 0 #140a04,
+    0 10px 24px rgba(0, 0, 0, 0.76),
+    inset 0 1px 0 rgba(255, 232, 182, 0.28),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.45) !important;
+  transition: border-color 0.18s ease, box-shadow 0.2s ease, transform 0.15s var(--aaa-ease), filter 0.16s ease !important;
+}
+#menu > #auth-bar .auth-pill:hover,
+#menu > #auth-bar .auth-lb-btn:hover {
+  border-color: var(--aaa-brass-bright) !important;
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 0 #140a04,
+    0 12px 26px rgba(0, 0, 0, 0.82),
+    0 0 16px rgba(236, 188, 92, 0.24),
+    inset 0 1px 0 rgba(255, 240, 200, 0.38) !important;
+}
+#menu > #auth-bar .auth-lb-btn {
+  font-family: var(--df) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  color: #f7ead0 !important;
+}
+
+/* Segmented Mode Switcher: Uniform Wood Tabs */
+.lobby-stage .queue-switch {
+  padding: 5px !important;
+  gap: 6px !important;
+  border-radius: 11px !important;
+  background: linear-gradient(180deg, rgba(22, 13, 7, 0.94), rgba(12, 7, 4, 0.98)) !important;
+  border: 1.5px solid #9e7438 !important;
+  box-shadow:
+    0 3px 0 #120904,
+    0 12px 28px rgba(0, 0, 0, 0.8),
+    inset 0 2px 8px rgba(0, 0, 0, 0.78),
+    inset 0 1px 0 rgba(255, 224, 170, 0.18) !important;
+}
+.lobby-stage .qs-btn {
+  background: var(--wood-shade-deep), var(--wood-tex) !important;
+  border: 1px solid rgba(154, 114, 58, 0.4) !important;
+  border-radius: 7px !important;
+  padding: 10px 6px !important;
+  color: #cbb896 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 224, 175, 0.12) !important;
+  transition: border-color 0.18s ease, color 0.18s ease, box-shadow 0.2s ease, filter 0.16s ease !important;
+}
+.lobby-stage .qs-btn b {
+  font-family: var(--df) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+}
+.lobby-stage .qs-btn small {
+  display: none !important;
+}
+.lobby-stage .qs-btn:hover {
+  border-color: rgba(232, 188, 102, 0.65) !important;
+  color: #fff3d8 !important;
+  filter: brightness(1.08);
+}
+.lobby-stage .qs-btn.act[data-q="ranked"],
+.lobby-stage .qs-btn.act[data-q="normal"],
+.lobby-stage .qs-btn.act[data-q="special"] {
+  background: var(--wood-sheen), var(--wood-shade), var(--wood-tex) !important;
+  border: 1.5px solid #f4cc68 !important;
+  color: #fff8e2 !important;
+  box-shadow:
+    0 2px 0 #140a04,
+    0 0 14px rgba(242, 196, 82, 0.28),
+    inset 0 1px 0 rgba(255, 242, 198, 0.42) !important;
+}
+
+/* Ranked Strip */
+.lobby-stage .ranked-strip {
+  background: var(--wood-sheen), var(--wood-shade-deep), var(--wood-tex) !important;
+  border: 1.5px solid #a87d3e !important;
+  border-radius: 10px !important;
+  box-shadow:
+    0 3px 0 #140a04,
+    0 10px 24px rgba(0, 0, 0, 0.76),
+    inset 0 1px 0 rgba(255, 232, 182, 0.24) !important;
+}
+
+/* Play Cards: Identical Natural Wood Grain + Brass Inlay + Hover Sheen */
+.play-card,
+.play-card.play-primary,
+.play-card.play-ai,
+.play-card.play-sp-vault,
+.play-card.play-sp-cursed,
+.play-card.play-sp-puzzle {
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px !important;
+  padding: 15px 18px !important;
+  background: var(--wood-sheen), var(--wood-shade), var(--wood-tex) !important;
+  border: 1.5px solid #a87d3e !important;
+  box-shadow:
+    0 4px 0 #140a04,
+    0 14px 28px rgba(0, 0, 0, 0.84),
+    inset 0 1px 0 rgba(255, 234, 186, 0.32),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.5) !important;
+  transition: transform 0.16s var(--aaa-ease), border-color 0.18s ease, box-shadow 0.2s ease, filter 0.16s ease !important;
+}
+.play-card.play-primary {
+  min-height: 70px !important;
+  border: 2px solid #e6bb5c !important;
+  box-shadow:
+    0 4px 0 #140a04,
+    0 16px 32px rgba(0, 0, 0, 0.86),
+    0 0 18px rgba(236, 188, 92, 0.2),
+    inset 0 1px 0 rgba(255, 240, 196, 0.42),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Symmetrical recessed brass hairline inlay */
+.play-card::before,
+.play-card.play-primary::before,
+.play-card.play-sp-cursed::before,
+.play-card.play-sp-puzzle::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 4px !important;
+  width: auto !important;
+  height: auto !important;
+  border-radius: 6px !important;
+  border: 1px solid rgba(245, 210, 134, 0.2) !important;
+  background: none !important;
+  opacity: 1 !important;
+  pointer-events: none;
+  z-index: 1;
+}
+.play-card.play-primary::before {
+  border-color: rgba(255, 224, 148, 0.34) !important;
+}
+
+/* Subtle metallic sheen sweep on hover */
+.play-card::after {
+  content: "";
+  position: absolute;
+  top: -20%;
+  left: -60%;
+  width: 46%;
+  height: 140%;
+  background: linear-gradient(105deg, transparent 20%, rgba(255, 238, 190, 0.16) 50%, transparent 80%);
+  transform: translate3d(-100%, 0, 0) skewX(-18deg);
+  transition: transform 0.62s var(--aaa-ease);
+  pointer-events: none;
+  z-index: 2;
+}
+.play-card:hover::after {
+  transform: translate3d(420%, 0, 0) skewX(-18deg);
+}
+
+.play-card:hover {
+  transform: translateY(-2px);
+  border-color: #fde68a !important;
+  filter: brightness(1.08);
+  box-shadow:
+    0 5px 0 #140a04,
+    0 18px 34px rgba(0, 0, 0, 0.88),
+    0 0 22px rgba(236, 188, 92, 0.28),
+    inset 0 1px 0 rgba(255, 244, 206, 0.44) !important;
+}
+.play-card:active {
+  transform: translateY(2px) scale(0.99) !important;
+  box-shadow:
+    0 1px 0 #140a04,
+    0 6px 14px rgba(0, 0, 0, 0.85),
+    inset 0 2px 6px rgba(0, 0, 0, 0.5) !important;
+}
+
+.pc-text {
+  position: relative;
+  z-index: 3;
+  gap: 2px;
+}
+.pc-text b {
+  font-family: var(--df) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  color: #fff2d4 !important;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.96) !important;
+}
+.play-card.play-primary .pc-text b {
+  font-size: 18.5px !important;
+  color: #fff9e6 !important;
+}
+.pc-text small {
+  font-family: var(--bf) !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  color: #e2d1b2 !important;
+}
+.pc-arrow {
+  position: relative;
+  z-index: 3;
+  font-family: var(--df) !important;
+  color: var(--aaa-brass-bright) !important;
+  transition: transform 0.2s var(--aaa-ease) !important;
+}
+.play-card:hover .pc-arrow {
+  transform: translateX(4px);
+}
+
+/* Bottom Lobby Dock */
+.menu-dock {
+  background: linear-gradient(180deg, rgba(38, 24, 14, 0.96), rgba(18, 11, 6, 0.98)) !important;
+  border: 2px solid #b48542 !important;
+  box-shadow:
+    0 0 0 2px #120904,
+    0 14px 34px rgba(0, 0, 0, 0.88),
+    inset 0 1px 0 rgba(255, 232, 180, 0.3) !important;
+}
+.dock-btn {
+  background: var(--wood-sheen), var(--wood-shade), var(--wood-tex) !important;
+  border: 1.5px solid #966d34 !important;
+  border-radius: 7px !important;
+  box-shadow:
+    0 3px 0 #140a04,
+    inset 0 1px 0 rgba(255, 230, 178, 0.28) !important;
+  transition: border-color 0.16s ease, transform 0.14s var(--aaa-ease), filter 0.16s ease, box-shadow 0.18s ease !important;
+}
+.dock-btn:hover {
+  border-color: #fde68a !important;
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 0 #140a04,
+    0 0 14px rgba(236, 188, 92, 0.24),
+    inset 0 1px 0 rgba(255, 242, 198, 0.38) !important;
+}
+.dock-btn:active {
+  transform: translateY(2px) scale(0.98) !important;
+}
+.dock-lbl {
+  font-family: var(--df) !important;
+  font-weight: 700 !important;
+  font-size: 12.5px !important;
+  letter-spacing: 0.04em !important;
+}
+
+/* ==========================================================================
+   3. IN-GAME TOP HUD (#hdr) — UNIFORM CARVED WOOD & FACETED JEWEL PIPS
+   ========================================================================== */
+#hdr .hs.sks,
+#hdr .hc {
+  background: var(--wood-sheen), var(--wood-shade), var(--wood-tex) !important;
+  border: 1.5px solid #a87d3e !important;
+  border-radius: 10px !important;
+  box-shadow:
+    0 0 0 1.5px #100804,
+    0 10px 24px rgba(0, 0, 0, 0.86),
+    inset 0 1px 0 rgba(255, 232, 182, 0.28),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.65) !important;
+}
+#hdr .hs.sks::before {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(196, 154, 82, 0.2), rgba(242, 204, 122, 0.62), rgba(196, 154, 82, 0.2));
+}
+.sk {
+  background: radial-gradient(circle at 50% 25%, rgba(32, 22, 14, 0.96), rgba(14, 9, 6, 0.98));
+  border: 1px solid rgba(154, 114, 58, 0.56);
+  box-shadow: inset 0 1px 0 rgba(255, 232, 184, 0.14), 0 3px 8px rgba(0, 0, 0, 0.65);
+}
+.sk small {
+  font-family: var(--df) !important;
+  font-weight: 800 !important;
+}
+.sk.cur {
+  background: radial-gradient(circle at 50% 28%, rgba(82, 50, 16, 0.96), rgba(26, 15, 7, 0.98));
+  border-color: #f5ce6c;
+  box-shadow:
+    0 0 16px rgba(245, 178, 56, 0.45),
+    inset 0 1px 0 rgba(255, 242, 198, 0.45);
+}
+
+#hdr .lab {
+  font-family: var(--df) !important;
+  font-weight: 700 !important;
+  font-size: 14.5px !important;
+  letter-spacing: 0.11em !important;
+  color: #f6e4be !important;
+}
+
+/* Faceted Jewel Round Pips */
+#hdr .pip {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid #9e753b;
+  background: radial-gradient(circle at 38% 35%, #231810, #0d0805);
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.92),
+    0 1px 0 rgba(255, 232, 184, 0.16);
+}
+#hdr .pip.now {
+  border-color: #f2d28b;
+  background: radial-gradient(circle at 38% 35%, rgba(242, 210, 139, 0.24), rgba(18, 12, 7, 0.94));
+  box-shadow:
+    0 0 8px rgba(232, 194, 116, 0.36),
+    inset 0 1px 3px rgba(0, 0, 0, 0.72);
+}
+#hdr .pip.w {
+  border-color: #7ea37d;
+  background: radial-gradient(circle at 34% 30%, #5e8f64 0%, #2d5a37 52%, #132818 100%);
+  box-shadow:
+    0 0 8px rgba(46, 102, 58, 0.42),
+    inset 0 1px 2px rgba(222, 238, 214, 0.28),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.55);
+}
+#hdr .pip.l {
+  border-color: #a84e52;
+  background: radial-gradient(circle at 34% 30%, #a0383d 0%, #6b1a1f 52%, #2b090c 100%);
+  box-shadow:
+    0 0 8px rgba(132, 30, 36, 0.46),
+    inset 0 1px 2px rgba(242, 200, 194, 0.24),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.6);
+}
+#hdr .pip.d {
+  border-color: #9e917c;
+  background: radial-gradient(circle at 34% 30%, #8e8270 0%, #4e463c 54%, #221d18 100%);
+  box-shadow:
+    inset 0 1px 2px rgba(240, 228, 206, 0.24),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.55);
+}
+
+#hdr .hg .gear {
+  font-family: var(--df) !important;
+  font-weight: 700 !important;
+  font-size: 12.5px !important;
+  letter-spacing: 0.075em !important;
+  color: #f7ead0 !important;
+  padding: 9px 14px;
+  background: var(--wood-sheen), var(--wood-shade), var(--wood-tex) !important;
+  border: 1.5px solid #9e7438 !important;
+  border-radius: 8px !important;
+  box-shadow:
+    0 3px 0 #140a04,
+    0 8px 20px rgba(0, 0, 0, 0.82),
+    inset 0 1px 0 rgba(255, 232, 182, 0.28) !important;
+  transition: border-color 0.18s ease, box-shadow 0.2s ease, transform 0.15s var(--aaa-ease), filter 0.16s ease !important;
+}
+#hdr .hg .gear:hover {
+  border-color: var(--aaa-brass-bright) !important;
+  color: #fffaf0 !important;
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 0 #140a04,
+    0 10px 24px rgba(0, 0, 0, 0.88),
+    0 0 18px rgba(236, 188, 92, 0.3),
+    inset 0 1px 0 rgba(255, 240, 200, 0.38) !important;
+}
+#hdr .hg .gear:active {
+  transform: translateY(2px) scale(0.98);
+}
+
+/* ==========================================================================
+   4. HERO PLAQUES (.who) — UNIFORM CARVED OAK & BRASS BEVEL (ZERO JITTER)
+   ========================================================================== */
+.who {
+  background: var(--wood-sheen), var(--wood-shade-deep), var(--wood-tex) !important;
+  border: 2px solid #9c743a !important;
+  border-radius: 15px !important;
+  box-shadow:
+    0 0 0 2px #100804,
+    0 0 0 3.5px #4e361a,
+    0 14px 32px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 234, 184, 0.3),
+    inset 0 -4px 12px rgba(0, 0, 0, 0.82) !important;
+}
+.who::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 10px;
+  border: 1px solid rgba(245, 210, 134, 0.2);
+  pointer-events: none;
+  z-index: 0;
+}
+.who > * {
+  z-index: 1;
+}
+
+#me.act .who {
+  border-color: #f2c868 !important;
+  box-shadow:
+    0 0 0 2px #100804,
+    0 0 0 3.5px #7a5824,
+    0 16px 34px rgba(0, 0, 0, 0.92),
+    0 0 28px rgba(234, 179, 84, 0.42),
+    inset 0 1px 0 rgba(255, 242, 198, 0.46),
+    inset 0 -4px 12px rgba(0, 0, 0, 0.82) !important;
+}
+#me.act .who::before {
+  border-color: rgba(255, 224, 148, 0.36);
+}
+
+#opp.act .who {
+  border-color: #d66048 !important;
+  box-shadow:
+    0 0 0 2px #100804,
+    0 0 0 3.5px #63281d,
+    0 16px 34px rgba(0, 0, 0, 0.92),
+    0 0 26px rgba(204, 68, 52, 0.4),
+    inset 0 1px 0 rgba(255, 206, 188, 0.36),
+    inset 0 -4px 12px rgba(0, 0, 0, 0.82) !important;
+}
+#opp.act .who::before {
+  border-color: rgba(234, 118, 96, 0.32);
+}
+
+/* Sculpted Brass Portrait Bezel (.who .av) */
+.who .av {
+  border-radius: 11px !important;
+  box-shadow:
+    0 0 0 2px #100804,
+    0 0 0 3.5px #b88a44,
+    0 12px 26px rgba(0, 0, 0, 0.94) !important;
+  transition: transform 0.18s var(--aaa-ease), box-shadow 0.22s ease !important;
+}
+#me.act .who .av {
+  box-shadow:
+    0 0 0 2px #100804,
+    0 0 0 3.5px #f4d078,
+    0 0 20px rgba(234, 179, 84, 0.46),
+    0 12px 26px rgba(0, 0, 0, 0.94) !important;
+}
+#opp.act .who .av {
+  box-shadow:
+    0 0 0 2px #100804,
+    0 0 0 3.5px #da6652,
+    0 0 18px rgba(208, 66, 54, 0.42),
+    0 12px 26px rgba(0, 0, 0, 0.94) !important;
+}
+.who .av:hover {
+  transform: scale(1.05);
+}
+
+/* Frameless Hero Power Icons with Simple Minimal Black Border */
+.who .hp-btn {
+  overflow: hidden !important;
+  border: 2.5px solid #090705 !important;
+  background: #090705 !important;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.88) !important;
+}
+.hpc-ic:has(.hp-art),
+.hp-mc-ic:has(.hp-art),
+.d20-mod-pill .mod-ic:has(.hp-art) {
+  border: 2px solid #090705 !important;
+  background: #090705 !important;
+}
+.hp-art {
+  transform: scale(1.04);
+}
+
+/* Engraved Cinzel Hero Typography & Sculpted Score Total */
+.who .nm b {
+  font-family: var(--df) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.055em !important;
+  color: #faf0d8 !important;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.96) !important;
+}
+.who .meta.nick {
+  font-family: var(--bf) !important;
+  font-weight: 600 !important;
+  color: #cbb99a !important;
+  letter-spacing: 0.02em;
+}
+.who .tot small {
+  font-family: var(--df) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.15em !important;
+  color: #d6bf96 !important;
+}
+.who .tot b {
+  font-family: var(--df) !important;
+  font-weight: 800 !important;
+  color: #fff8e4 !important;
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.96),
+    0 0 14px rgba(236, 194, 112, 0.28) !important;
+}
+.who .tot.bust b {
+  color: #dc5b5f !important;
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.96),
+    0 0 14px rgba(176, 36, 44, 0.62) !important;
+}
+.who .tot.exact b {
+  color: #ffe382 !important;
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.96),
+    0 0 20px rgba(245, 200, 66, 0.75) !important;
+}
+
+/* ==========================================================================
+   5. CENTER BATTLEFIELD (#fx), TURN ORB (#pass), DECK & CHRONOMETERS
+   ========================================================================== */
+#fx::before {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(196, 154, 82, 0.24) 15%, rgba(242, 204, 122, 0.6) 50%, rgba(196, 154, 82, 0.24) 85%, transparent 100%);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.9), 0 0 10px rgba(212, 168, 85, 0.2);
+}
+
+#fx .deck b {
+  font-family: var(--df) !important;
+  font-weight: 800 !important;
+  border-color: #dfb25c !important;
+  box-shadow:
+    0 0 0 2px #120904,
+    0 6px 14px rgba(0, 0, 0, 0.92),
+    inset 0 1px 3px rgba(255, 232, 178, 0.34) !important;
+}
+
+#fx #pass {
+  font-family: var(--df) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.065em !important;
+}
+#fx #pass:active:not(:disabled) {
+  transform: scale(0.96) !important;
+}
+
+.side-clock .sc-val b {
+  font-family: var(--df) !important;
+  font-weight: 800 !important;
+}
+
+/* ==========================================================================
+   6. CARDS, SHARP LAG-FREE HAND HOVER, LOG & PROMPT
+   ========================================================================== */
+.cards .c {
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.82),
+    0 2px 5px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 238, 198, 0.18);
+}
+
+/* Replace GPU-heavy blur(2.5px) on unhovered hand cards with crisp dimming */
+#hand:has(.j.hovered) .jslot:not(:has(.j.hovered)) .j,
+#hand:has(.j.pinned) .jslot:not(:has(.j.pinned)) .j {
+  filter: brightness(0.68) saturate(0.82) !important;
+  transform: translateX(-50%) rotate(var(--r)) scale(0.95) !important;
+}
+
+#glog.glog {
+  background: var(--wood-shade-deep), var(--wood-tex) !important;
+  border: 1.5px solid #9c743a !important;
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.84),
+    inset 0 1px 0 rgba(255, 230, 178, 0.22) !important;
+}
+#glog .glog-title {
+  font-family: var(--df) !important;
+  letter-spacing: 0.075em !important;
+}
+
+.pr-box {
+  background: var(--wood-sheen), var(--wood-shade-deep), var(--wood-tex) !important;
+  border: 1.5px solid #d4a652 !important;
+  box-shadow:
+    0 0 0 2px #100804,
+    0 18px 42px rgba(0, 0, 0, 0.94),
+    0 0 26px rgba(212, 168, 85, 0.28),
+    inset 0 1px 0 rgba(255, 236, 190, 0.3) !important;
+}
+.pr-title {
+  font-family: var(--df) !important;
+  letter-spacing: 0.06em !important;
+}
+
+/* ==========================================================================
+   7. CARVED WOOD GRIMOIRE MODALS (#m, #mb, .ps-card) — UNIFORM WOOD TONE
+   ========================================================================== */
+#m {
+  background: radial-gradient(circle at 50% 45%, rgba(18, 12, 8, 0.76) 0%, rgba(6, 4, 3, 0.92) 100%);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+#mb:not(.end-mode) {
+  border: 2px solid #b48542 !important;
+  border-radius: 13px !important;
+  background:
+    radial-gradient(90% 42% at 50% 0%, rgba(255, 220, 148, 0.12), transparent 72%),
+    linear-gradient(180deg, rgba(20, 12, 7, 0.68) 0%, rgba(10, 6, 3, 0.84) 100%),
+    var(--wood-tex) !important;
+  box-shadow:
+    0 0 0 2.5px #100804,
+    0 0 0 4.5px #664720,
+    0 28px 68px rgba(0, 0, 0, 0.96),
+    inset 0 1px 0 rgba(255, 234, 184, 0.28),
+    inset 0 0 36px rgba(0, 0, 0, 0.74) !important;
+}
+#mb:not(.end-mode)::before {
+  background: linear-gradient(90deg, rgba(16, 10, 5, 0.85) 0%, rgba(62, 38, 18, 0.88) 50%, rgba(16, 10, 5, 0.85) 100%) !important;
+  border-bottom: 1px solid rgba(212, 168, 85, 0.45) !important;
+  font-family: var(--df) !important;
+  font-weight: 800 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.28em !important;
+  color: #f4d898 !important;
+}
+#mb h3 {
+  font-family: var(--df) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.055em !important;
+  text-wrap: balance;
+}
+
+.ps-card,
+.ps-card.ps-card-main,
+.ps-card.ps-d-hard,
+.ps-card.ps-d-imp,
+.ps-card.ps-sp-vault,
+.ps-card.ps-sp-cursed,
+.ps-card.ps-sp-puzzle {
+  background: var(--wood-sheen), var(--wood-shade), var(--wood-tex) !important;
+  border: 1.5px solid #a87d3e !important;
+  border-radius: 9px !important;
+  box-shadow:
+    0 4px 0 #140a04,
+    0 8px 18px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 232, 182, 0.28) !important;
+  transition: transform 0.15s var(--aaa-ease), border-color 0.18s ease, box-shadow 0.2s ease, filter 0.16s ease !important;
+}
+.ps-card.ps-card-main {
+  border-color: #e6bb5c !important;
+}
+.ps-card:hover {
+  transform: translateY(-2px);
+  border-color: #fde68a !important;
+  filter: brightness(1.08);
+}
+.ps-card b {
+  font-family: var(--df) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.045em !important;
+}
+.ps-card small {
+  font-family: var(--bf) !important;
+  color: #dfd0b4 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .play-card::after {
+    display: none !important;
+  }
+  .btn,
+  .play-card,
+  .dock-btn,
+  .ps-card,
+  .who .av,
+  #fx #pass {
+    transition: none !important;
+  }
+}

@@ -13,8 +13,8 @@ const NEED={6:['any'],7:['any'],12:['eff'],13:['my'],14:['opp'],15:['my','opp'],
 const KTXT_TR={any:'bir sayı kartı seç',my:'kendi açık kartını seç',opp:'rakibin açık kartını seç',eff:'etkisiz kılınacak jokeri seç',sign:'ekle mi çıkar mı?',steal_j:'yerden çalınacak jokeri seç'};
 const KTXT_EN={any:'select a number card',my:'select your open card',opp:'select opponent\'s open card',eff:'select a joker to negate',sign:'add or subtract?',steal_j:'select a used joker to steal'};
 let KTXT={...KTXT_TR};
-const THIEF_SVG_TR='img/j/25.png?v=20261123_thief3';
-const THIEF_SVG_EN='img/j/25_en.png?v=20261122_thief2';
+const THIEF_SVG_TR='img/j/25.png?v=20261125_parch2';
+const THIEF_SVG_EN='img/j/25_en.png?v=20261125_parch2';
 if(typeof IMG!=='undefined'&&IMG.j){IMG.j[25]=THIEF_SVG_TR;if(IMG.j_tr)IMG.j_tr[25]=THIEF_SVG_TR;if(IMG.j_en)IMG.j_en[25]=THIEF_SVG_EN;}
 const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 const range=n=>[...Array(n)].map((_,i)=>i+1);
@@ -207,8 +207,8 @@ function hiLoad(id,cb){
     i=HC[cacheKey]=new Image();
     const pd=String(id).padStart(2,'0');
     const cs=LANG==='en'
-      ?['img/j_en/'+id+'.png',IMG.j_en&&IMG.j_en[id]?IMG.j_en[id]:'img/j/'+id+'.png']
-      :['img/j/'+id+'.png','img/j/'+id+'.webp','j'+id+'.webp',id+'.webp','img/j'+id+'.webp','img/j/'+pd+'.webp','/img/j/'+id+'.webp','img/j/'+id+'.jpg','img/j/'+id+'.avif','img/j/j'+id+'.webp','jokers/'+id+'.webp'];
+      ?['img/j_en/'+id+'.png?v=20261125_parch2',IMG.j_en&&IMG.j_en[id]?IMG.j_en[id]:'img/j/'+id+'.png?v=20261125_parch2']
+      :['img/j/'+id+'.png?v=20261125_parch2','img/j/'+id+'.webp','j'+id+'.webp',id+'.webp','img/j'+id+'.webp','img/j/'+pd+'.webp','/img/j/'+id+'.webp','img/j/'+id+'.jpg','img/j/'+id+'.avif','img/j/j'+id+'.webp','jokers/'+id+'.webp'];
     i._i=0;
     i.onload=()=>{AUD.hd='ok';try{i.decode&&i.decode().catch(()=>{})}catch(e){}};
     if(LANG!=='en'&&typeof HDJ!='undefined'&&HDJ[id])cs.unshift(HDJ[id]);
@@ -1247,7 +1247,7 @@ let botGen=0,thinkOn=false;
 function bot(){
   const S=G,prm=DIFF=='imp'?impPrm():PR[DIFF],gen=++botGen;let n=0;
   let plan=null,held=0,pid=0;
-  const think=r=>{thinkOn=true;R();talk('think',1,.55);R();const d=rnd(r)*(S.clocks&&S.clocks[1]<20?.42:.75);plan=null;const my=++pid;
+  const think=r=>{thinkOn=true;talk('think',1,.55);const d=rnd(r)*(S.clocks&&S.clocks[1]<20?.42:.75);plan=null;const my=++pid;
     // karar, düşünme süresinin hemen başında hesaplanır; hamle anında tam bütçeyle hazır olur
     const budCap=Math.max(900,Math.round(d-220));
     setTimeout(()=>{if(gen!=botGen||S!=G||S.turn!=1||S.over)return;if(n++>=8){plan={a:null};return}
@@ -2000,7 +2000,7 @@ const HEROES_EN=[
 ];
 let HEROES=[...HEROES_TR];
 let HERO_MAP=Object.fromEntries(HEROES.map(h=>[h.id,h]));
-const hpImg=id=>`<img class="hp-art" src="hp_icons/${id}.jpg?v=20261124_hp_hd3" alt="" decoding="async">`;
+const hpImg=id=>`<img class="hp-art" src="hp_icons/${id}.jpg?v=20261125_hp_clean5" alt="" decoding="async">`;
 const HP_IC={
   c:hpImg('c'),
   p:hpImg('p'),
@@ -2085,8 +2085,8 @@ function playThiefStealAnim(ev){
   }
   setTimeout(done,740);
 }
-const NAMES_TR={c:'Lanetli Tüccar',p:'Veba Doktoru',n:'Kara Şövalye',a:'Solmuş Kraliçe',s:'Büyücü',e:'Buz Devi',m:'Ölümün Efendisi',w:'Cadı',l:'Kurt Adam',v:'Vampir',u:'BİLİNMEYEN'};
-const NAMES_EN={c:'Cursed Merchant',p:'Plague Doctor',n:'Dark Knight',a:'Withered Queen',s:'Sorcerer',e:'Frost Giant',m:'Lord of Death',w:'Witch',l:'Werewolf',v:'Vampire',u:'THE UNKNOWN'};
+const NAMES_TR={c:'Lanetli Tüccar',p:'Veba Doktoru',n:'Kara Şövalye',a:'Solmuş Kraliçe',s:'Büyücü',e:'Buz Devi',m:'Ölümün Efendisi',w:'Cadı',l:'Kurt Adam',v:'Vampir',u:'Bilinmeyen'};
+const NAMES_EN={c:'Cursed Merchant',p:'Plague Doctor',n:'Dark Knight',a:'Withered Queen',s:'Sorcerer',e:'Frost Giant',m:'Lord of Death',w:'Witch',l:'Werewolf',v:'Vampire',u:'The Unknown'};
 let NAMES={...NAMES_TR};
 const avKey=(S,p)=>{if(p===0)return (S.hero&&S.hero[0])||MY_HERO||'c';if(MODE=='bot')return (S.hero&&S.hero[1])||'c';return (S.hero&&S.hero[p])||(S.av&&S.av[p])||'c'};
 const HD_PORTRAITS={
@@ -2365,12 +2365,13 @@ function cast(p,id,cb){ // joker sahnede Runeterra büyüsü gibi belirir ve Kap
   el.onclick=finish;
   setTimeout(finish,1650);
 }
-function count(el,a,b){if(!el)return;if(a==b||RM||typeof requestAnimationFrame=='undefined'){el.textContent=b;return}const t0=performance.now(),f=n=>{const x=Math.min(1,(n-t0)/520),e=1-Math.pow(1-x,3);el.textContent=Math.round(a+(b-a)*e);if(x<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
+function count(el,a,b){if(!el)return;if(el._cntRaf){cancelAnimationFrame(el._cntRaf);el._cntRaf=0}const target=String(b);if(a==b||RM||typeof requestAnimationFrame=='undefined'){if(el.textContent!==target)el.textContent=target;return}const t0=performance.now(),f=n=>{if(!el.isConnected){el._cntRaf=0;return}const x=Math.min(1,(n-t0)/520),e=1-Math.pow(1-x,3);const v=String(Math.round(a+(b-a)*e));if(el.textContent!==v)el.textContent=v;if(x<1)el._cntRaf=requestAnimationFrame(f);else el._cntRaf=0};el._cntRaf=requestAnimationFrame(f)}
 let dealAnimUntil=0;
 function fly(){ // yeni kartlar desteden teker teker, yumuşak yay çizerek uçar
   const d=$('#deck');if(!d||!d.getBoundingClientRect)return 0;
-  const freshNodes=[...document.querySelectorAll('.fresh')];
+  const freshNodes=[...document.querySelectorAll('.fresh:not([data-flew])')];
   if(!freshNodes.length)return 0;
+  freshNodes.forEach(el=>{el.dataset.flew='1'});
   const dr=d.getBoundingClientRect(),F=FIT||1;
   // Başlangıç dağıtımında (birden fazla kart): önce kapalı kartlar (senin -> rakibin), sonra açık sayı kartları (senin -> rakibin)
   let ordered=freshNodes;
@@ -2450,21 +2451,154 @@ function satUpdate(){let v=satProbe.getBoundingClientRect().height||0;
 ['load','pageshow','resize','orientationchange'].forEach(e=>addEventListener(e,satUpdate));
 if(window.visualViewport)visualViewport.addEventListener('resize',satUpdate);
 [0,150,500,1500,3500].forEach(t=>setTimeout(satUpdate,t));
-function fit(){document.documentElement.classList.add('fitm');try{fit0()}finally{document.documentElement.classList.remove('fitm')}} // ölçüm sırasında sıra bildirimi gizlenir
-function fit0(){
-  fitQ=0;FIT=1;
-}
-const fitSoon=()=>{if(!fitQ)fitQ=requestAnimationFrame(()=>fit())};
+function fit(){fitQ=0;FIT=1;}
+const fitSoon=()=>{fitQ=0;FIT=1;};
 addEventListener('resize',()=>{fitSig='';fitSoon()});addEventListener('orientationchange',()=>setTimeout(()=>{fitSig='';fitSoon()},250));
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{fitSig='';fitSoon()});
+function ensureZoneParts(sel,isOpp){
+  const root=$(sel);
+  if(!root)return null;
+  let who=root.querySelector(':scope > .who');
+  let cards=root.querySelector(':scope > .cards');
+  let jhand=isOpp?root.querySelector(':scope > .opp-jhand'):null;
+  if(!who||!cards||(isOpp&&!jhand)){
+    root.innerHTML=(isOpp?'<div class="opp-jhand"></div>':'')
+      +'<div class="who">'
+      +'<img class="av" alt="">'
+      +'<span class="hp-slot" style="display:contents"></span>'
+      +'<div class="nm"><b></b><span class="meta nick"></span></div>'
+      +(isOpp?'<div class="tot"><small></small><div class="tl"><b>0</b><span class="tl-suf"></span></div></div>':'<div class="tot"><small></small><b>0</b></div>')
+      +'</div>'
+      +'<div class="cards"></div>';
+    who=root.querySelector(':scope > .who');
+    cards=root.querySelector(':scope > .cards');
+    jhand=isOpp?root.querySelector(':scope > .opp-jhand'):null;
+    cards.addEventListener('animationend',ev=>{
+      const t=ev.target;
+      if(!t||!t.classList||!t.classList.contains('c'))return;
+      if(ev.animationName==='flip')t.classList.remove('flip');
+      else if(ev.animationName==='cardFlyIn'||ev.animationName==='fly'){t.classList.remove('fresh');delete t.dataset.flew;}
+    });
+  }
+  return {root,who,cards,jhand};
+}
+function syncWhoBox(whoEl,cfg){
+  const av=whoEl.querySelector(':scope > .av');
+  if(av){
+    if(av.dataset.av!==String(cfg.side))av.dataset.av=String(cfg.side);
+    if(av._src!==cfg.avSrc){av.src=cfg.avSrc;av._src=cfg.avSrc;}
+    if(av.style.objectPosition!==cfg.fp)av.style.objectPosition=cfg.fp;
+    const clsChanged=av._mCls!==cfg.mCls||av._mo!==cfg.mo;
+    if(clsChanged){
+      av.classList.remove('morph','mastery-1','mastery-2','mastery-3');
+      if(cfg.mo)av.classList.add('morph');
+      if(cfg.mCls)av.classList.add(cfg.mCls.trim());
+      av.style.animationDelay=cfg.mo?`-${cfg.el.toFixed(2)}s`:'';
+      av._mCls=cfg.mCls;av._mo=cfg.mo;
+    }
+    if(cfg.onAvClick!==undefined)av.onclick=cfg.onAvClick;
+  }
+  const hpSlot=whoEl.querySelector(':scope > .hp-slot');
+  if(hpSlot&&hpSlot._h!==cfg.hpHtml){
+    hpSlot.innerHTML=cfg.hpHtml;
+    hpSlot._h=cfg.hpHtml;
+  }
+  const nmB=whoEl.querySelector(':scope > .nm > b');
+  if(nmB&&nmB.textContent!==cfg.name)nmB.textContent=cfg.name;
+  const nmSub=whoEl.querySelector(':scope > .nm > .meta.nick');
+  if(nmSub&&nmSub.textContent!==cfg.sub)nmSub.textContent=cfg.sub;
+  const tot=whoEl.querySelector(':scope > .tot');
+  if(tot){
+    tot.classList.toggle('bust',!!cfg.bust);
+    tot.classList.toggle('exact',!!cfg.exact);
+    const sm=tot.querySelector('small');
+    if(sm&&sm.textContent!==cfg.totLbl)sm.textContent=cfg.totLbl;
+    if(cfg.sufHtml!=null){
+      const suf=tot.querySelector('.tl-suf');
+      if(suf&&suf._h!==cfg.sufHtml){suf.innerHTML=cfg.sufHtml;suf._h=cfg.sufHtml;}
+    }
+  }
+}
+function syncCardsEl(cardsEl,specs,cCnt){
+  cardsEl.classList.toggle('cards-2row',cCnt>=6);
+  cardsEl.classList.toggle('cards-dense',cCnt>=9);
+  const byKey=new Map();
+  for(const ch of [...cardsEl.children]){
+    const k=ch.dataset.k;
+    if(k)byKey.set(k,ch);
+  }
+  const desired=[];
+  for(const sp of specs){
+    if(sp.gap){
+      let g=byKey.get('gap');
+      if(!g){g=document.createElement('span');g.className='gap';g.dataset.k='gap';}
+      desired.push(g);
+      continue;
+    }
+    const key='c-'+sp.c.id;
+    let el=byKey.get(key);
+    const faceSig=sp.back?'bk':(sp.c.o==null?('n:'+sp.c.n):('o:'+sp.c.o));
+    const wasBack=el?el._isBack:null;
+    const shouldFlip=!!sp.forceFlip||(!!sp.revFlip&&wasBack===true&&!sp.back);
+    if(!el||el._faceSig!==faceSig||shouldFlip){
+      let node;
+      if(!sp.back&&sp.c.o==null){
+        node=document.createElement('img');
+        node.className='c n';
+        node.decoding='sync';
+        node.src=IMG.n[sp.c.n];
+        node.alt=String(sp.c.n);
+      }else{
+        node=document.createElement('div');
+        node.className='c'+(sp.back?' bk':'');
+        if(!sp.back){
+          node.innerHTML=`${sp.c.o??sp.c.n}${sp.c.o!=null?'<i>↺</i>':''}`;
+        }
+      }
+      node.dataset.k=key;
+      node.dataset.c=String(sp.c.id);
+      if(sp.pk)node.dataset.pk='1';
+      if(sp.pk&&sp.revDelay)node.style.setProperty('--fd','.08s');
+      if(sp.nf)node.classList.add('fresh');
+      if(shouldFlip){
+        node.classList.add('flip');
+        setTimeout(()=>{if(node.isConnected)node.classList.remove('flip');},720);
+      }
+      if(sp.hl)node.classList.add('hl');
+      if(sp.pk)node.classList.add('mc');
+      node._faceSig=faceSig;
+      node._isBack=!!sp.back;
+      if(el&&el.parentNode===cardsEl){
+        cardsEl.replaceChild(node,el);
+      }
+      el=node;
+    }else{
+      el.classList.toggle('hl',!!sp.hl);
+      el.classList.toggle('mc',!!sp.pk);
+      if(sp.pk)el.dataset.pk='1';else delete el.dataset.pk;
+    }
+    desired.push(el);
+  }
+  const keep=new Set(desired);
+  for(const ch of [...cardsEl.children]){
+    if(!keep.has(ch))ch.remove();
+  }
+  for(let i=0;i<desired.length;i++){
+    const node=desired[i];
+    if(cardsEl.children[i]!==node){
+      cardsEl.insertBefore(node,cardsEl.children[i]||null);
+    }
+  }
+}
 function R(){
   if(!G)return;
-  watch();fitSoon();
+  watch();
   const S=G,low=lowW(S),cn=cand(),k=P&&P.ks[P.pk.length],bi=Math.min(S.bo,3),T=tg(S),res=S.res||[];
-  let fresh=0;
-  const cd=(c,back,fl,pk)=>{const nf=!seen.has(c.id);if(nf)fresh++;seen.add(c.id);
-    const f=(nf?' fresh':'')+(fl?' flip':'')+(cn.includes(c.id)?' hl':'')+(pk?' mc':''),a=`data-c="${c.id}"${pk?' data-pk="1"':''}${pk&&S.rev?' style="--fd:.6s"':''}`;
-    return !back&&c.o==null?`<img class="c n${f}" ${a} src="${IMG.n[c.n]}" alt="${c.n}">`:`<div class="c${back?' bk':''}${f}" ${a}>${back?'':`${c.o??c.n}${c.o!=null?'<i>↺</i>':''}`}</div>`};
+  const mkCardSpec=(c,back,forceFlip,revFlip,pk)=>{
+    const nf=!seen.has(c.id);
+    seen.add(c.id);
+    return {c,back,nf,forceFlip:!!forceFlip,revFlip:!!revFlip,revDelay:!!(pk&&S.rev),hl:cn.includes(c.id),pk:!!pk};
+  };
   const pips=[0,1,2].map(i=>`<span class="pip ${res[i]==null?(i==S.rounds?'now':''):res[i]>0?'w':res[i]<0?'l':'d'}"></span>`).join('');
   const sk=TH.map((t,i)=>`<span class="sk${i<bi?' past':i==bi?' cur':''}" title="${tr(`D20 Ölüm Eşiği: ${t} veya üstü atmalısın`,`D20 Death Threshold: Roll ${t} or higher`)}">${IC.skull}<small>${t}</small></span>`).join('');
   const isSpec=MODE=='spectator';
@@ -2474,12 +2608,15 @@ function R(){
   const oppClosedKnown=!!(S.rev||oppHidZero||(S.pl[1].closed.length&&S.pl[1].closed.every(c=>c.o!=null||(S.oppPeek&&S.oppPeek.includes(c.id)))));
   const my=!isSpec&&S.turn==0&&!lock&&!S.wait,mt=total(S,0),ot=total(S,1,oppClosedKnown),bust=!low&&mt>T,obust=oppClosedKnown&&!low&&ot>T,seal=T+(low?'L':'');
   const exact=!low&&mt===T,oexact=oppClosedKnown&&!low&&ot===T;
-  const jp=n=>`<span class="jpips" title="${tr(`Bu tur kalan joker hakkı ${n}/2`,`Jokers left this round: ${n}/2`)}">${[0,1].map(i=>`<i${i<n?' class="on"':''}></i>`).join('')}</span>`;
-  const avh=p=>{const k=avKey(S,p),now=performance.now();if(prevAv[p]!==undefined&&prevAv[p]!==k)morphT[p]=now;prevAv[p]=k;
-    const el=(now-morphT[p])/1000,mo=morphT[p]&&el<1.1,fp=HERO_FOCUS[k]||'50% 25%';
-    const mCls=(p===0&&!isSpec&&typeof getHeroMastery==='function'&&typeof USER_ACC!=='undefined'&&USER_ACC)?((t=>t?` mastery-${t}`:'')(getHeroMastery(USER_ACC,k).tier)):'';
-    return `<img class="av${mo?' morph':''}${mCls}" data-av="${p}" style="object-position:${fp};${mo?`animation-delay:-${el.toFixed(2)}s`:''}" src="${avSrc(k)}" alt="">`};
-  const av0=avh(0),av1=avh(1);
+  const avMeta=p=>{
+    const hk=avKey(S,p),now=performance.now();
+    if(prevAv[p]!==undefined&&prevAv[p]!==hk)morphT[p]=now;
+    prevAv[p]=hk;
+    const el=(now-morphT[p])/1000,mo=!!(morphT[p]&&el<1.1),fp=HERO_FOCUS[hk]||'50% 25%';
+    const mCls=(p===0&&!isSpec&&typeof getHeroMastery==='function'&&typeof USER_ACC!=='undefined'&&USER_ACC)?((t=>t?`mastery-${t}`:'')(getHeroMastery(USER_ACC,hk).tier)):'';
+    return {src:avSrc(hk),fp,mo,el,mCls};
+  };
+  const av0m=avMeta(0),av1m=avMeta(1);
   const p0Char=NAMES[avKey(S,0)]||tr('Lanetli Tüccar','Cursed Merchant');
   const p1Char=NAMES[avKey(S,1)]||tr('Kara Şövalye','Dark Knight');
   const p0Name=p0Char;
@@ -2488,11 +2625,10 @@ function R(){
   const defClock=initClockSec();
   const c0=Math.ceil(S.clocks?S.clocks[0]:defClock),c1=Math.ceil(S.clocks?S.clocks[1]:defClock);
   const sc0=$('#sc-0'),sc1=$('#sc-1'),scSec0=$('#sc-sec-0'),scSec1=$('#sc-sec-1');
-  if(scSec0)scSec0.textContent=(meTimeOut||c0<=0)?'✕':String(c0);
-  if(scSec1)scSec1.textContent=(oppTimeOut||c1<=0)?'✕':String(c1);
+  if(scSec0){const v=(meTimeOut||c0<=0)?'✕':String(c0);if(scSec0.textContent!==v)scSec0.textContent=v;}
+  if(scSec1){const v=(oppTimeOut||c1<=0)?'✕':String(c1);if(scSec1.textContent!==v)scSec1.textContent=v;}
   if(sc0){sc0.classList.toggle('ticking',S.turn==0&&!S.wait&&!(S.graceLeft>0)&&!S.reconnPause&&!meTimeOut);sc0.classList.toggle('low',c0<=10&&c0>0);sc0.classList.toggle('out',meTimeOut||c0<=0);sc0.classList.toggle('turn-on',S.turn==0&&!S.wait&&!S.over);sc0.classList.toggle('turn-off',S.turn!=0&&!S.wait&&!S.over)}
   if(sc1){sc1.classList.toggle('ticking',S.turn==1&&!S.wait&&!(S.graceLeft>0)&&!S.reconnPause&&!oppTimeOut);sc1.classList.toggle('low',c1<=10&&c1>0);sc1.classList.toggle('out',oppTimeOut||c1<=0);sc1.classList.toggle('turn-on',S.turn==1&&!S.wait&&!S.over);sc1.classList.toggle('turn-off',S.turn!=1&&!S.wait&&!S.over)}
-  const oppHandHtml=`<div class="opp-jhand" title="${tr(`Rakibin elindeki kapalı jokerler (${S.hand[1].length})`,`Opponent's hidden jokers (${S.hand[1].length})`)}">${S.hand[1].map((_,i)=>`<img class="oj" style="--r:${((i-(S.hand[1].length-1)/2)*4.5).toFixed(1)}deg" src="${IMG.bj}" alt="">`).join('')}</div>`;
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'')+(S.winSide!=null?(S.winSide>0?' round-lose':S.winSide===0?' round-tie':''):'');
   const myHId=avKey(S,0),oppHId=avKey(S,1);
   const hpUsed0=myHId==='u'?!!(S.uRevived&&S.uRevived[0]):(myHId==='m'||myHId==='e'||myHId==='n'||myHId==='s'||myHId==='c'||myHId==='v')?false:!!(S.hpUsed&&S.hpUsed[0]);
@@ -2505,20 +2641,34 @@ function R(){
   const cProg1=(oppHId==='c'&&!cReady1)?`<i class="hp-prog">${Math.min(3,cWins1)}/3</i>`:'';
   const hpDot0=(!hpObj0.passive&&!cProg)?`<i class="hp-dot ${(!hpUsed0&&cReady)?'on':'off'}"></i>`:'';
   const hpDot1=(!hpObj1.passive&&!cProg1&&oppHId!=='w'&&oppHId!=='a')?`<i class="hp-dot ${(!hpUsed1&&cReady1)?'on':'off'}"></i>`:'';
-  const isMob=window.matchMedia&&window.matchMedia('(max-width: 760px), (hover: none) and (pointer: coarse)').matches;
   const hpBtn0=isSpec?`<span class="hp-btn opp-hp${hpObj0.passive?' passive':''}${hpUsed0?' used':!cReady?' locked':''}" data-hp-id="${myHId}" data-hp-side="0">${HP_IC[myHId]||HP_IC.c}${cProg}${hpDot0}</span>`:`<button id="hp-btn" class="hp-btn${hpObj0.passive?' passive':''}${hpUsed0?' used':canHp?' ready':''}" data-hp="1" data-hp-id="${myHId}" data-hp-side="0" aria-disabled="${!canHp}">${HP_IC[myHId]||HP_IC.c}${cProg}${hpDot0}</button>`;
   const hpBtn1=`<span class="hp-btn opp-hp${hpObj1.passive?' passive':''}${hpUsed1?' used':!cReady1?' locked':''}${(oppHId==='w'||oppHId==='a')?' secret-hp':''}" data-hp-id="${oppHId}" data-hp-side="1">${HP_IC[oppHId]||HP_IC.c}${cProg1}${hpDot1}</span>`;
   const myGuest=typeof isGuestUser==='function'?isGuestUser(USER_ACC):(!USER_ACC||USER_ACC.isGuest);
   const myFl=(!myGuest&&typeof getAccountLeague==='function')?getAccountLeague(USER_ACC):null;
-  const myBaseName=(!myGuest&&USER_ACC&&USER_ACC.username)?escHtml(USER_ACC.username):tr('Misafir','Guest');
+  const myBaseName=(!myGuest&&USER_ACC&&USER_ACC.username)?USER_ACC.username:tr('Misafir','Guest');
   const myNick=myFl?`${myBaseName} · ${myFl.unranked?tr('Derecesiz','Unranked'):myFl.name}`:myBaseName;
-  const p0Sub=isSpec?((S.specMeta&&S.specMeta.p0Sub)?escHtml(S.specMeta.p0Sub):''):myNick;
+  const p0Sub=isSpec?((S.specMeta&&S.specMeta.p0Sub)?S.specMeta.p0Sub:''):myNick;
   const oppBotSub=(DIFF==='easy'?tr('Kolay Bot','Easy Bot'):DIFF==='med'?tr('Orta Bot','Medium Bot'):DIFF==='hard'?tr('Zor Bot','Hard Bot'):tr('İmkansız Bot','Impossible Bot'));
-  const oppOnlineName=(OPP_PROFILE&&OPP_PROFILE.name)?escHtml(OPP_PROFILE.name):tr('Çevrim İçi','Online');
-  const oppOnlineLg=(OPP_PROFILE&&OPP_PROFILE.leagueName)?escHtml(OPP_PROFILE.leagueName):'';
-  const oppSub=isSpec?((S.specMeta&&S.specMeta.p1Sub)?escHtml(S.specMeta.p1Sub):''):(MODE==='bot'?oppBotSub:(MODE==='tutorial'?tr('Eğitim','Tutorial'):(oppOnlineLg?`${oppOnlineName} · ${oppOnlineLg}`:oppOnlineName)));
-  const cCnt1=S.pl[1].open.length+S.pl[1].closed.length;
-  setH('#opp',`${oppHandHtml}<div class="who">${av1}${hpBtn1}<div class="nm"><b>${p1Name}</b><span class="meta nick">${oppSub}</span></div><div class="tot${obust?' bust':oexact?' exact':''}"><small>${tr('Toplam','Total')}</small><div class="tl"><b>${lastTot[1]}</b>${oppHidZero?'<i class="pq">+</i><b>0</b>':oppClosedKnown?'':'<i class="pq">+</i><i class="pq">?</i>'}</div></div></div><div class="sayrow">${sayT?`<span class="say">${sayT}</span>`:''}</div><div class="cards${cCnt1>=6?' cards-2row':''}${cCnt1>=9?' cards-dense':''}">${S.pl[1].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[1].closed.map(c=>cd(c,!(S.rev||c.o!=null||(S.oppPeek&&S.oppPeek.includes(c.id))),S.rev)).join('')}</div>`);
+  const oppOnlineName=(OPP_PROFILE&&OPP_PROFILE.name)?OPP_PROFILE.name:tr('Çevrim İçi','Online');
+  const oppOnlineLg=(OPP_PROFILE&&OPP_PROFILE.leagueName)?OPP_PROFILE.leagueName:'';
+  const oppSub=isSpec?((S.specMeta&&S.specMeta.p1Sub)?S.specMeta.p1Sub:''):(MODE==='bot'?oppBotSub:(MODE==='tutorial'?tr('Eğitim','Tutorial'):(oppOnlineLg?`${oppOnlineName} · ${oppOnlineLg}`:oppOnlineName)));
+  const totLbl=tr('Toplam','Total');
+  const oppZ=ensureZoneParts('#opp',true);
+  if(oppZ){
+    const jTitle=tr(`Rakibin elindeki kapalı jokerler (${S.hand[1].length})`,`Opponent's hidden jokers (${S.hand[1].length})`);
+    if(oppZ.jhand.title!==jTitle)oppZ.jhand.title=jTitle;
+    const oppHandInner=S.hand[1].map((_,i)=>`<img class="oj" style="--r:${((i-(S.hand[1].length-1)/2)*4.5).toFixed(1)}deg" src="${IMG.bj}" alt="">`).join('');
+    if(oppZ.jhand._h!==oppHandInner){oppZ.jhand.innerHTML=oppHandInner;oppZ.jhand._h=oppHandInner;}
+    const oppSufHtml=oppHidZero?'<i class="pq">+</i><b>0</b>':oppClosedKnown?'':'<i class="pq">+</i><i class="pq">?</i>';
+    syncWhoBox(oppZ.who,{side:1,avSrc:av1m.src,fp:av1m.fp,mo:av1m.mo,el:av1m.el,mCls:av1m.mCls,hpHtml:hpBtn1,name:p1Name,sub:oppSub,bust:obust,exact:oexact,totLbl,sufHtml:oppSufHtml});
+    const cCnt1=S.pl[1].open.length+S.pl[1].closed.length;
+    const oppSpecs=[
+      ...S.pl[1].open.map(c=>mkCardSpec(c,false,false,false,false)).reverse(),
+      {gap:true},
+      ...S.pl[1].closed.map(c=>mkCardSpec(c,!(S.rev||c.o!=null||(S.oppPeek&&S.oppPeek.includes(c.id))),false,!!S.rev,false))
+    ];
+    syncCardsEl(oppZ.cards,oppSpecs,cCnt1);
+  }
   const activeTg=tgE(S),activeCl=clE(S);
   const chip=x=>{const e=S.eff.find(y=>y.uid==x.uid)||x,isSup=!e.neg&&((TGS.has(e.id)&&activeTg&&e.uid!==activeTg.uid)||(CLS.has(e.id)&&activeCl&&e.uid!==activeCl.uid));return `<span class="e${BLOCK.has(e.id)?'':' used'}${e.neg||isSup?' neg':''}${e.o==0?' mine':' opp'}${seenE.has(e.uid)?'':' newc'}${(k=='eff'||k=='steal_j')&&cn.includes(e.uid)?' hl':''}" data-e="${e.uid}"><img src="${IMG.j[e.id]}" alt=""></span>`};
   $('#deck b').textContent=S.deck.length;
@@ -2541,9 +2691,17 @@ function R(){
   setH('#seal',`<b>${low?tr('En az','Lowest'):T}</b>`);
   if(prevSeal&&prevSeal!=seal){sl.classList.remove('stamp');void sl.offsetWidth;sl.classList.add('stamp')}
   $('#me').className='zone'+(my?' act':'')+(S.winSide!=null?(S.winSide<0?' round-lose':S.winSide===0?' round-tie':''):'');
-  const cCnt0=S.pl[0].open.length+S.pl[0].closed.length;
-  setH('#me',`<div class="who">${av0}${hpBtn0}<div class="nm"><b>${p0Name}</b><span class="meta nick">${p0Sub}</span></div><div class="tot${bust?' bust':exact?' exact':''}"><small>${tr('Toplam','Total')}</small><b>${lastTot[0]}</b></div></div><div class="cards${cCnt0>=6?' cards-2row':''}${cCnt0>=9?' cards-dense':''}">${S.pl[0].open.map(c=>cd(c)).reverse().join('')}<span class="gap"></span>${S.pl[0].closed.map(c=>cd(c,!(S.rev||c.o!=null||peek.has(c.id)),S.rev||c.id==flipId,1)).join('')}</div>`);
-  const myAv=$('#me .who .av');if(myAv)myAv.onclick=isSpec?null:(e=>{e.stopPropagation();toggleEmoteMenu()});
+  const meZ=ensureZoneParts('#me',false);
+  if(meZ){
+    syncWhoBox(meZ.who,{side:0,avSrc:av0m.src,fp:av0m.fp,mo:av0m.mo,el:av0m.el,mCls:av0m.mCls,hpHtml:hpBtn0,name:p0Name,sub:p0Sub,bust,exact,totLbl,onAvClick:isSpec?null:(e=>{e.stopPropagation();toggleEmoteMenu()})});
+    const cCnt0=S.pl[0].open.length+S.pl[0].closed.length;
+    const meSpecs=[
+      ...S.pl[0].open.map(c=>mkCardSpec(c,false,false,false,false)).reverse(),
+      {gap:true},
+      ...S.pl[0].closed.map(c=>mkCardSpec(c,!(S.rev||c.o!=null||peek.has(c.id)),c.id==flipId,!!S.rev,true))
+    ];
+    syncCardsEl(meZ.cards,meSpecs,cCnt0);
+  }
   const pr=$('#prompt');
   pr.className=P?(P.hp?'ask'+(k==='hand_j'?' hand-mode':''):'ask has-joker'+(k==='sign'?' sign-mode':'')):'';
   if(!P){
@@ -2952,7 +3110,7 @@ function buildEndScreenHtml(S,v,L,roll,th){
       const promoBanner=(eloRes.doublePromoted||eloRes.promoted||eloRes.placementComplete)?`<div class="end-promo-banner ${fl.cls}${eloRes.doublePromoted?' dbl':''}">
         <div class="epb-crest">${leagueCrestSvg(fl.id,54)}</div>
         <div class="epb-txt">
-          <span class="epb-kicker">${eloRes.doublePromoted?tr('ÇİFTE TERFİ! (+2 KÜME)','DOUBLE PROMOTION! (+2 DIVISIONS)'):(eloRes.placementComplete?tr('LİGİN BELİRLENDİ!','LEAGUE ASSIGNED!'):(eloRes.placementMatch===1?tr('GEÇİCİ LİGİN BELİRLENDİ!','PROVISIONAL LEAGUE SET!'):tr('LİG YÜKSELDİN!','PROMOTED!')))}</span>
+          <span class="epb-kicker">${eloRes.doublePromoted?tr('Çifte Terfi! (+2 Küme)','Double Promotion! (+2 Divisions)'):(eloRes.placementComplete?tr('Ligin Belirlendi!','League Assigned!'):(eloRes.placementMatch===1?tr('Geçici Ligin Belirlendi!','Provisional League Set!'):tr('Lig Yükseldin!','Promoted!')))}</span>
           <b class="epb-rank">${escHtml(fl.name)}</b>
           ${(eloRes.beforeLg&&!eloRes.beforeLg.unranked&&eloRes.beforeLg.name!==fl.name)?`<small class="epb-from">${escHtml(eloRes.beforeLg.name)} → ${escHtml(fl.name)}</small>`:''}
         </div>
@@ -3004,13 +3162,13 @@ function zoom(o){ // {src, hd:cb=>…, cls, cap, sub, btn, fn}
   el.onclick=e=>{const zb=e.target.closest&&e.target.closest('[data-zb]');close();if(zb&&o.fn)o.fn()}; // her yere dokunmak kapatır
 }
 const numHD=n=>cb=>{
-  if(typeof HDN!='undefined'&&HDN[n]){cb(HDN[n]);return;}
-  const cs=[`img/n/${n}.png`,`img/n/${n}.jpg`,`img/n/${n}.webp`,`img/n${n}.png`,`n${n}.png`];
-  hq('n_'+n+'_v2',cs,cb);
+  const cs=[`img/n/${n}.png?v=20261125_parch2`,`img/n/${n}.jpg?v=20261125_parch2`];
+  hq('n_'+n+'_v3',cs,cb);
 };
 const backHD=cb=>{
-  if(typeof HDBK!='undefined'&&HDBK){cb(HDBK);return;}
-  hq('bk_v2',['img/back.png','img/back.jpg','img/n/back.png','img/n/back.jpg','img/back.webp'],cb);
+  const cbKey=(typeof USER_ACC!=='undefined'&&USER_ACC&&USER_ACC.cardBack)||'classic';
+  const equipped=(typeof CARDBACK_IMG_MAP!=='undefined'&&CARDBACK_IMG_MAP[cbKey])||'img/cb_classic.jpg?v=20261125_cb4';
+  hq('bk_'+cbKey+'_v3',[equipped,'img/cb_classic.jpg?v=20261125_cb4'],cb);
 };
 const HERO_LORE_TR={
   c:'Karanlık pazarlarda kemik ve altın tartıp terazisine hile karıştıran lanetli bezirgân.',
@@ -3055,14 +3213,15 @@ function zoomCard(id){const S=G;let f=null;
   for(const p of [0,1])for(const kd of ['open','closed']){const c=S.pl[p][kd].find(x=>x.id==id);if(c)f={c,p,closed:kd=='closed'}}
   if(!f)return;const {c,p,closed}=f,own=p==0,up=!closed||S.rev||(own&&peek.has(id)); // kart yüzü açık mı?
   if(!up){ // kapalı kart: arka yüzü
-    const initialSrc=(typeof HDBK!='undefined'&&HDBK)?HDBK:IMG.bn;
+    const cbKey=(typeof USER_ACC!=='undefined'&&USER_ACC&&USER_ACC.cardBack)||'classic';
+    const initialSrc=(typeof CARDBACK_IMG_MAP!=='undefined'&&CARDBACK_IMG_MAP[cbKey])||IMG.bn;
     return zoom({src:initialSrc,cls:'card',cap:own?tr('Senin kapalı kartın','Your hidden card'):tr('Rakibin kapalı kartı','Opponent\'s hidden card'),hd:backHD,
       btn:own&&!S.rev?tr('Kartıma bak','Peek at card'):'',fn:()=>{snd('flip');peek.add(id);flipId=id;R();setTimeout(()=>zoomCard(id),80)}})}
   const val=c.o!=null?c.o:c.n;
-  const initialSrc=(typeof HDN!='undefined'&&HDN[c.n])?HDN[c.n]:IMG.n[c.n];
+  const initialSrc=IMG.n[c.n];
   zoom({src:initialSrc,cls:'card',cap:`${val}`,hd:numHD(c.n),
     sub:(closed?(own?tr('Senin kapalı kartın','Your hidden card'):tr('Rakibin kapalı kartı','Opponent\'s hidden card')):(own?tr('Senin açık kartın','Your open card'):tr('Rakibin açık kartın','Opponent\'s open card')))+(c.o!=null?tr(` (joker etkisiyle ${c.o} sayılıyor, kartın aslı ${c.n})`,` (counts as ${c.o} due to Joker effect, original value ${c.n})`):''),
-    btn:closed&&own&&!S.rev?tr('Kartımı gizle','Hide card'):'',fn:()=>{snd('flip');peek.delete(id);R()}})}
+    btn:closed&&own&&!S.rev?tr('Kartımı gizle','Hide card'):'',fn:()=>{snd('flip');peek.delete(id);flipId=id;R()}})}
 function preview(id,use,note,back){ // jokeri büyük göster: Kullan / Kapat
   lock=true;snd('info');
   $('#mb').classList.remove('end-mode','an-mode','set-mode');
@@ -3453,7 +3612,7 @@ document.addEventListener('click',e=>{
     return;
   }
 });
-function drawFromDeck(){if(MODE==='spectator')return;const S=G;if(!S||S.turn||lock||P||!canDraw(S,0))return;if(MODE==='tutorial'&&tutStep!==2)return;recMove(S,{t:'d'},tr('Kart Çek','Draw Card'));snd('draw');if(MODE=='guest')return conn.send({k:'draw'});S.graceLeft=0;lrnAct(S,'d');if(S.botScry&&S.botScry.length)S.botScry.shift();const c=S.deck.pop();S.pl[0].open.push(c);if(S.stats&&S.stats.draws)S.stats.draws[0]++;S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R();if(MODE==='tutorial'&&tutStep===2)tutAdvance('draw')}
+function drawFromDeck(){if(MODE==='spectator')return;const S=G;if(!S||S.turn||lock||P||!canDraw(S,0))return;if(MODE==='tutorial'&&tutStep!==2)return;recMove(S,{t:'d'},tr('Kart Çek','Draw Card'));if(MODE=='guest'){snd('draw');return conn.send({k:'draw'})}S.graceLeft=0;lrnAct(S,'d');if(S.botScry&&S.botScry.length)S.botScry.shift();const c=S.deck.pop();S.pl[0].open.push(c);if(S.stats&&S.stats.draws)S.stats.draws[0]++;S.acted=true;S.log.push({p:0,t:`kart çekti (${c.n})`});R();if(MODE==='tutorial'&&tutStep===2)tutAdvance('draw')}
 $('#pass').onclick=()=>{if(MODE==='spectator')return;if(G.turn==0&&!lock&&!P){if(MODE==='tutorial'&&tutStep!==7)return;recMove(G,null,$('#pass').textContent||tr('Pas','Pass'));if(MODE=='guest')conn.send({k:'pass'});else{lrnAct(G,'p');pass();if(MODE==='tutorial'&&tutStep===7)tutClearHighlights()}}};
 
 /* ---------- ONLINE (PeerJS) ---------- */
@@ -4938,20 +5097,28 @@ function createSmoothDragLoop(onFrame){
       }
     }
   }
+  let hoverActive=false;
   function clearHover(){
+    if(!hoverActive&&!prevJId)return;
+    hoverActive=false;
     document.querySelectorAll('#hand .j.hovered').forEach(el=>el.classList.remove('hovered'));
     clearOracle();
   }
 
   document.addEventListener('pointermove',e=>{
     if(e.pointerType==='touch')return;
+    const mn=document.getElementById('menu'),md=document.getElementById('m');
+    if((mn&&!mn.hidden)||(md&&!md.hidden)){clearHover();return;}
     if(document.body.classList.contains('dragging-joker')||document.body.classList.contains('dragging-deck')){
+      clearHover();return;
+    }
+    if(e.clientY<window.innerHeight*0.60){
       clearHover();return;
     }
     const hand=document.getElementById('hand');
     if(!hand)return;
     const slots=[...hand.querySelectorAll('.jslot')];
-    if(!slots.length)return;
+    if(!slots.length){clearHover();return;}
 
     let targetJ=null;
     for(const sl of slots){
@@ -4962,6 +5129,7 @@ function createSmoothDragLoop(onFrame){
       }
     }
     if(targetJ&&!targetJ.classList.contains('drag-source-hidden')){
+      hoverActive=true;
       slots.forEach(s=>{const c=s.querySelector('.j');if(c&&c!==targetJ)c.classList.remove('hovered')});
       targetJ.classList.add('hovered');
       updateOracle(targetJ);
@@ -5149,6 +5317,23 @@ function createSmoothDragLoop(onFrame){
   }
   seedParticles();
 
+  let cornerLights=[];
+  function buildLights(){
+    const lr=Math.min(W,H)*0.19;
+    const defs=[
+      [0.155,0.045,'rgba(255, 155, 55, 0.24)'],
+      [0.845,0.045,'rgba(255, 155, 55, 0.24)'],
+      [0.155,0.955,'rgba(255, 145, 45, 0.24)'],
+      [0.845,0.955,'rgba(255, 145, 45, 0.24)']
+    ];
+    cornerLights=defs.map(([u,v,col])=>{
+      const lx=W*u,ly=H*v;
+      const lg=ctx.createRadialGradient(lx,ly,2,lx,ly,lr);
+      lg.addColorStop(0,col);
+      lg.addColorStop(1,'rgba(0,0,0,0)');
+      return {x:lx-lr,y:ly-lr,s:lr*2,lg};
+    });
+  }
   function resize(){
     DPR=isMobilePerf()?1:Math.min(window.devicePixelRatio||1,1.25);
     W=window.innerWidth;
@@ -5156,6 +5341,7 @@ function createSmoothDragLoop(onFrame){
     cvs.width=Math.round(W*DPR);
     cvs.height=Math.round(H*DPR);
     ctx.setTransform(DPR,0,0,DPR,0,0);
+    buildLights();
   }
   window.addEventListener('resize',resize);
   resize();
@@ -5175,23 +5361,19 @@ function createSmoothDragLoop(onFrame){
       const t=rm?0:now*0.001;
       ctx.clearRect(0,0,W,H);
 
-      // 4 köşedeki simetrik ateş kaseleri için titreyen sıcak meşale parıltıları
+      // 4 köşedeki simetrik ateş kaseleri için titreyen sıcak meşale parıltıları (önbellekli gradyan)
       const flicker = 0.78 + 0.22*Math.sin(t*7.1)*Math.cos(t*4.3);
-      const drawLight = (u, v, rad, col) => {
-        const lx = W*u, ly = H*v, lr = Math.min(W,H)*rad;
-        const lg = ctx.createRadialGradient(lx, ly, 2, lx, ly, lr);
-        lg.addColorStop(0, col);
-        lg.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = lg;
-        ctx.fillRect(lx-lr, ly-lr, lr*2, lr*2);
-      };
-      drawLight(0.155, 0.045, 0.19, `rgba(255, 155, 55, ${0.24*flicker})`);
-      drawLight(0.845, 0.045, 0.19, `rgba(255, 155, 55, ${0.24*flicker})`);
-      drawLight(0.155, 0.955, 0.19, `rgba(255, 145, 45, ${0.24*flicker})`);
-      drawLight(0.845, 0.955, 0.19, `rgba(255, 145, 45, ${0.24*flicker})`);
+      ctx.globalAlpha=flicker;
+      for(let i=0;i<cornerLights.length;i++){
+        const l=cornerLights[i];
+        ctx.fillStyle=l.lg;
+        ctx.fillRect(l.x,l.y,l.s,l.s);
+      }
+      ctx.globalAlpha=1;
 
       // Canlı atmosfer parçacıkları (Meşale kıvılcımları ve rün tozları)
-      if(!rm)particles.forEach(p => {
+      if(!rm)for(let i=0;i<particles.length;i++){
+        const p=particles[i];
         p.x += p.vx;
         p.y += p.vy;
         if(p.y < -0.04) { p.y = 1.04; p.x = Math.random(); }
@@ -5208,7 +5390,7 @@ function createSmoothDragLoop(onFrame){
         ctx.beginPath();
         ctx.arc(px, py, p.r, 0, Math.PI*2);
         ctx.fill();
-      });
+      }
     }
   }
   requestAnimationFrame(render);
@@ -5228,7 +5410,7 @@ function createSmoothDragLoop(onFrame){
     const wantMobile=window.innerWidth<=760||window.innerHeight>window.innerWidth*1.15;
     if(wantMobile===isMobileMenuBg&&menuImg.src)return;
     isMobileMenuBg=wantMobile;
-    const url=wantMobile?'menu_gothic_mobile.jpg?v=20261125_keyart2':'menu_gothic.jpg?v=20261125_keyart2';
+    const url=wantMobile?'menu_gothic_mobile.jpg?v=20261125_keyart2':'menu_gothic_wide.jpg?v=20261125_wide1';
     cvs.style.background=`url('${url}') center/cover no-repeat #09060a`;
     menuImg.src=url;
   }
@@ -5275,8 +5457,9 @@ function createSmoothDragLoop(onFrame){
       const t=rm?0:now*0.001;
       ctx.clearRect(0,0,W,H);
 
-      // Yeni key art üzerinde yalnızca yumuşak altın mum kıvılcımları süzülür (eski sahte ışık huzmeleri kaldırıldı)
-      if(!rm)motes.forEach(e=>{
+      // Yeni key art üzerinde yalnızca yumuşak altın mum kıvılcımları süzülür (shadowBlur/gradyan tahsissiz GPU dostu çizim)
+      if(!rm)for(let i=0;i<motes.length;i++){
+        const e=motes[i];
         e.x+=e.vx;
         e.y+=e.vy;
         if(e.y<-0.06){e.y=1.06;e.x=Math.random()}
@@ -5286,31 +5469,34 @@ function createSmoothDragLoop(onFrame){
         const ex=e.x*W+drift;
         const ey=e.y*H;
         const flick=0.45+0.55*Math.abs(Math.sin(t*3.1+e.phase));
-        const rot=t*1.4+e.phase;
-        ctx.save();
-        ctx.translate(ex,ey);
-        ctx.rotate(rot);
         if(e.kind===0){
-          // Parlak turuncu-altın kor kıvılcımı (yumuşak alev haleli)
-          const gr=e.r*3.4;
-          const g=ctx.createRadialGradient(0,0,0,0,0,gr);
-          g.addColorStop(0,`rgba(255, 232, 160, ${0.95*flick})`);
-          g.addColorStop(0.35,`rgba(255, 118, 32, ${0.65*flick})`);
-          g.addColorStop(1,'rgba(255, 60, 10, 0)');
-          ctx.fillStyle=g;
+          ctx.fillStyle=`rgba(255, 118, 32, ${0.26*flick})`;
           ctx.beginPath();
-          ctx.arc(0,0,gr,0,Math.PI*2);
+          ctx.arc(ex,ey,e.r*3.0,0,Math.PI*2);
+          ctx.fill();
+          ctx.fillStyle=`rgba(255, 224, 148, ${0.88*flick})`;
+          ctx.beginPath();
+          ctx.arc(ex,ey,e.r*1.15,0,Math.PI*2);
           ctx.fill();
         }else if(e.kind===1){
-          // Kızıl köz parçası (hafif oval, dönerek süzülür)
-          ctx.fillStyle=`rgba(255, 78, 22, ${0.78*flick})`;
-          ctx.shadowColor='rgba(255, 90, 20, 0.8)';
-          ctx.shadowBlur=6;
+          const rot=t*1.4+e.phase;
+          ctx.save();
+          ctx.translate(ex,ey);
+          ctx.rotate(rot);
+          ctx.fillStyle=`rgba(255, 90, 20, ${0.26*flick})`;
+          ctx.beginPath();
+          ctx.ellipse(0,0,e.r*2.4,e.r*1.4,0,0,Math.PI*2);
+          ctx.fill();
+          ctx.fillStyle=`rgba(255, 92, 28, ${0.82*flick})`;
           ctx.beginPath();
           ctx.ellipse(0,0,e.r*1.4,e.r*0.7,0,0,Math.PI*2);
           ctx.fill();
+          ctx.restore();
         }else{
-          // Koyu yanık kül pulu (kenarında sönen turuncu kor izi)
+          const rot=t*1.4+e.phase;
+          ctx.save();
+          ctx.translate(ex,ey);
+          ctx.rotate(rot);
           ctx.fillStyle=`rgba(34, 24, 22, ${0.62+0.25*flick})`;
           ctx.strokeStyle=`rgba(255, 110, 35, ${0.42*flick})`;
           ctx.lineWidth=0.9;
@@ -5318,9 +5504,9 @@ function createSmoothDragLoop(onFrame){
           ctx.ellipse(0,0,e.r*1.65,e.r*0.85,0,0,Math.PI*2);
           ctx.fill();
           ctx.stroke();
+          ctx.restore();
         }
-        ctx.restore();
-      });
+      }
     }
   }
   requestAnimationFrame(render);
@@ -5328,23 +5514,29 @@ function createSmoothDragLoop(onFrame){
 
 /* ---------- SATRANÇ SAATİ (CHESS CLOCK 66s / 55s / 44s) & 5 SN HAZIRLIK ---------- */
 (function initHearthstoneTurnTimer(){
-  let lastTickSec=-1;
+  let lastTickSec=-1,lastS0='',lastS1='',wasActive=false;
   setInterval(()=>{
+    const menu=$('#menu');
+    const menuOpen=!!(menu&&!menu.hidden);
+    if(menuOpen&&!wasActive)return;
     const sc0=$('#sc-0');
     const sc1=$('#sc-1');
     const scSec0=$('#sc-sec-0');
     const scSec1=$('#sc-sec-1');
-    const menu=$('#menu');
     const modalEl=$('#m'),mbEl=$('#mb');
     const isMenuModal=!!(modalEl&&!modalEl.hidden&&mbEl&&!mbEl.querySelector('.d20-box,.tie-box,.scry-row,#hp-p2,.hero-grid'));
     const isReconnPaused=!!(RECONN_TIMER||RECONN_LEFT>0||(G&&G.reconnPause));
-    const active=!!(G && MODE!=='tutorial' && !G.over && !G.wait && !isReconnPaused && (!lock || (MODE!=='bot' && isMenuModal)) && (!menu || menu.hidden));
+    const active=!!(G && MODE!=='tutorial' && !G.over && !G.wait && !isReconnPaused && (!lock || (MODE!=='bot' && isMenuModal)) && !menuOpen);
     if(!active){
-      if(sc0){sc0.classList.remove('ticking','low');sc0.classList.toggle('turn-on',!!(G&&G.turn===0));sc0.classList.toggle('turn-off',!!(G&&G.turn!==0))}
-      if(sc1){sc1.classList.remove('ticking','low');sc1.classList.toggle('turn-on',!!(G&&G.turn===1));sc1.classList.toggle('turn-off',!!(G&&G.turn!==1))}
+      if(wasActive||G){
+        if(sc0){sc0.classList.remove('ticking','low');sc0.classList.toggle('turn-on',!!(G&&G.turn===0));sc0.classList.toggle('turn-off',!!(G&&G.turn!==0))}
+        if(sc1){sc1.classList.remove('ticking','low');sc1.classList.toggle('turn-on',!!(G&&G.turn===1));sc1.classList.toggle('turn-off',!!(G&&G.turn!==1))}
+      }
+      wasActive=false;
       lastTickSec=-1;
       return;
     }
+    wasActive=true;
     if(!Array.isArray(G.clocks)||G.clocks.length!==2){
       const cs=initClockSec();
       G.clocks=[cs,cs];
@@ -5356,8 +5548,10 @@ function createSmoothDragLoop(onFrame){
     if(G.graceLeft && G.graceLeft > 0){
       G.graceLeft=Math.max(0, G.graceLeft - 0.1);
       const s0=Math.ceil(G.clocks[0]), s1=Math.ceil(G.clocks[1]);
-      if(scSec0) scSec0.textContent=(G.timeOut[0]||s0<=0)?'✕':String(s0);
-      if(scSec1) scSec1.textContent=(G.timeOut[1]||s1<=0)?'✕':String(s1);
+      const t0=(G.timeOut[0]||s0<=0)?'✕':String(s0);
+      const t1=(G.timeOut[1]||s1<=0)?'✕':String(s1);
+      if(scSec0&&t0!==lastS0){scSec0.textContent=t0;lastS0=t0;}
+      if(scSec1&&t1!==lastS1){scSec1.textContent=t1;lastS1=t1;}
       if(sc0){sc0.classList.remove('ticking','low');sc0.classList.toggle('turn-on',G.turn===0);sc0.classList.toggle('turn-off',G.turn!==0)}
       if(sc1){sc1.classList.remove('ticking','low');sc1.classList.toggle('turn-on',G.turn===1);sc1.classList.toggle('turn-off',G.turn!==1)}
       lastTickSec=-1;
@@ -5371,8 +5565,10 @@ function createSmoothDragLoop(onFrame){
     const sec=Math.ceil(curLeft);
     const myTurn=(t===0);
 
-    if(scSec0) scSec0.textContent=(G.timeOut[0]||s0<=0)?'✕':String(s0);
-    if(scSec1) scSec1.textContent=(G.timeOut[1]||s1<=0)?'✕':String(s1);
+    const t0=(G.timeOut[0]||s0<=0)?'✕':String(s0);
+    const t1=(G.timeOut[1]||s1<=0)?'✕':String(s1);
+    if(scSec0&&t0!==lastS0){scSec0.textContent=t0;lastS0=t0;}
+    if(scSec1&&t1!==lastS1){scSec1.textContent=t1;lastS1=t1;}
 
     if(sc0){
       sc0.classList.toggle('ticking', myTurn && !G.timeOut[0]);
@@ -7678,15 +7874,13 @@ function applyQueueModeUi(){
     b.classList.toggle('qs-locked',guest&&q==='ranked');
     b.setAttribute('aria-selected',act?'true':'false');
     const bEl=b.querySelector('b'),sEl=b.querySelector('small');
+    if(sEl)sEl.remove();
     if(q==='normal'){
       if(bEl)bEl.textContent=tr('Normal','Normal');
-      if(sEl)sEl.textContent=tr('Derecesiz','Unranked');
     }else if(q==='special'){
       if(bEl)bEl.textContent=tr('Özel Modlar','Special');
-      if(sEl)sEl.textContent=tr('Meydan Okuma','Challenges');
     }else{
       if(bEl)bEl.textContent=tr('Dereceli','Ranked');
-      if(sEl)sEl.textContent=guest?tr('Üyelere Özel','Members Only'):tr('Lig & LP','League & LP');
     }
   });
   if($('#play-stack-std'))$('#play-stack-std').hidden=isS;
@@ -7898,11 +8092,11 @@ const BOARD_IMG_MAP={
   gold:'board_gold.jpg?v=20261125_b1'
 };
 const CARDBACK_IMG_MAP={
-  classic:'img/cb_classic.jpg?v=20261125_cb1',
+  classic:'img/cb_classic.jpg?v=20261125_cb4',
   crimson:'img/cb_crimson.jpg?v=20261125_cb1',
   ghost:'img/cb_ghost.jpg?v=20261125_cb1',
   obsidian:'img/cb_obsidian.jpg?v=20261125_cb1',
-  moonlight:'img/cb_moonlight.jpg?v=20261125_cb1',
+  moonlight:'img/cb_moonlight.jpg?v=20261125_cb3',
   sovereign:'img/cb_sovereign.jpg?v=20261125_cb1'
 };
 function applyCosmetics(acc){
@@ -8102,7 +8296,7 @@ async function openLeaderboardModal(activeTab='rank'){
         const isMe=!!(myKey&&u.key===myKey);
         const med=`#${pos}`;
         const tTag=u.title?`<span class="lb-title-tag">${escHtml(getTitleLabel(u.title))}</span> · `:'';
-        const rightDisp=fl.unranked?`${fl.placementGames}/5 <i>${tr('MAÇ','GM')}</i>`:`${fl.lp} <i>LP</i>`;
+        const rightDisp=fl.unranked?`${fl.placementGames}/5 <i>${tr('Maç','Gm')}</i>`:`${fl.lp} <i>LP</i>`;
         return `<div class="lb-row${pos<=3?' top'+pos:''}${isMe?' me':''}">
           <span class="lb-pos">${med}</span>
           <span class="lb-rk" title="${escHtml(fl.name)}">${leagueCrestSvg(fl.id,28)}</span>
@@ -8615,7 +8809,7 @@ function openAuthModal(initialTab='login',isUpgrade=false){
         setTimeout(()=>{
           const im=new Image();im.decoding='async';im.src=avSrc(h.id);
           if(im.decode)im.decode().catch(()=>{});
-          const hi=new Image();hi.decoding='async';hi.src=`hp_icons/${h.id}.jpg?v=20261122_hp7`;
+          const hi=new Image();hi.decoding='async';hi.src=`hp_icons/${h.id}.jpg?v=20261125_hp_clean5`;
           if(hi.decode)hi.decode().catch(()=>{});
         },i*90);
       });
@@ -8946,11 +9140,11 @@ function shareDeathCard(card,btn){
     ctx.textAlign='left';ctx.textBaseline='alphabetic';
     ctx.fillStyle=card.won?'#fde68a':'#fca5a5';
     ctx.font='700 24px Georgia, serif';
-    ctx.fillText('NECRODICE · '+(card.won?tr('ZAFER MÜHRÜ','VICTORY SEAL'):tr('ÖLÜM MÜHRÜ','DEATH SEAL')),410,126);
+    ctx.fillText('Necrodice · '+(card.won?tr('Zafer Mührü','Victory Seal'):tr('Ölüm Mührü','Death Seal')),410,126);
 
     ctx.fillStyle='#fff6e0';
     ctx.font='800 56px Georgia, serif';
-    ctx.fillText(card.won?tr('ZAFER!','VICTORY!'):tr('MAĞLUBİYET','DEFEAT'),410,198);
+    ctx.fillText(card.won?tr('Zafer!','Victory!'):tr('Mağlubiyet','Defeat'),410,198);
 
     const headline=tr(
       `${card.heroName} ile ${card.oppLabel} karşısında ${card.rw}-${card.rl}`,
@@ -9108,7 +9302,7 @@ function openFirstVisitWelcome(){
   mb.classList.remove('end-mode','an-mode','set-mode','lb-mode','lob-mode','pr-mode');
   mb.classList.add('auth-mode');
   mb.innerHTML=`<div class="sp-wrap">
-    <img class="fv-logo" src="necrodice_logo.png?v=20261118_logo8" alt="NECRODICE" width="920" height="281">
+    <img class="fv-logo" src="necrodice_logo.png?v=20261125_logo10" alt="Necrodice" width="940" height="299">
     <div class="sp-badge vault">${tr('Hoş Geldin','Welcome')}</div>
     <h3 class="sp-title">${tr('Kaderin Kartlarda, Hayatın Zarda','Fate in Cards, Life on the Die')}</h3>
     <p class="sp-desc">${tr('21\'e en yakın toplamı kur, Jokerlerle masayı tersine çevir ve düelloyu kaybedersen Ölüm Zarından sağ çıkmaya çalış. İlk kez oynuyorsan 60 saniyelik hızlı eğitimle hemen öğren!','Get closest to 21, bend the rules with Jokers, and survive the Death Dice if you lose. New here? Learn everything in 60 seconds with the interactive tutorial!')}</p>
@@ -9179,7 +9373,7 @@ function openInventoryModal(initialCat='dice'){
     }else if(cat==='cards'){
       const cbCards=CARD_BACKS.map(cb=>{
         const ok=cb.req(acc),sel=(acc.cardBack||'classic')===cb.id;
-        const cbImg=(typeof CARDBACK_IMG_MAP!=='undefined'&&CARDBACK_IMG_MAP[cb.id])||'img/cb_classic.jpg?v=20261125_cb1';
+        const cbImg=(typeof CARDBACK_IMG_MAP!=='undefined'&&CARDBACK_IMG_MAP[cb.id])||'img/cb_classic.jpg?v=20261125_cb4';
         return `<button type="button" class="inv-card${sel?' sel':''}${ok?'':' lock'}" data-cb="${cb.id}" ${ok?'':'disabled'}>
           <div class="inv-stage inv-stage-cb">
             <div class="inv-cb-preview cb-prev-${cb.id}"><img src="${cbImg}" alt="" decoding="async"></div>

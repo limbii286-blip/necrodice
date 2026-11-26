@@ -456,7 +456,7 @@ body:has(#menu:not([hidden])) #fl {
   background: rgba(16, 10, 6, 0.94) !important;
   color: #fde68a !important;
   text-align: center;
-  text-transform: uppercase;
+  text-transform: none;
   box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.95) !important;
 }
 #mb2 #code::placeholder {
@@ -1437,19 +1437,19 @@ html::after {
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.65);
 }
 #hdr .pip.w {
-  border-color: #52a86c;
-  background: #2e7d47;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+  border-color: #7ea37d;
+  background: #2d5a37;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 #hdr .pip.l {
-  border-color: #cf4e54;
-  background: #9e242a;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+  border-color: #a84e52;
+  background: #6b1a1f;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 #hdr .pip.d {
-  background: #635d56;
-  border-color: #8f877d;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+  background: #4e463c;
+  border-color: #9e917c;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
 #hdr .hg .gear {
@@ -1610,7 +1610,9 @@ body.dragging-joker #fx::after {
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 18px;
+  width: clamp(430px, 46vw, 560px);
   min-width: clamp(430px, 46vw, 560px);
+  max-width: 100%;
   padding: 6px 24px;
   background:
     linear-gradient(rgba(16, 10, 5, 0.45), rgba(10, 6, 3, 0.60)),
@@ -1750,7 +1752,7 @@ body.dragging-joker #fx::after {
   justify-content: center;
   gap: 5px;
   text-align: center;
-  min-width: 0;
+  min-width: 108px;
   padding: 0 0 0 10px;
   background: none;
   border: none;
@@ -1774,7 +1776,11 @@ body.dragging-joker #fx::after {
   text-shadow: 0 2px 6px #000, 0 0 12px rgba(230, 190, 110, 0.35) !important;
   display: inline-flex;
   align-items: baseline;
+  justify-content: center;
   line-height: 1 !important;
+}
+.who .tot b {
+  min-width: 1.15em;
 }
 .who .tot .pq {
   font-family: 'Lora', Georgia, serif !important;
@@ -1794,6 +1800,15 @@ body.dragging-joker #fx::after {
   align-items: baseline;
   justify-content: center !important;
   gap: 4px;
+  min-width: 92px;
+}
+.who .tl-suf {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.who .tl-suf:empty {
+  display: none;
 }
 
 .who .jbs {
@@ -1814,6 +1829,7 @@ body.dragging-joker #fx::after {
 
 /* --- SAVAŞ ALANI KART DİZİLİMİ (.cards) --- */
 .zone .cards {
+  --card-h: calc(clamp(64px, 10.6dvh, 100px) * 1.45);
   flex: 0 0 auto;
   width: 100%;
   max-width: min(96vw, 1360px);
@@ -1822,7 +1838,8 @@ body.dragging-joker #fx::after {
   align-items: center;
   justify-content: center;
   gap: clamp(8px, 1.2vw, 14px);
-  min-height: 0 !important;
+  height: calc(var(--card-h) + clamp(10px, 1.5dvh, 18px)) !important;
+  min-height: calc(var(--card-h) + clamp(10px, 1.5dvh, 18px)) !important;
   padding: 0 12px;
   perspective: 900px;
 }
@@ -1857,6 +1874,7 @@ body.dragging-joker #fx::after {
 }
 
 .cards .c {
+  flex: 0 0 auto;
   width: clamp(64px, 10.6dvh, 100px) !important;
   height: calc(clamp(64px, 10.6dvh, 100px) * 1.45) !important;
   border-radius: 9px !important;
@@ -1867,15 +1885,16 @@ body.dragging-joker #fx::after {
     0 12px 24px rgba(0, 0, 0, 0.9),
     0 0 0 1px #0d0806,
     inset 0 0 0 1px rgba(255, 230, 175, 0.28) !important;
-  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.28s ease, filter 0.28s ease, border-color 0.24s ease !important;
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.24s ease, filter 0.24s ease, border-color 0.22s ease !important;
   cursor: default;
 }
 .cards .c i {
   font: 700 14px/1 var(--mf) !important;
 }
 .cards .c.n {
+  display: block;
   border: 2px solid #9e7f46 !important;
-  filter: sepia(0.36) saturate(0.84) brightness(0.90) contrast(1.08) hue-rotate(-8deg);
+  filter: none;
 }
 .cards .c:not(.n):not(.bk) {
   background:
@@ -1912,13 +1931,18 @@ body.dragging-joker #fx::after {
     0 0 0 2px rgba(230, 195, 106, 0.55),
     0 0 18px rgba(230, 195, 106, 0.35) !important;
 }
-.cards .c:hover {
-  transform: translateY(-6px) scale(1.09) !important;
+.cards .c:not(.flip):not(.fresh):hover {
+  transform: translateY(-6px) scale(1.09);
   z-index: 8;
   box-shadow:
     0 6px 0 #5b4322,
     0 20px 36px rgba(0, 0, 0, 0.96),
     0 0 22px rgba(230, 195, 110, 0.5) !important;
+}
+.cards .c.flip {
+  animation: flip 0.48s cubic-bezier(0.22, 1, 0.36, 1) var(--fd, 0s) both;
+  backface-visibility: hidden;
+  will-change: transform;
 }
 
 /* Kart Çekme Animasyonu */
@@ -2487,7 +2511,7 @@ body.dragging-joker #fx::after {
   border-radius: 8px;
   border: 1.5px solid rgba(230, 195, 115, 0.55);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.85);
-  filter: sepia(0.32) saturate(0.86) brightness(0.92) contrast(1.06) hue-rotate(-8deg);
+  filter: none;
 }
 #joker-inspect-pop .jip-tag {
   padding: 2px 6px;
@@ -2634,7 +2658,7 @@ body.dragging-joker #fx::after {
   margin-left: 0 !important;
   border-radius: 9px !important;
   border: 2px solid #d4af64 !important;
-  filter: sepia(0.34) saturate(0.84) brightness(0.90) contrast(1.08) hue-rotate(-8deg);
+  filter: none;
   box-shadow:
     0 4px 0 #5b4322,
     0 -4px 18px rgba(0, 0, 0, 0.88),
@@ -2838,7 +2862,7 @@ body.dragging-joker #fx::after {
 }
 #hand .j.hl {
   opacity: 1 !important;
-  filter: sepia(0.22) saturate(0.95) brightness(1.04) contrast(1.06) !important;
+  filter: brightness(1.06) contrast(1.04) !important;
   border-color: #ffe89e !important;
   box-shadow:
     0 0 0 2.5px rgba(255, 232, 158, 0.92),
@@ -2869,6 +2893,7 @@ body.dragging-joker #fx::after {
     margin-left: 4px;
   }
   .who {
+    width: clamp(340px, 46vw, 460px);
     min-width: 340px;
   }
   .side-clocks {
@@ -3062,7 +3087,7 @@ body.dragging-joker #fx::after {
     position: relative;
     justify-self: end;
     align-self: stretch;
-    min-width: 48px !important;
+    min-width: 74px !important;
     padding: 0 6px !important;
     gap: 0 !important;
     justify-content: center !important;
@@ -3080,6 +3105,9 @@ body.dragging-joker #fx::after {
   .who .tot .tl {
     margin-top: 7px;
   }
+  .who .tot .tl {
+    min-width: 60px;
+  }
   .who .tot b {
     font-size: clamp(19px, 3dvh, 24px) !important;
   }
@@ -3092,6 +3120,7 @@ body.dragging-joker #fx::after {
     flex-wrap: nowrap !important;
     width: 100%;
     max-width: 100%;
+    height: calc(var(--mch) + 8px) !important;
     min-height: calc(var(--mch) + 8px) !important;
     justify-content: center;
     align-content: center;
@@ -3104,6 +3133,7 @@ body.dragging-joker #fx::after {
   .cards.cards-2row {
     flex-wrap: nowrap !important;
     gap: 3px !important;
+    height: calc(var(--mch) + 8px) !important;
     min-height: calc(var(--mch) + 8px) !important;
   }
   .cards.cards-2row .c {
@@ -3551,8 +3581,12 @@ body.dragging-joker #fx::after {
   position: relative;
 }
 .ora-tot {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
   display: inline-block;
-  margin-left: 6px;
+  margin-left: 0;
   padding: 2px 7px;
   border-radius: 999px;
   background: rgba(24, 17, 11, 0.94);
@@ -3560,8 +3594,10 @@ body.dragging-joker #fx::after {
   color: #fde68a;
   font: 800 14px/1.1 var(--mf);
   letter-spacing: 0.4px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 12;
   box-shadow: 0 0 12px rgba(230, 195, 106, 0.45);
-  vertical-align: middle;
   animation: fade 0.2s ease both;
 }
 .ora-tot.ora-exact {
@@ -3702,8 +3738,8 @@ body.dragging-joker #fx::after {
   transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 .hp-dot.on {
-  background: radial-gradient(circle at 34% 30%, #86efac, #16a34a 70%, #14532d 100%);
-  box-shadow: 0 0 0 1px rgba(212, 168, 85, 0.72), 0 2px 6px rgba(0, 0, 0, 0.9);
+  background: radial-gradient(circle at 34% 30%, #6b9e70, #2b5a36 68%, #122617 100%);
+  box-shadow: 0 0 0 1px rgba(188, 152, 86, 0.7), 0 2px 6px rgba(0, 0, 0, 0.9);
 }
 body.cb .hp-dot.on {
   background: radial-gradient(circle at 34% 30%, #bae6fd, #0284c7 70%, #0c4a6e 100%);
@@ -4377,7 +4413,7 @@ body.cb .hp-dot.on {
   width: 82px;
   border-radius: 8px;
   border: 2px solid #c9a968;
-  filter: sepia(0.36) saturate(0.84) brightness(0.90) contrast(1.08) hue-rotate(-8deg);
+  filter: none;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.9);
 }
 .scry-card span {
@@ -9209,7 +9245,7 @@ body[data-board="gold"] main::after {
 .qs-btn b {
   font: 800 15.5px/1.15 var(--mf);
   letter-spacing: 0.04em;
-  text-transform: uppercase;
+  text-transform: none;
 }
 .qs-btn small {
   font: 600 11px/1.2 var(--mf);
@@ -9366,8 +9402,8 @@ body[data-board="gold"] main::after {
 }
 .epb-kicker {
   font: 800 11.5px/1.1 var(--mf);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-transform: none;
   color: #ffe999;
 }
 .end-promo-banner.dbl .epb-kicker {
@@ -9849,8 +9885,8 @@ body[data-board="gold"] main::after {
   padding: 3px 10px;
   border-radius: 999px;
   font: 700 11px/1.2 var(--mf);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-transform: none;
 }
 .ps-kicker.rk {
   background: rgba(245, 200, 66, 0.16);
@@ -9943,8 +9979,8 @@ body[data-board="gold"] main::after {
 .ps-join-box label {
   font: 700 12.5px/1.1 var(--mf);
   color: #d6c3a4;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  text-transform: none;
+  letter-spacing: 0.03em;
 }
 .ps-join-row {
   display: flex;
@@ -9960,8 +9996,8 @@ body[data-board="gold"] main::after {
   background: rgba(20, 14, 12, 0.95);
   color: #fff3d6;
   font: 800 16px/1 var(--mf);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  text-transform: none;
   text-align: center;
 }
 .ps-join-row .btn {
@@ -10730,11 +10766,11 @@ body[data-board="gold"] main::after {
 }
 
 /* GERÇEK ÖZEL ÇİZİM KART ARKALARI (FİLTRESİZ, GERÇEK RENK & DOKU) */
-body[data-cardback="classic"] #deck, body[data-cardback="classic"] .c.bk { background-image: url('img/cb_classic.jpg?v=20261125_cb1') !important; filter: none !important; }
+body[data-cardback="classic"] #deck, body[data-cardback="classic"] .c.bk { background-image: url('img/cb_classic.jpg?v=20261125_cb4') !important; filter: none !important; }
 body[data-cardback="crimson"] #deck, body[data-cardback="crimson"] .c.bk { background-image: url('img/cb_crimson.jpg?v=20261125_cb1') !important; filter: none !important; }
 body[data-cardback="ghost"] #deck, body[data-cardback="ghost"] .c.bk { background-image: url('img/cb_ghost.jpg?v=20261125_cb1') !important; filter: none !important; }
 body[data-cardback="obsidian"] #deck, body[data-cardback="obsidian"] .c.bk { background-image: url('img/cb_obsidian.jpg?v=20261125_cb1') !important; filter: none !important; }
-body[data-cardback="moonlight"] #deck, body[data-cardback="moonlight"] .c.bk { background-image: url('img/cb_moonlight.jpg?v=20261125_cb1') !important; filter: none !important; }
+body[data-cardback="moonlight"] #deck, body[data-cardback="moonlight"] .c.bk { background-image: url('img/cb_moonlight.jpg?v=20261125_cb3') !important; filter: none !important; }
 body[data-cardback="sovereign"] #deck, body[data-cardback="sovereign"] .c.bk { background-image: url('img/cb_sovereign.jpg?v=20261125_cb1') !important; filter: none !important; }
 .cb-prev-classic, .cb-prev-crimson, .cb-prev-ghost, .cb-prev-obsidian, .cb-prev-moonlight, .cb-prev-sovereign {
   filter: none !important;

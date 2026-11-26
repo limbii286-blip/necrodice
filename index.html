@@ -29,11 +29,13 @@
 <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png?v=20261122_d20">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700;800&text=0123456789&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@700&text=%3F%2B&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261121_perf">
-<link rel="stylesheet" href="retro.css?v=20261125_final1">
+<link rel="stylesheet" href="style.css?v=20261125_fix2">
+<link rel="stylesheet" href="retro.css?v=20261125_fix4">
+<link rel="stylesheet" href="aaa.css?v=20261125_aaa6">
 </head>
 <body>
 <div id="splash"><img id="slogo" alt=""><b>limbigames</b></div>
@@ -63,15 +65,15 @@
   <div id="auth-bar" class="auth-bar" hidden></div>
   <div id="mb2" class="lobby-hub">
     <div class="hs-header">
-      <h1 class="hs-title" aria-label="NECRODICE">
-        <img class="hs-logo-img" src="necrodice_logo.png?v=20261118_logo8" alt="NECRODICE" width="920" height="281" decoding="async" fetchpriority="high">
+      <h1 class="hs-title" aria-label="Necrodice">
+        <img class="hs-logo-img" src="necrodice_logo.png?v=20261125_logo10" alt="Necrodice" width="940" height="299" decoding="async" fetchpriority="high">
       </h1>
     </div>
     <div class="lobby-stage">
       <div class="queue-switch" id="queue-switch" role="tablist" aria-label="Oyun Modu">
-        <button type="button" class="qs-btn act" data-q="ranked" role="tab"><b>Dereceli</b><small>Lig &amp; LP</small></button>
-        <button type="button" class="qs-btn" data-q="normal" role="tab"><b>Normal</b><small>Derecesiz</small></button>
-        <button type="button" class="qs-btn" data-q="special" role="tab"><b>Özel Modlar</b><small>Meydan Okuma</small></button>
+        <button type="button" class="qs-btn act" data-q="ranked" role="tab"><b>Dereceli</b></button>
+        <button type="button" class="qs-btn" data-q="normal" role="tab"><b>Normal</b></button>
+        <button type="button" class="qs-btn" data-q="special" role="tab"><b>Özel Modlar</b></button>
       </div>
       <div id="ranked-strip" class="ranked-strip" hidden></div>
       <div class="play-stack" id="play-stack-std">
@@ -128,13 +130,13 @@
 <script defer src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script defer src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<script defer src="images.js?v=20261118_en1"></script>
+<script defer src="images.js?v=20261125_parch2"></script>
 <script defer src="avatars.js?v=20261115_hs11"></script>
 <script defer src="sfxdata.js?v=20261113_sfx"></script>
 <script defer src="audio_data.js?v=20261114_tavern1"></script>
 <script defer src="hd.js?v=20261115_hs11"></script>
 <script defer src="d20_canvas.js?v=20261124_big4"></script>
-<script defer src="game.js?v=20261125_perf2"></script>
+<script defer src="game.js?v=20261125_fix5"></script>
 <script>
 // PWA: service worker kaydı (sw.js depoda vardı ama hiç kaydedilmiyordu → offline/önbellek çalışmıyordu)
 if ('serviceWorker' in navigator) {
