@@ -8111,8 +8111,8 @@ const ACHIEVEMENTS=[
   {id:'daily3',ic:'☾',trN:'Sadık Düellocu',enN:'Devoted Duelist',trD:'3 günlük giriş serisine ulaş',enD:'Reach a 3-day login streak',trT:'Ebedi Nöbetçi',enT:'Eternal Sentinel'}
 ];
 const CARD_BACKS=[
-  {id:'classic',trN:'Klasik',enN:'Classic',req:()=>true,trR:'Varsayılan',enR:'Default'},
-  {id:'bone',trN:'Klasik Kemik',enN:'Classic Bone',req:()=>true,trR:'Ücretsiz Kozmetik',enR:'Free Cosmetic'},
+  {id:'classic',trN:'Klasik Kemik',enN:'Classic Bone',req:()=>true,trR:'Varsayılan',enR:'Default'},
+  {id:'bone',trN:'Kuzgun Parşömeni',enN:'Raven Parchment',req:()=>true,trR:'Ücretsiz Kozmetik',enR:'Free Cosmetic'},
   {id:'crimson',trN:'Kızıl Mühür',enN:'Crimson Seal',req:a=>((a.wins||0)+(a.unrankedWins||0))>=3||(a.peakElo||1200)>=1250,trR:'3 Zafer veya 1250 ELO',enR:'3 Wins or 1250 ELO'},
   {id:'ghost',trN:'Hayalet Örtü',enN:'Ghost Shroud',req:a=>(a.achievements||[]).includes('survivor')||((a.wins||0)+(a.unrankedWins||0))>=5,trR:'5 Zafer veya Ölümsüz İrade',enR:'5 Wins or Undying Will'},
   {id:'obsidian',trN:'Obsidyen Altın',enN:'Obsidian Gold',req:a=>(a.peakElo||1200)>=1400,trR:'1400 ELO (Kan Efendisi)',enR:'1400 ELO (Blood Lord)'},
