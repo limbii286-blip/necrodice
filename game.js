@@ -2002,7 +2002,7 @@ const HEROES_EN=[
 ];
 let HEROES=[...HEROES_TR];
 let HERO_MAP=Object.fromEntries(HEROES.map(h=>[h.id,h]));
-const hpImg=id=>`<img class="hp-art" src="hp_icons/${id}.jpg?v=20261125_hp_clean5" alt="" decoding="async">`;
+const hpImg=id=>`<img class="hp-art" src="hp_icons/${id}.jpg?v=20261126_hp_e2" alt="" decoding="async">`;
 const HP_IC={
   c:hpImg('c'),
   p:hpImg('p'),
@@ -3226,8 +3226,11 @@ function buildEndScreenHtml(S,v,L,roll,th){
       </div>`;
     }
   }
-  LAST_DEATH_CARD={won,isSpec,heroId:featH,heroName:featNm,oppLabel:typeof getOppLabel==='function'?getOppLabel(S):tr('Rakip','Opponent'),rw,rl,rt,roll,th,elo:eloRes?(eloRes.unranked?eloRes.before:eloRes.after):Math.round((USER_ACC&&USER_ACC.elo)||1200),delta:(eloRes&&!eloRes.unranked)?eloRes.delta:0,playerName:(USER_ACC&&!USER_ACC.isGuest&&USER_ACC.username)?USER_ACC.username:tr('Misafir','Guest'),durTxt};
-  const guestCta=(!isSpec&&USER_ACC&&USER_ACC.isGuest)?`<button type="button" class="end-save-cta" id="end-save-guest"><span>${tr("İsmini kaydet, ELO'nu ve başarımlarını koru","Save your name to keep your ELO & badges")}</span><b>${tr('Üye Ol','Sign Up')}</b></button>`:'';
+  const dcLg=eloRes?(eloRes.afterLg||getAccountLeague(USER_ACC)):(USER_ACC&&!USER_ACC.isGuest?getAccountLeague(USER_ACC):null);
+  const dcLgTxt=dcLg?(dcLg.unranked?tr('Yerleştirme','Unranked'):`${dcLg.name} · ${dcLg.lp} LP`):tr('Misafir','Guest');
+  const dcLpD=(eloRes&&!eloRes.unranked&&eloRes.lpDelta)?` (${eloRes.lpDelta>0?'+':''}${eloRes.lpDelta} LP)`:'';
+  LAST_DEATH_CARD={won,isSpec,heroId:featH,heroName:featNm,oppLabel:typeof getOppLabel==='function'?getOppLabel(S):tr('Rakip','Opponent'),rw,rl,rt,roll,th,leagueTxt:`${dcLgTxt}${dcLpD}`,playerName:(USER_ACC&&!USER_ACC.isGuest&&USER_ACC.username)?USER_ACC.username:tr('Misafir','Guest'),durTxt};
+  const guestCta=(!isSpec&&USER_ACC&&USER_ACC.isGuest)?`<button type="button" class="end-save-cta" id="end-save-guest"><span>${tr("İsmini kaydet, ligini ve başarımlarını koru","Save your name to keep your league & badges")}</span><b>${tr('Üye Ol','Sign Up')}</b></button>`:'';
   return `<div class="end-screen hs-victory ${isSpec?'spec':won?'win':'lose'}" data-res="${isSpec?'spec':won?'win':'lose'}">
     <div class="hs-crest-stage">
       <div class="hs-arch-frame">
@@ -4557,7 +4560,7 @@ function hostRoom(inviteTarget,onCodeReady){
       box(`
         <div class="lobby-box">
           <h3 style="margin-bottom:8px">${tr('Düello Daveti Gönderildi','Duel Invite Sent')}</h3>
-          <p style="color:var(--bone);font-size:17px;margin-bottom:10px">${tr(`<b>${escHtml(inviteTarget.name)}</b> (${Math.round(inviteTarget.elo||1200)} ELO) yanıtı bekleniyor…`,`Waiting for <b>${escHtml(inviteTarget.name)}</b> (${Math.round(inviteTarget.elo||1200)} ELO)…`)}</p>
+          <p style="color:var(--bone);font-size:17px;margin-bottom:10px">${tr(`<b>${escHtml(inviteTarget.name)}</b> (${escHtml(eloRank(inviteTarget.elo).name)}) yanıtı bekleniyor…`,`Waiting for <b>${escHtml(inviteTarget.name)}</b> (${escHtml(eloRank(inviteTarget.elo).name)})…`)}</p>
           <div class="lobby-spinner"><i></i><i></i><i></i></div>
           <p id="lobbyStatus" style="font-size:15px;color:#a0b8a4;margin-top:12px">${tr('Kabul ettiğinde düello otomatik başlayacak.','The duel will start automatically once accepted.')}</p>
         </div>
@@ -7782,7 +7785,7 @@ function renderLobbyModalBody(){
         <b>${escHtml(dispName)}</b>
         <small>${tLbl}${inGame?tr('Maçta','In Match'):tr('Müsait','Available')}</small>
       </div>
-      <span class="lob-elo">${eloVal} <i>ELO</i></span>
+      <span class="lob-elo">${escHtml(rk.name)}</span>
       ${actHtml}
     </div>`;
   }).join(''):`<div class="lb-empty">${tr('Şu an lobide başka çevrim içi oyuncu yok.','No other players online in the lobby right now.')}</div>`;
@@ -9256,14 +9259,16 @@ function shareDeathCard(card,btn){
     ctx.font='600 24px Georgia, serif';
     ctx.fillText(d20Line,410,312);
 
-    // Oyuncu + ELO bandı
+    // Oyuncu + Lig bandı
     ctx.fillStyle='rgba(245,196,81,0.12)';
     ctx.fillRect(410,356,595,88);
     ctx.strokeStyle='rgba(245,196,81,0.45)';ctx.lineWidth=2;ctx.strokeRect(410,356,595,88);
     ctx.fillStyle='#f8e3ab';
-    ctx.font='700 30px Georgia, serif';
-    const dStr=card.delta?` (${card.delta>0?'+':''}${card.delta})`:'';
-    ctx.fillText(`${card.playerName}  ·  ${card.elo} ELO${dStr}`,434,412);
+    const bandTxt=`${card.playerName}  ·  ${card.leagueTxt||tr('Misafir','Guest')}`;
+    let bf=28;
+    ctx.font=`700 ${bf}px Alegreya, Georgia, serif`;
+    while(bf>18&&ctx.measureText(bandTxt).width>548){bf-=2;ctx.font=`700 ${bf}px Alegreya, Georgia, serif`;}
+    ctx.fillText(bandTxt,434,410);
 
     ctx.fillStyle='rgba(210,192,162,0.65)';
     ctx.font='600 20px Georgia, serif';

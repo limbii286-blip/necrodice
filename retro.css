@@ -1785,8 +1785,11 @@ body.dragging-joker #fx::after {
 .who .tot b {
   min-width: 1.15em;
 }
+.who .tot .tl b {
+  min-width: 0 !important;
+}
 .who .tot .pq {
-  font-family: var(--mf) !important;
+  font-family: 'Lora', var(--mf) !important;
   font-weight: 700 !important;
   font-size: clamp(23.5px, 3.8dvh, 34.5px) !important;
 }
