@@ -914,7 +914,8 @@ function findCardInState(S,cid){
 function decide(S,p,prm){ // en iyi hamleyi seç; null = pas
   CUR=prm;const d=prm.depth||0,nz=()=>prm.noise?(Math.random()+Math.random()-1)*prm.noise:0;
   if(Math.random()<prm.rand)return canDraw(S,p)&&Math.random()<.5?{t:'d'}:null;
-  const low=lowW(S),Tg=tg(S),myT=total(S,p,true);
+  const low=lowW(S),Tg=tg(S),myT=total(S,p,true),isBustedNow=!low&&myT>Tg;
+  const cost=isBustedNow?0.01:(S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc);
   const pool=unk(S,p);let best=null,bs=evalS(clone(S),p)+prm.dm;
   if(!low&&myT<Tg&&canDraw(S,p)&&pool.length){
     let v=0;pool.forEach(x=>{const T=clone(S);T.deck.pop();T.pl[p].open.push({id:++T.u,n:x});v+=look(T,p,d)});
@@ -922,7 +923,7 @@ function decide(S,p,prm){ // en iyi hamleyi seç; null = pas
   }
   const activeTg=tgE(S),activeCl=clE(S),oppOpen=total(S,1-p,false);
   if(!S.noJ[p])new Set(S.hand[p]).forEach(id=>{
-    if(id==16||!playable(S,p,id)||isRedundantJoker(S,p,id)||Math.random()>prm.jp)return;
+    if(id==16||!playable(S,p,id)||isRedundantJoker(S,p,id)||(!isBustedNow&&Math.random()>prm.jp))return;
     combos((NEED[id]||[]).map(k=>opts(S,p,k))).forEach(pk=>{
       if(id==15){
         if(pk[0]==pk[1])return;
@@ -944,14 +945,14 @@ function decide(S,p,prm){ // en iyi hamleyi seç; null = pas
       if(id==5&&pool.length){
         let sv=0;
         pool.forEach(x=>{const T=clone(S);T.deck=[{id:++T.u,n:x}];play(T,p,5,[]);sv+=look(T,p,d)});
-        const v=sv/pool.length-(S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc)+nz();
+        const v=sv/pool.length-cost+nz();
         if(v>bs){bs=v;best={t:'j',id,pk}};
         return;
       }
       const T=clone(S);
       if(id==5&&pool.length)T.deck=shuf(pool.map(n=>({id:++T.u,n}))).slice(0,S.deck.length);
       play(T,p,id,pk);
-      const v=look(T,p,d)-(S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc)+nz();if(v>bs){bs=v;best={t:'j',id,pk}}
+      const v=look(T,p,d)-cost+nz();if(v>bs){bs=v;best={t:'j',id,pk}}
     });
   });
   return best;
@@ -1271,7 +1272,8 @@ function decideHA(S,p,prm,done,budCap){ // zaman dilimli Monte-Carlo + Exact End
     top.push(c);
   }
   [pass,draw].forEach(c=>{if(c&&!top.includes(c))top.push(c)});
-  const TACTICAL=new Set([12,16,19,23,24,25]);
+  const isBustedNow=!low&&myT>Tg;
+  const TACTICAL=new Set(isBustedNow?[4,6,8,9,12,13,15,16,19,20,23,24,25]:[12,16,19,23,24,25]);
   TACTICAL.forEach(tid=>{const bestT=all.find(c=>c.a&&c.a.id===tid&&!top.includes(c));if(bestT)top.push(bestT)});
   if(top.length==1)return done(top[0].a);
   const matchPoint=S.rounds>=2||(S.pts&&(S.pts[0]>=1.5||S.pts[1]>=1.5));
@@ -1322,10 +1324,11 @@ function decideHA(S,p,prm,done,budCap){ // zaman dilimli Monte-Carlo + Exact End
       const v=rawSc[i];
       if(c.a&&c.a.t==='j'){
         // Maç sayısı değilken, jokeri oynadıktan sonra bile tur büyük ihtimalle kaybediliyorsa (v < -0.22) jokeri boşa yakma!
-        if(!matchPoint&&v<-0.22)return;
+        // Ancak bot şu an patlamışsa (isBustedNow) veya joker devasa bir kurtarma sağlıyorsa (+0.25) kesinlikle engelleme.
+        if(!matchPoint&&!isBustedNow&&v<-0.22&&(v-bestFreeVal)<0.25)return;
         const hiMult=HI_TIER_J.has(c.a.id)?0.025:0;
         const overkill=(bestFreeVal>=safeWinThr)?(matchPoint?0.08:0.16):0;
-        const minGain=(overkill>0?overkill:(matchPoint?0.02:0.075))+hiMult;
+        const minGain=isBustedNow?0.015:((overkill>0?overkill:(matchPoint?0.02:0.075))+hiMult);
         if(v>bestFreeVal+minGain&&v>bestVal+1e-9){bestVal=v;bi=i}
       }else if(v>bestVal+1e-9){
         bestVal=v;bi=i;
