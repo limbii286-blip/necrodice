@@ -895,7 +895,11 @@ function decide(S,p,prm){ // en iyi hamleyi seç; null = pas
   if(!S.noJ[p])new Set(S.hand[p]).forEach(id=>{
     if(id==16||!playable(S,p,id)||isRedundantJoker(S,p,id)||Math.random()>prm.jp)return;
     combos((NEED[id]||[]).map(k=>opts(S,p,k))).forEach(pk=>{
-      if(id==15&&pk[0]==pk[1])return;
+      if(id==15){
+        if(pk[0]==pk[1])return;
+        const f1=findCardInState(S,pk[0]),f2=findCardInState(S,pk[1]);
+        if(f1&&f2&&(f1.c.o??f1.c.n)===(f2.c.o??f2.c.n))return;
+      }
       if(id==6||id==7){const fc=findCardInState(S,pk[0]);if(fc&&fc.c.o===(id==6?0:12))return}
       if(id==12){
         const ef=S.eff.find(e=>e.uid==pk[0]);
@@ -915,7 +919,9 @@ function decide(S,p,prm){ // en iyi hamleyi seç; null = pas
         if(v>bs){bs=v;best={t:'j',id,pk}};
         return;
       }
-      const T=clone(S);T.deck=shuf(pool.map(n=>({id:++T.u,n}))).slice(0,S.deck.length);play(T,p,id,pk);
+      const T=clone(S);
+      if(id==5&&pool.length)T.deck=shuf(pool.map(n=>({id:++T.u,n}))).slice(0,S.deck.length);
+      play(T,p,id,pk);
       const v=look(T,p,d)-(S.rounds>=2&&prm.jl!=null?prm.jl:prm.jc)+nz();if(v>bs){bs=v;best={t:'j',id,pk}}
     });
   });
@@ -962,7 +968,11 @@ function listC(S,p,prm){
       return;
     }
     combos((NEED[id]||[]).map(k=>opts(S,p,k))).forEach(pk=>{
-      if(id==15&&pk[0]==pk[1])return;
+      if(id==15){
+        if(pk[0]==pk[1])return;
+        const f1=findCardInState(S,pk[0]),f2=findCardInState(S,pk[1]);
+        if(f1&&f2&&(f1.c.o??f1.c.n)===(f2.c.o??f2.c.n))return;
+      }
       if(id==6||id==7){
         const fc=findCardInState(S,pk[0]);
         if(fc&&fc.c.o===(id==6?0:12))return;
@@ -1073,6 +1083,15 @@ function world(S,p,prm,stratIdx){ // bilinmeyenleri rastgele/katmanlı doldurulm
     while(i<w.length-1&&(r-=w[i])>0)i++;
     cl.n=pool[i];
     pool.splice(i,1);
+  }
+  if(T.pl[q].closed.length>1){
+    for(let ci=1;ci<T.pl[q].closed.length;ci++){
+      const ex=T.pl[q].closed[ci];
+      if(ex&&ex.o==null&&pool.length){
+        const pickI=Math.floor(Math.random()*pool.length);
+        ex.n=pool.splice(pickI,1)[0];
+      }
+    }
   }
   if(prm&&prm.hero&&p===1&&S.botScry&&S.botScry.length){
     const scry=S.botScry.filter(n=>pool.includes(n));
@@ -1307,9 +1326,9 @@ const rnd=r=>r[0]+Math.random()*(r[1]-r[0]);
 let botGen=0,thinkOn=false;
 function bot(){
   const S=G,prm=DIFF=='imp'?impPrm():PR[DIFF],gen=++botGen;let n=0;
-  let plan=null,held=0,pid=0;
-  const think=r=>{thinkOn=true;talk('think',1,.55);const d=rnd(r)*(S.clocks&&S.clocks[1]<20?.42:.75);plan=null;const my=++pid;
-    const budCap=Math.max(900,Math.round(d-220));
+  let plan=null,held=0,pid=0,waitPlan=0;
+  const think=r=>{thinkOn=true;talk('think',1,.55);const d=rnd(r)*(S.clocks&&S.clocks[1]<20?.42:.75);plan=null;waitPlan=0;const my=++pid;
+    const budCap=Math.max(400,Math.round(d-280));
     setTimeout(()=>{if(gen!=botGen||S!=G||S.turn!=1||S.over)return;if(n>=8){plan={a:null};return}
       const ok=a=>{if(my==pid&&gen==botGen&&S==G&&S.turn==1&&!S.over)plan={a}};
       if(prm.mc)decideHA(S,1,prm,ok,budCap);else ok(decide(S,1,prm))},20);
@@ -1319,6 +1338,7 @@ function bot(){
     if(S.turn!=1||S.over){thinkOn=false;return}
     if(lock||(S.graceLeft&&S.graceLeft>0)){held=1;return setTimeout(step,150)}
     if(held){held=0;return setTimeout(step,420)}
+    if(!plan&&prm.mc&&waitPlan<3){waitPlan++;return setTimeout(step,120)}
     thinkOn=false;
     if(S.hpUsed&&!S.hpUsed[1]){
       const bh=avKey(S,1),bt=total(S,1),bT=tg(S),low=lowW(S);
