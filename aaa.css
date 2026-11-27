@@ -6,8 +6,8 @@
    ========================================================================== */
 
 :root {
-  --df: 'Alegreya', Georgia, serif;
-  --bf: 'Alegreya', Georgia, serif;
+  --df: 'Lora', 'Alegreya', Georgia, serif;
+  --bf: 'Lora', 'Alegreya', Georgia, serif;
   --aaa-brass: #c99a4a;
   --aaa-brass-bright: #f4d382;
   --aaa-ease: cubic-bezier(0.22, 1, 0.36, 1);
