@@ -3615,16 +3615,108 @@ function exitGame(){ // limbigames perdesi, sonra ilk ekrana dön
   },460);
   setTimeout(()=>{entering=false},1480);
 }
-function toggleMobileJokerPin(t){
-  if(!t)return;
-  const wasPinned=t.classList.contains('pinned');
-  document.querySelectorAll('#hand .j.pinned').forEach(el=>el.classList.remove('pinned'));
-  if(wasPinned){
-    if(window.clearOracleForJoker)window.clearOracleForJoker();
-  }else{
-    t.classList.add('pinned');
-    if(window.updateOracleForJoker)window.updateOracleForJoker(t);
+/* ---------- MOBİL JOKER YELPAZESİ ---------- */
+let _mf=null;
+function mfCanPlay(id){const S=G;return !!(S&&!S.over&&!lock&&!P&&S.turn===0&&!S.wait&&MODE!=='spectator'&&playable(S,0,id)&&(MODE!=='tutorial'||(tutStep===3&&id===3)));}
+function closeMobileFan(){
+  if(!_mf)return;
+  const f=_mf;_mf=null;
+  cancelAnimationFrame(f.raf);clearInterval(f.watch);
+  document.body.classList.remove('mob-fan-open');
+  if(window.clearOracleForJoker)window.clearOracleForJoker();
+  f.root.classList.add('closing');
+  setTimeout(()=>f.root.remove(),180);
+}
+function openMobileFan(startIdx){
+  const S=G;
+  if(!S||S.over||MODE==='spectator'||_mf)return;
+  if(!$('#m').hidden)return;
+  const handEls=[...document.querySelectorAll('#hand .j[data-j]')];
+  if(!handEls.length)return;
+  const ids=handEls.map(el=>+el.dataset.j);
+  const sig=ids.join(',');
+  const root=document.createElement('div');root.id='mob-fan';
+  const track=document.createElement('div');track.className='mf-track';root.appendChild(track);
+  const cards=ids.map((id,i)=>{const im=document.createElement('img');im.className='mf-card'+(mfCanPlay(id)?'':' mf-dim');im.draggable=false;im.alt='';im.src=handEls[i].currentSrc||handEls[i].src||IMG.j[id];hi(im,id);track.appendChild(im);return im;});
+  document.body.appendChild(root);
+  document.body.classList.add('mob-fan-open');
+  const n=ids.length,clampI=v=>Math.max(0,Math.min(n-1,v));
+  const f=_mf={root,cards,ids,handEls,pos:clampI(Number.isFinite(startIdx)?startIdx:0),target:0,lift:0,liftTarget:0,mode:null,raf:0,watch:0,openedAt:performance.now(),oracleIdx:-1};
+  f.target=f.pos;
+  const spacing=()=>Math.min(window.innerWidth*0.36,170);
+  function layout(){
+    const sp=spacing();
+    for(let i=0;i<n;i++){
+      const d=i-f.pos,ad=Math.abs(d);
+      const isC=i===Math.round(f.pos);
+      const x=d*sp, y=ad*ad*10+ad*14 + (isC?f.lift:0);
+      const rot=d*10, sc=Math.max(0.62,1-Math.min(ad,2.5)*0.15)*(isC&&f.lift<0?1+Math.min(-f.lift/600,0.08):1);
+      const c=cards[i];
+      c.style.transform=`translate3d(calc(-50% + ${x.toFixed(1)}px), ${y.toFixed(1)}px, 0) rotate(${(isC&&f.lift<0?0:rot).toFixed(2)}deg) scale(${sc.toFixed(3)})`;
+      c.style.zIndex=String(100-Math.round(ad*10));
+      c.style.opacity=ad>2.6?'0':'1';
+      c.classList.toggle('mf-center',isC);
+    }
   }
+  function tick(){
+    if(!_mf)return;
+    if(f.mode!=='swipe'){f.pos+=(f.target-f.pos)*0.22;if(Math.abs(f.target-f.pos)<0.002)f.pos=f.target;}
+    if(f.mode!=='lift'){f.lift+=(0-f.lift)*0.25;if(Math.abs(f.lift)<0.3)f.lift=0;}
+    layout();
+    const ci=Math.round(f.pos);
+    if(f.mode!=='swipe'&&f.pos===f.target&&f.oracleIdx!==ci){f.oracleIdx=ci;if(window.updateOracleForJoker)window.updateOracleForJoker(handEls[ci]);}
+    f.raf=requestAnimationFrame(tick);
+  }
+  let sx=0,sy=0,sPos=0,lastX=0,lastT=0,vel=0,pid=null,downCard=-1;
+  root.addEventListener('pointerdown',e=>{
+    e.preventDefault();e.stopPropagation();
+    pid=e.pointerId;try{root.setPointerCapture(pid)}catch(err){}
+    sx=lastX=e.clientX;sy=e.clientY;sPos=f.pos;lastT=performance.now();vel=0;f.mode=null;
+    downCard=cards.indexOf(e.target);
+  });
+  root.addEventListener('pointermove',e=>{
+    if(e.pointerId!==pid)return;
+    const dx=e.clientX-sx,dy=e.clientY-sy;
+    if(!f.mode&&Math.hypot(dx,dy)>8){
+      const ci=Math.round(f.pos);
+      if(dy<0&&Math.abs(dy)>Math.abs(dx)&&downCard===ci&&mfCanPlay(ids[ci])){f.mode='lift';f.target=ci;f.pos=ci;}
+      else f.mode='swipe';
+      if(f.oracleIdx!==-1&&f.mode==='swipe'){f.oracleIdx=-1;if(window.clearOracleForJoker)window.clearOracleForJoker();}
+    }
+    if(f.mode==='swipe'){
+      const now=performance.now();vel=(e.clientX-lastX)/Math.max(1,now-lastT);lastX=e.clientX;lastT=now;
+      let p=sPos-dx/spacing();
+      if(p<0)p=p*0.35; if(p>n-1)p=(n-1)+(p-(n-1))*0.35;
+      f.pos=p;
+    }else if(f.mode==='lift'){
+      f.lift=Math.min(0,dy);
+      cards[Math.round(f.pos)].classList.toggle('mf-ready',e.clientY<window.innerHeight*0.5);
+    }
+  });
+  function up(e,cancel){
+    if(e.pointerId!==pid)return;pid=null;
+    const mode=f.mode;f.mode=null;
+    if(mode==='swipe'){
+      let t=Math.round(f.pos - (Math.abs(vel)>0.45?Math.sign(vel)*0.6:0));
+      f.target=clampI(t);
+    }else if(mode==='lift'){
+      const ci=Math.round(f.pos),id=ids[ci];
+      cards[ci].classList.remove('mf-ready');
+      if(!cancel&&e.clientY<window.innerHeight*0.5&&mfCanPlay(id)){closeMobileFan();startJoker(id);return;}
+    }else if(!cancel){
+      if(performance.now()-f.openedAt<350)return;
+      if(downCard>=0&&downCard!==Math.round(f.pos)){f.target=downCard;return;}
+      if(downCard<0)closeMobileFan();
+    }
+  }
+  root.addEventListener('pointerup',e=>up(e,false));
+  root.addEventListener('pointercancel',e=>up(e,true));
+  f.watch=setInterval(()=>{
+    const cur=[...document.querySelectorAll('#hand .j[data-j]')].map(el=>el.dataset.j).join(',');
+    if(!G||G.over||!$('#m').hidden||cur!==sig||P)closeMobileFan();
+  },250);
+  layout();
+  f.raf=requestAnimationFrame(tick);
 }
 document.addEventListener('click',e=>{
   const jClick=e.target.closest&&e.target.closest('#hand .j[data-j]');
@@ -3692,7 +3784,7 @@ document.addEventListener('click',e=>{
       return; // masaüstünde sadece sürükleyerek oynanır
     }
     if(isMobView){
-      toggleMobileJokerPin(t);
+      openMobileFan(+t.dataset.jidx);
       return;
     }
     // Masaüstünde tıklayarak joker oynanmaz; basılı tutup masaya sürükleyerek oynanır
@@ -5136,8 +5228,8 @@ function createSmoothDragLoop(onFrame){
       cleanupDrag();
       if(!cancelled&&isMobView&&maxDist<=16&&tappedEl){
         window._suppressJokerClick=true;
-        setTimeout(()=>{window._suppressJokerClick=false},400);
-        toggleMobileJokerPin(tappedEl);
+        setTimeout(()=>{window._suppressJokerClick=false},220);
+        openMobileFan(+tappedEl.dataset.jidx);
       }
     }
   }
