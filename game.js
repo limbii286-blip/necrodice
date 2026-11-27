@@ -5136,7 +5136,7 @@ function createSmoothDragLoop(onFrame){
       cleanupDrag();
       if(!cancelled&&isMobView&&maxDist<=16&&tappedEl){
         window._suppressJokerClick=true;
-        setTimeout(()=>{window._suppressJokerClick=false},220);
+        setTimeout(()=>{window._suppressJokerClick=false},400);
         toggleMobileJokerPin(tappedEl);
       }
     }

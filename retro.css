@@ -3309,8 +3309,8 @@ body.dragging-joker #fx::after {
     width: var(--mjw);
     height: calc(var(--mjw) * 1.5);
   }
-  #hand .j:not(.dim):not(.drag-source-hidden):hover,
-  #hand .j.dim:not(.drag-source-hidden):hover {
+  #hand .j:not(.dim):not(.drag-source-hidden):not(.pinned):hover,
+  #hand .j.dim:not(.drag-source-hidden):not(.pinned):hover {
     width: 100% !important;
     transform: translateX(-50%) rotate(var(--r, 0deg)) !important;
   }
