@@ -3637,19 +3637,27 @@ function openMobileFan(startIdx){
   const sig=ids.join(',');
   const root=document.createElement('div');root.id='mob-fan';
   const track=document.createElement('div');track.className='mf-track';root.appendChild(track);
+  const ora=document.createElement('div');ora.className='mf-ora';track.appendChild(ora);
   const cards=ids.map((id,i)=>{const im=document.createElement('img');im.className='mf-card'+(mfCanPlay(id)?'':' mf-dim');im.draggable=false;im.alt='';im.src=handEls[i].currentSrc||handEls[i].src||IMG.j[id];hi(im,id);track.appendChild(im);return im;});
   document.body.appendChild(root);
   document.body.classList.add('mob-fan-open');
   const n=ids.length,clampI=v=>Math.max(0,Math.min(n-1,v));
-  const f=_mf={root,cards,ids,handEls,pos:clampI(Number.isFinite(startIdx)?startIdx:0),target:0,lift:0,liftTarget:0,mode:null,raf:0,watch:0,openedAt:performance.now(),oracleIdx:-1};
+  const f=_mf={root,ora,cards,ids,handEls,pos:clampI(Number.isFinite(startIdx)?startIdx:0),target:0,lift:0,liftTarget:0,mode:null,raf:0,watch:0,openedAt:performance.now(),oracleIdx:-1};
   f.target=f.pos;
-  const spacing=()=>Math.min(window.innerWidth*0.36,170);
+  const spacing=()=>Math.min(window.innerWidth*0.24,100);
+  function syncOra(){
+    const t=document.querySelector('#me .who .ora-tot'),s=document.querySelector('#fx .seal .ora-seal, #seal .ora-seal');
+    let h='';
+    if(t)h+=`<span class="${t.classList.contains('ora-exact')?'ora-exact':t.classList.contains('ora-bust')?'ora-bust':''}">${tr('Toplam','Total')} ${t.textContent}</span>`;
+    if(s)h+=`<span>${tr('Mühür','Seal')} ${s.textContent}</span>`;
+    ora.innerHTML=h;ora.classList.toggle('on',!!h);
+  }
   function layout(){
     const sp=spacing();
     for(let i=0;i<n;i++){
       const d=i-f.pos,ad=Math.abs(d);
       const isC=i===Math.round(f.pos);
-      const x=d*sp, y=ad*ad*10+ad*14 + (isC?f.lift:0);
+      const x=d*sp, y=ad*ad*6+ad*9 + (isC?f.lift:0);
       const rot=d*10, sc=Math.max(0.62,1-Math.min(ad,2.5)*0.15)*(isC&&f.lift<0?1+Math.min(-f.lift/600,0.08):1);
       const c=cards[i];
       c.style.transform=`translate3d(calc(-50% + ${x.toFixed(1)}px), ${y.toFixed(1)}px, 0) rotate(${(isC&&f.lift<0?0:rot).toFixed(2)}deg) scale(${sc.toFixed(3)})`;
@@ -3664,7 +3672,7 @@ function openMobileFan(startIdx){
     if(f.mode!=='lift'){f.lift+=(0-f.lift)*0.25;if(Math.abs(f.lift)<0.3)f.lift=0;}
     layout();
     const ci=Math.round(f.pos);
-    if(f.mode!=='swipe'&&f.pos===f.target&&f.oracleIdx!==ci){f.oracleIdx=ci;if(window.updateOracleForJoker)window.updateOracleForJoker(handEls[ci]);}
+    if(f.mode!=='swipe'&&f.pos===f.target&&f.oracleIdx!==ci){f.oracleIdx=ci;if(window.updateOracleForJoker)window.updateOracleForJoker(handEls[ci]);syncOra();}
     f.raf=requestAnimationFrame(tick);
   }
   let sx=0,sy=0,sPos=0,lastX=0,lastT=0,vel=0,pid=null,downCard=-1;
@@ -3679,9 +3687,9 @@ function openMobileFan(startIdx){
     const dx=e.clientX-sx,dy=e.clientY-sy;
     if(!f.mode&&Math.hypot(dx,dy)>8){
       const ci=Math.round(f.pos);
-      if(dy<0&&Math.abs(dy)>Math.abs(dx)&&downCard===ci&&mfCanPlay(ids[ci])){f.mode='lift';f.target=ci;f.pos=ci;}
+      if(dy<0&&Math.abs(dy)>Math.abs(dx)&&downCard===ci&&mfCanPlay(ids[ci])){f.mode='lift';f.target=ci;f.pos=ci;ora.classList.remove('on');}
       else f.mode='swipe';
-      if(f.oracleIdx!==-1&&f.mode==='swipe'){f.oracleIdx=-1;if(window.clearOracleForJoker)window.clearOracleForJoker();}
+      if(f.mode==='swipe'){if(f.oracleIdx!==-1){f.oracleIdx=-1;if(window.clearOracleForJoker)window.clearOracleForJoker();}ora.classList.remove('on');}
     }
     if(f.mode==='swipe'){
       const now=performance.now();vel=(e.clientX-lastX)/Math.max(1,now-lastT);lastX=e.clientX;lastT=now;
@@ -3703,6 +3711,7 @@ function openMobileFan(startIdx){
       const ci=Math.round(f.pos),id=ids[ci];
       cards[ci].classList.remove('mf-ready');
       if(!cancel&&e.clientY<window.innerHeight*0.5&&mfCanPlay(id)){closeMobileFan();startJoker(id);return;}
+      f.oracleIdx=-1;
     }else if(!cancel){
       if(performance.now()-f.openedAt<350)return;
       if(downCard>=0&&downCard!==Math.round(f.pos)){f.target=downCard;return;}
