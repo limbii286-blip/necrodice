@@ -4658,12 +4658,14 @@ function hostRoom(inviteTarget,onCodeReady){
       ACTIVE_OUT_INV_ID=invId;
       const myName=(USER_ACC&&!USER_ACC.isGuest)?USER_ACC.username:tr('Misafir','Guest');
       const myElo=Math.round((USER_ACC&&USER_ACC.elo)||1200);
+      const myFl=USER_ACC?getAccountLeague(USER_ACC):formatLeague(null,false);
       const ref=fbDb.collection('lobby_invites').doc(invId);
       ref.set({
         id:invId,
         fromId:getMyPresenceId(),
         fromName:myName,
         fromElo:myElo,
+        fromLeagueName:myFl.name,
         toId:inviteTarget.pid,
         toName:inviteTarget.name||'',
         roomCode:code,
@@ -7550,6 +7552,7 @@ function updateLobbyPresence(forceOffline=false){
   const name=(USER_ACC&&!USER_ACC.isGuest&&USER_ACC.username)?USER_ACC.username:tr('Misafir','Guest');
   const elo=Math.round((USER_ACC&&USER_ACC.elo)||1200);
   const isGuest=!(USER_ACC&&!USER_ACC.isGuest);
+  const fl=USER_ACC?getAccountLeague(USER_ACC):formatLeague(null,false);
   const roomCode=inGame?(MODE==='host'?CURRENT_HOST_CODE:(MODE==='guest'?LAST_JOIN_CODE:(MODE==='bot'?CURRENT_BOT_SPEC_CODE:''))):'';
   const title=(USER_ACC&&USER_ACC.title)||'';
   ref.set({
@@ -7557,6 +7560,12 @@ function updateLobbyPresence(forceOffline=false){
     name,
     elo,
     isGuest,
+    league:(USER_ACC&&USER_ACC.league)||null,
+    leagueId:fl.id,
+    leagueName:fl.name,
+    leagueCls:fl.cls,
+    leagueLp:fl.lp|0,
+    leagueUnranked:!!fl.unranked,
     title,
     roomCode,
     status:inGame?'ingame':'menu',
@@ -7582,7 +7591,7 @@ function showIncomingInviteBanner(inv){
       <span class="lit-ic">◈</span>
       <div class="lit-txt">
         <b>${tr('Düello Daveti!','Duel Invite!')}</b>
-        <small><em>${escHtml(inv.fromName||tr('Oyuncu','Player'))}</em> (${Math.round(inv.fromElo||1200)} ELO) ${tr('seni düelloya davet ediyor.','challenges you to a duel.')}</small>
+        <small><em>${escHtml(inv.fromName||tr('Oyuncu','Player'))}</em> (${escHtml(inv.fromLeagueName||eloRank(inv.fromElo||1200).name)}) ${tr('seni düelloya davet ediyor.','challenges you to a duel.')}</small>
       </div>
     </div>
     <div class="lit-acts">
@@ -7782,7 +7791,19 @@ function renderLobbyModalBody(){
   };
   const rowsHtml=list.length?list.map(u=>{
     const isMe=u.pid===myPid;
-    const rk=eloRank(u.elo);
+    let rk;
+    if(u.league&&typeof u.league==='object'){
+      const uClone={isGuest:!!u.isGuest,elo:Math.round(u.elo||1200),matches:u.leagueUnranked?0:5,league:u.league};
+      const uFl=formatLeague(ensureLeagueState(uClone),false);
+      rk={ic:leagueCrestSvg(uFl.id,22),name:uFl.name,cls:uFl.cls,id:uFl.id,fl:uFl};
+    }else if(u.leagueId&&u.leagueName){
+      rk={ic:leagueCrestSvg(u.leagueId,22),name:u.leagueName,cls:u.leagueCls||('rk-'+u.leagueId),id:u.leagueId};
+    }else if(u.isGuest){
+      const gFl=formatLeague({unranked:false,tier:0,div:2,lp:0,placementGames:5},false);
+      rk={ic:leagueCrestSvg(gFl.id,22),name:gFl.name,cls:gFl.cls,id:gFl.id,fl:gFl};
+    }else{
+      rk=eloRank(u.elo);
+    }
     const inGame=u.status==='ingame';
     const dispName=displayNameOf(u);
     const tLbl=(u.title&&typeof getTitleLabel==='function')?`${escHtml(getTitleLabel(u.title))} · `:'';
