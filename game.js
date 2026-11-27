@@ -8162,8 +8162,8 @@ const DICE_SKINS=[
   {id:'void',trN:'Hiçlik Zarı',enN:'Void Die',req:a=>(a.achievements||[]).includes('imp_slayer')||(a.peakElo||1200)>=1500,trR:'İmkansız Bot Zaferi / 1500 ELO',enR:'Beat Impossible AI / 1500 ELO'}
 ];
 const BOARD_THEMES=[
-  {id:'classic',trN:'Gotik Masa',enN:'Gothic Table',req:()=>true,trR:'Varsayılan',enR:'Default'},
-  {id:'frost',trN:'Donmuş Mahzen',enN:'Frozen Vault',req:a=>((a.wins||0)+(a.unrankedWins||0))>=3||(a.peakElo||1200)>=1250,trR:'3 Zafer veya 1250 ELO',enR:'3 Wins or 1250 ELO'},
+  {id:'classic',trN:'Donmuş Mahzen',enN:'Frozen Vault',req:()=>true,trR:'Varsayılan',enR:'Default'},
+  {id:'gothic',trN:'Gotik Masa',enN:'Gothic Table',req:()=>true,trR:'Ücretsiz Kozmetik',enR:'Free Cosmetic'},
   {id:'emerald',trN:'Zümrüt Mahzen',enN:'Emerald Crypt',req:a=>((a.wins||0)+(a.unrankedWins||0))>=4||(a.peakElo||1200)>=1300,trR:'4 Zafer veya 1300 ELO',enR:'4 Wins or 1300 ELO'},
   {id:'crimson',trN:'Kanlı Sunak',enN:'Blood Altar',req:a=>(a.peakElo||1200)>=1350||(a.achievements||[]).includes('win_streak3'),trR:'1350 ELO veya 3 Seri',enR:'1350 ELO or 3-Win Streak'},
   {id:'void',trN:'Hiçlik Tahtı',enN:'Void Throne',req:a=>(a.achievements||[]).includes('imp_slayer')||(a.peakElo||1200)>=1450,trR:'İmkansız Bot Zaferi / 1450 ELO',enR:'Beat Impossible AI / 1450 ELO'},
@@ -8235,8 +8235,8 @@ function getTitleLabel(id){
   return a?(isEn()?a.enT:a.trT):'';
 }
 const BOARD_IMG_MAP={
-  classic:'board_gothic.jpg?v=20261115_sym1',
-  frost:'board_frost.jpg?v=20261125_b1',
+  classic:'board_frost.jpg?v=20261125_b1',
+  gothic:'board_gothic.jpg?v=20261115_sym1',
   emerald:'board_gothic.jpg?v=20261115_sym1',
   crimson:'board_crimson.jpg?v=20261125_b1',
   void:'board_gothic.jpg?v=20261115_sym1',

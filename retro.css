@@ -1299,7 +1299,7 @@ body:has(#menu:not([hidden])) #fl {
   z-index: 0;
   pointer-events: none;
   display: block;
-  background: #070508 url('board_gothic.jpg?v=20261115_sym1') center / cover no-repeat;
+  background: #060b12 url('board_frost.jpg?v=20261125_b1') center / cover no-repeat;
 }
 
 main {
@@ -2934,7 +2934,7 @@ body.dragging-joker #fx::after {
 /* Mobil ve Dar Ekran Uyumluluğu */
 @media (max-width: 760px) {
   #lor-valley-bg {
-    background: #070508 url('board_gothic_mobile.jpg?v=20261116_m1') center / cover no-repeat;
+    background: #060b12 url('board_frost.jpg?v=20261125_b1') center / cover no-repeat;
   }
   #mb2 {
     width: min(95vw, 430px) !important;
@@ -8858,8 +8858,8 @@ body.cb .qm-vs-card.opp {
   flex-shrink: 0;
   border: 1px solid rgba(255, 255, 255, 0.35);
 }
-.bt-classic { background: linear-gradient(135deg, #2a1d17, #6d4c32); }
-.bt-frost { background: linear-gradient(135deg, #0b2538, #67e8f9); }
+.bt-classic { background: linear-gradient(135deg, #0b2538, #67e8f9); }
+.bt-gothic { background: linear-gradient(135deg, #2a1d17, #6d4c32); }
 .bt-emerald { background: linear-gradient(135deg, #064e3b, #34d399); }
 .bt-crimson { background: linear-gradient(135deg, #3b080e, #dc2626); }
 .bt-void { background: linear-gradient(135deg, #2e1065, #a855f7); }
@@ -10790,7 +10790,10 @@ body[data-board="gold"] main::after {
   }
 }
 
-/* GERÇEK ÖZEL ÇİZİM SAVAŞ MASALARI (DONMUŞ MAHZEN, KANLI SUNAK, ALTIN HAZİNE) */
+/* GERÇEK ÖZEL ÇİZİM SAVAŞ MASALARI (DONMUŞ MAHZEN VARSAYILAN, GOTİK MASA, KANLI SUNAK, ALTIN HAZİNE) */
+body[data-board="gothic"] #lor-valley-bg {
+  background: #070508 url('board_gothic.jpg?v=20261115_sym1') center / cover no-repeat !important;
+}
 body[data-board="frost"] #lor-valley-bg {
   background: #060b12 url('board_frost.jpg?v=20261125_b1') center / cover no-repeat !important;
 }
@@ -10800,11 +10803,13 @@ body[data-board="crimson"] #lor-valley-bg {
 body[data-board="gold"] #lor-valley-bg {
   background: #0c0905 url('board_gold.jpg?v=20261125_b1') center / cover no-repeat !important;
 }
+body[data-board="gothic"] main::after,
 body[data-board="frost"] main::after,
 body[data-board="crimson"] main::after,
 body[data-board="gold"] main::after {
   background: none !important;
 }
+.bt-prev-gothic img,
 .bt-prev-frost img,
 .bt-prev-crimson img,
 .bt-prev-gold img,
