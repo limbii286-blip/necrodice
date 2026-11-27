@@ -1803,7 +1803,7 @@ body.dragging-joker #fx::after {
 .who .tot .pq {
   font-family: 'Cinzel', var(--mf) !important;
   font-weight: 700 !important;
-  font-size: clamp(23.5px, 3.7dvh, 33px) !important;
+  font-size: clamp(26px, 4.1dvh, 36px) !important;
 }
 .who .tot > b,
 .who .tot .tl {
@@ -1821,13 +1821,13 @@ body.dragging-joker #fx::after {
   display: flex;
   align-items: baseline;
   justify-content: center !important;
-  gap: 4px;
+  gap: 7px;
   min-width: 92px;
 }
 .who .tl-suf {
   display: inline-flex;
   align-items: baseline;
-  gap: 4px;
+  gap: 7px;
 }
 .who .tl-suf:empty {
   display: none;
@@ -3134,7 +3134,7 @@ body.dragging-joker #fx::after {
     font-size: clamp(19.5px, 3.1dvh, 24.5px) !important;
   }
   .who .tot .pq {
-    font-size: clamp(18px, 2.85dvh, 22.5px) !important;
+    font-size: clamp(19.5px, 3.1dvh, 24.5px) !important;
   }
   .cards {
     --mcw: clamp(50px, min(15.6vw, 9.2dvh), 70px);

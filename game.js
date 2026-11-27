@@ -1612,9 +1612,13 @@ function clearStaleAvAttackers(){
   document.querySelectorAll('.who .av').forEach(av=>{if(av.style.opacity==='0')av.style.opacity='';});
 }
 function spawnAvAttackerClone(av,r){
-  const c=document.createElement('img');
-  c.src=av.src;
+  const c=av.cloneNode(false);
+  c.removeAttribute('style');
+  c.decoding='sync';
   c.className='av-attacker';
+  c.style.display='block';
+  c.style.opacity='1';
+  c.style.visibility='visible';
   c.style.left=r.left+'px';
   c.style.top=r.top+'px';
   c.style.width=r.width+'px';
