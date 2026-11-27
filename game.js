@@ -2031,7 +2031,7 @@ const HEROES_EN=[
 ];
 let HEROES=[...HEROES_TR];
 let HERO_MAP=Object.fromEntries(HEROES.map(h=>[h.id,h]));
-const hpImg=id=>`<img class="hp-art" src="hp_icons/${id}.jpg?v=20261126_hp_e3" alt="" decoding="async">`;
+const hpImg=id=>`<img class="hp-art" src="hp_icons/${id}.jpg?v=20261127_hp_e4" alt="" decoding="async">`;
 const HP_IC={
   c:hpImg('c'),
   p:hpImg('p'),
