@@ -5071,7 +5071,8 @@ function createSmoothDragLoop(onFrame){
     sticky=false;
     pointerId=e.pointerId;
     try{jEl.setPointerCapture(e.pointerId)}catch(err){}
-    if(e.pointerType!=='touch'){
+    const isMobView=window.innerWidth<=760||e.pointerType==='touch';
+    if(!isMobView){
       startGhost(e.clientX,e.clientY);
     }
   },true);
@@ -5089,7 +5090,8 @@ function createSmoothDragLoop(onFrame){
     const dx=e.clientX-startX,dy=e.clientY-startY;
     const dist=Math.hypot(dx,dy);
     if(dist>maxDist)maxDist=dist;
-    if(!isDragging&&dist>8){
+    const dragThresh=(e.pointerType==='touch'||window.innerWidth<=760)?16:8;
+    if(!isDragging&&dist>dragThresh){
       startGhost(e.clientX,e.clientY);
     }
     if(isDragging&&ghost){
@@ -5106,9 +5108,9 @@ function createSmoothDragLoop(onFrame){
     if(!dragEl||e.pointerId!==pointerId)return;
     const wasDragging=isDragging;
     const id=dragId;
-    const isDesktop=e.pointerType!=='touch';
+    const isMobView=window.innerWidth<=760||e.pointerType==='touch';
     // Masaüstünde kısa tıklama yapıldıysa: kart büyümüş şekilde elimizde kalsın (sticky mod)
-    if(!cancelled&&wasDragging&&isDesktop&&maxDist<=10&&!isOverDropZone(e.clientY)){
+    if(!cancelled&&wasDragging&&!isMobView&&maxDist<=10&&!isOverDropZone(e.clientY)){
       sticky=true;
       pointerId=null;
       if(ghost){
@@ -5132,9 +5134,9 @@ function createSmoothDragLoop(onFrame){
     }else{
       const tappedEl=dragEl;
       cleanupDrag();
-      if(!cancelled&&e.pointerType==='touch'&&maxDist<=10&&tappedEl){
+      if(!cancelled&&isMobView&&maxDist<=16&&tappedEl){
         window._suppressJokerClick=true;
-        setTimeout(()=>{window._suppressJokerClick=false},200);
+        setTimeout(()=>{window._suppressJokerClick=false},220);
         toggleMobileJokerPin(tappedEl);
       }
     }
