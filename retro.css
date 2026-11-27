@@ -1776,14 +1776,14 @@ body.dragging-joker #fx::after {
   max-width: none !important;
 }
 .who .tot small {
-  font: 700 12.5px/1 var(--mf) !important;
-  letter-spacing: 1.2px !important;
+  font: 700 14.5px/1 var(--mf) !important;
+  letter-spacing: 1px !important;
   color: #b8a278 !important;
   margin-bottom: 0;
 }
 .who .tot b,
 .who .pq {
-  font: 800 clamp(26px, 4.2dvh, 38px)/1 var(--mf) !important;
+  font: 800 clamp(30px, 4.9dvh, 44px)/1 var(--mf) !important;
   font-style: normal !important;
   font-variant-numeric: lining-nums tabular-nums !important;
   font-feature-settings: "lnum" 1, "tnum" 1 !important;
@@ -1803,7 +1803,7 @@ body.dragging-joker #fx::after {
 .who .tot .pq {
   font-family: 'Lora', var(--mf) !important;
   font-weight: 700 !important;
-  font-size: clamp(23.5px, 3.8dvh, 34.5px) !important;
+  font-size: clamp(27px, 4.4dvh, 40px) !important;
 }
 .who .tot.bust b {
   color: var(--blood2) !important;
@@ -3115,7 +3115,7 @@ body.dragging-joker #fx::after {
   .who .tot small {
     position: static !important;
     transform: none !important;
-    font-size: 11.5px !important;
+    font-size: 13px !important;
     line-height: 1 !important;
     white-space: nowrap;
   }
@@ -3127,10 +3127,10 @@ body.dragging-joker #fx::after {
     min-width: 60px;
   }
   .who .tot b {
-    font-size: clamp(19px, 3dvh, 24px) !important;
+    font-size: clamp(22px, 3.5dvh, 28px) !important;
   }
   .who .tot .pq {
-    font-size: clamp(17.5px, 2.75dvh, 22px) !important;
+    font-size: clamp(20px, 3.2dvh, 25.5px) !important;
   }
   .cards {
     --mcw: clamp(50px, min(15.6vw, 9.2dvh), 70px);
