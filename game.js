@@ -3628,7 +3628,7 @@ function toggleMobileJokerPin(t){
 }
 document.addEventListener('click',e=>{
   const jClick=e.target.closest&&e.target.closest('#hand .j[data-j]');
-  if(!jClick){
+  if(!jClick&&!window._suppressJokerClick){
     document.querySelectorAll('#hand .j.pinned').forEach(el=>el.classList.remove('pinned'));
     if(window.clearOracleForJoker)window.clearOracleForJoker();
   }
