@@ -3377,14 +3377,16 @@ body.dragging-joker #fx::after {
   position: fixed;
   z-index: 95;
   margin: 0 !important;
-  border-radius: 10px !important;
+  border-radius: 11px !important;
   padding: 0;
   border: none;
   object-fit: cover;
   pointer-events: none;
   box-shadow:
+    0 0 0 2px #100804,
+    0 0 0 3.5px #b88a44,
     0 18px 42px rgba(0, 0, 0, 0.95),
-    0 0 28px rgba(242, 210, 139, 0.85);
+    0 0 28px rgba(242, 210, 139, 0.72) !important;
   will-change: transform;
 }
 .who .av.av-hit {

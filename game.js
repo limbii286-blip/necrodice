@@ -415,7 +415,7 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
   const targetRz = targetAng.rz;
 
   let rx = initAng.rx, ry = initAng.ry, rz = initAng.rz;
-  let rolling = false, finished = false;
+  let rolling = false, finished = false, rollStarted = false, triggered = false;
   let animId = null;
 
   const render = (num, isCrit, isFail, scale, textPop, ovNum) => {
@@ -429,7 +429,9 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
   setTimeout(()=>{ if(d.isConnected) d.classList.add('ready'); }, 80);
 
   const runRoll = () => {
-    if(!d.isConnected || rolling) return;
+    if(!d.isConnected || rolling || finished || rollStarted) return;
+    rollStarted = true;
+    triggered = true;
     rolling = true;
     d.classList.add('rolling');
     snd('dice');vib([100,50,100]);
@@ -649,7 +651,8 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
   };
 
   window._triggerD20Roll=()=>{
-    if(!d.isConnected||rolling||finished)return false;
+    if(!d.isConnected||triggered||rolling||finished||rollStarted)return false;
+    triggered=true;
     const b=document.querySelector('#rl');
     if(b){b.disabled=true;b.classList.add('used')}
     snd('heart');
@@ -661,7 +664,8 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
   const isOnline=(MODE==='host'||MODE==='guest'||MODE==='spectator');
   if(rl&&isMe&&MODE!=='spectator') {
     const startMyD20=()=>{
-      if(rolling||finished||rl.disabled)return;
+      if(triggered||rolling||finished||rollStarted||rl.disabled)return;
+      triggered=true;
       rl.disabled=true;
       rl.classList.add('used');
       const sendD20=()=>{
@@ -684,6 +688,7 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
       if(MODE==='bot'&&spectators.length){
         spectators.forEach(s=>{try{if(s.open)s.send({k:'d20_roll'})}catch(e){}});
       }
+      triggered=true;
       snd('heart');
       setTimeout(runRoll, 1000);
     }else if(window._pendingD20Roll&&(Date.now()-window._pendingD20Roll)<10000){
@@ -692,7 +697,8 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
     }else{
       // Güvenlik ağı: rakibin zar sinyali ağda kaybolursa veya gecikirse 4.5sn sonra zarı otomatik döndür
       setTimeout(()=>{
-        if(d.isConnected&&!rolling&&!finished){
+        if(d.isConnected&&!triggered&&!rolling&&!finished&&!rollStarted){
+          triggered=true;
           snd('heart');
           runRoll();
         }
@@ -1601,24 +1607,49 @@ function triggerVampBurnFx(vb){
   const targetEl=jEls[vb.idx]||jEls[jEls.length-1];
   if(targetEl)dustElements([targetEl],true);
 }
+function clearStaleAvAttackers(){
+  document.querySelectorAll('.av-attacker').forEach(el=>el.remove());
+  document.querySelectorAll('.who .av').forEach(av=>{if(av.style.opacity==='0')av.style.opacity='';});
+}
+function spawnAvAttackerClone(av,r){
+  const c=document.createElement('img');
+  c.src=av.src;
+  c.className='av-attacker';
+  c.style.left=r.left+'px';
+  c.style.top=r.top+'px';
+  c.style.width=r.width+'px';
+  c.style.height=r.height+'px';
+  c.style.objectPosition=av.style.objectPosition||getComputedStyle(av).objectPosition||'50% 50%';
+  document.body.appendChild(c);
+  av.style.opacity='0';
+  return c;
+}
+function bindAvCloneCleanup(anim,c,av,dur){
+  let done=false;
+  const cleanup=()=>{
+    if(done)return;
+    done=true;
+    if(c&&c.isConnected)c.remove();
+    if(av&&av.isConnected)av.style.opacity='';
+  };
+  anim.onfinish=cleanup;
+  setTimeout(cleanup,dur+150);
+}
+function triggerAvHitRecoil(dstAv){
+  dstAv.classList.remove('av-hit');void dstAv.offsetWidth;dstAv.classList.add('av-hit');
+  setTimeout(()=>{if(dstAv.isConnected)dstAv.classList.remove('av-hit');},620);
+}
 function heroAttack(winIdx,tanked=false){
   const srcAv=document.querySelector((winIdx===0?'#me':'#opp')+' .who .av');
   const dstAv=document.querySelector((winIdx===0?'#opp':'#me')+' .who .av');
   if(!srcAv||!dstAv)return;
+  clearStaleAvAttackers();
   const r1=srcAv.getBoundingClientRect(),r2=dstAv.getBoundingClientRect();
   if(!r1.width||!r2.width)return;
   const dx=(r2.left+r2.width/2)-(r1.left+r1.width/2);
   const dy=(r2.top+r2.height/2)-(r1.top+r1.height/2);
-  const clone=document.createElement('img');
-  clone.src=srcAv.src;
-  clone.className='av-attacker';
-  clone.style.left=r1.left+'px';
-  clone.style.top=r1.top+'px';
-  clone.style.width=r1.width+'px';
-  clone.style.height=r1.height+'px';
-  document.body.appendChild(clone);
-  srcAv.style.opacity='0';
-
+  const clone=spawnAvAttackerClone(srcAv,r1);
+  const dur=2550;
   const anim=clone.animate([
     {transform:'translate3d(0,0,0) scale(1) rotate(0deg)',offset:0},
     {transform:`translate3d(${(-dx*0.06).toFixed(1)}px,${(-dy*0.06).toFixed(1)}px,0) scale(1.14) rotate(-3deg)`,offset:0.22},
@@ -1627,12 +1658,12 @@ function heroAttack(winIdx,tanked=false){
     {transform:`translate3d(${(dx*0.92).toFixed(1)}px,${(dy*0.92).toFixed(1)}px,0) scale(1.26) rotate(0deg)`,offset:0.62},
     {transform:`translate3d(${(dx*0.84).toFixed(1)}px,${(dy*0.84).toFixed(1)}px,0) scale(1.16) rotate(0deg)`,offset:0.69},
     {transform:'translate3d(0,0,0) scale(1) rotate(0deg)',offset:1}
-  ],{duration:2550,easing:'cubic-bezier(0.22,1,0.36,1)',fill:'forwards'});
+  ],{duration:dur,easing:'cubic-bezier(0.22,1,0.36,1)',fill:'forwards'});
 
   setTimeout(()=>{
     if(!dstAv.isConnected)return;
     snd('stamp');vib([60,40,120]);
-    dstAv.classList.remove('av-hit');void dstAv.offsetWidth;dstAv.classList.add('av-hit');
+    triggerAvHitRecoil(dstAv);
     const imp=document.createElement('div');
     imp.className='av-impact';
     imp.style.left=(r2.left+r2.width/2)+'px';
@@ -1660,15 +1691,13 @@ function heroAttack(winIdx,tanked=false){
     }
   },1180);
 
-  anim.onfinish=()=>{
-    clone.remove();
-    if(srcAv.isConnected)srcAv.style.opacity='';
-  };
+  bindAvCloneCleanup(anim,clone,srcAv,dur);
 }
 function heroClash(){
   const av0=document.querySelector('#me .who .av');
   const av1=document.querySelector('#opp .who .av');
   if(!av0||!av1)return;
+  clearStaleAvAttackers();
   const r0=av0.getBoundingClientRect(),r1=av1.getBoundingClientRect();
   if(!r0.width||!r1.width)return;
   const cx0=r0.left+r0.width/2,cy0=r0.top+r0.height/2;
@@ -1676,16 +1705,7 @@ function heroClash(){
   const mx=(cx0+cx1)/2,my=(cy0+cy1)/2;
   const dx0=mx-cx0,dy0=(my-cy0)+r0.height*0.32;
   const dx1=mx-cx1,dy1=(my-cy1)-r1.height*0.32;
-  const mkClone=(av,r)=>{
-    const c=document.createElement('img');
-    c.src=av.src;c.className='av-attacker';
-    c.style.left=r.left+'px';c.style.top=r.top+'px';
-    c.style.width=r.width+'px';c.style.height=r.height+'px';
-    document.body.appendChild(c);
-    av.style.opacity='0';
-    return c;
-  };
-  const c0=mkClone(av0,r0),c1=mkClone(av1,r1);
+  const c0=spawnAvAttackerClone(av0,r0),c1=spawnAvAttackerClone(av1,r1);
   const dur=2800;
   const run=(c,dx,dy,tilt)=>c.animate([
     {transform:'translate3d(0,0,0) scale(1) rotate(0deg)',offset:0},
@@ -1707,13 +1727,14 @@ function heroClash(){
     document.body.appendChild(imp);
     setTimeout(()=>imp.remove(),1100);
   },1736);
-  a0.onfinish=()=>{c0.remove();if(av0.isConnected)av0.style.opacity='';};
-  a1.onfinish=()=>{c1.remove();if(av1.isConnected)av1.style.opacity='';};
+  bindAvCloneCleanup(a0,c0,av0,dur);
+  bindAvCloneCleanup(a1,c1,av1,dur);
 }
 function heroVampTie(vampIdx){
   const av0=document.querySelector('#me .who .av');
   const av1=document.querySelector('#opp .who .av');
   if(!av0||!av1)return;
+  clearStaleAvAttackers();
   const r0=av0.getBoundingClientRect(),r1=av1.getBoundingClientRect();
   if(!r0.width||!r1.width)return;
   const cx0=r0.left+r0.width/2,cy0=r0.top+r0.height/2;
@@ -1721,16 +1742,7 @@ function heroVampTie(vampIdx){
   const mx=(cx0+cx1)/2,my=(cy0+cy1)/2;
   const dx0=mx-cx0,dy0=(my-cy0)+r0.height*0.32;
   const dx1=mx-cx1,dy1=(my-cy1)-r1.height*0.32;
-  const mkClone=(av,r)=>{
-    const c=document.createElement('img');
-    c.src=av.src;c.className='av-attacker';
-    c.style.left=r.left+'px';c.style.top=r.top+'px';
-    c.style.width=r.width+'px';c.style.height=r.height+'px';
-    document.body.appendChild(c);
-    av.style.opacity='0';
-    return c;
-  };
-  const c0=mkClone(av0,r0),c1=mkClone(av1,r1);
+  const c0=spawnAvAttackerClone(av0,r0),c1=spawnAvAttackerClone(av1,r1);
   const dur=3600;
   const run=(c,dx,dy,tilt,isVamp)=>c.animate([
     {transform:'translate3d(0,0,0) scale(1) rotate(0deg)',offset:0},
@@ -1768,7 +1780,7 @@ function heroVampTie(vampIdx){
     const dstAv=vampIdx===0?av1:av0,dr=vampIdx===0?r1:r0;
     if(!dstAv.isConnected)return;
     snd('stamp');vib([60,40,120]);
-    dstAv.classList.remove('av-hit');void dstAv.offsetWidth;dstAv.classList.add('av-hit');
+    triggerAvHitRecoil(dstAv);
     const dmg=document.createElement('div');
     dmg.className='av-dmg';
     dmg.textContent='-1';
@@ -1777,8 +1789,8 @@ function heroVampTie(vampIdx){
     document.body.appendChild(dmg);
     setTimeout(()=>dmg.remove(),1250);
   },3050);
-  a0.onfinish=()=>{c0.remove();if(av0.isConnected)av0.style.opacity='';};
-  a1.onfinish=()=>{c1.remove();if(av1.isConnected)av1.style.opacity='';};
+  bindAvCloneCleanup(a0,c0,av0,dur);
+  bindAvCloneCleanup(a1,c1,av1,dur);
 }
 function endRound(){
   const S=G,a=[total(S,0),total(S,1)],T=tg(S);
