@@ -4915,13 +4915,25 @@ body.cb #hdr .pip.l { background: var(--cb-bad); border-color: #fed7aa; box-shad
 body.cb #hdr .pip.d { background: #cbd5e1; border-color: #f1f5f9; }
 
 /* Toplam: patladı / tam hedef (sembolsüz, yalnızca net renk farkı) */
-body.cb .who .tot.bust b {
+body.cb .who .tot.bust b,
+body.cb .who .tot.bust .pq {
   color: var(--cb-bad) !important;
   text-shadow: 0 0 12px rgba(249, 115, 22, 0.88) !important;
 }
-body.cb .who .tot.exact b {
+body.cb .who .tot.exact b,
+body.cb .who .tot.exact .pq {
   color: var(--cb-good) !important;
   text-shadow: 0 0 12px rgba(56, 189, 248, 0.92), 0 0 22px rgba(2, 132, 199, 0.65) !important;
+}
+body.cb .ora-tot.ora-exact {
+  border-color: var(--cb-good);
+  color: #bae6fd;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.55);
+}
+body.cb .ora-tot.ora-bust {
+  border-color: var(--cb-bad);
+  color: #fed7aa;
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.55);
 }
 
 /* Masadaki joker yuvarlakları: senin = mavi, rakip = turuncu */
