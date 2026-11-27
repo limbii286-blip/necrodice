@@ -566,12 +566,17 @@ select:focus-visible,
 }
 .who .tot b,
 .who .tot .pq {
-  font-family: 'Cinzel', var(--df) !important;
+  font-family: 'Lora', Georgia, serif !important;
   font-weight: 700 !important;
+  font-variant-numeric: lining-nums tabular-nums !important;
+  font-feature-settings: "lnum" 1, "tnum" 1 !important;
   color: #fff8e4 !important;
   text-shadow:
     0 2px 6px rgba(0, 0, 0, 0.96),
     0 0 14px rgba(236, 194, 112, 0.28) !important;
+}
+.who .tot .pq {
+  font-family: 'Cinzel', serif !important;
 }
 .who .tot.bust b,
 .who .tot.bust .pq {
