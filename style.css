@@ -71,7 +71,6 @@ main{position:relative;z-index:1;max-width:800px;margin:auto;padding:max(10px,en
 .grp{margin:8px 0;padding:10px 12px 12px;background:#0a0812db;border:1px solid #ffffff26;border-radius:14px}.grp>span{display:block;opacity:.7;margin-bottom:6px}.row{display:flex;gap:8px;justify-content:center;margin:6px 0;flex-wrap:wrap}
 #code{width:110px;font:20px 'Alegreya',Georgia,serif;text-align:center;padding:9px;border-radius:10px;border:1px solid var(--bone);background:#0d0a14;color:var(--gold)}
 #st{min-height:22px;color:var(--gold);margin:0}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 /* deste, ölüm zarı, ses düğmesi */
 .deck{position:relative;flex:none;width:calc(var(--cw)*.9);height:calc(var(--ch)*.9);border-radius:8px;background:var(--bn) center/cover;border:2px solid #d9553a;box-shadow:3px 3px 0 -1px #c9b07a,6px 6px 0 -2px #a98f5a,0 10px 18px #000a}
 .deck b{position:absolute;left:50%;bottom:-13px;transform:translateX(-50%);background:#0d0a14;border:1px solid var(--bone);border-radius:10px;padding:0 9px;font-size:15px;font-weight:700}
