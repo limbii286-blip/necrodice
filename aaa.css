@@ -567,7 +567,7 @@ select:focus-visible,
 }
 .who .tot b,
 .who .tot .pq {
-  font-family: 'Lora', var(--df) !important;
+  font-family: 'Cinzel', var(--df) !important;
   font-weight: 700 !important;
   color: #fff8e4 !important;
   text-shadow:

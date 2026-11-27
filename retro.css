@@ -1801,9 +1801,13 @@ body.dragging-joker #fx::after {
   min-width: 0 !important;
 }
 .who .tot .pq {
-  font-family: 'Lora', var(--mf) !important;
+  font-family: 'Cinzel', var(--mf) !important;
   font-weight: 700 !important;
   font-size: clamp(23.5px, 3.7dvh, 33px) !important;
+}
+.who .tot > b,
+.who .tot .tl {
+  margin-top: 2px;
 }
 .who .tot.bust b {
   color: var(--blood2) !important;
@@ -1884,7 +1888,7 @@ body.dragging-joker #fx::after {
 }
 #opp .cards {
   align-items: flex-end;
-  padding: 0 12px clamp(5px, 0.8dvh, 10px) !important;
+  padding: 0 12px clamp(9px, 1.25dvh, 14px) !important;
 }
 #me .cards {
   align-items: flex-start;
@@ -3121,7 +3125,7 @@ body.dragging-joker #fx::after {
   }
   .who .tot > b,
   .who .tot .tl {
-    margin-top: 0 !important;
+    margin-top: 2px !important;
   }
   .who .tot .tl {
     min-width: 60px;
@@ -3138,8 +3142,8 @@ body.dragging-joker #fx::after {
     flex-wrap: nowrap !important;
     width: 100%;
     max-width: 100%;
-    height: calc(var(--mch) + 5px) !important;
-    min-height: calc(var(--mch) + 5px) !important;
+    height: calc(var(--mch) + 8px) !important;
+    min-height: calc(var(--mch) + 8px) !important;
     justify-content: center;
     align-content: center;
     align-items: center !important;
@@ -3150,17 +3154,17 @@ body.dragging-joker #fx::after {
   }
   #opp .cards {
     align-items: flex-end !important;
-    padding: 0 2px 5px !important;
+    padding: 0 2px 8px !important;
   }
   #me .cards {
     align-items: flex-start !important;
-    padding: 5px 2px 0 !important;
+    padding: 4px 2px 0 !important;
   }
   .cards.cards-2row {
     flex-wrap: nowrap !important;
     gap: 3px !important;
-    height: calc(var(--mch) + 5px) !important;
-    min-height: calc(var(--mch) + 5px) !important;
+    height: calc(var(--mch) + 8px) !important;
+    min-height: calc(var(--mch) + 8px) !important;
   }
   .cards.cards-2row .c {
     flex: 0 1 clamp(42px, 11.4vw, 56px) !important;
@@ -3180,10 +3184,10 @@ body.dragging-joker #fx::after {
     font-size: 21px !important;
   }
   #opp .cards {
-    padding: 0 2px 6px !important;
+    padding: 0 2px 8px !important;
   }
   #me .cards {
-    padding: 6px 2px 0 !important;
+    padding: 4px 2px 0 !important;
   }
   .cards .gap {
     flex: 0 0 4px !important;
