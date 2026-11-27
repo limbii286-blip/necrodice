@@ -1998,7 +1998,7 @@ const HEROES_TR=[
   {id:'s',name:'Büyücü',passive:true,hpName:'Gölge Hırsızı',desc:'Her düelloya 4. olarak Hırsız Jokeriyle başla.'},
   {id:'e',name:'Buz Devi',passive:true,hpName:'Kadim Direnç',desc:'Kaybettiğin her turda %20 ihtimalle gelen hasarı tamamen savuşturur ve turu beraberliğe dönüştürür.'},
   {id:'m',name:'Ölümün Efendisi',passive:true,hpName:'Ölümün Takdiri',desc:'Attığın her Ölüm Zarı sonucuna +2 bonus kazan.'},
-  {id:'w',name:'Cadı',hpName:'Kuzgunun Kehaneti',desc:'Rakibinin kapalı sayı kartını gizlice incele.'},
+  {id:'w',name:'Cadı',hpName:'Kuzgunun Kehaneti',desc:'Rakibinin kapalı sayı kartını incele.'},
   {id:'l',name:'Kurt Adam',hpName:'Kanlı Dolunay',desc:'Her iki oyuncunun da masadaki rastgele 1 açık sayı kartını imha et.'},
   {id:'v',name:'Vampir',passive:true,hpName:'Kanlı Karşılık',desc:'Bir turu kaybedince rakibin elindeki rastgele 1 Joker kartı yanar.'},
   {id:'u',name:'Bilinmeyen',passive:true,bossOnly:true,hpName:'Hiçlikten Dönüş',desc:'Ölüm zarında hedef sayının altında atarsan, ölümden bir kereliğine geri dönersin.'}
@@ -2011,7 +2011,7 @@ const HEROES_EN=[
   {id:'s',name:'Sorcerer',passive:true,hpName:'Shadow Thief',desc:'Start every duel with the Thief Joker as your 4th card.'},
   {id:'e',name:'Frost Giant',passive:true,hpName:'Ancient Resilience',desc:'Each time you lose a round, you have a 20% chance to deflect the damage and turn the round into a tie.'},
   {id:'m',name:'Lord of Death',passive:true,hpName:'Death\'s Favor',desc:'Gain a +2 bonus to every Death Dice roll you make.'},
-  {id:'w',name:'Witch',hpName:'Raven\'s Prophecy',desc:'Secretly inspect your opponent\'s hidden number card.'},
+  {id:'w',name:'Witch',hpName:'Raven\'s Prophecy',desc:'Inspect your opponent\'s hidden number card.'},
   {id:'l',name:'Werewolf',hpName:'Blood Full Moon',desc:'Destroy 1 random face-up number card on the table from both players.'},
   {id:'v',name:'Vampire',passive:true,hpName:'Blood Retaliation',desc:'Whenever you lose a round, 1 random Joker card in your opponent\'s hand is burned.'},
   {id:'u',name:'The Unknown',passive:true,bossOnly:true,hpName:'Return from the Void',desc:'If you roll below the target on the Death Dice, return from death once per match.'}
@@ -5841,7 +5841,7 @@ const TUT_STEPS=()=>[
     sel:'#me .hp-btn',
     pos:'top',
     title:tr('Kahraman Güçleri & Örnekler','Hero Powers & Examples'),
-    txt:tr('Her kahramanın eşsiz bir gücü vardır:<br>• <b>Aktif:</b> <b>Veba Doktoru</b> (1 joker yak, 2 çek), <b>Cadı</b> (rakibin kapalı kartına gizlice bak), <b>Kurt Adam</b> (iki taraftan 1\'er kart imha et).<br>• <b>Pasif:</b> <b>Buz Devi</b> (%20 hasar savuşturur), <b>Vampir</b> (tur kaybedince rakibin 1 jokerini yakar), <b>Ölümün Efendisi</b> (D20 +2).','Every hero has a unique power:<br>• <b>Active:</b> <b>Plague Doctor</b> (burn 1 Joker, draw 2), <b>Witch</b> (secretly peek opponent\'s hidden card), <b>Werewolf</b> (destroy 1 card per side).<br>• <b>Passive:</b> <b>Frost Giant</b> (20% deflect), <b>Vampire</b> (burns 1 opponent Joker on round loss), <b>Lord of Death</b> (+2 D20).'),
+    txt:tr('Her kahramanın eşsiz bir gücü vardır:<br>• <b>Aktif:</b> <b>Veba Doktoru</b> (1 joker yak, 2 çek), <b>Cadı</b> (rakibin kapalı kartına bak), <b>Kurt Adam</b> (iki taraftan 1\'er kart imha et).<br>• <b>Pasif:</b> <b>Buz Devi</b> (%20 hasar savuşturur), <b>Vampir</b> (tur kaybedince rakibin 1 jokerini yakar), <b>Ölümün Efendisi</b> (D20 +2).','Every hero has a unique power:<br>• <b>Active:</b> <b>Plague Doctor</b> (burn 1 Joker, draw 2), <b>Witch</b> (peek opponent\'s hidden card), <b>Werewolf</b> (destroy 1 card per side).<br>• <b>Passive:</b> <b>Frost Giant</b> (20% deflect), <b>Vampire</b> (burns 1 opponent Joker on round loss), <b>Lord of Death</b> (+2 D20).'),
     next:true
   },
   {
