@@ -3397,13 +3397,7 @@ body.dragging-joker #fx::after {
 }
 
 .zone.round-tie {
-  background: radial-gradient(75% 90% at 50% 50%, rgba(226, 212, 183, 0.16), rgba(148, 163, 184, 0.08) 60%, transparent 88%) !important;
-}
-.zone.round-tie .who {
-  border-color: #cbd5e1 !important;
-  box-shadow:
-    0 12px 28px rgba(0, 0, 0, 0.92),
-    0 0 22px rgba(226, 232, 240, 0.42) !important;
+  background: radial-gradient(75% 90% at 50% 50%, rgba(220, 38, 38, 0.14), rgba(127, 29, 29, 0.08) 60%, transparent 88%) !important;
 }
 
 /* Hearthstone Tarzı Saldıran Kahraman Portresi ve Darbe Efekti */
@@ -3413,31 +3407,26 @@ body.dragging-joker #fx::after {
   margin: 0 !important;
   border-radius: 11px !important;
   padding: 0;
-  border: none !important;
-  background: #0c080a;
+  border: none;
   object-fit: cover;
   pointer-events: none;
-  will-change: transform;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  contain: layout style;
   box-shadow:
     0 0 0 2px #100804,
-    0 0 0 3.5px #e6be6a,
-    0 16px 34px rgba(0, 0, 0, 0.94),
-    0 0 20px rgba(242, 210, 139, 0.48) !important;
+    0 0 0 3.5px #b88a44,
+    0 18px 42px rgba(0, 0, 0, 0.95),
+    0 0 28px rgba(242, 210, 139, 0.72) !important;
+  will-change: transform;
 }
 .who .av.av-hit {
-  will-change: transform;
-  backface-visibility: hidden;
-  animation: avHitRecoil 0.46s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, filter;
+  animation: avHitRecoil 0.54s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @keyframes avHitRecoil {
-  0% { transform: translate3d(0, 0, 0) scale(1); }
-  20% { transform: translate3d(0, var(--hit-dy, 7px), 0) scale(0.88); box-shadow: 0 0 0 2px #100804, 0 0 0 4px #ef4444, 0 0 26px rgba(239, 68, 68, 0.95) !important; }
-  52% { transform: translate3d(-3px, calc(var(--hit-dy, 7px) * -0.25), 0) scale(1.045); box-shadow: 0 0 0 2px #100804, 0 0 0 3.5px #f87171, 0 0 14px rgba(239, 68, 68, 0.55) !important; }
-  78% { transform: translate3d(2px, 0, 0) scale(0.99); }
-  100% { transform: translate3d(0, 0, 0) scale(1); }
+  0% { transform: scale(1); filter: none; }
+  18% { transform: scale(0.89) translate3d(0, 4px, 0); filter: brightness(1.42) sepia(0.55) hue-rotate(-36deg) saturate(2.1); }
+  46% { transform: scale(1.055) translate3d(-3px, 0, 0); filter: brightness(1.14) sepia(0.32) hue-rotate(-24deg); }
+  74% { transform: scale(0.985) translate3d(2px, 0, 0); filter: brightness(1.04); }
+  100% { transform: scale(1); filter: none; }
 }
 .av-impact {
   position: fixed;
@@ -3455,7 +3444,7 @@ body.dragging-joker #fx::after {
   border: 3px solid rgba(239, 68, 68, 0.95);
   box-shadow: 0 0 24px rgba(239, 68, 68, 0.9), inset 0 0 18px rgba(251, 191, 36, 0.65);
   will-change: transform, opacity;
-  animation: avShockwave 0.52s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: avShockwave 0.58s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 .av-impact::after {
   content: "";
@@ -3469,15 +3458,7 @@ body.dragging-joker #fx::after {
   box-shadow: 0 0 16px #ef4444;
   transform: translate(-50%, -50%) rotate(-32deg) scaleX(0.2);
   will-change: transform, opacity;
-  animation: avSlash 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-.av-impact.tie::before {
-  border-color: rgba(253, 230, 138, 0.95);
-  box-shadow: 0 0 24px rgba(251, 191, 36, 0.85), inset 0 0 18px rgba(226, 232, 240, 0.7);
-}
-.av-impact.tie::after {
-  background: linear-gradient(90deg, transparent, #ffffff 35%, #fbbf24 65%, transparent);
-  box-shadow: 0 0 16px #fbbf24;
+  animation: avSlash 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 .av-vamp-blood {
   position: fixed;
