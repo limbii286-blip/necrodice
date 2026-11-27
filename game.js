@@ -3239,7 +3239,7 @@ function buildEndScreenHtml(S,v,L,roll,th){
     }
   }
   const dcLg=eloRes?(eloRes.afterLg||getAccountLeague(USER_ACC)):(USER_ACC&&!USER_ACC.isGuest?getAccountLeague(USER_ACC):null);
-  const dcLgTxt=dcLg?(dcLg.unranked?tr('Yerleştirme','Unranked'):`${dcLg.name} · ${dcLg.lp} LP`):tr('Misafir','Guest');
+  const dcLgTxt=dcLg?(dcLg.unranked?tr('Yerleştirme','Unranked'):dcLg.name):tr('Misafir','Guest');
   const dcLpD=(eloRes&&!eloRes.unranked&&eloRes.lpDelta)?` (${eloRes.lpDelta>0?'+':''}${eloRes.lpDelta} LP)`:'';
   LAST_DEATH_CARD={won,isSpec,heroId:featH,heroName:featNm,oppLabel:typeof getOppLabel==='function'?getOppLabel(S):tr('Rakip','Opponent'),rw,rl,rt,roll,th,leagueTxt:`${dcLgTxt}${dcLpD}`,playerName:(USER_ACC&&!USER_ACC.isGuest&&USER_ACC.username)?USER_ACC.username:tr('Misafir','Guest'),durTxt};
   const guestCta=(!isSpec&&USER_ACC&&USER_ACC.isGuest)?`<button type="button" class="end-save-cta" id="end-save-guest"><span>${tr("İsmini kaydet, ligini ve başarımlarını koru","Save your name to keep your league & badges")}</span><b>${tr('Üye Ol','Sign Up')}</b></button>`:'';
@@ -3850,8 +3850,8 @@ function showQuickMatchFound(isHost,oppName,oppElo,secs=10){
   IS_QUICK_MATCH=false;
   const myGuest=isGuestUser(USER_ACC);
   const myName=(!myGuest&&USER_ACC&&USER_ACC.username)?USER_ACC.username:tr('Misafir','Guest');
-  const myFl=!myGuest?getAccountLeague(USER_ACC):null;
-  const myLgLabel=myGuest?tr('Misafir','Guest'):(myFl.unranked?tr('Derecesiz','Unranked'):`${myFl.name} · ${myFl.lp} LP`);
+  const myFl=USER_ACC?getAccountLeague(USER_ACC):null;
+  const myLgLabel=myFl?(myFl.unranked?tr('Derecesiz','Unranked'):myFl.name):tr('Misafir','Guest');
   const oName=String(oppName||tr('Misafir','Guest')).slice(0,22);
   const oGuest=oName===tr('Misafir','Guest');
   const oElo=Math.max(400,Math.min(4000,Math.round(+oppElo||1200)));
@@ -7695,7 +7695,7 @@ async function startQuickMatch(){
   const myName=(USER_ACC&&!USER_ACC.isGuest)?USER_ACC.username:tr('Misafir','Guest');
   const myFl=getAccountLeague(USER_ACC);
   const qMode=QUEUE_MODE==='normal'?'normal':'ranked';
-  const myRankTxt=myFl.unranked?tr(`Yerleştirme (${myFl.placementGames}/5)`,`Placements (${myFl.placementGames}/5)`):`${myFl.name} · ${myFl.lp} LP`;
+  const myRankTxt=myFl.unranked?tr(`Yerleştirme (${myFl.placementGames}/5)`,`Placements (${myFl.placementGames}/5)`):myFl.name;
   let secs=0;
   const renderWait=(msg)=>{
     box(`<div class="lobby-box">
@@ -8053,14 +8053,14 @@ function applyQueueModeUi(){
       strip.className=`ranked-strip ${fl.cls}`;
       strip.innerHTML=`<span class="rs-crest">${leagueCrestSvg(fl.id,32)}</span>
         <div class="rs-mid">
-          <div class="rs-top"><b>${fl.unranked?tr('Yerleştirme Maçları','Placement Matches'):escHtml(fl.name)}</b><span>${fl.unranked?`${pg}/5`:`${fl.lp} LP · ${pg}/5`}</span></div>
+          <div class="rs-top"><b>${fl.unranked?tr('Yerleştirme Maçları','Placement Matches'):escHtml(fl.name)}</b><span>${pg}/5</span></div>
           <div class="rs-pips">${pips}<em>${fl.unranked?tr('5 maçta ligin belirlenir','5 games to place'):tr('Geçici Lig','Provisional')}</em></div>
         </div>`;
     }else{
       strip.className=`ranked-strip ${fl.cls}`;
       strip.innerHTML=`<span class="rs-crest">${leagueCrestSvg(fl.id,32)}</span>
         <div class="rs-mid">
-          <div class="rs-top"><b>${escHtml(fl.name)}</b><span>${fl.id==='challenger'?`${fl.lp} LP`:`${fl.lp} / ${cap} LP`}</span></div>
+          <div class="rs-top"><b>${escHtml(fl.name)}</b></div>
           <div class="rs-bar"><i style="width:${pct}%;--lg-c1:${fl.c1}"></i></div>
         </div>`;
     }
@@ -8114,7 +8114,7 @@ function renderAuthBar(){
   const stDays=Math.max(1,USER_ACC.streak||1);
   const rightPill=fl.unranked
     ?`<span class="ap-elo">${fl.placementGames}/5</span>`
-    :`<span class="ap-elo">${fl.lp} <i>LP</i></span>`;
+    :'';
   bar.hidden=false;
   bar.innerHTML=`<div class="auth-bar-left"><button type="button" class="auth-pill ${fl.cls}" id="ab-prof" title="${tr('Profil, Lig & Günlük Seri','Profile, League & Daily Streak')}">
     <span class="ap-ic">${leagueCrestSvg(fl.id,24)}</span>
@@ -8561,7 +8561,7 @@ function openProfileModal(initialTab='overview'){
         :`<div class="pr-hempty">${tr('Henüz kayıtlı maç bulunmuyor.','No recorded matches yet.')}</div>`;
       const subGames=uMatches>0?` (${rMatches} ${tr('Dereceli','Ranked')} · ${uMatches} ${tr('Normal','Normal')})`:'';
       const isG=isGuestUser(acc);
-      const curLigTxt=isG?tr('Üyelik Gerekli','Sign Up Required'):(fl.unranked?tr(`Yerleştirme (${fl.placementGames}/5)`,`Placements (${fl.placementGames}/5)`):`${fl.name} · ${fl.lp} LP`);
+      const curLigTxt=fl.unranked?tr(`Yerleştirme (${fl.placementGames}/5)`,`Placements (${fl.placementGames}/5)`):fl.name;
       const pkLigTxt=isG?tr('Yok','None'):(fl.unranked?tr('Derecesiz','Unranked'):`${pkFl.name}`);
       tabBody=`<div class="pr-grid">
         <div class="pr-stat"><span>${tr('Güncel Lig','Current League')}</span><b>${escHtml(curLigTxt)}</b></div>
@@ -8681,7 +8681,7 @@ function openProfileModal(initialTab='overview'){
         <div class="pr-badge ${isGProf?'rk-unr':fl.cls} ${frCls}">${isGProf?'—':leagueCrestSvg(fl.id,46)}</div>
         <div class="pr-titles">
           <h3>${nm}${eqTitle?` <span class="pr-eq-title">«${escHtml(eqTitle)}»</span>`:''}</h3>
-          <div class="pr-rank">${isGProf?tr('Normal Oyun · Lig & Puan Yok','Normal Play · No League or Points'):`${escHtml(fl.name)}${fl.unranked?` · <b>${fl.placementGames}/5 ${tr('Yerleştirme','Placements')}</b>`:` · <b>${fl.lp} LP</b>${fl.provisional?` <em>(${tr('Geçici','Prov.')} ${fl.placementGames}/5)</em>`:''}`}`} · <span class="pr-st-tag">${stCur} ${tr('Gün Seri','Day Streak')}</span>${(acc.puzzleStreak||0)>0?` · <span class="pr-st-tag">${tr('Bulmaca','Puzzle')}: ${acc.puzzleStreak}</span>`:''}</div>
+          <div class="pr-rank">${escHtml(fl.name)}${fl.unranked?` · <b>${fl.placementGames}/5 ${tr('Yerleştirme','Placements')}</b>`:(fl.provisional?` <em>(${tr('Geçici','Prov.')} ${fl.placementGames}/5)</em>`:'')} · <span class="pr-st-tag">${stCur} ${tr('Gün Seri','Day Streak')}</span>${(acc.puzzleStreak||0)>0?` · <span class="pr-st-tag">${tr('Bulmaca','Puzzle')}: ${acc.puzzleStreak}</span>`:''}</div>
         </div>
       </div>
       <div class="pr-tabs">
