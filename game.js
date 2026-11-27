@@ -1628,16 +1628,33 @@ function spawnAvAttackerClone(av,r){
   av.style.opacity='0';
   return c;
 }
-function bindAvCloneCleanup(anim,c,av,dur){
-  let done=false;
-  const cleanup=()=>{
-    if(done)return;
-    done=true;
-    if(c&&c.isConnected)c.remove();
-    if(av&&av.isConnected)av.style.opacity='';
+function bindAvCloneCleanup(c,av){
+  if(c&&c.isConnected)c.remove();
+  if(av&&av.isConnected)av.style.opacity='';
+}
+function animateAvKeyframes(el,kfs,dur,onDone){
+  const t0=performance.now();
+  const cubicOut=t=>1-Math.pow(1-t,3);
+  const tick=now=>{
+    if(!el||!el.isConnected){if(onDone)onDone();return;}
+    const rawP=Math.min(1,(now-t0)/dur);
+    const p=cubicOut(rawP);
+    let a=kfs[0],b=kfs[kfs.length-1];
+    for(let i=0;i<kfs.length-1;i++){
+      if(p>=kfs[i].o&&p<=kfs[i+1].o){a=kfs[i];b=kfs[i+1];break;}
+    }
+    const span=(b.o-a.o)||1;
+    const lp=Math.max(0,Math.min(1,(p-a.o)/span));
+    const sp=lp*lp*(3-2*lp);
+    const x=a.x+(b.x-a.x)*sp;
+    const y=a.y+(b.y-a.y)*sp;
+    const s=a.s+(b.s-a.s)*sp;
+    const r=a.r+(b.r-a.r)*sp;
+    el.style.transform=`translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0) scale(${s.toFixed(3)}) rotate(${r.toFixed(2)}deg)`;
+    if(rawP<1)requestAnimationFrame(tick);
+    else if(onDone)onDone();
   };
-  anim.onfinish=cleanup;
-  setTimeout(cleanup,dur+150);
+  requestAnimationFrame(tick);
 }
 function triggerAvHitRecoil(dstAv){
   dstAv.classList.remove('av-hit');void dstAv.offsetWidth;dstAv.classList.add('av-hit');
@@ -1653,16 +1670,16 @@ function heroAttack(winIdx,tanked=false){
   const dx=(r2.left+r2.width/2)-(r1.left+r1.width/2);
   const dy=(r2.top+r2.height/2)-(r1.top+r1.height/2);
   const clone=spawnAvAttackerClone(srcAv,r1);
-  const dur=2550;
-  const anim=clone.animate([
-    {transform:'translate3d(0,0,0) scale(1) rotate(0deg)',offset:0},
-    {transform:`translate3d(${(-dx*0.06).toFixed(1)}px,${(-dy*0.06).toFixed(1)}px,0) scale(1.14) rotate(-3deg)`,offset:0.22},
-    {transform:`translate3d(${(-dx*0.12).toFixed(1)}px,${(-dy*0.12).toFixed(1)}px,0) scale(1.24) rotate(-6deg)`,offset:0.38},
-    {transform:`translate3d(${(dx*0.28).toFixed(1)}px,${(dy*0.28).toFixed(1)}px,0) scale(1.28) rotate(2deg)`,offset:0.52},
-    {transform:`translate3d(${(dx*0.92).toFixed(1)}px,${(dy*0.92).toFixed(1)}px,0) scale(1.26) rotate(0deg)`,offset:0.62},
-    {transform:`translate3d(${(dx*0.84).toFixed(1)}px,${(dy*0.84).toFixed(1)}px,0) scale(1.16) rotate(0deg)`,offset:0.69},
-    {transform:'translate3d(0,0,0) scale(1) rotate(0deg)',offset:1}
-  ],{duration:dur,easing:'cubic-bezier(0.22,1,0.36,1)',fill:'forwards'});
+  const dur=2450;
+  animateAvKeyframes(clone,[
+    {o:0,x:0,y:0,s:1,r:0},
+    {o:0.22,x:-dx*0.06,y:-dy*0.06,s:1.14,r:-3},
+    {o:0.38,x:-dx*0.12,y:-dy*0.12,s:1.24,r:-6},
+    {o:0.52,x:dx*0.28,y:dy*0.28,s:1.28,r:2},
+    {o:0.62,x:dx*0.92,y:dy*0.92,s:1.26,r:0},
+    {o:0.69,x:dx*0.84,y:dy*0.84,s:1.16,r:0},
+    {o:1,x:0,y:0,s:1,r:0}
+  ],dur,()=>bindAvCloneCleanup(clone,srcAv));
 
   setTimeout(()=>{
     if(!dstAv.isConnected)return;
@@ -1693,9 +1710,7 @@ function heroAttack(winIdx,tanked=false){
         setTimeout(()=>fx.remove(),1350);
       }
     }
-  },1180);
-
-  bindAvCloneCleanup(anim,clone,srcAv,dur);
+  },920);
 }
 function heroClash(){
   const av0=document.querySelector('#me .who .av');
@@ -1710,17 +1725,18 @@ function heroClash(){
   const dx0=mx-cx0,dy0=(my-cy0)+r0.height*0.32;
   const dx1=mx-cx1,dy1=(my-cy1)-r1.height*0.32;
   const c0=spawnAvAttackerClone(av0,r0),c1=spawnAvAttackerClone(av1,r1);
-  const dur=2800;
-  const run=(c,dx,dy,tilt)=>c.animate([
-    {transform:'translate3d(0,0,0) scale(1) rotate(0deg)',offset:0},
-    {transform:`translate3d(${(-dx*0.06).toFixed(1)}px,${(-dy*0.08).toFixed(1)}px,0) scale(1.12) rotate(${-tilt*0.6}deg)`,offset:0.22},
-    {transform:`translate3d(${(-dx*0.12).toFixed(1)}px,${(-dy*0.16).toFixed(1)}px,0) scale(1.20) rotate(${-tilt}deg)`,offset:0.38},
-    {transform:`translate3d(${(dx*0.30).toFixed(1)}px,${(dy*0.30).toFixed(1)}px,0) scale(1.25) rotate(${tilt*0.5}deg)`,offset:0.52},
-    {transform:`translate3d(${dx.toFixed(1)}px,${dy.toFixed(1)}px,0) scale(1.24) rotate(0deg)`,offset:0.62},
-    {transform:`translate3d(${(dx*0.80).toFixed(1)}px,${(dy*0.80).toFixed(1)}px,0) scale(1.14) rotate(${-tilt*0.4}deg)`,offset:0.69},
-    {transform:'translate3d(0,0,0) scale(1) rotate(0deg)',offset:1}
-  ],{duration:dur,easing:'cubic-bezier(0.22,1,0.36,1)',fill:'forwards'});
-  const a0=run(c0,dx0,dy0,5),a1=run(c1,dx1,dy1,-5);
+  const dur=2700;
+  const mkKfs=(dx,dy,tilt)=>[
+    {o:0,x:0,y:0,s:1,r:0},
+    {o:0.22,x:-dx*0.06,y:-dy*0.08,s:1.12,r:-tilt*0.6},
+    {o:0.38,x:-dx*0.12,y:-dy*0.16,s:1.20,r:-tilt},
+    {o:0.52,x:dx*0.30,y:dy*0.30,s:1.25,r:tilt*0.5},
+    {o:0.62,x:dx,y:dy,s:1.24,r:0},
+    {o:0.69,x:dx*0.80,y:dy*0.80,s:1.14,r:-tilt*0.4},
+    {o:1,x:0,y:0,s:1,r:0}
+  ];
+  animateAvKeyframes(c0,mkKfs(dx0,dy0,5),dur,()=>bindAvCloneCleanup(c0,av0));
+  animateAvKeyframes(c1,mkKfs(dx1,dy1,-5),dur,()=>bindAvCloneCleanup(c1,av1));
   setTimeout(()=>{
     if(!av0.isConnected)return;
     snd('stamp');vib([50,35,90]);
@@ -1730,9 +1746,7 @@ function heroClash(){
     imp.style.top=my+'px';
     document.body.appendChild(imp);
     setTimeout(()=>imp.remove(),1100);
-  },1736);
-  bindAvCloneCleanup(a0,c0,av0,dur);
-  bindAvCloneCleanup(a1,c1,av1,dur);
+  },1050);
 }
 function heroVampTie(vampIdx){
   const av0=document.querySelector('#me .who .av');
@@ -1747,18 +1761,19 @@ function heroVampTie(vampIdx){
   const dx0=mx-cx0,dy0=(my-cy0)+r0.height*0.32;
   const dx1=mx-cx1,dy1=(my-cy1)-r1.height*0.32;
   const c0=spawnAvAttackerClone(av0,r0),c1=spawnAvAttackerClone(av1,r1);
-  const dur=3600;
-  const run=(c,dx,dy,tilt,isVamp)=>c.animate([
-    {transform:'translate3d(0,0,0) scale(1) rotate(0deg)',offset:0},
-    {transform:`translate3d(${dx.toFixed(1)}px,${dy.toFixed(1)}px,0) scale(1.22) rotate(0deg)`,offset:0.22},
-    {transform:`translate3d(${dx.toFixed(1)}px,${dy.toFixed(1)}px,0) scale(1.22) rotate(0deg)`,offset:0.50},
+  const dur=3500;
+  const mkKfs=(dx,dy,tilt,isVamp)=>[
+    {o:0,x:0,y:0,s:1,r:0},
+    {o:0.22,x:dx,y:dy,s:1.22,r:0},
+    {o:0.50,x:dx,y:dy,s:1.22,r:0},
     isVamp
-      ?{transform:`translate3d(${(dx+(vampIdx===0?0:-6)).toFixed(1)}px,${(dy+(vampIdx===0?-22:22)).toFixed(1)}px,0) scale(1.30) rotate(${tilt}deg)`,offset:0.60}
-      :{transform:`translate3d(${(dx*0.72).toFixed(1)}px,${(dy*0.72).toFixed(1)}px,0) scale(1.06) rotate(${-tilt}deg)`,offset:0.62},
-    {transform:'translate3d(0,0,0) scale(1) rotate(0deg)',offset:0.86},
-    {transform:'translate3d(0,0,0) scale(1) rotate(0deg)',offset:1}
-  ],{duration:dur,easing:'cubic-bezier(0.22,1,0.36,1)',fill:'forwards'});
-  const a0=run(c0,dx0,dy0,5,vampIdx===0),a1=run(c1,dx1,dy1,-5,vampIdx===1);
+      ?{o:0.60,x:dx+(vampIdx===0?0:-6),y:dy+(vampIdx===0?-22:22),s:1.30,r:tilt}
+      :{o:0.62,x:dx*0.72,y:dy*0.72,s:1.06,r:-tilt},
+    {o:0.86,x:0,y:0,s:1,r:0},
+    {o:1,x:0,y:0,s:1,r:0}
+  ];
+  animateAvKeyframes(c0,mkKfs(dx0,dy0,5,vampIdx===0),dur,()=>bindAvCloneCleanup(c0,av0));
+  animateAvKeyframes(c1,mkKfs(dx1,dy1,-5,vampIdx===1),dur,()=>bindAvCloneCleanup(c1,av1));
   setTimeout(()=>{
     if(!av0.isConnected)return;
     snd('stamp');vib([80,40,140]);
@@ -1793,8 +1808,6 @@ function heroVampTie(vampIdx){
     document.body.appendChild(dmg);
     setTimeout(()=>dmg.remove(),1250);
   },3050);
-  bindAvCloneCleanup(a0,c0,av0,dur);
-  bindAvCloneCleanup(a1,c1,av1,dur);
 }
 function endRound(){
   const S=G,a=[total(S,0),total(S,1)],T=tg(S);
