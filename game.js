@@ -2966,6 +2966,8 @@ function R(){
   }
   $('#hand').classList.toggle('joker-locked',!!(S.noJ&&S.noJ[0]));
   syncHandEl($('#hand'),S.hand[0]||[],isSpec,k,my,S);
+  syncMobileHandPos();
+  requestAnimationFrame(syncMobileHandPos);
   if(pendingThief)playThiefStealAnim(pendingThief);
   count(document.querySelector('#me .tot b'),lastTot[0],mt);count(document.querySelector('#opp .tot b'),lastTot[1],ot);lastTot=[mt,ot];
   (S.pj||[]).forEach(e=>seenE.add(e.uid));S.hand[0].forEach(id=>hiLoad(id));
@@ -3715,6 +3717,28 @@ function exitGame(){ // limbigames perdesi, sonra ilk ekrana dön
   },460);
   setTimeout(()=>{entering=false},1480);
 }
+function syncMobileHandPos(){
+  const handEl=document.getElementById('hand');
+  if(!handEl)return;
+  if(window.innerWidth>760){
+    if(handEl.style.getPropertyValue('--mob-hand-b'))handEl.style.removeProperty('--mob-hand-b');
+    return;
+  }
+  const av=document.querySelector('#me .who .av');
+  const slot=handEl.querySelector('.jslot');
+  if(!av||!slot)return;
+  const H=document.documentElement.clientHeight||window.innerHeight;
+  const avB=av.getBoundingClientRect().bottom;
+  const slotH=slot.getBoundingClientRect().height;
+  if(!avB||!slotH||avB>=H)return;
+  const visH=slotH+5;
+  const free=H-avB-visH;
+  const bPx=Math.max(2,Math.min(26,Math.round(free*0.44)));
+  const val=bPx+'px';
+  if(handEl.style.getPropertyValue('--mob-hand-b')!==val)handEl.style.setProperty('--mob-hand-b',val);
+}
+window.addEventListener('resize',syncMobileHandPos);
+if(window.visualViewport)window.visualViewport.addEventListener('resize',syncMobileHandPos);
 /* ---------- MOBİL JOKER YELPAZESİ ---------- */
 let _mf=null;
 function mfCanPlay(id){const S=G;return !!(S&&!S.over&&!lock&&!P&&S.turn===0&&!S.wait&&MODE!=='spectator'&&playable(S,0,id)&&(MODE!=='tutorial'||(tutStep===3&&id===3)));}
@@ -3742,9 +3766,28 @@ function openMobileFan(startIdx){
   document.body.appendChild(root);
   document.body.classList.add('mob-fan-open');
   const n=ids.length,clampI=v=>Math.max(0,Math.min(n-1,v));
+  const computeCardW=()=>{
+    const H=document.documentElement.clientHeight||window.innerHeight;
+    const W=document.documentElement.clientWidth||window.innerWidth;
+    const bottomPad=6;
+    const whoEl=document.querySelector('#me .who');
+    const sealEl=document.getElementById('seal');
+    let maxCardH=H*0.31;
+    if(whoEl){
+      const wr=whoEl.getBoundingClientRect();
+      const sr=sealEl?sealEl.getBoundingClientRect():null;
+      const sealSafe=sr&&sr.bottom>0?(sr.bottom+70):0;
+      const ceilY=Math.max(sealSafe,wr.top+2);
+      maxCardH=H-bottomPad-ceilY;
+    }
+    const cw=Math.round(Math.max(100,Math.min(W*0.40,156,maxCardH/1.5)));
+    root.style.setProperty('--mfcw',cw+'px');
+    return cw;
+  };
+  let curCardW=computeCardW();
   const f=_mf={root,ora,cards,ids,handEls,pos:clampI(Number.isFinite(startIdx)?startIdx:0),target:0,lift:0,liftTarget:0,mode:null,raf:0,watch:0,openedAt:performance.now(),oracleIdx:-1};
   f.target=f.pos;
-  const spacing=()=>Math.min(window.innerWidth*0.175,72);
+  const spacing=()=>Math.min(window.innerWidth*0.25,Math.round(curCardW*0.68));
   function syncOra(){
     const t=document.querySelector('#me .who .ora-tot'),s=document.querySelector('#fx .seal .ora-seal, #seal .ora-seal');
     const curB=document.querySelector('#me .who .tot b');
@@ -3762,8 +3805,8 @@ function openMobileFan(startIdx){
     for(let i=0;i<n;i++){
       const d=i-f.pos,ad=Math.abs(d);
       const isC=i===Math.round(f.pos);
-      const x=d*sp, y=ad*ad*5+ad*7 + (isC?f.lift:0);
-      const rot=d*9, sc=Math.max(0.68,1-Math.min(ad,2.5)*0.12)*(isC&&f.lift<0?1+Math.min(-f.lift/500,0.08):1);
+      const x=d*sp, y=ad*ad*6+ad*9 + (isC?f.lift:0);
+      const rot=d*9.5, sc=Math.max(0.66,1-Math.min(ad,2.5)*0.13)*(isC&&f.lift<0?1+Math.min(-f.lift/520,0.08):1);
       const c=cards[i];
       c.style.transform=`translate3d(calc(-50% + ${x.toFixed(1)}px), ${y.toFixed(1)}px, 0) rotate(${(isC&&f.lift<0?0:rot).toFixed(2)}deg) scale(${sc.toFixed(3)})`;
       c.style.zIndex=String(100-Math.round(ad*10));
