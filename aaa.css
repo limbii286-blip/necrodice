@@ -670,8 +670,8 @@ select:focus-visible,
    ========================================================================== */
 #m {
   background: radial-gradient(circle at 50% 45%, rgba(18, 12, 8, 0.76) 0%, rgba(6, 4, 3, 0.92) 100%);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 #mb:not(.end-mode) {
   border: 2px solid #b48542 !important;

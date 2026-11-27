@@ -5241,19 +5241,21 @@ function createSmoothDragLoop(onFrame){
     clearOracle();
   }
 
+  const handEl=document.getElementById('hand');
+  const menuEl=document.getElementById('menu');
+  const modalEl=document.getElementById('m');
   document.addEventListener('pointermove',e=>{
     if(e.pointerType==='touch')return;
-    const mn=document.getElementById('menu'),md=document.getElementById('m');
-    if((mn&&!mn.hidden)||(md&&!md.hidden)){clearHover();return;}
+    if((menuEl&&!menuEl.hidden)||(modalEl&&!modalEl.hidden)){clearHover();return;}
     if(document.body.classList.contains('dragging-joker')||document.body.classList.contains('dragging-deck')){
       clearHover();return;
     }
     if(e.clientY<window.innerHeight*0.60){
       clearHover();return;
     }
-    const hand=document.getElementById('hand');
-    if(!hand)return;
-    const slots=[...hand.querySelectorAll('.jslot')];
+    if(!handEl)return;
+    if(!hoverActive&&!handEl.contains(e.target))return;
+    const slots=[...handEl.querySelectorAll('.jslot')];
     if(!slots.length){clearHover();return;}
 
     let targetJ=null;
@@ -5483,16 +5485,17 @@ function createSmoothDragLoop(onFrame){
   resize();
 
   let lastRender=0;
+  const mEl=document.getElementById('m'),mn=document.getElementById('menu');
+  const scheduleNext=(idle)=>idle?setTimeout(()=>requestAnimationFrame(render),240):requestAnimationFrame(render);
   function render(now){
-    requestAnimationFrame(render);
-    if(entering||leaving||document.hidden)return;
-    const mEl=document.getElementById('m');
-    if(mEl&&!mEl.hidden)return;
-    const mob=isMobilePerf();
-    const mn=document.getElementById('menu');
+    if(entering||leaving||document.hidden){scheduleNext(true);return;}
+    if(mEl&&!mEl.hidden){scheduleNext(true);return;}
     const menuOpen=mn&&!mn.hidden;
+    if(menuOpen){scheduleNext(true);return;}
+    scheduleNext(false);
+    const mob=isMobilePerf();
     const rm=document.body.classList.contains('rm');
-    if(!menuOpen&&(rm?now-lastRender>=500:now-lastRender>=(mob?42:32))){
+    if(rm?now-lastRender>=500:now-lastRender>=(mob?55:42)){
       lastRender=now;
       const t=rm?0:now*0.001;
       ctx.clearRect(0,0,W,H);
@@ -5580,15 +5583,15 @@ function createSmoothDragLoop(onFrame){
   resize();
 
   let lastMenuDraw=0;
+  const mEl=document.getElementById('m'),menuEl=document.getElementById('menu');
+  const scheduleNext=(idle)=>idle?setTimeout(()=>requestAnimationFrame(render),240):requestAnimationFrame(render);
   function render(now){
-    requestAnimationFrame(render);
-    if(entering||leaving||document.hidden)return;
-    const mEl=document.getElementById('m');
-    if(mEl&&!mEl.hidden)return;
-    const menuEl=document.getElementById('menu');
+    if(entering||leaving||document.hidden){scheduleNext(true);return;}
+    if((mEl&&!mEl.hidden)||!(menuEl&&!menuEl.hidden)){scheduleNext(true);return;}
+    scheduleNext(false);
     const rm=document.body.classList.contains('rm');
-    // Hareketi azalt: kül/kıvılcım yok, titreşen ışık yok; normalde akıcı 30fps GPU tasarrufu
-    if(menuEl&&!menuEl.hidden&&(rm?now-lastMenuDraw>=500:now-lastMenuDraw>=(isMobilePerf()?44:32))){
+    // Hareketi azalt: kül/kıvılcım yok, titreşen ışık yok; normalde akıcı GPU tasarrufu
+    if(rm?now-lastMenuDraw>=500:now-lastMenuDraw>=(isMobilePerf()?55:42)){
       lastMenuDraw=now;
       const t=rm?0:now*0.001;
       ctx.clearRect(0,0,W,H);
