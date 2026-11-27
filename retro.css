@@ -1712,7 +1712,7 @@ body.dragging-joker #fx::after {
   padding: 0 4px !important;
 }
 .who .nm b {
-  font: 700 clamp(16.5px, 2.3dvh, 22px)/1.1 var(--mf) !important;
+  font: 700 clamp(18px, 2.55dvh, 24px)/1.1 var(--mf) !important;
   color: #f5e6c8 !important;
   letter-spacing: 0.8px !important;
   text-shadow: 0 2px 4px #000 !important;
@@ -1783,7 +1783,7 @@ body.dragging-joker #fx::after {
 }
 .who .tot b,
 .who .pq {
-  font: 800 clamp(30px, 4.9dvh, 44px)/1 var(--mf) !important;
+  font: 800 clamp(26px, 4.1dvh, 36px)/1 var(--mf) !important;
   font-style: normal !important;
   font-variant-numeric: lining-nums tabular-nums !important;
   font-feature-settings: "lnum" 1, "tnum" 1 !important;
@@ -1803,7 +1803,7 @@ body.dragging-joker #fx::after {
 .who .tot .pq {
   font-family: 'Lora', var(--mf) !important;
   font-weight: 700 !important;
-  font-size: clamp(27px, 4.4dvh, 40px) !important;
+  font-size: clamp(23.5px, 3.7dvh, 33px) !important;
 }
 .who .tot.bust b {
   color: var(--blood2) !important;
@@ -3099,7 +3099,7 @@ body.dragging-joker #fx::after {
     padding: 0 2px !important;
   }
   .who .nm b {
-    font-size: clamp(14px, 3.8vw, 17px) !important;
+    font-size: clamp(15px, 4.1vw, 18.5px) !important;
   }
   .who .tot {
     position: relative;
@@ -3127,10 +3127,10 @@ body.dragging-joker #fx::after {
     min-width: 60px;
   }
   .who .tot b {
-    font-size: clamp(22px, 3.5dvh, 28px) !important;
+    font-size: clamp(19.5px, 3.1dvh, 24.5px) !important;
   }
   .who .tot .pq {
-    font-size: clamp(20px, 3.2dvh, 25.5px) !important;
+    font-size: clamp(18px, 2.85dvh, 22.5px) !important;
   }
   .cards {
     --mcw: clamp(50px, min(15.6vw, 9.2dvh), 70px);
@@ -7046,7 +7046,7 @@ html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, 
 /* İkon Kutucuğu Alt Nickname / Misafir Etiketi & Derecesiz ELO Rozeti */
 .who .nm .meta.nick {
   display: block;
-  font-size: 13px !important;
+  font-size: 14.5px !important;
   font-weight: 600;
   color: #cbb894;
   line-height: 1.15;
@@ -7063,8 +7063,8 @@ html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, 
 }
 @media (max-width: 760px) {
   .who .nm .meta.nick {
-    font-size: 11px !important;
-    max-width: 120px;
+    font-size: 12.5px !important;
+    max-width: 132px;
   }
 }
 
