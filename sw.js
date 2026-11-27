@@ -1,4 +1,4 @@
-const C='nd-v369-origatk1';
+const C='nd-v370-lbwr1';
 self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(['./','index.html','style.css','retro.css','aaa.css','game.js','d20_canvas.js','images.js','avatars.js','sfxdata.js','manifest.json']).catch(()=>{})));self.skipWaiting()});
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!=C).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{

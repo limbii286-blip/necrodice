@@ -7473,6 +7473,10 @@ html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, 
   font-size: 12.5px;
   color: #b8a58b;
 }
+.lb-wr {
+  color: #ebd298;
+  font-weight: 700;
+}
 .lb-elo {
   flex-shrink: 0;
   padding: 4px 10px;

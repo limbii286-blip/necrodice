@@ -8667,13 +8667,16 @@ async function openLeaderboardModal(activeTab='rank'){
         const isMe=!!(myKey&&u.key===myKey);
         const med=`#${pos}`;
         const tTag=u.title?`<span class="lb-title-tag">${escHtml(getTitleLabel(u.title))}</span> · `:'';
+        const totG=(u.wins||0)+(u.losses||0);
+        const wrPct=totG>0?Math.round((u.wins*100)/totG):0;
+        const wrTxt=tr(`%${wrPct}`,`${wrPct}%`);
         const rightDisp=fl.unranked?`${fl.placementGames}/5 <i>${tr('Maç','Gm')}</i>`:`${fl.lp} <i>LP</i>`;
         return `<div class="lb-row${pos<=3?' top'+pos:''}${isMe?' me':''}">
           <span class="lb-pos">${med}</span>
           <span class="lb-rk" title="${escHtml(fl.name)}">${leagueCrestSvg(fl.id,28)}</span>
           <div class="lb-u">
             <b>${escHtml(u.username)}${isMe?` <em>(${tr('Sen','You')})</em>`:''}</b>
-            <small><span class="lb-lg-tag ${fl.cls}">${escHtml(fl.name)}</span> · ${tTag}${u.wins}${tr('G','W')} / ${u.losses}${tr('M','L')}</small>
+            <small><span class="lb-lg-tag ${fl.cls}">${escHtml(fl.name)}</span> · ${tTag}${u.wins}${tr('G','W')} / ${u.losses}${tr('M','L')} <span class="lb-wr">(${wrTxt})</span></small>
           </div>
           <span class="lb-elo">${rightDisp}</span>
         </div>`;
@@ -8684,11 +8687,14 @@ async function openLeaderboardModal(activeTab='rank'){
       bodyHtml=`<div class="lb-list">${rowsHtml}</div>${myBarHtml}`;
     }else{
       const leader=list[0];
+      const lTot=leader?(leader.wins||0)+(leader.losses||0):0;
+      const lWr=lTot>0?Math.round((leader.wins*100)/lTot):0;
+      const lWrTxt=tr(`%${lWr}`,`${lWr}%`);
       const liveChamp=leader
         ?`<div class="hof-card live">
             <div class="hof-s">${season.label} · <span>${tr('Güncel Lider','Current Leader')}</span></div>
             <div class="hof-name">${leagueCrestSvg(leader.fl.id,24)} ${escHtml(leader.username)}</div>
-            <div class="hof-meta">${escHtml(leader.fl.name)} · ${leader.fl.lp} LP · ${leader.wins}${tr('G','W')} / ${leader.losses}${tr('M','L')} · ${tr(`${season.daysLeft} gün sonra taçlanır`,`crowned in ${season.daysLeft}d`)}</div>
+            <div class="hof-meta">${escHtml(leader.fl.name)} · ${leader.fl.lp} LP · ${leader.wins}${tr('G','W')} / ${leader.losses}${tr('M','L')} (${lWrTxt}) · ${tr(`${season.daysLeft} gün sonra taçlanır`,`crowned in ${season.daysLeft}d`)}</div>
           </div>`
         :`<div class="lb-empty">${tr('Bu sezon henüz lider yok.','No season leader yet.')}</div>`;
       const pastHtml=hofList.map(h=>`<div class="hof-card">
