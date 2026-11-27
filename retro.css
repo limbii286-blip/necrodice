@@ -5390,35 +5390,63 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
 }
 @media (max-width: 760px) {
   #m:has(#mb.end-mode) {
-    align-items: flex-start !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
     overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
-    padding: max(8px, env(safe-area-inset-top)) 0 max(22px, env(safe-area-inset-bottom)) !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: max(8px, env(safe-area-inset-top)) 8px max(28px, env(safe-area-inset-bottom)) !important;
   }
   #mb.end-mode {
     max-height: none !important;
+    height: auto !important;
     margin: auto 0 !important;
-    padding: 8px 10px 14px !important;
+    overflow: visible !important;
+    padding: 6px 8px 12px !important;
   }
   .hs-crest-stage {
-    width: min(62vw, 240px);
+    width: min(48vw, 185px) !important;
+  }
+  .hs-wood-plaque {
+    padding: 6px 22px !important;
+    font-size: 18px !important;
   }
   .end-screen {
-    gap: 7px;
+    gap: 6px !important;
+  }
+  .end-promo-banner {
+    padding: 7px 10px !important;
+    gap: 8px !important;
+    margin: 0 !important;
+  }
+  .end-lg-card {
+    padding: 7px 10px !important;
+    gap: 8px !important;
   }
   .end-elo {
-    padding: 7px 10px;
+    padding: 6px 10px !important;
+  }
+  .hs-end-stats {
+    gap: 5px !important;
+    max-width: 310px !important;
+  }
+  .hs-end-stats .end-stat {
+    padding: 5px 4px !important;
   }
   #mb.end-mode .row {
-    gap: 7px !important;
+    gap: 6px !important;
+    margin-top: 2px !important;
   }
   #mb.end-mode .btn {
-    min-height: 40px;
-    padding: 8px 14px;
+    min-height: 36px !important;
+    padding: 6px 12px !important;
+    font-size: 14px !important;
   }
   .end-crest {
-    width: 52px;
-    height: 52px;
+    width: 48px;
+    height: 48px;
   }
   .end-av-wrap {
     width: 54px;
