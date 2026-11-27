@@ -5389,8 +5389,32 @@ body.cb .tut-task { color: #e0f2fe; background: rgba(2, 132, 199, 0.24); border-
   gap: 10px !important;
 }
 @media (max-width: 760px) {
+  #m:has(#mb.end-mode) {
+    align-items: flex-start !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    padding: max(8px, env(safe-area-inset-top)) 0 max(22px, env(safe-area-inset-bottom)) !important;
+  }
   #mb.end-mode {
-    padding: 14px 12px !important;
+    max-height: none !important;
+    margin: auto 0 !important;
+    padding: 8px 10px 14px !important;
+  }
+  .hs-crest-stage {
+    width: min(62vw, 240px);
+  }
+  .end-screen {
+    gap: 7px;
+  }
+  .end-elo {
+    padding: 7px 10px;
+  }
+  #mb.end-mode .row {
+    gap: 7px !important;
+  }
+  #mb.end-mode .btn {
+    min-height: 40px;
+    padding: 8px 14px;
   }
   .end-crest {
     width: 52px;
