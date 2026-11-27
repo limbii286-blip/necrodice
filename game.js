@@ -2751,7 +2751,7 @@ function R(){
   $('#opp').className='zone'+(S.turn==1&&!S.wait?' act':'')+(S.winSide!=null?(S.winSide>0?' round-lose':S.winSide===0?' round-tie':''):'');
   const myHId=avKey(S,0),oppHId=avKey(S,1);
   const hpUsed0=myHId==='u'?!!(S.uRevived&&S.uRevived[0]):(myHId==='m'||myHId==='e'||myHId==='n'||myHId==='s'||myHId==='c'||myHId==='v')?false:!!(S.hpUsed&&S.hpUsed[0]);
-  const hpUsed1=oppHId==='u'?!!(MODE==='bot'?S.rigDone:(S.uRevived&&S.uRevived[1])):(oppHId==='m'||oppHId==='e'||oppHId==='n'||oppHId==='s'||oppHId==='w'||oppHId==='a'||oppHId==='c'||oppHId==='v')?false:!!(S.hpUsed&&S.hpUsed[1]);
+  const hpUsed1=oppHId==='u'?!!(MODE==='bot'?S.rigDone:(S.uRevived&&S.uRevived[1])):(oppHId==='m'||oppHId==='e'||oppHId==='n'||oppHId==='s'||oppHId==='w'||oppHId==='c'||oppHId==='v')?false:!!(S.hpUsed&&S.hpUsed[1]);
   const hpObj0=HERO_MAP[myHId]||HEROES[0],hpObj1=HERO_MAP[oppHId]||HEROES[0];
   const cWins0=(S.cWins&&S.cWins[0])||0,cReady=myHId!=='c'||cWins0>=3;
   const cWins1=(S.cWins&&S.cWins[1])||0,cReady1=oppHId!=='c'||cWins1>=3;
@@ -2759,11 +2759,11 @@ function R(){
   const cProg=(myHId==='c'&&!cReady)?`<i class="hp-prog">${Math.min(3,cWins0)}/3</i>`:'';
   const cProg1=(oppHId==='c'&&!cReady1)?`<i class="hp-prog">${Math.min(3,cWins1)}/3</i>`:'';
   const hpDot0=(!hpObj0.passive&&!cProg)?`<i class="hp-dot ${(!hpUsed0&&cReady)?'on':'off'}"></i>`:'';
-  const hpDot1=(!hpObj1.passive&&!cProg1&&oppHId!=='w'&&oppHId!=='a')?`<i class="hp-dot ${(!hpUsed1&&cReady1)?'on':'off'}"></i>`:'';
+  const hpDot1=(!hpObj1.passive&&!cProg1&&oppHId!=='w')?`<i class="hp-dot ${(!hpUsed1&&cReady1)?'on':'off'}"></i>`:'';
   const hpMeta0={tag:isSpec?'SPAN':'BUTTON',id:myHId,passive:!!hpObj0.passive,used:!!hpUsed0,ready:isSpec?false:!!canHp,locked:isSpec?!cReady:false,secret:false,prog:(myHId==='c'&&!cReady)?`${Math.min(3,cWins0)}/3`:'',dot:(!hpObj0.passive&&!cProg)?((!hpUsed0&&cReady)?'on':'off'):''};
-  const hpMeta1={tag:'SPAN',id:oppHId,passive:!!hpObj1.passive,used:!!hpUsed1,ready:false,locked:!cReady1,secret:(oppHId==='w'||oppHId==='a'),prog:(oppHId==='c'&&!cReady1)?`${Math.min(3,cWins1)}/3`:'',dot:(!hpObj1.passive&&!cProg1&&oppHId!=='w'&&oppHId!=='a')?((!hpUsed1&&cReady1)?'on':'off'):''};
+  const hpMeta1={tag:'SPAN',id:oppHId,passive:!!hpObj1.passive,used:!!hpUsed1,ready:false,locked:!cReady1,secret:(oppHId==='w'),prog:(oppHId==='c'&&!cReady1)?`${Math.min(3,cWins1)}/3`:'',dot:(!hpObj1.passive&&!cProg1&&oppHId!=='w')?((!hpUsed1&&cReady1)?'on':'off'):''};
   const hpBtn0=isSpec?`<span class="hp-btn opp-hp${hpObj0.passive?' passive':''}${hpUsed0?' used':!cReady?' locked':''}" data-hp-id="${myHId}" data-hp-side="0">${HP_IC[myHId]||HP_IC.c}${cProg}${hpDot0}</span>`:`<button id="hp-btn" class="hp-btn${hpObj0.passive?' passive':''}${hpUsed0?' used':canHp?' ready':''}" data-hp="1" data-hp-id="${myHId}" data-hp-side="0" aria-disabled="${!canHp}">${HP_IC[myHId]||HP_IC.c}${cProg}${hpDot0}</button>`;
-  const hpBtn1=`<span class="hp-btn opp-hp${hpObj1.passive?' passive':''}${hpUsed1?' used':!cReady1?' locked':''}${(oppHId==='w'||oppHId==='a')?' secret-hp':''}" data-hp-id="${oppHId}" data-hp-side="1">${HP_IC[oppHId]||HP_IC.c}${cProg1}${hpDot1}</span>`;
+  const hpBtn1=`<span class="hp-btn opp-hp${hpObj1.passive?' passive':''}${hpUsed1?' used':!cReady1?' locked':''}${oppHId==='w'?' secret-hp':''}" data-hp-id="${oppHId}" data-hp-side="1">${HP_IC[oppHId]||HP_IC.c}${cProg1}${hpDot1}</span>`;
   const myGuest=typeof isGuestUser==='function'?isGuestUser(USER_ACC):(!USER_ACC||USER_ACC.isGuest);
   const myFl=(typeof getAccountLeague==='function'&&USER_ACC)?getAccountLeague(USER_ACC):null;
   const myBaseName=(!myGuest&&USER_ACC&&USER_ACC.username)?USER_ACC.username:tr('Misafir','Guest');
