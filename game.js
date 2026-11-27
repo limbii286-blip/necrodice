@@ -1334,8 +1334,8 @@ function bot(){
         const oppStood=!!(S.pa&&S.pa[0]>0);
         if(oppStood||low||bt>=bT-6||S.rounds>=1){
           S.hpUsed[1]=true;S.botPeekVal=S.pl[0].closed[0].n;
-          S.log.push({p:1,t:'Kuzgunun Kehaneti kullandı (kapalı kartını inceledi)'});
-          playHeroPowerAnim('w',1,HERO_MAP.w);snd('info');R();return think(AFTER[DIFF]);
+          S.log.push({p:1,t:'Gizlice İncele kullandı (kapalı kartını inceledi)'});
+          R();return think(AFTER[DIFF]);
         }
       }
       if(bh==='a'&&prm.hero&&S.deck.length>=2){
@@ -2078,7 +2078,7 @@ const HEROES_TR=[
   {id:'s',name:'Büyücü',passive:true,hpName:'Gölge Hırsızı',desc:'Her düelloya 4. olarak Hırsız Jokeriyle başla.'},
   {id:'e',name:'Buz Devi',passive:true,hpName:'Kadim Direnç',desc:'Kaybettiğin her turda %20 ihtimalle gelen hasarı tamamen savuşturur ve turu beraberliğe dönüştürür.'},
   {id:'m',name:'Ölümün Efendisi',passive:true,hpName:'Ölümün Takdiri',desc:'Attığın her Ölüm Zarı sonucuna +2 bonus kazan.'},
-  {id:'w',name:'Cadı',hpName:'Kuzgunun Kehaneti',desc:'Rakibinin kapalı sayı kartını incele.'},
+  {id:'w',name:'Cadı',hpName:'Gizlice İncele',desc:'Rakibinin kapalı sayı kartını gizlice incele.'},
   {id:'l',name:'Kurt Adam',hpName:'Kanlı Dolunay',desc:'Her iki oyuncunun da masadaki rastgele 1 açık sayı kartını imha et.'},
   {id:'v',name:'Vampir',passive:true,hpName:'Kanlı Karşılık',desc:'Bir turu kaybedince rakibin elindeki rastgele 1 Joker kartı yanar.'},
   {id:'u',name:'Bilinmeyen',passive:true,bossOnly:true,hpName:'Hiçlikten Dönüş',desc:'Ölüm zarında hedef sayının altında atarsan, ölümden bir kereliğine geri dönersin.'}
@@ -2091,7 +2091,7 @@ const HEROES_EN=[
   {id:'s',name:'Sorcerer',passive:true,hpName:'Shadow Thief',desc:'Start every duel with the Thief Joker as your 4th card.'},
   {id:'e',name:'Frost Giant',passive:true,hpName:'Ancient Resilience',desc:'Each time you lose a round, you have a 20% chance to deflect the damage and turn the round into a tie.'},
   {id:'m',name:'Lord of Death',passive:true,hpName:'Death\'s Favor',desc:'Gain a +2 bonus to every Death Dice roll you make.'},
-  {id:'w',name:'Witch',hpName:'Raven\'s Prophecy',desc:'Inspect your opponent\'s hidden number card.'},
+  {id:'w',name:'Witch',hpName:'Secretly Inspect',desc:'Secretly inspect your opponent\'s hidden number card.'},
   {id:'l',name:'Werewolf',hpName:'Blood Full Moon',desc:'Destroy 1 random face-up number card on the table from both players.'},
   {id:'v',name:'Vampire',passive:true,hpName:'Blood Retaliation',desc:'Whenever you lose a round, 1 random Joker card in your opponent\'s hand is burned.'},
   {id:'u',name:'The Unknown',passive:true,bossOnly:true,hpName:'Return from the Void',desc:'If you roll below the target on the Death Dice, return from death once per match.'}
@@ -3970,7 +3970,7 @@ function view(S){ // rakibe gidecek, gizli bilgisi temizlenmiş ve aynalanmış 
   return {av:f(S.av),hero:S.hero?f(S.hero):f(S.av),hpUsed:[hu1,visHu0],hpMod:S.hpMod?f(S.hpMod):[0,0],plagueMod:S.plagueMod?f(S.plagueMod):[0,0],hpTgMod:S.hpTgMod||0,uRevived:S.uRevived?f(S.uRevived):[false,false],vampUsed:S.vampUsed?f(S.vampUsed):[false,false],cWins:S.cWins?f(S.cWins):[0,0],vampBurn:S.vampBurn?{vamp:1-S.vampBurn.vamp,victim:1-S.vampBurn.victim,idx:S.vampBurn.idx,jid:S.vampBurn.jid}:null,thiefSteal:S.thiefSteal?{...S.thiefSteal,thief:1-S.thiefSteal.thief}:null,oppPeek:pk1,mast:f(S.mast),turns:S.turns,acted:S.acted,bo:S.bo,rounds:S.rounds,over:S.over,wait:S.wait,reconnPause:!!S.reconnPause,turn:1-S.turn,clocks:S.clocks?f(S.clocks):[ONLINE_CLOCK_INIT,ONLINE_CLOCK_INIT],clockMax:S.clockMax||ONLINE_CLOCK_INIT,graceLeft:S.graceLeft||0,timeOut:S.timeOut?f(S.timeOut):[false,false],hadTimeout:!!S.hadTimeout,pts:f(S.pts),rev:S.rev,winSide:S.winSide==null?null:-S.winSide,res:(S.res||[]).map(x=>-x),jUsed:f(S.jUsed),jTurn:S.jTurn?f(S.jTurn):[0,0],noJ:f(S.noJ),
     hand:[S.hand[1],S.hand[0].map(()=>0)],jdeckLen:(S.jdeck&&S.jdeck.length)||0,deck:S.deck.map(()=>({id:0,n:0})),
     pl:[S.pl[1],{open:S.pl[0].open,closed:S.pl[0].closed.map(c=>({id:c.id,n:(S.rev||pk1.includes(c.id))?c.n:0,o:c.o,hpImmune:!!c.hpImmune}))}],
-    eff:S.eff.map(e=>({...e,o:1-e.o})),pj:(S.pj||[]).map(e=>({...e,o:1-e.o})),log:S.log.filter(l=>!(l.p===0&&/Kuzgunun Kehaneti|Yitik Yazgı/.test(l.t||''))).slice(-30).map(l=>({...l,p:l.p<0?-1:1-l.p}))};
+    eff:S.eff.map(e=>({...e,o:1-e.o})),pj:(S.pj||[]).map(e=>({...e,o:1-e.o})),log:S.log.filter(l=>!(l.p===0&&/Kuzgunun Kehaneti|Gizlice İncele|Yitik Yazgı/.test(l.t||''))).slice(-30).map(l=>({...l,p:l.p<0?-1:1-l.p}))};
 }
 function specView(S){ // izleyicilere gidecek durum: izlenen oyuncunun (0) gözünden canlı görünüm (kendi eli + kapalı kartı bakılabilir, rakip kapalı kartı gizli)
   const pk0=S.oppPeek0||[];
