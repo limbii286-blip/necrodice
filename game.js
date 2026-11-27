@@ -274,6 +274,10 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
   const tb=document.querySelector('#mb .tie-box');
   if(tb){
     const d0=+tb.dataset.d0,d1=+tb.dataset.d1,win=+tb.dataset.win,first=+tb.dataset.first,isBot=tb.dataset.bot==='1';
+    let rounds=null;
+    try{if(tb.dataset.rounds)rounds=JSON.parse(tb.dataset.rounds)}catch(e){}
+    if(!Array.isArray(rounds)||!rounds.length)rounds=[[d0,d1]];
+    let roundIdx=0;
     const btn=tb.querySelector('#tie-rl'),turnLbl=tb.querySelector('#tie-turn'),mo=document.querySelector('#mo');
     const cv=tb.querySelector('#tie-d20cv'),stage=tb.querySelector('.tie-d20-stage');
     if(mo)mo.style.visibility='hidden';
@@ -297,7 +301,12 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
       if(stage)stage.style.cursor=(doneCount<2&&curSide===0&&!rollingSide&&MODE!=='spectator')?'pointer':'default';
       if(doneCount>=2){
         if(btn){btn.disabled=true;btn.classList.add('used')}
-        if(turnLbl)turnLbl.textContent=win===0?tr('Beraberlik Zarı Kazanıldı!','Tiebreaker Won!'):tr('Beraberlik Zarı Kaybedildi!','Tiebreaker Lost!');
+        const rPair=rounds[roundIdx]||[d0,d1];
+        if(rPair[0]===rPair[1]&&roundIdx+1<rounds.length){
+          if(turnLbl)turnLbl.textContent=tr(`Berabere (${rPair[0]}–${rPair[1]})! Tekrar atılıyor…`,`Tied (${rPair[0]}–${rPair[1]})! Rolling again…`);
+        }else{
+          if(turnLbl)turnLbl.textContent=win===0?tr('Beraberlik Zarı Kazanıldı!','Tiebreaker Won!'):tr('Beraberlik Zarı Kaybedildi!','Tiebreaker Lost!');
+        }
         return;
       }
       if(MODE==='spectator'){
@@ -339,7 +348,8 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
       if(stage)stage.style.cursor='default';
       tb.classList.add('rolling');
       const sumEl=side===0?s0:s1;
-      const targetVal=side===0?d0:d1;
+      const rPair=rounds[roundIdx]||[d0,d1];
+      const targetVal=side===0?rPair[0]:rPair[1];
       const tAng=(typeof getD20FaceAngles==='function')?getD20FaceAngles(targetVal):initAng;
       const startRx=rx,startRy=ry,startRz=rz;
       const endRx=tAng.rx+3*Math.PI*2,endRy=tAng.ry+2*Math.PI*2,endRz=tAng.rz+1*Math.PI*2;
@@ -376,7 +386,26 @@ function anim(){ // Baldur's Gate 3 tarzı kırmızı 3D D20 ölüm zarı & bera
           rollingSide=false;
           if(doneCount>=2){
             updateUi();
-            setTimeout(finishTie,420);
+            if(rPair[0]===rPair[1]&&roundIdx+1<rounds.length){
+              setTimeout(()=>{
+                if(!tb.isConnected)return;
+                roundIdx++;
+                doneCount=0;
+                curSide=first;
+                if(s0){s0.textContent='—';s0.classList.remove('shown')}
+                if(s1){s1.textContent='—';s1.classList.remove('shown')}
+                renderTieD20('?',false,false,false,1.0,1.0);
+                updateUi();
+                if(window._pendingTieRoll&&(Date.now()-window._pendingTieRoll)<10000){
+                  window._pendingTieRoll=0;
+                  setTimeout(()=>{if(window._triggerTieRoll)window._triggerTieRoll()},120);
+                }else if(isBot&&curSide===1){
+                  setTimeout(()=>rollSide(1,true),780);
+                }
+              },1200);
+            }else{
+              setTimeout(finishTie,420);
+            }
           }else{
             curSide=1-curSide;
             updateUi();
@@ -1973,11 +2002,11 @@ function endRound(){
       deal(S);R();runAfterDeal(S);
       return;
     }
-    let L=S.pts[0]<S.pts[1]?0:S.pts[1]<S.pts[0]?1:-1,hx=null,how='',tieFirst=0;
+    let L=S.pts[0]<S.pts[1]?0:S.pts[1]<S.pts[0]?1:-1,hx=null,tieRounds=null,how='',tieFirst=0;
     if(L<0){
       const j=S.hand.map(h=>h.length);
       if(j[0]!=j[1]){L=j[0]<j[1]?0:1;how='joker'}
-      else{let x,y;do{x=d20();y=d20()}while(x==y);L=x<y?0:1;hx=[x,y];tieFirst=MODE==='bot'?0:(Math.random()<0.5?0:1);how='zar'}
+      else{tieRounds=[];let x,y;do{x=d20();y=d20();tieRounds.push([x,y])}while(x==y);L=x<y?0:1;hx=[x,y];tieFirst=MODE==='bot'?0:(Math.random()<0.5?0:1);how='zar'}
     }
     const extraNeed=(CURSED_RULE&&CURSED_RULE.id==='blood_dice')?2:0;
     const th=Math.min(20,TH[Math.min(S.bo,3)]+extraNeed);
@@ -2040,7 +2069,8 @@ function endRound(){
         const myLbl=v===2?sp0:tr('Senin Zarın','Your Roll');
         const opLbl=v===2?sp1:(MODE==='bot'?tr('Botun Zarı','Bot\'s Roll'):tr('Rakibin Zarı','Opponent\'s Roll'));
         const resTxt=v===2?(w===0?tr(`${sp0} düelloyu kazandı!`,`${sp0} won the duel!`):tr(`${sp1} düelloyu kazandı!`,`${sp1} won the duel!`)) :(w===0?tr('Düelloyu sen kazandın!<br>Rakip Ölüm Zarı atacak.','You won the duel!<br>Opponent will roll the Death Dice.'):tr('Düelloyu rakip kazandı!<br>Ölüm Zarını sen atacaksın.','Opponent won the duel!<br>You will roll the Death Dice.'));
-        return `<h3>${tr('Düello Berabere!','Duel Tied!')}</h3><p class="tie-sub">${tr('Puanlar ve kalan jokerler eşit. Sırayla D20 atılır, yüksek atan kazanır!','Points and remaining jokers are tied. Roll D20 in turn, higher wins!')}</p><div class="tie-box" data-d0="${hx[vi]}" data-d1="${hx[1-vi]}" data-win="${w}" data-first="${firstForV}" data-bot="${MODE==='bot'?1:0}"><div class="bg3-roll-card tie-d20-card"><div class="bg3-card-border"></div><i class="bg3-corner tl"></i><i class="bg3-corner tr"></i><i class="bg3-corner bl"></i><i class="bg3-corner br"></i><div id="tie-turn" class="tie-turn"></div><div class="d20-stage tie-d20-stage"><div class="d20-glow"></div><canvas id="tie-d20cv" class="d20-canvas" width="280" height="280"></canvas></div><div class="tie-sides"><div class="tie-side me"><span class="tie-lbl">${myLbl}</span><b id="tie-s0" class="tie-sum">—</b></div><div class="tie-vs">VS</div><div class="tie-side opp"><span class="tie-lbl">${opLbl}</span><b id="tie-s1" class="tie-sum">—</b></div></div><button id="tie-rl" class="btn d20-btn">${tr('D20 At','Roll D20')}</button></div><div class="tie-after"><b>${hx[vi]} – ${hx[1-vi]}</b><br>${resTxt}</div></div>`;
+        const roundsAttr=JSON.stringify((tieRounds||[hx]).map(r=>[r[vi],r[1-vi]]));
+        return `<h3>${tr('Düello Berabere!','Duel Tied!')}</h3><p class="tie-sub">${tr('Puanlar ve kalan jokerler eşit. Sırayla D20 atılır, yüksek atan kazanır!','Points and remaining jokers are tied. Roll D20 in turn, higher wins!')}</p><div class="tie-box" data-d0="${hx[vi]}" data-d1="${hx[1-vi]}" data-rounds='${roundsAttr}' data-win="${w}" data-first="${firstForV}" data-bot="${MODE==='bot'?1:0}"><div class="bg3-roll-card tie-d20-card"><div class="bg3-card-border"></div><i class="bg3-corner tl"></i><i class="bg3-corner tr"></i><i class="bg3-corner bl"></i><i class="bg3-corner br"></i><div id="tie-turn" class="tie-turn"></div><div class="d20-stage tie-d20-stage"><div class="d20-glow"></div><canvas id="tie-d20cv" class="d20-canvas" width="280" height="280"></canvas></div><div class="tie-sides"><div class="tie-side me"><span class="tie-lbl">${myLbl}</span><b id="tie-s0" class="tie-sum">—</b></div><div class="tie-vs">VS</div><div class="tie-side opp"><span class="tie-lbl">${opLbl}</span><b id="tie-s1" class="tie-sum">—</b></div></div><button id="tie-rl" class="btn d20-btn">${tr('D20 At','Roll D20')}</button></div><div class="tie-after"><b>${hx[vi]} – ${hx[1-vi]}</b><br>${resTxt}</div></div>`;
       };
       MM(tieFn,tr('Ölüm Zarına Geç','Proceed to Death Dice'),openDeathModal);
     }else{
