@@ -197,19 +197,10 @@ select:focus-visible,
 .play-card.play-sp-puzzle {
   position: relative;
   overflow: hidden;
+  min-height: 70px !important;
   border-radius: 10px !important;
   padding: 15px 18px !important;
   background: var(--wood-sheen), var(--wood-shade), var(--wood-tex) !important;
-  border: 1.5px solid #a87d3e !important;
-  box-shadow:
-    0 4px 0 #140a04,
-    0 14px 28px rgba(0, 0, 0, 0.84),
-    inset 0 1px 0 rgba(255, 234, 186, 0.32),
-    inset 0 -2px 6px rgba(0, 0, 0, 0.5) !important;
-  transition: transform 0.16s var(--aaa-ease), border-color 0.18s ease, box-shadow 0.2s ease, filter 0.16s ease !important;
-}
-.play-card.play-primary {
-  min-height: 70px !important;
   border: 2px solid #e6bb5c !important;
   box-shadow:
     0 4px 0 #140a04,
@@ -217,6 +208,7 @@ select:focus-visible,
     0 0 18px rgba(236, 188, 92, 0.2),
     inset 0 1px 0 rgba(255, 240, 196, 0.42),
     inset 0 -2px 6px rgba(0, 0, 0, 0.5) !important;
+  transition: transform 0.16s var(--aaa-ease), border-color 0.18s ease, box-shadow 0.2s ease, filter 0.16s ease !important;
 }
 
 /* Symmetrical recessed brass hairline inlay */
@@ -236,7 +228,12 @@ select:focus-visible,
   pointer-events: none;
   z-index: 1;
 }
-.play-card.play-primary::before {
+.play-card::before,
+.play-card.play-primary::before,
+.play-card.play-ai::before,
+.play-card.play-sp-vault::before,
+.play-card.play-sp-cursed::before,
+.play-card.play-sp-puzzle::before {
   border-color: rgba(255, 224, 148, 0.34) !important;
 }
 
@@ -288,7 +285,9 @@ select:focus-visible,
   color: #fff2d4 !important;
   text-shadow: 0 2px 5px rgba(0, 0, 0, 0.96) !important;
 }
-.play-card.play-primary .pc-text b {
+.play-card .pc-text b,
+.play-card.play-primary .pc-text b,
+.play-card.play-ai .pc-text b {
   font-size: 21px !important;
   color: #fff9e6 !important;
 }

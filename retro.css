@@ -11033,7 +11033,7 @@ body[data-cardback="sovereign"] #deck, body[data-cardback="sovereign"] .c.bk { b
   .play-card.play-sp-vault,
   .play-card.play-sp-cursed,
   .play-card.play-sp-puzzle {
-    min-height: 42px !important;
+    min-height: 48px !important;
   }
   .pc-text b {
     font-size: 14px !important;
@@ -11081,7 +11081,7 @@ body[data-cardback="sovereign"] #deck, body[data-cardback="sovereign"] .c.bk { b
   .play-card.play-sp-vault,
   .play-card.play-sp-cursed,
   .play-card.play-sp-puzzle {
-    min-height: 38px !important;
+    min-height: 42px !important;
   }
   .pc-text small {
     display: none !important;
@@ -11113,7 +11113,7 @@ body[data-cardback="sovereign"] #deck, body[data-cardback="sovereign"] .c.bk { b
   .play-card.play-sp-vault,
   .play-card.play-sp-cursed,
   .play-card.play-sp-puzzle {
-    min-height: 34px !important;
+    min-height: 38px !important;
   }
   .pc-text b {
     font-size: 13px !important;
