@@ -8134,19 +8134,25 @@ const CARD_BACKS=[
 const DICE_SKINS=[
   {id:'ruby',trN:'Kanlı Yakut',enN:'Blood Ruby',req:()=>true,trR:'Varsayılan',enR:'Default'},
   {id:'bone',trN:'Antik Kemik',enN:'Ancient Bone',req:a=>((a.wins||0)+(a.unrankedWins||0))>=2||(a.achievements||[]).includes('veteran10'),trR:'2 Zafer',enR:'2 Wins'},
+  {id:'emerald',trN:'Zümrüt Kalp',enN:'Emerald Heart',req:a=>((a.wins||0)+(a.unrankedWins||0))>=4||(a.peakElo||1200)>=1300,trR:'4 Zafer veya 1300 ELO',enR:'4 Wins or 1300 ELO'},
   {id:'gold',trN:'Altın Rünlü',enN:'Golden Rune',req:a=>(a.peakElo||1200)>=1350||(a.achievements||[]).includes('win_streak3'),trR:'1350 ELO veya 3 Seri',enR:'1350 ELO or 3-Win Streak'},
   {id:'spectral',trN:'Hayalet Zarı',enN:'Spectral Die',req:a=>(a.achievements||[]).includes('survivor')||(a.achievements||[]).includes('nat20')||(a.peakElo||1200)>=1400,trR:'Ölümsüz İrade / Nat 20 / 1400 ELO',enR:'Undying Will / Nat 20 / 1400 ELO'},
+  {id:'obsidian',trN:'Obsidyen Alev',enN:'Obsidian Ember',req:a=>(a.peakElo||1200)>=1450||(a.achievements||[]).includes('blood_lord'),trR:'1450 ELO veya Kan Efendisi',enR:'1450 ELO or Blood Lord'},
   {id:'void',trN:'Hiçlik Zarı',enN:'Void Die',req:a=>(a.achievements||[]).includes('imp_slayer')||(a.peakElo||1200)>=1500,trR:'İmkansız Bot Zaferi / 1500 ELO',enR:'Beat Impossible AI / 1500 ELO'}
 ];
 const BOARD_THEMES=[
   {id:'classic',trN:'Gotik Masa',enN:'Gothic Table',req:()=>true,trR:'Varsayılan',enR:'Default'},
   {id:'frost',trN:'Donmuş Mahzen',enN:'Frozen Vault',req:a=>((a.wins||0)+(a.unrankedWins||0))>=3||(a.peakElo||1200)>=1250,trR:'3 Zafer veya 1250 ELO',enR:'3 Wins or 1250 ELO'},
+  {id:'emerald',trN:'Zümrüt Mahzen',enN:'Emerald Crypt',req:a=>((a.wins||0)+(a.unrankedWins||0))>=4||(a.peakElo||1200)>=1300,trR:'4 Zafer veya 1300 ELO',enR:'4 Wins or 1300 ELO'},
   {id:'crimson',trN:'Kanlı Sunak',enN:'Blood Altar',req:a=>(a.peakElo||1200)>=1350||(a.achievements||[]).includes('win_streak3'),trR:'1350 ELO veya 3 Seri',enR:'1350 ELO or 3-Win Streak'},
+  {id:'void',trN:'Hiçlik Tahtı',enN:'Void Throne',req:a=>(a.achievements||[]).includes('imp_slayer')||(a.peakElo||1200)>=1450,trR:'İmkansız Bot Zaferi / 1450 ELO',enR:'Beat Impossible AI / 1450 ELO'},
   {id:'gold',trN:'Altın Hazine',enN:'Golden Vault',req:a=>(a.achievements||[]).includes('imp_slayer')||(a.peakElo||1200)>=1500,trR:'İmkansız Bot Zaferi / 1500 ELO',enR:'Beat Impossible AI / 1500 ELO'}
 ];
 const D20_EFFECTS=[
   {id:'classic',trN:'Klasik Parıltı',enN:'Classic Glow',req:()=>true,trR:'Varsayılan',enR:'Default'},
   {id:'sparks',trN:'Kızıl Kıvılcım',enN:'Crimson Sparks',req:a=>((a.wins||0)+(a.unrankedWins||0))>=2,trR:'2 Zafer',enR:'2 Wins'},
+  {id:'frost',trN:'Buzul Halkası',enN:'Frost Ring',req:a=>((a.wins||0)+(a.unrankedWins||0))>=3,trR:'3 Zafer',enR:'3 Wins'},
+  {id:'emerald',trN:'Zümrüt Fırtına',enN:'Emerald Surge',req:a=>(a.peakElo||1200)>=1300||(a.achievements||[]).includes('win_streak3'),trR:'1300 ELO veya 3 Seri',enR:'1300 ELO or 3-Win Streak'},
   {id:'runes',trN:'Altın Rün Halkası',enN:'Golden Rune Ring',req:a=>(a.peakElo||1200)>=1350,trR:'1350 ELO',enR:'1350 ELO'},
   {id:'void',trN:'Mor Hiçlik Dumanı',enN:'Void Mist',req:a=>(a.achievements||[]).includes('imp_slayer')||(a.peakElo||1200)>=1450,trR:'İmkansız Bot Zaferi / 1450 ELO',enR:'Beat Impossible AI / 1450 ELO'}
 ];
@@ -8186,7 +8192,9 @@ function getHeroMastery(acc,hid){
 const PROFILE_FRAMES=[
   {id:'classic',trN:'Antik Bronz',enN:'Ancient Bronze',req:()=>true,trR:'Varsayılan',enR:'Default'},
   {id:'crimson',trN:'Kanlı Yakut',enN:'Blood Ruby',req:a=>((a.wins||0)+(a.unrankedWins||0))>=2,trR:'2 Zafer',enR:'2 Wins'},
+  {id:'emerald',trN:'Zümrüt Mühür',enN:'Emerald Seal',req:a=>((a.wins||0)+(a.unrankedWins||0))>=4||(a.peakElo||1200)>=1300,trR:'4 Zafer veya 1300 ELO',enR:'4 Wins or 1300 ELO'},
   {id:'gold',trN:'Kraliyet Altını',enN:'Royal Gold',req:a=>(a.peakElo||1200)>=1350,trR:'1350 ELO',enR:'1350 ELO'},
+  {id:'frost',trN:'Buzul Taç',enN:'Frost Crown',req:a=>(a.achievements||[]).includes('veteran10')||(a.peakElo||1200)>=1400,trR:'Arena Gazisi / 1400 ELO',enR:'Arena Veteran / 1400 ELO'},
   {id:'void',trN:'Hiçlik Aurası',enN:'Void Aura',req:a=>(a.achievements||[]).includes('imp_slayer')||(a.peakElo||1200)>=1550,trR:'İmkansız Bot Zaferi / 1550 ELO',enR:'Beat Impossible AI / 1550 ELO'}
 ];
 const DAILY_QUEST_POOL=[
@@ -8208,7 +8216,9 @@ function getTitleLabel(id){
 const BOARD_IMG_MAP={
   classic:'board_gothic.jpg?v=20261115_sym1',
   frost:'board_frost.jpg?v=20261125_b1',
+  emerald:'board_gothic.jpg?v=20261115_sym1',
   crimson:'board_crimson.jpg?v=20261125_b1',
+  void:'board_gothic.jpg?v=20261115_sym1',
   gold:'board_gold.jpg?v=20261125_b1'
 };
 const CARDBACK_IMG_MAP={

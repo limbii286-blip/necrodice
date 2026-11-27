@@ -7881,7 +7881,9 @@ html, body, button, input, select, textarea, b, span, div, i, small, p, h1, h2, 
 
 .fr-classic { border-color: rgba(212, 168, 85, 0.65) !important; }
 .fr-crimson { border-color: #ef4444 !important; box-shadow: 0 0 14px rgba(239, 68, 68, 0.55) !important; }
+.fr-emerald { border-color: #34d399 !important; box-shadow: 0 0 15px rgba(52, 211, 153, 0.58) !important; }
 .fr-gold { border-color: #fde047 !important; box-shadow: 0 0 16px rgba(250, 204, 21, 0.65) !important; }
+.fr-frost { border-color: #38bdf8 !important; box-shadow: 0 0 16px rgba(56, 189, 248, 0.62) !important; }
 .fr-void { border-color: #a855f7 !important; box-shadow: 0 0 16px rgba(168, 85, 247, 0.68) !important; }
 
 /* Oyun İçi Açılabilir Kart Arkası Temaları */
@@ -8842,11 +8844,15 @@ body.cb .qm-vs-card.opp {
 }
 .bt-classic { background: linear-gradient(135deg, #2a1d17, #6d4c32); }
 .bt-frost { background: linear-gradient(135deg, #0b2538, #67e8f9); }
+.bt-emerald { background: linear-gradient(135deg, #064e3b, #34d399); }
 .bt-crimson { background: linear-gradient(135deg, #3b080e, #dc2626); }
+.bt-void { background: linear-gradient(135deg, #2e1065, #a855f7); }
 .bt-gold { background: linear-gradient(135deg, #422006, #facc15); }
 
 .fx-classic { background: radial-gradient(circle, #fde68a, #5c3a16); }
 .fx-sparks { background: radial-gradient(circle, #ff6b4a, #7f1d1d); }
+.fx-frost { background: radial-gradient(circle, #7dd3fc, #0c4a6e); }
+.fx-emerald { background: radial-gradient(circle, #6ee7b7, #064e3b); }
 .fx-runes { background: radial-gradient(circle, #fef08a, #a16207); }
 .fx-void { background: radial-gradient(circle, #c084fc, #2e1065); }
 
@@ -8891,6 +8897,14 @@ body[data-board="gold"] main::after {
 .d20-fx-ring.fx-sparks {
   border: 3px dashed rgba(255, 110, 72, 0.92);
   box-shadow: 0 0 28px rgba(239, 68, 68, 0.85), inset 0 0 24px rgba(251, 146, 60, 0.65);
+}
+.d20-fx-ring.fx-frost {
+  border: 3px solid rgba(125, 211, 252, 0.92);
+  box-shadow: 0 0 30px rgba(56, 189, 248, 0.88), inset 0 0 24px rgba(186, 230, 253, 0.55);
+}
+.d20-fx-ring.fx-emerald {
+  border: 3px dashed rgba(110, 231, 183, 0.94);
+  box-shadow: 0 0 32px rgba(52, 211, 153, 0.88), inset 0 0 24px rgba(167, 243, 208, 0.52);
 }
 .d20-fx-ring.fx-runes {
   border: 3px double rgba(253, 224, 71, 0.95);
@@ -9128,7 +9142,9 @@ body[data-board="gold"] main::after {
   pointer-events: none;
 }
 .bt-prev-frost::after { background: radial-gradient(circle, rgba(56, 189, 248, 0.18), rgba(8, 32, 58, 0.58)); }
+.bt-prev-emerald::after { background: radial-gradient(circle, rgba(52, 211, 153, 0.22), rgba(6, 56, 38, 0.62)); }
 .bt-prev-crimson::after { background: radial-gradient(circle, rgba(220, 38, 38, 0.22), rgba(64, 6, 14, 0.58)); }
+.bt-prev-void::after { background: radial-gradient(circle, rgba(168, 85, 247, 0.24), rgba(34, 12, 68, 0.64)); }
 .bt-prev-gold::after { background: radial-gradient(circle, rgba(250, 204, 21, 0.22), rgba(62, 32, 6, 0.48)); }
 
 .inv-stage-fx { height: 78px; }
@@ -9144,6 +9160,8 @@ body[data-board="gold"] main::after {
 }
 .inv-fx-demo.fx-classic { border: 2px solid rgba(212, 168, 85, 0.65); }
 .inv-fx-demo.fx-sparks { border: 2.5px dashed #ff6b4a; box-shadow: 0 0 18px rgba(239, 68, 68, 0.78); }
+.inv-fx-demo.fx-frost { border: 2.5px solid #38bdf8; box-shadow: 0 0 18px rgba(56, 189, 248, 0.8); }
+.inv-fx-demo.fx-emerald { border: 2.5px dashed #34d399; box-shadow: 0 0 18px rgba(52, 211, 153, 0.8); }
 .inv-fx-demo.fx-runes { border: 2.5px double #fde047; box-shadow: 0 0 20px rgba(250, 204, 21, 0.8); }
 .inv-fx-demo.fx-void { border: 2.5px solid #c084fc; box-shadow: 0 0 20px rgba(147, 51, 234, 0.85); }
 
@@ -10779,13 +10797,30 @@ body[data-board="gold"] main::after {
 }
 
 /* GERÇEK ÖZEL ÇİZİM KART ARKALARI (FİLTRESİZ, GERÇEK RENK & DOKU) */
-body[data-cardback="classic"] #deck, body[data-cardback="classic"] .c.bk { background-image: url('img/cb_classic.jpg?v=20261126_cb_orig2') !important; filter: none !important; }
+body[data-board="emerald"] main::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(circle at 50% 45%, rgba(52, 211, 153, 0.14), rgba(4, 38, 26, 0.52) 80%);
+}
+body[data-board="void"] main::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(circle at 50% 45%, rgba(168, 85, 247, 0.15), rgba(22, 6, 46, 0.55) 80%);
+}
+body[data-cardback="classic"] #deck, body[data-cardback="classic"] .c.bk { background-image: url('img/cb_classic.jpg?v=20261127_cb_rp1') !important; filter: none !important; }
+body[data-cardback="bone"] #deck, body[data-cardback="bone"] .c.bk { background-image: url('img/cb_bone.jpg?v=20261127_cb_bone2') !important; filter: none !important; }
 body[data-cardback="crimson"] #deck, body[data-cardback="crimson"] .c.bk { background-image: url('img/cb_crimson.jpg?v=20261125_cb1') !important; filter: none !important; }
 body[data-cardback="ghost"] #deck, body[data-cardback="ghost"] .c.bk { background-image: url('img/cb_ghost.jpg?v=20261125_cb1') !important; filter: none !important; }
 body[data-cardback="obsidian"] #deck, body[data-cardback="obsidian"] .c.bk { background-image: url('img/cb_obsidian.jpg?v=20261125_cb1') !important; filter: none !important; }
 body[data-cardback="moonlight"] #deck, body[data-cardback="moonlight"] .c.bk { background-image: url('img/cb_moonlight.jpg?v=20261125_cb3') !important; filter: none !important; }
 body[data-cardback="sovereign"] #deck, body[data-cardback="sovereign"] .c.bk { background-image: url('img/cb_sovereign.jpg?v=20261125_cb1') !important; filter: none !important; }
-.cb-prev-classic, .cb-prev-crimson, .cb-prev-ghost, .cb-prev-obsidian, .cb-prev-moonlight, .cb-prev-sovereign {
+.cb-prev-classic, .cb-prev-bone, .cb-prev-crimson, .cb-prev-ghost, .cb-prev-obsidian, .cb-prev-moonlight, .cb-prev-sovereign {
   filter: none !important;
 }
 

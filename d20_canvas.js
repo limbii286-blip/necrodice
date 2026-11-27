@@ -175,6 +175,18 @@
         edgeColor = 'rgba(175, 240, 245, 0.78)';
         numColor = '#e6ffff';
         numGlow = 'rgba(120, 235, 240, 0.9)';
+      } else if (skin === 'emerald') {
+        grad.addColorStop(0, `rgb(${Math.min(255, (26 * diff + spec * 60)|0)}, ${Math.min(255, (168 * diff + spec * 120)|0)}, ${Math.min(255, (86 * diff + spec * 70)|0)})`);
+        grad.addColorStop(1, `rgb(${Math.min(255, (8 * diff)|0)}, ${Math.min(255, (62 * diff)|0)}, ${Math.min(255, (32 * diff)|0)})`);
+        edgeColor = 'rgba(134, 239, 172, 0.82)';
+        numColor = '#dcfce7';
+        numGlow = 'rgba(74, 222, 128, 0.9)';
+      } else if (skin === 'obsidian') {
+        grad.addColorStop(0, `rgb(${Math.min(255, (58 * diff + spec * 100)|0)}, ${Math.min(255, (48 * diff + spec * 80)|0)}, ${Math.min(255, (54 * diff + spec * 80)|0)})`);
+        grad.addColorStop(1, `rgb(${Math.min(255, (16 * diff)|0)}, ${Math.min(255, (12 * diff)|0)}, ${Math.min(255, (16 * diff)|0)})`);
+        edgeColor = 'rgba(251, 146, 60, 0.86)';
+        numColor = '#fed7aa';
+        numGlow = 'rgba(249, 115, 22, 0.92)';
       } else {
         // Mat kadife bordo / koyu kızıl ton (Kanlı Yakut)
         grad.addColorStop(0, `rgb(${Math.min(255, (190 * diff + spec * 130)|0)}, ${Math.min(255, (22 * diff)|0)}, 36)`);
