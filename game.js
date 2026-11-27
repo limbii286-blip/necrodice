@@ -7613,7 +7613,7 @@ function recordMatchElo(S,won){
       lg.tier=Math.min(3,seeded.tier); // İlk maçta en fazla Zümrüt IV
       lg.div=seeded.div;
       lg.lp=won?Math.max(25,Math.min(78,seeded.lp+20)):Math.max(0,Math.min(35,seeded.lp));
-      lg.demoteShield=2;
+      lg.demoteShield=0;
       lpDelta=lg.lp;
       promoted=true;
     }else{
@@ -7638,7 +7638,7 @@ function recordMatchElo(S,won){
       if(lg.placementGames>=5){
         lg.provisional=false;
         placementComplete=true;
-        lg.demoteShield=3;
+        lg.demoteShield=0;
       }
     }
   }else{
@@ -7672,12 +7672,12 @@ function recordMatchElo(S,won){
           doublePromoted=true;
           promoted=true;
           lg.lp=Math.min(40,overflow);
-          lg.demoteShield=3;
+          lg.demoteShield=0;
         }else{
           step=Math.min(21,step+1);
           promoted=true;
           lg.lp=Math.min(99,overflow);
-          lg.demoteShield=2;
+          lg.demoteShield=0;
         }
         const nl=stepIndexToLeague(step);
         lg.tier=nl.tier;lg.div=nl.div;
@@ -7690,17 +7690,12 @@ function recordMatchElo(S,won){
       }else{
         let step=leagueStepIndex(lg.tier,lg.div);
         if(step>0){
-          if((lg.demoteShield||0)>0){
-            lg.demoteShield--;
-            shieldUsed=true;
-          }else{
-            step--;
-            const nl=stepIndexToLeague(step);
-            lg.tier=nl.tier;lg.div=nl.div;
-            lg.lp=(step===20)?(MASTER_PROMO_LP-35):75;
-            lg.demoteShield=1;
-            demoted=true;
-          }
+          step--;
+          const nl=stepIndexToLeague(step);
+          lg.tier=nl.tier;lg.div=nl.div;
+          lg.lp=(step===20)?(MASTER_PROMO_LP-35):75;
+          lg.demoteShield=0;
+          demoted=true;
         }
       }
     }
