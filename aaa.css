@@ -383,10 +383,18 @@ select:focus-visible,
 
 #hdr .lab {
   font-family: var(--df) !important;
-  font-weight: 700 !important;
-  font-size: 16.5px !important;
-  letter-spacing: 0.08em !important;
+  font-weight: 800 !important;
+  font-size: 19px !important;
+  font-variant-numeric: lining-nums tabular-nums !important;
+  font-feature-settings: "lnum" 1, "tnum" 1 !important;
+  letter-spacing: 0.06em !important;
   color: #f6e4be !important;
+}
+@media (max-width: 760px) {
+  #hdr .lab {
+    font-size: 16px !important;
+    letter-spacing: 0.04em !important;
+  }
 }
 
 /* Faceted Jewel Round Pips */
