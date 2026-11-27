@@ -1495,7 +1495,13 @@ window._initNecroFirebase=function(){
       if((LRN && LRN.ht > 0) || (PROF && PROF.n > 0))syncToFirebase();
     });
     if(typeof USER_ACC!=='undefined'&&USER_ACC&&!USER_ACC.isGuest&&USER_ACC.key&&typeof pullAccountFromCloud==='function'){
-      pullAccountFromCloud(USER_ACC.key).then(()=>{if(isRegisteredMember(USER_ACC))claimActiveSession(USER_ACC);});
+      pullAccountFromCloud(USER_ACC.key).then(()=>{
+        if(isRegisteredMember(USER_ACC)){
+          claimActiveSession(USER_ACC);
+          if(typeof applyCosmetics==='function')applyCosmetics(USER_ACC);
+          if(typeof renderAuthBar==='function')renderAuthBar();
+        }
+      });
     }
     if(typeof startLobbyPresence==='function')startLobbyPresence();
   }catch(e){console.warn('Firebase init error:',e)}
@@ -8634,17 +8640,24 @@ async function openLeaderboardModal(activeTab='rank'){
     });
   }catch(e){}
   let hofList=[];
+  if(!fbDb&&typeof window._initNecroFirebase==='function')window._initNecroFirebase();
   if(fbDb){
     try{
-      const snap=await fbDb.collection('users').orderBy('elo','desc').limit(50).get();
-      snap.forEach(doc=>{
+      let snap=null;
+      try{snap=await fbDb.collection('users').orderBy('elo','desc').limit(100).get();}catch(e){snap=null;}
+      if(!snap||snap.empty){snap=await fbDb.collection('users').limit(100).get();}
+      if(snap)snap.forEach(doc=>{
         const u=doc.data();
         if(isRegisteredMember(u)){
           const k=u.key||doc.id||normUserKey(u.username);
-          byKey.set(k,packUser(u,k));
+          const prev=byKey.get(k);
+          // Buluttaki veri varsa ve yerel kopyadan daha güncelse onu kullan
+          if(!prev||((u.matches||0)>=(prev.matches||0))){
+            byKey.set(k,packUser(u,k));
+          }
         }
       });
-    }catch(e){}
+    }catch(e){console.warn('Leaderboard users fetch error:',e)}
     try{
       const hSnap=await fbDb.collection('seasons_hof').orderBy('seasonNum','desc').limit(12).get();
       hSnap.forEach(doc=>{const d=doc.data();if(d&&d.champion)hofList.push(d)});
