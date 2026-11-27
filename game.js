@@ -2786,7 +2786,7 @@ function R(){
   const myBaseName=(!myGuest&&USER_ACC&&USER_ACC.username)?USER_ACC.username:tr('Misafir','Guest');
   const myNick=myFl?`${myBaseName} · ${myFl.unranked?tr('Derecesiz','Unranked'):myFl.name}`:myBaseName;
   const p0Sub=isSpec?((S.specMeta&&S.specMeta.p0Sub)?S.specMeta.p0Sub:''):myNick;
-  const oppBotSub=(DIFF==='easy'?tr('Kolay Bot','Easy Bot'):DIFF==='med'?tr('Orta Bot','Medium Bot'):DIFF==='hard'?tr('Zor Bot','Hard Bot'):tr('İmkansız Bot','Impossible Bot'));
+  const oppBotSub=(DIFF==='easy'?tr('Kolay Seviye Bot','Easy Level Bot'):DIFF==='med'?tr('Orta Seviye Bot','Medium Level Bot'):DIFF==='hard'?tr('Zor Seviye Bot','Hard Level Bot'):tr('İmkansız Seviye Bot','Impossible Level Bot'));
   const oppOnlineName=(OPP_PROFILE&&OPP_PROFILE.name)?OPP_PROFILE.name:tr('Çevrim İçi','Online');
   const oppOnlineLg=(OPP_PROFILE&&OPP_PROFILE.leagueName)?OPP_PROFILE.leagueName:'';
   const oppSub=isSpec?((S.specMeta&&S.specMeta.p1Sub)?S.specMeta.p1Sub:''):(MODE==='bot'?oppBotSub:(MODE==='tutorial'?tr('Eğitim','Tutorial'):(oppOnlineLg?`${oppOnlineName} · ${oppOnlineLg}`:oppOnlineName)));
@@ -3758,7 +3758,7 @@ function specView(S){ // izleyicilere gidecek durum: izlenen oyuncunun (0) göz�
   const myFl=(typeof getAccountLeague==='function'&&typeof USER_ACC!=='undefined'&&USER_ACC)?getAccountLeague(USER_ACC):null;
   const myNm=(typeof USER_ACC!=='undefined'&&USER_ACC&&!USER_ACC.isGuest&&USER_ACC.username)?USER_ACC.username:tr('Misafir','Guest');
   const mySub=myFl?`${myNm} · ${myFl.unranked?tr('Derecesiz','Unranked'):myFl.name}`:myNm;
-  const botNm=DIFF==='easy'?tr('Kolay Bot','Easy Bot'):DIFF==='med'?tr('Orta Bot','Medium Bot'):DIFF==='hard'?tr('Zor Bot','Hard Bot'):tr('İmkansız Bot','Impossible Bot');
+  const botNm=DIFF==='easy'?tr('Kolay Seviye Bot','Easy Level Bot'):DIFF==='med'?tr('Orta Seviye Bot','Medium Level Bot'):DIFF==='hard'?tr('Zor Seviye Bot','Hard Level Bot'):tr('İmkansız Seviye Bot','Impossible Level Bot');
   const oppNm=MODE==='bot'?botNm:((OPP_PROFILE&&OPP_PROFILE.name)?OPP_PROFILE.name:tr('Rakip','Opponent'));
   const oppLg=(OPP_PROFILE&&OPP_PROFILE.leagueName)?OPP_PROFILE.leagueName:'';
   const oppSub=MODE==='bot'?botNm:(oppLg?`${oppNm} · ${oppLg}`:oppNm);
@@ -5819,7 +5819,7 @@ const TUT_STEPS=()=>[
     sel:null,
     pos:'bottom',
     title:tr('Hazırsın, Şimdi Devam Et!','You\'re Ready — Continue!'),
-    txt:tr('Artık tüm kontrol tamamen sende! Bu düelloyu <b>1 – 0</b> öndeyken <b>Kolay Bot</b> karşısında kendin tamamla. Kahraman gücünü ve kalan jokerlerini kullanmayı unutma — bol şans!','You\'re in full control now! Finish this duel from <b>1 – 0</b> ahead against the <b>Easy Bot</b>. Don\'t forget your Hero Power and remaining Jokers — good luck!'),
+    txt:tr('Artık tüm kontrol tamamen sende! Bu düelloyu <b>1 – 0</b> öndeyken <b>Kolay Seviye Bot</b> karşısında kendin tamamla. Kahraman gücünü ve kalan jokerlerini kullanmayı unutma — bol şans!','You\'re in full control now! Finish this duel from <b>1 – 0</b> ahead against the <b>Easy Level Bot</b>. Don\'t forget your Hero Power and remaining Jokers — good luck!'),
     handoff:true
   }
 ];
