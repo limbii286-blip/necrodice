@@ -2895,85 +2895,27 @@ function R(){
   }
 }
 let glogOpen=false,glogLastSig='';
-function glogEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-function glogFmtText(raw){
-  let h=glogEsc(raw||'');
-  h=h.replace(/joker oynadı:\s*(.+)$/i,(m,jn)=>`joker oynadı: <span class="glog-tag">${jn}</span>`);
-  h=h.replace(/\(([^)]+)\)/g,(m,inner)=>`(<span class="glog-num">${inner}</span>)`);
-  return h;
-}
-function renderGameLog(S){
-  const el=$('#glog');if(!el)return;
-  const menuEl=$('#menu');
-  if(!S||(menuEl&&!menuEl.hidden)){el.hidden=true;return}
-  el.hidden=false;
-  const raw=(S.log||[]).filter(l=>l&&!(l.p===1&&/Kuzgunun Kehaneti|Yitik Yazgı/.test(l.t||''))).slice(-30);
-  const sig=(glogOpen?1:0)+'|'+(S.bo||0)+'|'+MODE+'|'+(isEn()?1:0)+'|'+raw.length+'|'+(raw.length?raw[raw.length-1].p+':'+raw[raw.length-1].t:'');
-  if(sig===glogLastSig)return;
-  glogLastSig=sig;
-  const isSpec=MODE==='spectator';
-  const whoOf=p=>isSpec?(p===0?((S.specMeta&&S.specMeta.p0Name)||tr('Oyuncu','Player')):((S.specMeta&&S.specMeta.p1Name)||tr('Rakip','Opponent'))):(p===0?tr('Sen','You'):tr('Rakip','Opp'));
-  let actCnt=0,peekTxt=tr('Henüz hamle yok','No moves yet');
-  const rows=raw.map(l=>{
-    if(l.p<0){
-      const clean=String(l.t||'').replace(/^—\s*|\s*—$/g,'');
-      return `<div class="glog-row div">${glogEsc(clean)}</div>`;
-    }
-    actCnt++;
-    const who=whoOf(l.p);
-    peekTxt=`${who} ${l.t||''}`;
-    return `<div class="glog-row ${l.p===0?'me':'opp'}"><span class="glog-who">${glogEsc(who)}</span><span>${glogFmtText(l.t)}</span></div>`;
-  }).join('');
-  el.classList.toggle('collapsed',!glogOpen);
-  el.innerHTML=`<button type="button" class="glog-hdr" aria-expanded="${glogOpen?'true':'false'}"><span class="glog-title">${tr('Maç Günlüğü','Game Log')}</span></button><div class="glog-body">${rows||`<div class="glog-empty">${tr('Henüz hamle yok','No moves yet')}</div>`}</div>`;
-  const toggle=()=>{
-    glogOpen=!glogOpen;
-    glogLastSig='';
-    renderGameLog(G);
-    if(glogOpen){const b=el.querySelector('.glog-body');if(b)b.scrollTop=b.scrollHeight;}
-  };
-  const hdr=el.querySelector('.glog-hdr');
-  if(hdr)hdr.onclick=e=>{e.stopPropagation();toggle()};
-  if(glogOpen){const b=el.querySelector('.glog-body');if(b)b.scrollTop=b.scrollHeight;}
-  syncGlogMobileSize();
-}
+function renderGameLog(){const el=$('#glog');if(el)el.remove();}
 function syncGlogMobileSize(){
-  const el=$('#glog'),tl=$('#hdr .hs.sks'),hc=$('#hdr .hc');
-  if(!el)return;
+  const ssb=document.getElementById('spec-social-bar');
+  if(!ssb)return;
   if(window.innerWidth<=760){
+    const tl=$('#hdr .hs.sks'),hc=$('#hdr .hc');
     const tr=tl?tl.getBoundingClientRect():null;
     const hr=hc?hc.getBoundingClientRect():null;
     const ref=(tr&&tr.width>40&&tr.height>16)?tr:hr;
     if(ref&&ref.width>40&&ref.height>16){
-      el.style.setProperty('--glog-mob-w',Math.round(ref.width)+'px');
-      el.style.setProperty('--glog-mob-h',Math.round(hr&&hr.height>16?hr.height:ref.height)+'px');
-      el.style.setProperty('--glog-mob-l','6px');
-      el.style.setProperty('--glog-mob-t',Math.round(ref.bottom+5)+'px');
-      const ssb=document.getElementById('spec-social-bar');
-      if(ssb){
-        const gr=el.getBoundingClientRect();
-        ssb.style.left='6px';
-        ssb.style.right='auto';
-        ssb.style.top=Math.round((gr.bottom||ref.bottom+34)+4)+'px';
-        ssb.style.width=Math.round(ref.width)+'px';
-      }
+      ssb.style.left='6px';
+      ssb.style.right='auto';
+      ssb.style.top=Math.round(ref.bottom+5)+'px';
+      ssb.style.width=Math.round(ref.width)+'px';
     }
   }else{
-    el.style.removeProperty('--glog-mob-w');
-    el.style.removeProperty('--glog-mob-h');
-    el.style.removeProperty('--glog-mob-l');
-    el.style.removeProperty('--glog-mob-t');
-    const ssb=document.getElementById('spec-social-bar');
-    if(ssb){ssb.style.left='';ssb.style.right='';ssb.style.top='';ssb.style.width='';}
+    ssb.style.left='';ssb.style.right='';ssb.style.top='';ssb.style.width='';
   }
 }
 window.addEventListener('resize',syncGlogMobileSize);
 window.addEventListener('orientationchange',()=>setTimeout(syncGlogMobileSize,260));
-document.addEventListener('click',e=>{
-  if(!glogOpen)return;
-  const el=$('#glog');
-  if(el&&!el.contains(e.target)){glogOpen=false;glogLastSig='';if(G)renderGameLog(G);}
-});
 function playHeroPowerAnim(hId,side,hObj){
   const btn=document.querySelector(side===0?'#me .hp-btn':'#opp .hp-btn');
   if(btn){
