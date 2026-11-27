@@ -3061,7 +3061,7 @@ body.dragging-joker #fx::after {
   }
   #opp.zone .who {
     margin-top: 0 !important;
-    margin-bottom: calc(clamp(24px, 3.75dvh, 32px) + 5px) !important;
+    margin-bottom: calc(clamp(24px, 3.75dvh, 32px) + 12px) !important;
   }
   .opp-jhand {
     position: relative;
