@@ -3283,8 +3283,8 @@ const numHD=n=>cb=>{
 };
 const backHD=cb=>{
   const cbKey=(typeof USER_ACC!=='undefined'&&USER_ACC&&USER_ACC.cardBack)||'classic';
-  const equipped=(typeof CARDBACK_IMG_MAP!=='undefined'&&CARDBACK_IMG_MAP[cbKey])||'img/cb_classic.jpg?v=20261126_cb_orig2';
-  hq('bk_'+cbKey+'_v5',[equipped,'img/cb_classic.jpg?v=20261126_cb_orig2'],cb);
+  const equipped=(typeof CARDBACK_IMG_MAP!=='undefined'&&CARDBACK_IMG_MAP[cbKey])||'img/cb_classic.jpg?v=20261127_cb_rp1';
+  hq('bk_'+cbKey+'_v6',[equipped,'img/cb_classic.jpg?v=20261127_cb_rp1'],cb);
 };
 const HERO_LORE_TR={
   c:'Karanlık pazarlarda kemik ve altın tartıp terazisine hile karıştıran lanetli bezirgân.',
@@ -8123,8 +8123,8 @@ const ACHIEVEMENTS=[
   {id:'daily3',ic:'☾',trN:'Sadık Düellocu',enN:'Devoted Duelist',trD:'3 günlük giriş serisine ulaş',enD:'Reach a 3-day login streak',trT:'Ebedi Nöbetçi',enT:'Eternal Sentinel'}
 ];
 const CARD_BACKS=[
-  {id:'classic',trN:'Klasik Kemik',enN:'Classic Bone',req:()=>true,trR:'Varsayılan',enR:'Default'},
-  {id:'bone',trN:'Kuzgun Parşömeni',enN:'Raven Parchment',req:()=>true,trR:'Ücretsiz Kozmetik',enR:'Free Cosmetic'},
+  {id:'classic',trN:'Kuzgun Parşömeni',enN:'Raven Parchment',req:()=>true,trR:'Varsayılan',enR:'Default'},
+  {id:'bone',trN:'Klasik Kemik',enN:'Classic Bone',req:()=>true,trR:'Ücretsiz Kozmetik',enR:'Free Cosmetic'},
   {id:'crimson',trN:'Kızıl Mühür',enN:'Crimson Seal',req:a=>((a.wins||0)+(a.unrankedWins||0))>=3||(a.peakElo||1200)>=1250,trR:'3 Zafer veya 1250 ELO',enR:'3 Wins or 1250 ELO'},
   {id:'ghost',trN:'Hayalet Örtü',enN:'Ghost Shroud',req:a=>(a.achievements||[]).includes('survivor')||((a.wins||0)+(a.unrankedWins||0))>=5,trR:'5 Zafer veya Ölümsüz İrade',enR:'5 Wins or Undying Will'},
   {id:'obsidian',trN:'Obsidyen Altın',enN:'Obsidian Gold',req:a=>(a.peakElo||1200)>=1400,trR:'1400 ELO (Kan Efendisi)',enR:'1400 ELO (Blood Lord)'},
@@ -8212,8 +8212,8 @@ const BOARD_IMG_MAP={
   gold:'board_gold.jpg?v=20261125_b1'
 };
 const CARDBACK_IMG_MAP={
-  classic:'img/cb_classic.jpg?v=20261126_cb_orig2',
-  bone:'img/cb_bone.jpg?v=20261126_cb_bone1',
+  classic:'img/cb_classic.jpg?v=20261127_cb_rp1',
+  bone:'img/cb_bone.jpg?v=20261127_cb_bone2',
   crimson:'img/cb_crimson.jpg?v=20261125_cb1',
   ghost:'img/cb_ghost.jpg?v=20261125_cb1',
   obsidian:'img/cb_obsidian.jpg?v=20261125_cb1',
@@ -9496,7 +9496,7 @@ function openInventoryModal(initialCat='dice'){
     }else if(cat==='cards'){
       const cbCards=CARD_BACKS.map(cb=>{
         const ok=cb.req(acc),sel=(acc.cardBack||'classic')===cb.id;
-        const cbImg=(typeof CARDBACK_IMG_MAP!=='undefined'&&CARDBACK_IMG_MAP[cb.id])||'img/cb_classic.jpg?v=20261126_cb_orig2';
+        const cbImg=(typeof CARDBACK_IMG_MAP!=='undefined'&&CARDBACK_IMG_MAP[cb.id])||'img/cb_classic.jpg?v=20261127_cb_rp1';
         return `<button type="button" class="inv-card${sel?' sel':''}${ok?'':' lock'}" data-cb="${cb.id}" ${ok?'':'disabled'}>
           <div class="inv-stage inv-stage-cb">
             <div class="inv-cb-preview cb-prev-${cb.id}"><img src="${cbImg}" alt="" decoding="async"></div>
