@@ -7177,6 +7177,15 @@ function mergeAccountData(localAcc,cloudAcc){
     boardTheme:pri.boardTheme||sec.boardTheme||'classic',
     d20Effect:pri.d20Effect||sec.d20Effect||'classic',
     frame:pri.frame||sec.frame||'classic',
+    backdrop:pri.backdrop||sec.backdrop||'none',
+    unlockedBackdrops:[...new Set([...(localAcc.unlockedBackdrops||[]),...(cloudAcc.unlockedBackdrops||[])])],
+    seasonRewards:(() => {
+      const m=new Map();
+      [...(cloudAcc.seasonRewards||[]),...(localAcc.seasonRewards||[])].forEach(r=>{if(r&&r.seasonNum!=null)m.set(r.seasonNum,r);});
+      return [...m.values()].sort((a,b)=>(b.seasonNum||0)-(a.seasonNum||0));
+    })(),
+    seasonTracked:Math.max(localAcc.seasonTracked||0,cloudAcc.seasonTracked||0)||0,
+    pendingSeasonReward:pri.pendingSeasonReward||sec.pendingSeasonReward||null,
     puzzleStreak:Math.max(localAcc.puzzleStreak||0,cloudAcc.puzzleStreak||0),
     lastPuzzleDay:(localAcc.lastPuzzleDay||'')>=(cloudAcc.lastPuzzleDay||'')?(localAcc.lastPuzzleDay||''):(cloudAcc.lastPuzzleDay||''),
     vaultBest:Math.max(localAcc.vaultBest||0,cloudAcc.vaultBest||0),
@@ -7346,6 +7355,10 @@ function syncAccountToCloud(acc){
     boardTheme:a.boardTheme||'classic',
     d20Effect:a.d20Effect||'classic',
     frame:a.frame||'classic',
+    backdrop:a.backdrop||'none',
+    unlockedBackdrops:Array.isArray(a.unlockedBackdrops)?a.unlockedBackdrops:[],
+    seasonRewards:Array.isArray(a.seasonRewards)?a.seasonRewards:[],
+    seasonTracked:a.seasonTracked||0,
     puzzleStreak:a.puzzleStreak||0,
     lastPuzzleDay:a.lastPuzzleDay||'',
     vaultBest:a.vaultBest||0,
@@ -8490,6 +8503,21 @@ const PROFILE_FRAMES=[
   {id:'frost',trN:'Buzul Taç',enN:'Frost Crown',req:a=>(a.achievements||[]).includes('veteran10')||hasLeagueTier(a,3),trR:'Arena Gazisi / Zümrüt Ligi',enR:'Arena Veteran / Emerald League'},
   {id:'void',trN:'Hiçlik Aurası',enN:'Void Aura',req:a=>(a.achievements||[]).includes('imp_slayer')||hasLeagueTier(a,4),trR:'İmkansız Bot Zaferi / Elmas Ligi',enR:'Beat Impossible AI / Diamond League'}
 ];
+const PROFILE_BACKDROPS=[
+  {id:'none',      tier:-1, trN:'Klasik Karanlık',        enN:'Classic Obsidian',      trR:'Varsayılan',                         enR:'Default',                               trD:'Standart karanlık profil arkalığı',                    enD:'Standard dark profile backdrop'},
+  {id:'bronze',    tier:0,  trN:'Bronz Sezon Arkalığı',   enN:'Bronze Season Backdrop',trR:'Sezonu Bronz liginde bitir',        enR:'Finish a season in Bronze',             trD:'Antik bronz parıltılı sezon sonu profil arkalığı',     enD:'Ancient bronze-lit season-end profile backdrop'},
+  {id:'silver',    tier:1,  trN:'Gümüş Sezon Arkalığı',   enN:'Silver Season Backdrop',trR:'Sezonu Gümüş liginde bitir',        enR:'Finish a season in Silver',             trD:'Ay ışığı ve cilalı gümüş sezon sonu arkalığı',         enD:'Moonlit polished silver season-end backdrop'},
+  {id:'gold',      tier:2,  trN:'Altın Sezon Arkalığı',   enN:'Gold Season Backdrop',  trR:'Sezonu Altın liginde bitir',        enR:'Finish a season in Gold',               trD:'Kraliyet altını varaklı sezon sonu profil arkalığı',   enD:'Royal gold-gilded season-end profile backdrop'},
+  {id:'emerald',   tier:3,  trN:'Zümrüt Sezon Arkalığı',  enN:'Emerald Season Backdrop',trR:'Sezonu Zümrüt liginde bitir',      enR:'Finish a season in Emerald',            trD:'Zümrüt yeşili mistik aura sezon sonu profil arkalığı', enD:'Mystic emerald aura season-end profile backdrop'},
+  {id:'diamond',   tier:4,  trN:'Elmas Sezon Arkalığı',   enN:'Diamond Season Backdrop',trR:'Sezonu Elmas liginde bitir',       enR:'Finish a season in Diamond',            trD:'Kristal buz mavisi prizma sezon sonu profil arkalığı', enD:'Crystal ice-blue prism season-end profile backdrop'},
+  {id:'master',    tier:5,  trN:'Ustalık Sezon Arkalığı', enN:'Master Season Backdrop', trR:'Sezonu Ustalık liginde bitir',     enR:'Finish a season in Master',             trD:'Karanlık ametist efsunlu sezon sonu profil arkalığı',  enD:'Dark amethyst enchanted season-end profile backdrop'},
+  {id:'challenger',tier:6,  trN:'Şampiyonluk Arkalığı',   enN:'Challenger Backdrop',   trR:'Sezonu Şampiyonluk liginde bitir',  enR:'Finish a season in Challenger',         trD:'Altın-kızıl taçlı efsanevi sezon sonu profil arkalığı',enD:'Gold-crimson crowned legendary season-end profile backdrop'}
+];
+function hasSeasonBackdrop(acc,id){
+  if(!id||id==='none')return true;
+  if(!acc)return false;
+  return Array.isArray(acc.unlockedBackdrops)&&acc.unlockedBackdrops.includes(id);
+}
 const DAILY_QUEST_POOL=[
   {id:'play2',trN:'2 Maç Tamamla',enN:'Complete 2 Matches',goal:2,ic:'❖'},
   {id:'win1',trN:'1 Maç Kazan',enN:'Win 1 Match',goal:1,ic:'★'},
@@ -8527,11 +8555,13 @@ function applyCosmetics(acc){
   try{
     const cb=(acc&&acc.cardBack)||'classic';
     const fr=(acc&&acc.frame)||'classic';
+    const bd=(acc&&acc.backdrop)||'none';
     const ds=(acc&&acc.diceSkin)||'ruby';
     const bt=(acc&&acc.boardTheme)||'classic';
     const fx=(acc&&acc.d20Effect)||'classic';
     document.body.dataset.cardback=cb;
     document.body.dataset.frame=fr;
+    document.body.dataset.backdrop=bd;
     document.body.dataset.diceskin=ds;
     document.body.dataset.board=bt;
     document.body.dataset.d20fx=fx;
@@ -8648,6 +8678,78 @@ function getCurrentSeason(){
   const mo=tr('Ocak,Şubat,Mart,Nisan,Mayıs,Haziran,Temmuz,Ağustos,Eylül,Ekim,Kasım,Aralık','January,February,March,April,May,June,July,August,September,October,November,December').split(',');
   return {num:Math.max(1,num),label:`${tr('Sezon','Season')} ${Math.max(1,num)} · ${mo[m]} ${y}`,daysLeft};
 }
+function checkSeasonRollover(acc){
+  if(!acc||isGuestUser(acc))return false;
+  const curS=getCurrentSeason();
+  if(!acc.seasonTracked){
+    acc.seasonTracked=curS.num;
+    return false;
+  }
+  if(acc.seasonTracked>=curS.num)return false;
+  const endedSeason=acc.seasonTracked;
+  const lg=ensureLeagueState(acc);
+  let rewarded=false;
+  if(lg&&!lg.unranked&&(lg.placementGames||0)>=1){
+    const finishTier=Math.max(0,Math.min(6,lg.tier|0));
+    const tObj=LEAGUE_TIERS[finishTier]||LEAGUE_TIERS[0];
+    const bdId=tObj.id;
+    acc.unlockedBackdrops=Array.isArray(acc.unlockedBackdrops)?acc.unlockedBackdrops:[];
+    if(!acc.unlockedBackdrops.includes(bdId))acc.unlockedBackdrops.push(bdId);
+    acc.seasonRewards=Array.isArray(acc.seasonRewards)?acc.seasonRewards:[];
+    if(!acc.seasonRewards.some(r=>r.seasonNum===endedSeason)){
+      acc.seasonRewards.unshift({seasonNum:endedSeason,tier:finishTier,div:lg.div||4,lp:lg.lp||0,backdropId:bdId,ts:Date.now()});
+    }
+    if(!acc.backdrop||acc.backdrop==='none')acc.backdrop=bdId;
+    acc.pendingSeasonReward={seasonNum:endedSeason,tier:finishTier,div:lg.div||4,lp:lg.lp||0,backdropId:bdId};
+    rewarded=true;
+  }
+  acc.league={unranked:true,provisional:false,placementGames:0,placementWins:0,tier:0,div:4,lp:0,peakTier:0,peakDiv:4,peakLp:0,demoteShield:0};
+  acc.elo=Math.round(1200+((acc.elo||1200)-1200)*0.5);
+  acc.seasonTracked=curS.num;
+  saveSession(acc);
+  return rewarded;
+}
+function openSeasonRewardModal(rew){
+  if(!rew)return;
+  const mb=$('#mb');
+  if(!mb)return;
+  const tObj=LEAGUE_TIERS[Math.max(0,Math.min(6,rew.tier|0))]||LEAGUE_TIERS[0];
+  const bd=PROFILE_BACKDROPS.find(b=>b.id===rew.backdropId)||PROFILE_BACKDROPS[1];
+  const fl=formatLeague({unranked:false,provisional:false,tier:rew.tier,div:rew.div,lp:rew.lp},false);
+  lock=true;
+  mb.classList.remove('end-mode','an-mode','set-mode','lob-mode','lb-mode','inv-mode');
+  mb.classList.add('auth-mode','pr-mode');
+  mb.innerHTML=`<div class="sr-modal bd-${bd.id}">
+    <div class="sr-crest">${leagueCrestSvg(tObj.id,56)}</div>
+    <div class="sr-eyebrow">${tr(`Sezon ${rew.seasonNum} Tamamlandı!`,`Season ${rew.seasonNum} Complete!`)}</div>
+    <h3>${tr('Sezon Sonu Ödülü Kazanıldı','Season-End Reward Unlocked')}</h3>
+    <p class="sr-sub">${tr(`Sezonu <b>${escHtml(fl.name)}</b> liginde bitirdiğin için özel ödülün hazır:`,
+      `For finishing the season in <b>${escHtml(fl.name)}</b>, your exclusive reward is ready:`)}</p>
+    <div class="sr-rew-card">
+      <div class="bd-sw bd-${bd.id}"></div>
+      <div>
+        <b>${escHtml(isEn()?bd.enN:bd.trN)}</b>
+        <small>${escHtml(isEn()?bd.enD:bd.trD)}</small>
+      </div>
+    </div>
+    <div class="row sr-acts">
+      <button type="button" id="sr-equip" class="btn">${tr('Arkalığı Kuşan','Equip Backdrop')}</button>
+      <button type="button" id="sr-ok" class="btn alt">${tr('Kapat','Close')}</button>
+    </div>
+  </div>`;
+  $('#m').hidden=false;
+  const finish=()=>{
+    if(USER_ACC){delete USER_ACC.pendingSeasonReward;saveSession(USER_ACC);}
+    mb.classList.remove('auth-mode','pr-mode');
+    $('#m').hidden=true;lock=false;
+  };
+  $('#sr-equip').onclick=()=>{
+    snd('ok');
+    if(USER_ACC){USER_ACC.backdrop=bd.id;}
+    finish();
+  };
+  $('#sr-ok').onclick=()=>{snd('click');finish();};
+}
 
 async function openLeaderboardModal(activeTab='rank'){
   const mb=$('#mb');
@@ -8718,6 +8820,7 @@ async function openLeaderboardModal(activeTab='rank'){
     const tabsHtml=`<div class="pr-tabs lb-tabs">
       <button type="button" class="pr-tab${curTab==='rank'?' act':''}" data-lt="rank">${tr('Sezon Sıralaması','Season Standings')}</button>
       <button type="button" class="pr-tab${curTab==='hof'?' act':''}" data-lt="hof">${tr('Onur Listesi','Hall of Fame')}</button>
+      <button type="button" class="pr-tab${curTab==='rewards'?' act':''}" data-lt="rewards">${tr('Sezon Ödülleri','Season Rewards')}</button>
     </div>`;
     let bodyHtml='';
     if(curTab==='rank'){
@@ -8745,6 +8848,41 @@ async function openLeaderboardModal(activeTab='rank'){
         ?`<div class="lb-my-bar">${tr('Senin Sıran','Your Rank')}: <b>#${myIdx+1}</b> / ${list.length} · <b>${escHtml(list[myIdx].fl.name)} (${list[myIdx].fl.lp} LP)</b></div>`
         :(USER_ACC&&USER_ACC.isGuest?`<div class="lb-my-bar guest">${tr('Sıralamaya girmek için üye ol!','Register to appear on the leaderboard!')}</div>`:'');
       bodyHtml=`<div class="lb-list">${rowsHtml}</div>${myBarHtml}`;
+    }else if(curTab==='rewards'){
+      const myLg=USER_ACC?ensureLeagueState(USER_ACC):null;
+      const myFl=USER_ACC?formatLeague(myLg,false):null;
+      const myTierIdx=(myLg&&!myLg.unranked&&(myLg.placementGames||0)>=1)?Math.max(0,Math.min(6,myLg.tier|0)):-1;
+      const myBd=myTierIdx>=0?PROFILE_BACKDROPS.find(b=>b.tier===myTierIdx):null;
+      const projHtml=myBd
+        ?`<div class="sr-proj bd-${myBd.id}">
+            <div class="sr-proj-ic">${leagueCrestSvg(LEAGUE_TIERS[myTierIdx].id,38)}</div>
+            <div class="sr-proj-txt">
+              <b>${tr('Mevcut Sezon Hedefin','Your Projected Reward')}: ${escHtml(isEn()?myBd.enN:myBd.trN)}</b>
+              <small>${tr(`Sezonu <b>${escHtml(myFl.name)}</b> liginde bitirirsen bu profil arkalığını ve S${season.num} nişanını kazanacaksın.`,
+                `Finish Season ${season.num} in <b>${escHtml(myFl.name)}</b> to unlock this profile backdrop and S${season.num} badge.`)}</small>
+            </div>
+          </div>`
+        :`<div class="sr-proj">
+            <div class="sr-proj-txt">
+              <b>${tr('Dereceli Maç Oyna','Play Ranked Matches')}</b>
+              <small>${tr('Sezon sonu ödülü kazanmak için en az 1 dereceli yerleştirme maçı tamamla.','Complete at least 1 ranked placement match to qualify for season-end rewards.')}</small>
+            </div>
+          </div>`;
+      const tierRows=LEAGUE_TIERS.map(t=>{
+        const bd=PROFILE_BACKDROPS.find(b=>b.tier===t.idx)||PROFILE_BACKDROPS[1];
+        const unlocked=hasSeasonBackdrop(USER_ACC,bd.id);
+        const isTarget=myTierIdx===t.idx;
+        return `<div class="sr-row${isTarget?' cur':''}${unlocked?' got':''}">
+          <div class="sr-row-rk">${leagueCrestSvg(t.id,30)}</div>
+          <div class="sr-row-sw bd-sw bd-${bd.id}"></div>
+          <div class="sr-row-info">
+            <b>${escHtml(isEn()?t.en:t.tr)} — ${escHtml(isEn()?bd.enN:bd.trN)}</b>
+            <small>${escHtml(isEn()?bd.enD:bd.trD)}</small>
+          </div>
+          <span class="sr-tag">${unlocked?tr('Kazanıldı','Unlocked'):(isTarget?tr('Mevcut Lig','Current'):`S${season.num}`)}</span>
+        </div>`;
+      }).join('');
+      bodyHtml=`${projHtml}<div class="lb-list sr-list">${tierRows}</div>`;
     }else{
       const leader=list[0];
       const lTot=leader?(leader.wins||0)+(leader.losses||0):0;
@@ -8961,12 +9099,18 @@ function openProfileModal(initialTab='overview'){
     }
 
     const isGProf=isGuestUser(acc);
-    mb.innerHTML=`<div class="pr-wrap">
+    const bdCls='bd-'+(acc.backdrop||'none');
+    const sBadges=(Array.isArray(acc.seasonRewards)?acc.seasonRewards:[]).slice(0,4).map(r=>{
+      const tObj=LEAGUE_TIERS[Math.max(0,Math.min(6,r.tier|0))]||LEAGUE_TIERS[0];
+      return `<span class="pr-sbadge rk-${tObj.id}">S${r.seasonNum} · ${escHtml(isEn()?tObj.en:tObj.tr)}</span>`;
+    }).join('');
+    mb.innerHTML=`<div class="pr-wrap ${bdCls}">
       <div class="pr-head">
         <div class="pr-badge ${isGProf?'rk-unr':fl.cls} ${frCls}">${isGProf?'—':leagueCrestSvg(fl.id,46)}</div>
         <div class="pr-titles">
           <h3>${nm}${eqTitle?` <span class="pr-eq-title">«${escHtml(eqTitle)}»</span>`:''}</h3>
           <div class="pr-rank">${escHtml(fl.name)}${fl.unranked?` · <b>${fl.placementGames}/5 ${tr('Yerleştirme','Placements')}</b>`:(fl.provisional?` <em>(${tr('Geçici','Prov.')} ${fl.placementGames}/5)</em>`:'')} · <span class="pr-st-tag">${stCur} ${tr('Gün Seri','Day Streak')}</span>${(acc.puzzleStreak||0)>0?` · <span class="pr-st-tag">${tr('Bulmaca','Puzzle')}: ${acc.puzzleStreak}</span>`:''}</div>
+          ${sBadges?`<div class="pr-season-badges">${sBadges}</div>`:''}
         </div>
       </div>
       <div class="pr-tabs">
@@ -9227,6 +9371,11 @@ function openAuthModal(initialTab='login',isUpgrade=false){
     if(hadNewDay){
       const stVal=USER_ACC.streak||1;
       setTimeout(()=>showStreakToast(stVal,stVal>1),sp?1380:350);
+    }
+    checkSeasonRollover(USER_ACC);
+    if(USER_ACC.pendingSeasonReward){
+      const pRew=USER_ACC.pendingSeasonReward;
+      setTimeout(()=>{if(!G||G.over)openSeasonRewardModal(pRew)},sp?1600:600);
     }
     if(!USER_ACC.isGuest&&USER_ACC.key&&fbDb){
       pullAccountFromCloud(USER_ACC.key).then(()=>{if(isRegisteredMember(USER_ACC))claimActiveSession(USER_ACC);});
@@ -9842,6 +9991,25 @@ function openInventoryModal(initialCat='dice'){
       }).join('');
       bodyHtml=`<div class="inv-sec-lbl">${tr('Savaş Masası Atmosfer Temaları','Battle Table Atmosphere Themes')}</div>
         <div class="inv-grid inv-grid-2">${btCards}</div>`;
+    }else if(cat==='backdrop'){
+      const bdCards=PROFILE_BACKDROPS.map(bd=>{
+        const ok=hasSeasonBackdrop(acc,bd.id),sel=(acc.backdrop||'none')===bd.id;
+        return `<button type="button" class="inv-card inv-card-wide${sel?' sel':''}${ok?'':' lock'}" data-bd="${bd.id}" ${ok?'':'disabled'}>
+          <div class="inv-stage inv-stage-bd bd-${bd.id}">
+            <div class="inv-bd-mini">
+              <img src="${heroImg}" alt="" decoding="async">
+              <span>${escHtml(acc.username||tr('Oyuncu','Player'))}</span>
+            </div>
+          </div>
+          <div class="inv-info">
+            <b>${escHtml(isEn()?bd.enN:bd.trN)}</b>
+            <small>${sel?tr('Aktif','Equipped'):(ok?tr('Kullanmak için tıkla','Click to equip'):escHtml(isEn()?bd.enR:bd.trR))}</small>
+          </div>
+          ${sel?`<span class="inv-tag on">${tr('Seçili','Active')}</span>`:(!ok?`<span class="inv-tag lk">${tr('Kilitli','Locked')}</span>`:'')}
+        </button>`;
+      }).join('');
+      bodyHtml=`<div class="inv-sec-lbl">${tr('Sezon Sonu Profil Arkalıkları','Season-End Profile Backdrops')}</div>
+        <div class="inv-grid inv-grid-2">${bdCards}</div>`;
     }else{
       const frCards=PROFILE_FRAMES.map(fr=>{
         const ok=fr.req(acc),sel=(acc.frame||'classic')===fr.id;
@@ -9885,6 +10053,7 @@ function openInventoryModal(initialCat='dice'){
         <button type="button" class="inv-tab${cat==='dice'?' act':''}" data-ic="dice">${tr('Ölüm Zarı','Death Dice')}</button>
         <button type="button" class="inv-tab${cat==='cards'?' act':''}" data-ic="cards">${tr('Kart Arkası','Card Backs')}</button>
         <button type="button" class="inv-tab${cat==='board'?' act':''}" data-ic="board">${tr('Masa Teması','Table Theme')}</button>
+        <button type="button" class="inv-tab${cat==='backdrop'?' act':''}" data-ic="backdrop">${tr('Profil Arkalığı','Backdrops')}</button>
         <button type="button" class="inv-tab${cat==='frame'?' act':''}" data-ic="frame">${tr('Çerçeve & Unvan','Frames & Titles')}</button>
       </div>
       <div class="inv-scroll">${bodyHtml}</div>
@@ -9908,6 +10077,7 @@ function openInventoryModal(initialCat='dice'){
     mb.querySelectorAll('.inv-card[data-fx]').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.d20Effect=b.dataset.fx;saveSession(USER_ACC);renderInv(USER_ACC)});
     mb.querySelectorAll('.inv-card[data-cb]').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.cardBack=b.dataset.cb;saveSession(USER_ACC);renderInv(USER_ACC)});
     mb.querySelectorAll('.inv-card[data-bt]').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.boardTheme=b.dataset.bt;saveSession(USER_ACC);renderInv(USER_ACC)});
+    mb.querySelectorAll('.inv-card[data-bd]').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.backdrop=b.dataset.bd;saveSession(USER_ACC);renderInv(USER_ACC)});
     mb.querySelectorAll('.inv-card[data-fr]').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.frame=b.dataset.fr;saveSession(USER_ACC);renderInv(USER_ACC)});
     mb.querySelectorAll('.ach-eq').forEach(b=>b.onclick=()=>{snd('ok');USER_ACC.title=b.dataset.title||'';saveSession(USER_ACC);renderInv(USER_ACC)});
   };
