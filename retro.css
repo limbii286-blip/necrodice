@@ -10499,6 +10499,17 @@ body[data-board="gold"] main::after {
   margin: 0 auto 4px;
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.85)) drop-shadow(0 0 14px rgba(242, 190, 90, 0.28));
 }
+.fv-welcome-title {
+  font-family: var(--df);
+  font-weight: 800;
+  font-size: clamp(36px, 6.2vw, 48px);
+  line-height: 1.08;
+  letter-spacing: 0.03em;
+  color: var(--gold-bright, #fde68a);
+  text-shadow: 0 3px 8px rgba(0, 0, 0, 0.96), 0 0 18px rgba(242, 190, 90, 0.32);
+  margin: 4px 0 8px;
+  text-align: center;
+}
 
 /* ==========================================================================
    FINAL AAA MERKEZİ OYMA TAHTA & ANTİK PİRİNÇ LOBİ (MASAÜSTÜ + MOBİL)
