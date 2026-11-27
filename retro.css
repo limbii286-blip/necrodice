@@ -10876,7 +10876,8 @@ body[data-board="void"] main::after {
   z-index: 0;
   background: radial-gradient(circle at 50% 45%, rgba(168, 85, 247, 0.15), rgba(22, 6, 46, 0.55) 80%);
 }
-body[data-cardback="classic"] #deck, body[data-cardback="classic"] .c.bk { background-image: url('img/cb_classic.jpg?v=20261127_cb_rp1') !important; filter: none !important; }
+#deck, .c.bk { background-image: url('img/cb_classic.jpg?v=20261127_cb_rp2'); background-position: center; background-size: cover; background-repeat: no-repeat; }
+body[data-cardback="classic"] #deck, body[data-cardback="classic"] .c.bk { background-image: url('img/cb_classic.jpg?v=20261127_cb_rp2') !important; filter: none !important; }
 body[data-cardback="bone"] #deck, body[data-cardback="bone"] .c.bk { background-image: url('img/cb_bone.jpg?v=20261127_cb_bone2') !important; filter: none !important; }
 body[data-cardback="crimson"] #deck, body[data-cardback="crimson"] .c.bk { background-image: url('img/cb_crimson.jpg?v=20261125_cb1') !important; filter: none !important; }
 body[data-cardback="ghost"] #deck, body[data-cardback="ghost"] .c.bk { background-image: url('img/cb_ghost.jpg?v=20261125_cb1') !important; filter: none !important; }

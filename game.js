@@ -3308,8 +3308,8 @@ const numHD=n=>cb=>{
 };
 const backHD=cb=>{
   const cbKey=(typeof USER_ACC!=='undefined'&&USER_ACC&&USER_ACC.cardBack)||'classic';
-  const equipped=(typeof CARDBACK_IMG_MAP!=='undefined'&&CARDBACK_IMG_MAP[cbKey])||'img/cb_classic.jpg?v=20261127_cb_rp1';
-  hq('bk_'+cbKey+'_v6',[equipped,'img/cb_classic.jpg?v=20261127_cb_rp1'],cb);
+  const equipped=(typeof CARDBACK_IMG_MAP!=='undefined'&&CARDBACK_IMG_MAP[cbKey])||'img/cb_classic.jpg?v=20261127_cb_rp2';
+  hq('bk_'+cbKey+'_v7',[equipped,'img/cb_classic.jpg?v=20261127_cb_rp2'],cb);
 };
 const HERO_LORE_TR={
   c:'Karanlık pazarlarda kemik ve altın tartıp terazisine hile karıştıran lanetli bezirgân.',
@@ -5143,7 +5143,9 @@ function createSmoothDragLoop(onFrame){
       document.body.classList.add('dragging-deck');
       ghost=document.createElement('div');
       ghost.className='deck-drag-ghost';
-      ghost.style.backgroundImage=`url("${IMG.bn}")`;
+      const activeCb=(typeof USER_ACC!=='undefined'&&USER_ACC&&USER_ACC.cardBack)||'classic';
+      const activeCbUrl=(typeof CARDBACK_IMG_MAP!=='undefined'&&CARDBACK_IMG_MAP[activeCb])||IMG.bn;
+      ghost.style.backgroundImage=`url("${activeCbUrl}")`;
       ghost.style.transform=`translate3d(${e.clientX.toFixed(2)}px, ${e.clientY.toFixed(2)}px, 0) translate(-50%, -50%) scale(1)`;
       document.body.appendChild(ghost);
       loop.start(e.clientX,e.clientY,1,1.08);
@@ -8462,7 +8464,7 @@ const BOARD_IMG_MAP={
   gold:'board_gold.jpg?v=20261125_b1'
 };
 const CARDBACK_IMG_MAP={
-  classic:'img/cb_classic.jpg?v=20261127_cb_rp1',
+  classic:'img/cb_classic.jpg?v=20261127_cb_rp2',
   bone:'img/cb_bone.jpg?v=20261127_cb_bone2',
   crimson:'img/cb_crimson.jpg?v=20261125_cb1',
   ghost:'img/cb_ghost.jpg?v=20261125_cb1',
@@ -9173,7 +9175,7 @@ function openAuthModal(initialTab='login',isUpgrade=false){
     }
   }
   renderAuthBar();
-  if(USER_ACC)applyCosmetics(USER_ACC);
+  applyCosmetics(USER_ACC||{cardBack:'classic'});
   if(fbDb)startLobbyPresence();
   if(USER_ACC&&typeof checkAbandonedOrResumeMatch==='function'){
     setTimeout(()=>checkAbandonedOrResumeMatch(),sp?1350:250);
@@ -9751,7 +9753,7 @@ function openInventoryModal(initialCat='dice'){
     }else if(cat==='cards'){
       const cbCards=CARD_BACKS.map(cb=>{
         const ok=cb.req(acc),sel=(acc.cardBack||'classic')===cb.id;
-        const cbImg=(typeof CARDBACK_IMG_MAP!=='undefined'&&CARDBACK_IMG_MAP[cb.id])||'img/cb_classic.jpg?v=20261127_cb_rp1';
+        const cbImg=(typeof CARDBACK_IMG_MAP!=='undefined'&&CARDBACK_IMG_MAP[cb.id])||'img/cb_classic.jpg?v=20261127_cb_rp2';
         return `<button type="button" class="inv-card${sel?' sel':''}${ok?'':' lock'}" data-cb="${cb.id}" ${ok?'':'disabled'}>
           <div class="inv-stage inv-stage-cb">
             <div class="inv-cb-preview cb-prev-${cb.id}"><img src="${cbImg}" alt="" decoding="async"></div>
