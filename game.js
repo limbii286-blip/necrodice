@@ -6372,6 +6372,7 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
     <p class="an-sub">${tr('Kesin kombinatoryal çözücü, kahraman gücü fırsatları ve Multi-PV hatları taranıyor…','Scanning Exact Endgame Solver, Hero Power opportunities & Multi-PV lines…')}</p>
     <div class="an-pbar"><i id="an-fill"></i></div>
     <div id="an-stat" class="an-stat">0 / ${hist.length}</div>
+    <button type="button" id="an-cancel" class="btn alt sm" style="margin-top:14px">${tr('İptal','Cancel')}</button>
   </div>`;
   const restoreEnd=()=>{
     cancelled=true;
@@ -6380,6 +6381,13 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
     mb.innerHTML=endTplHtml;
     const row=mb.querySelector('.end-acts');
     if(row){
+      if(LAST_DEATH_CARD&&!LAST_DEATH_CARD.isSpec){
+        const sb=document.createElement('button');
+        sb.id='btn-share-card';sb.className='btn alt';
+        sb.textContent=tr('Ölüm Kartını Paylaş','Share Death Card');
+        sb.onclick=()=>{snd('click');shareDeathCard(LAST_DEATH_CARD,sb)};
+        row.appendChild(sb);
+      }
       const ab=document.createElement('button');
       ab.id='btn-analyze';ab.className='btn alt';
       ab.textContent=tr('Maçı Analiz Et','Analyze Match');
@@ -6388,7 +6396,10 @@ function openMatchAnalysis(endTplHtml,moBtn,mxBtn){
       if(moBtn){moBtn.style.visibility='';row.appendChild(moBtn)}
       if(mxBtn){mxBtn.style.visibility='';row.appendChild(mxBtn)}
     }
+    const gSave=mb.querySelector('#end-save-guest');
+    if(gSave){gSave.onclick=()=>{snd('click');mb.classList.remove('end-mode');openAuthModal('register',true)}}
   };
+  if($('#an-cancel'))$('#an-cancel').onclick=()=>{snd('click');restoreEnd()};
   const renderReport=(scrollToIdx)=>{
     const st=computeMatchStats(results);
     const cnt=st.cnt;
