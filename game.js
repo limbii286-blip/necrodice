@@ -3660,6 +3660,7 @@ document.addEventListener('click',e=>{
   const jClick=e.target.closest&&e.target.closest('#hand .j[data-j]');
   if(!jClick){
     document.querySelectorAll('#hand .j.pinned').forEach(el=>el.classList.remove('pinned'));
+    if(window.clearOracleForJoker)window.clearOracleForJoker();
   }
   const S=G,t=e.target.closest&&e.target.closest('[data-c],[data-e],[data-j],[data-s],[data-x],[data-g],[data-av],[data-hp],[data-hp-id]');
   if(lock||!t)return;
@@ -3721,8 +3722,15 @@ document.addEventListener('click',e=>{
       return; // masaüstünde sadece sürükleyerek oynanır
     }
     if(isMobView){
-      const canUse=S.turn==0&&!S.wait&&MODE!=='spectator'&&playable(S,0,id);
-      return preview(id,canUse,BLOCK.has(id)?tr('Etkisiz kılınabilir','Can be negated'):tr('Etkisiz kılınamaz','Cannot be negated'));
+      const wasPinned=t.classList.contains('pinned');
+      document.querySelectorAll('#hand .j.pinned').forEach(el=>el.classList.remove('pinned'));
+      if(wasPinned){
+        if(window.clearOracleForJoker)window.clearOracleForJoker();
+      }else{
+        t.classList.add('pinned');
+        if(window.updateOracleForJoker)window.updateOracleForJoker(t);
+      }
+      return;
     }
     // Masaüstünde tıklayarak joker oynanmaz; basılı tutup masaya sürükleyerek oynanır
     return;
@@ -5187,22 +5195,26 @@ function createSmoothDragLoop(onFrame){
     prevJId=id;
     const sim={...S,eff:[...S.eff,{id,o:0,uid:-1}]};
     const curT=total(S,0),newT=id===22?curT:total(sim,0),curTg=tg(S),newTg=tg(sim),curLow=lowW(S),newLow=lowW(sim);
+    const slots=[...document.querySelectorAll('#hand .jslot')];
+    const slEl=targetJ.closest('.jslot');
+    const sIdx=slEl?slots.indexOf(slEl):-1;
+    const isRightSide=sIdx>=0&&slots.length>1&&sIdx>(slots.length-1)/2;
+    const oraSideCls=isRightSide?' ora-left':' ora-right';
+    const whoEl=document.querySelector('#me .who');
     if(id===22&&S.deck.length>0){
-      const totEl=document.querySelector('#me .tot');
-      if(totEl){
+      if(whoEl){
         const sp=document.createElement('span');
-        sp.className='ora-tot';
+        sp.className='ora-tot'+oraSideCls;
         sp.textContent=`±${S.deck.length}`;
-        totEl.appendChild(sp);
+        whoEl.appendChild(sp);
       }
     }else if(Number.isFinite(newT)&&newT!==curT){
-      const totEl=document.querySelector('#me .tot');
-      if(totEl){
+      if(whoEl){
         const sp=document.createElement('span');
         const isExact=!newLow&&newT===newTg,isBust=!newLow&&newT>newTg;
-        sp.className='ora-tot'+(isExact?' ora-exact':isBust?' ora-bust':'');
+        sp.className='ora-tot'+oraSideCls+(isExact?' ora-exact':isBust?' ora-bust':'');
         sp.textContent='→ '+newT;
-        totEl.appendChild(sp);
+        whoEl.appendChild(sp);
       }
     }
     if(newTg!==curTg||newLow!==curLow){
@@ -5215,6 +5227,8 @@ function createSmoothDragLoop(onFrame){
       }
     }
   }
+  window.updateOracleForJoker=targetJ=>{prevJId=null;updateOracle(targetJ);};
+  window.clearOracleForJoker=clearOracle;
   let hoverActive=false;
   function clearHover(){
     if(!hoverActive&&!prevJId)return;
