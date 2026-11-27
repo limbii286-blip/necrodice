@@ -3065,7 +3065,7 @@ body.dragging-joker #fx::after {
   }
   .opp-jhand {
     position: relative;
-    top: 2px !important;
+    top: -6px !important;
     margin: auto 0 !important;
     gap: 5px !important;
     min-height: clamp(42px, 6.4dvh, 54px) !important;
@@ -3305,7 +3305,7 @@ body.dragging-joker #fx::after {
     max-width: calc(100vw - 8px) !important;
   }
   #hand .jslot {
-    --mjw: clamp(44px, min(14vw, 6.2dvh), 58px);
+    --mjw: clamp(48px, min(15.2vw, 7.1dvh), 66px);
     width: var(--mjw);
     height: calc(var(--mjw) * 1.5);
   }
@@ -3316,8 +3316,8 @@ body.dragging-joker #fx::after {
   }
   #hand .j.pinned:not(.drag-source-hidden),
   #hand .j.dim.pinned:not(.drag-source-hidden) {
-    width: clamp(118px, 34vw, 156px) !important;
-    transform: translateX(-50%) translateY(-24px) rotate(0deg) !important;
+    width: clamp(136px, 38vw, 178px) !important;
+    transform: translateX(-50%) translateY(-28px) rotate(0deg) !important;
     z-index: 60 !important;
     border-color: #ffe89e !important;
     box-shadow:

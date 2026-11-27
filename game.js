@@ -3660,6 +3660,17 @@ function exitGame(){ // limbigames perdesi, sonra ilk ekrana dön
   },460);
   setTimeout(()=>{entering=false},1480);
 }
+function toggleMobileJokerPin(t){
+  if(!t)return;
+  const wasPinned=t.classList.contains('pinned');
+  document.querySelectorAll('#hand .j.pinned').forEach(el=>el.classList.remove('pinned'));
+  if(wasPinned){
+    if(window.clearOracleForJoker)window.clearOracleForJoker();
+  }else{
+    t.classList.add('pinned');
+    if(window.updateOracleForJoker)window.updateOracleForJoker(t);
+  }
+}
 document.addEventListener('click',e=>{
   const jClick=e.target.closest&&e.target.closest('#hand .j[data-j]');
   if(!jClick){
@@ -3726,14 +3737,7 @@ document.addEventListener('click',e=>{
       return; // masaüstünde sadece sürükleyerek oynanır
     }
     if(isMobView){
-      const wasPinned=t.classList.contains('pinned');
-      document.querySelectorAll('#hand .j.pinned').forEach(el=>el.classList.remove('pinned'));
-      if(wasPinned){
-        if(window.clearOracleForJoker)window.clearOracleForJoker();
-      }else{
-        t.classList.add('pinned');
-        if(window.updateOracleForJoker)window.updateOracleForJoker(t);
-      }
+      toggleMobileJokerPin(t);
       return;
     }
     // Masaüstünde tıklayarak joker oynanmaz; basılı tutup masaya sürükleyerek oynanır
@@ -5171,7 +5175,13 @@ function createSmoothDragLoop(onFrame){
         returnToOrigin();
       }
     }else{
+      const tappedEl=dragEl;
       cleanupDrag();
+      if(!cancelled&&e.pointerType==='touch'&&maxDist<=10&&tappedEl){
+        window._suppressJokerClick=true;
+        setTimeout(()=>{window._suppressJokerClick=false},200);
+        toggleMobileJokerPin(tappedEl);
+      }
     }
   }
 
