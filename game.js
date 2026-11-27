@@ -30,7 +30,6 @@ const ac=()=>{
   if(AC.state!=='running'){try{AC.resume().catch(()=>{})}catch(e){}}return AC;
 };
 /* Müzik: menüde menu.m4a, oyunda game1/game2 sırayla. Web Audio'ya bağlı olduğu için ses ayarı iOS'ta da çalışır. */
-(()=>{try{if(typeof HDAV=='undefined'){const h=document.createElement('script');h.src='hd.js?v=20261113_art';h.async=true;document.head.appendChild(h)}}catch(e){}})(); // HD görseller (gömülü): HDJ jokerler, HDAV karakterler
 const FILE=location.protocol=='file:'; // çift tıkla açılınca Web Audio dosyaya erişemez: doğrudan <audio> kullan
 const AUD={mus:'?',sfx:'?',hd:'?'},MISS=[];const miss=u=>{try{u=new URL(u,location.href).href}catch(e){}if(!MISS.includes(u))MISS.push(u)}; // ayarlarda gösterilen dosya durumu
 const MU={menu:['music_gothic.wav'],game:['music_gothic.wav']};
@@ -219,14 +218,22 @@ function hiLoad(id,cb){
   if(cb){if(i.complete&&i.naturalWidth)cb(i.src);else i.addEventListener('load',()=>cb(i.src),{once:true})}}
 let hiPre=false;
 function hiPreload(){
+  if(G){
+    [0,1].forEach(p=>{
+      const u=avSrc(avKey(G,p));
+      if(u){const im=new Image();im.decoding='async';im.src=u;if(im.decode)im.decode().catch(()=>{});}
+    });
+  }
   if(hiPre)return;
   hiPre=true;
   ['end_win_crest.png?v=20261123_wide2','end_lose_crest.png?v=20261123_wide2'].forEach(u=>{
     const im=new Image();im.decoding='async';im.onload=()=>{try{im.decode&&im.decode().catch(()=>{})}catch(e){}};im.src=u;
   });
-  const baseDelay=entering?1700:350;
-  range(24).forEach((id,n)=>setTimeout(()=>hiLoad(id),baseDelay+n*90));
-} // tüm HD jokerler ve oyun sonu armaları geçiş sonrasında arka planda yumuşakça yüklenir
+  const baseDelay=entering?900:180;
+  for(let n=1;n<=11;n++)setTimeout(()=>{try{numHD(n)(()=>{})}catch(e){}},baseDelay+(n-1)*45);
+  setTimeout(()=>{try{backHD(()=>{})}catch(e){}},baseDelay+520);
+  range(24).forEach((id,n)=>setTimeout(()=>hiLoad(id),baseDelay+560+n*75));
+} // tüm HD sayı/joker kartları ve oyun sonu armaları arka planda asenkron çözülür
 function hi(el,id){if(!el)return;if(id===25){if(IMG.j&&IMG.j[25]&&el.src!==IMG.j[25])el.src=IMG.j[25];return}const fb=IMG.j[id];el.onerror=()=>{el.onerror=null;if(fb)el.src=fb}; // HD açılmazsa gömülü görsele dön
   hiLoad(id,u=>{if(el.isConnected&&el.src!==u)el.src=u})}
 function tone(f,d,ty='sine',v=.12,w=0,sl=0){const a=ac(),t=a.currentTime+w,o=a.createOscillator(),g=a.createGain();o.type=ty;o.frequency.setValueAtTime(f,t);if(sl)o.frequency.linearRampToValueAtTime(Math.max(30,f+sl),t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(SG);o.start(t);o.stop(t+d)}
@@ -1412,30 +1419,32 @@ const FB_CFG={
   messagingSenderId: "865937962056",
   appId: "1:865937962056:web:d54c137e3ca1e8cc95547d"
 };
-let fbDb=null,fbDoc=null;
-try{
-  if(window.firebase){
-    firebase.initializeApp(FB_CFG);
+let fbDb=null,fbDoc=null,_fbInited=false;
+window._initNecroFirebase=function(){
+  if(_fbInited||!window.firebase)return;
+  _fbInited=true;
+  try{
+    if(!firebase.apps||!firebase.apps.length)firebase.initializeApp(FB_CFG);
     fbDb=firebase.firestore();
     fbDoc=fbDb.collection('bot').doc('global_memory');
-    // Global hafızayı çekip yerel LRN ve PROF ile birleştir
     fbDoc.get().then(doc=>{
       if(doc.exists){
         const d=doc.data();
         if(d.LRN)mergeGlobalLRN(d.LRN);
         if(d.PROF)mergeGlobalPROF(d.PROF);
-        console.log('Firebase: Global bot hafızası yüklendi!');
       }
-      // Telefonda veya yerelde daha önce birikmiş veri varsa hemen Firebase'e aktar
-      if((LRN && LRN.ht > 0) || (PROF && PROF.n > 0)){
-        syncToFirebase();
-      }
+      if((LRN && LRN.ht > 0) || (PROF && PROF.n > 0))syncToFirebase();
     }).catch(e=>{
       console.warn('Firebase get error:',e);
-      if((LRN && LRN.ht > 0) || (PROF && PROF.n > 0)) syncToFirebase();
+      if((LRN && LRN.ht > 0) || (PROF && PROF.n > 0))syncToFirebase();
     });
-  }
-}catch(e){console.warn('Firebase init error:',e)}
+    if(typeof USER_ACC!=='undefined'&&USER_ACC&&!USER_ACC.isGuest&&USER_ACC.key&&typeof pullAccountFromCloud==='function'){
+      pullAccountFromCloud(USER_ACC.key).then(()=>{if(isRegisteredMember(USER_ACC))claimActiveSession(USER_ACC);});
+    }
+    if(typeof startLobbyPresence==='function')startLobbyPresence();
+  }catch(e){console.warn('Firebase init error:',e)}
+};
+window._initNecroFirebase();
 
 function mergeGlobalLRN(g){
   if(!g)return;
@@ -1532,7 +1541,7 @@ function dustElements(cards,crimson=false){
   ctx.scale(dpr,dpr);
   document.body.appendChild(cvs);
   const mob=isMobilePerf();
-  const perCard=mob?38:78;
+  const perCard=mob?28:52;
   const palParch=['#e7d7b8','#d5c098','#a6906c','#5c5043','#2b2520','#d4a855'];
   const palRed=['#c99c62','#8f242c','#4c2124','#3a312c','#e0c79e','#211b19'];
   const palBlood=['#dc2626','#991b1b','#f87171','#e7d7b8','#3a1518','#1c1412'];
@@ -1542,29 +1551,31 @@ function dustElements(cards,crimson=false){
     if(!r.width||!r.height)return;
     const isRed=c.classList.contains('bk')||c.classList.contains('opp');
     const pal=crimson?palBlood:(isRed?palRed:palParch);
-    const baseD=idx*35;
+    const baseD=idx*30;
     for(let i=0;i<perCard;i++){
-      const u=Math.random(),v=Math.random(); // u: 0..1 left->right, v: 0..1 top->bottom
-      const front=(1-u)*0.65+v*0.35; // sağ üstten sol alta doğru çözülme dalgası
+      const u=Math.random(),v=Math.random();
+      const front=(1-u)*0.65+v*0.35;
       pts.push({
         x:r.left+u*r.width,
         y:r.top+v*r.height,
-        vx:36+Math.random()*95,
+        vx:38+Math.random()*95,
         vy:-18-Math.random()*62,
-        sz:1.3+Math.random()*(mob?2.2:2.7),
+        sz:1.4+Math.random()*(mob?2.1:2.6),
         col:pal[(Math.random()*pal.length)|0],
-        delay:baseD+front*360+Math.random()*70,
-        life:420+Math.random()*360,
+        delay:baseD+front*300+Math.random()*55,
+        life:380+Math.random()*320,
         phase:Math.random()*Math.PI*2,
         freq:4+Math.random()*6,
-        swirl:14+Math.random()*26
+        swirl:14+Math.random()*24
       });
     }
   });
+  const buckets=new Map();
   const t0=performance.now();
   const frame=now=>{
     const el=now-t0;
     ctx.clearRect(0,0,W,H);
+    buckets.forEach(arr=>{arr.length=0});
     let alive=0;
     for(let i=0;i<pts.length;i++){
       const p=pts[i];
@@ -1573,18 +1584,25 @@ function dustElements(cards,crimson=false){
       if(dt>=p.life)continue;
       alive++;
       const prog=dt/p.life;
-      const ease=prog*prog;
-      const sec=dt/1000;
+      const sec=dt*0.001;
       const px=p.x+p.vx*sec*(0.4+0.8*prog)+Math.sin(sec*p.freq+p.phase)*p.swirl*prog;
       const py=p.y+p.vy*sec*(0.45+0.7*prog)+Math.cos(sec*p.freq*0.7+p.phase)*(p.swirl*0.45)*prog;
-      const alpha=(1-ease)*(prog<0.12?prog/0.12:1);
       const sz=p.sz*(1-prog*0.55);
-      ctx.globalAlpha=Math.max(0,alpha);
-      ctx.fillStyle=p.col;
-      ctx.fillRect(px,py,sz,sz);
+      let b=buckets.get(p.col);
+      if(!b){b=[];buckets.set(p.col,b);}
+      b.push(px,py,sz);
     }
+    const fade=el>520?Math.max(0,1-(el-520)/380):1;
+    ctx.globalAlpha=0.88*fade;
+    buckets.forEach((arr,col)=>{
+      if(!arr.length)return;
+      ctx.fillStyle=col;
+      ctx.beginPath();
+      for(let j=0;j<arr.length;j+=3)ctx.rect(arr[j],arr[j+1],arr[j+2],arr[j+2]);
+      ctx.fill();
+    });
     ctx.globalAlpha=1;
-    if(alive>0&&el<1050)requestAnimationFrame(frame);
+    if(alive>0&&el<900)requestAnimationFrame(frame);
     else cvs.remove();
   };
   requestAnimationFrame(frame);
@@ -1607,14 +1625,16 @@ function triggerVampBurnFx(vb){
   const targetEl=jEls[vb.idx]||jEls[jEls.length-1];
   if(targetEl)dustElements([targetEl],true);
 }
+let _avAnimRafs=[];
 function clearStaleAvAttackers(){
+  while(_avAnimRafs.length)cancelAnimationFrame(_avAnimRafs.pop());
   document.querySelectorAll('.av-attacker').forEach(el=>el.remove());
   document.querySelectorAll('.who .av').forEach(av=>{if(av.style.opacity==='0')av.style.opacity='';});
 }
 function spawnAvAttackerClone(av,r){
   const c=av.cloneNode(false);
   c.removeAttribute('style');
-  c.decoding='sync';
+  c.decoding='async';
   c.className='av-attacker';
   c.style.display='block';
   c.style.opacity='1';
@@ -1623,6 +1643,7 @@ function spawnAvAttackerClone(av,r){
   c.style.top=r.top+'px';
   c.style.width=r.width+'px';
   c.style.height=r.height+'px';
+  c.style.transform='translate3d(0px,0px,0) scale(1) rotate(0deg)';
   c.style.objectPosition=av.style.objectPosition||getComputedStyle(av).objectPosition||'50% 50%';
   document.body.appendChild(c);
   av.style.opacity='0';
@@ -1632,33 +1653,45 @@ function bindAvCloneCleanup(c,av){
   if(c&&c.isConnected)c.remove();
   if(av&&av.isConnected)av.style.opacity='';
 }
-function animateAvKeyframes(el,kfs,dur,onDone){
+function easeSeg(t,mode){
+  if(mode==='in')return t*t*t;
+  if(mode==='out')return 1-Math.pow(1-t,3);
+  if(mode==='lin')return t;
+  return t*t*(3-2*t);
+}
+function animateAvKeyframes(el,kfs,dur,onDone,impactO,onImpact){
   const t0=performance.now();
-  const cubicOut=t=>1-Math.pow(1-t,3);
+  let hitFired=false,rafId=0;
   const tick=now=>{
     if(!el||!el.isConnected){if(onDone)onDone();return;}
-    const rawP=Math.min(1,(now-t0)/dur);
-    const p=cubicOut(rawP);
+    const t=Math.min(1,Math.max(0,(now-t0)/dur));
+    if(!hitFired&&impactO!=null&&t>=impactO){
+      hitFired=true;
+      if(onImpact)try{onImpact()}catch(e){}
+    }
     let a=kfs[0],b=kfs[kfs.length-1];
     for(let i=0;i<kfs.length-1;i++){
-      if(p>=kfs[i].o&&p<=kfs[i+1].o){a=kfs[i];b=kfs[i+1];break;}
+      if(t>=kfs[i].o&&t<=kfs[i+1].o){a=kfs[i];b=kfs[i+1];break;}
     }
     const span=(b.o-a.o)||1;
-    const lp=Math.max(0,Math.min(1,(p-a.o)/span));
-    const sp=lp*lp*(3-2*lp);
+    const lp=Math.max(0,Math.min(1,(t-a.o)/span));
+    const sp=easeSeg(lp,b.e);
     const x=a.x+(b.x-a.x)*sp;
     const y=a.y+(b.y-a.y)*sp;
     const s=a.s+(b.s-a.s)*sp;
     const r=a.r+(b.r-a.r)*sp;
     el.style.transform=`translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0) scale(${s.toFixed(3)}) rotate(${r.toFixed(2)}deg)`;
-    if(rawP<1)requestAnimationFrame(tick);
-    else if(onDone)onDone();
+    if(t<1){
+      rafId=requestAnimationFrame(tick);
+      _avAnimRafs.push(rafId);
+    }else if(onDone)onDone();
   };
-  requestAnimationFrame(tick);
+  rafId=requestAnimationFrame(tick);
+  _avAnimRafs.push(rafId);
 }
 function triggerAvHitRecoil(dstAv){
   dstAv.classList.remove('av-hit');void dstAv.offsetWidth;dstAv.classList.add('av-hit');
-  setTimeout(()=>{if(dstAv.isConnected)dstAv.classList.remove('av-hit');},620);
+  setTimeout(()=>{if(dstAv.isConnected)dstAv.classList.remove('av-hit');},500);
 }
 function heroAttack(winIdx,tanked=false){
   const srcAv=document.querySelector((winIdx===0?'#me':'#opp')+' .who .av');
@@ -1670,33 +1703,30 @@ function heroAttack(winIdx,tanked=false){
   const dx=(r2.left+r2.width/2)-(r1.left+r1.width/2);
   const dy=(r2.top+r2.height/2)-(r1.top+r1.height/2);
   const clone=spawnAvAttackerClone(srcAv,r1);
-  const dur=2450;
+  const dur=1320;
   animateAvKeyframes(clone,[
     {o:0,x:0,y:0,s:1,r:0},
-    {o:0.22,x:-dx*0.06,y:-dy*0.06,s:1.14,r:-3},
-    {o:0.38,x:-dx*0.12,y:-dy*0.12,s:1.24,r:-6},
-    {o:0.52,x:dx*0.28,y:dy*0.28,s:1.28,r:2},
-    {o:0.62,x:dx*0.92,y:dy*0.92,s:1.26,r:0},
-    {o:0.69,x:dx*0.84,y:dy*0.84,s:1.16,r:0},
-    {o:1,x:0,y:0,s:1,r:0}
-  ],dur,()=>bindAvCloneCleanup(clone,srcAv));
-
-  setTimeout(()=>{
+    {o:0.28,x:-dx*0.10,y:-dy*0.10,s:1.20,r:-5,e:'out'},
+    {o:0.46,x:dx*0.92,y:dy*0.92,s:1.26,r:1,e:'in'},
+    {o:0.58,x:dx*0.78,y:dy*0.78,s:1.14,r:-1,e:'out'},
+    {o:1,x:0,y:0,s:1,r:0,e:'io'}
+  ],dur,()=>bindAvCloneCleanup(clone,srcAv),0.46,()=>{
     if(!dstAv.isConnected)return;
     snd('stamp');vib([60,40,120]);
     triggerAvHitRecoil(dstAv);
+    const cx=r2.left+r2.width/2,cy=r2.top+r2.height/2;
     const imp=document.createElement('div');
     imp.className='av-impact';
-    imp.style.left=(r2.left+r2.width/2)+'px';
-    imp.style.top=(r2.top+r2.height/2)+'px';
+    imp.style.left=cx+'px';
+    imp.style.top=cy+'px';
     const dmg=document.createElement('div');
     dmg.className='av-dmg';
     dmg.textContent=tanked?'0':'-1';
-    dmg.style.left=(r2.left+r2.width/2)+'px';
-    dmg.style.top=(r2.top+r2.height/2)+'px';
+    dmg.style.left=cx+'px';
+    dmg.style.top=cy+'px';
     document.body.appendChild(imp);
     document.body.appendChild(dmg);
-    setTimeout(()=>{imp.remove();dmg.remove()},1250);
+    setTimeout(()=>{imp.remove();dmg.remove()},1100);
     if(tanked){
       const hpEl=document.querySelector(winIdx===0?'#opp .hp-btn':'#me .hp-btn');
       if(hpEl){
@@ -1707,10 +1737,10 @@ function heroAttack(winIdx,tanked=false){
         fx.style.top=(hr.top+hr.height/2)+'px';
         fx.innerHTML=`<i class="hp-cast-ring"></i><span class="hp-cast-pop">${tr('Kadim Direnç!','Ancient Resilience!')}</span>`;
         document.body.appendChild(fx);
-        setTimeout(()=>fx.remove(),1350);
+        setTimeout(()=>fx.remove(),1250);
       }
     }
-  },920);
+  });
 }
 function heroClash(){
   const av0=document.querySelector('#me .who .av');
@@ -1725,28 +1755,25 @@ function heroClash(){
   const dx0=mx-cx0,dy0=(my-cy0)+r0.height*0.32;
   const dx1=mx-cx1,dy1=(my-cy1)-r1.height*0.32;
   const c0=spawnAvAttackerClone(av0,r0),c1=spawnAvAttackerClone(av1,r1);
-  const dur=2700;
+  const dur=1400;
   const mkKfs=(dx,dy,tilt)=>[
     {o:0,x:0,y:0,s:1,r:0},
-    {o:0.22,x:-dx*0.06,y:-dy*0.08,s:1.12,r:-tilt*0.6},
-    {o:0.38,x:-dx*0.12,y:-dy*0.16,s:1.20,r:-tilt},
-    {o:0.52,x:dx*0.30,y:dy*0.30,s:1.25,r:tilt*0.5},
-    {o:0.62,x:dx,y:dy,s:1.24,r:0},
-    {o:0.69,x:dx*0.80,y:dy*0.80,s:1.14,r:-tilt*0.4},
-    {o:1,x:0,y:0,s:1,r:0}
+    {o:0.28,x:-dx*0.10,y:-dy*0.12,s:1.18,r:-tilt,e:'out'},
+    {o:0.48,x:dx,y:dy,s:1.24,r:0,e:'in'},
+    {o:0.62,x:dx*0.68,y:dy*0.68,s:1.12,r:-tilt*0.4,e:'out'},
+    {o:1,x:0,y:0,s:1,r:0,e:'io'}
   ];
-  animateAvKeyframes(c0,mkKfs(dx0,dy0,5),dur,()=>bindAvCloneCleanup(c0,av0));
-  animateAvKeyframes(c1,mkKfs(dx1,dy1,-5),dur,()=>bindAvCloneCleanup(c1,av1));
-  setTimeout(()=>{
+  animateAvKeyframes(c0,mkKfs(dx0,dy0,5),dur,()=>bindAvCloneCleanup(c0,av0),0.48,()=>{
     if(!av0.isConnected)return;
     snd('stamp');vib([50,35,90]);
     const imp=document.createElement('div');
-    imp.className='av-impact';
+    imp.className='av-impact tie';
     imp.style.left=mx+'px';
     imp.style.top=my+'px';
     document.body.appendChild(imp);
-    setTimeout(()=>imp.remove(),1100);
-  },1050);
+    setTimeout(()=>imp.remove(),950);
+  });
+  animateAvKeyframes(c1,mkKfs(dx1,dy1,-5),dur,()=>bindAvCloneCleanup(c1,av1));
 }
 function heroVampTie(vampIdx){
   const av0=document.querySelector('#me .who .av');
@@ -1761,20 +1788,17 @@ function heroVampTie(vampIdx){
   const dx0=mx-cx0,dy0=(my-cy0)+r0.height*0.32;
   const dx1=mx-cx1,dy1=(my-cy1)-r1.height*0.32;
   const c0=spawnAvAttackerClone(av0,r0),c1=spawnAvAttackerClone(av1,r1);
-  const dur=3500;
+  const dur=2200;
   const mkKfs=(dx,dy,tilt,isVamp)=>[
     {o:0,x:0,y:0,s:1,r:0},
-    {o:0.22,x:dx,y:dy,s:1.22,r:0},
-    {o:0.50,x:dx,y:dy,s:1.22,r:0},
+    {o:0.26,x:dx,y:dy,s:1.22,r:0,e:'in'},
+    {o:0.46,x:dx,y:dy,s:1.22,r:0,e:'lin'},
     isVamp
-      ?{o:0.60,x:dx+(vampIdx===0?0:-6),y:dy+(vampIdx===0?-22:22),s:1.30,r:tilt}
-      :{o:0.62,x:dx*0.72,y:dy*0.72,s:1.06,r:-tilt},
-    {o:0.86,x:0,y:0,s:1,r:0},
-    {o:1,x:0,y:0,s:1,r:0}
+      ?{o:0.58,x:dx+(vampIdx===0?0:-6),y:dy+(vampIdx===0?-22:22),s:1.30,r:tilt,e:'in'}
+      :{o:0.60,x:dx*0.72,y:dy*0.72,s:1.06,r:-tilt,e:'out'},
+    {o:1,x:0,y:0,s:1,r:0,e:'io'}
   ];
-  animateAvKeyframes(c0,mkKfs(dx0,dy0,5,vampIdx===0),dur,()=>bindAvCloneCleanup(c0,av0));
-  animateAvKeyframes(c1,mkKfs(dx1,dy1,-5,vampIdx===1),dur,()=>bindAvCloneCleanup(c1,av1));
-  setTimeout(()=>{
+  animateAvKeyframes(c0,mkKfs(dx0,dy0,5,vampIdx===0),dur,()=>bindAvCloneCleanup(c0,av0),0.26,()=>{
     if(!av0.isConnected)return;
     snd('stamp');vib([80,40,140]);
     const b=document.createElement('div');
@@ -1794,20 +1818,21 @@ function heroVampTie(vampIdx){
       document.body.appendChild(fx);
       setTimeout(()=>fx.remove(),1350);
     }
-  },1850);
-  setTimeout(()=>{
-    const dstAv=vampIdx===0?av1:av0,dr=vampIdx===0?r1:r0;
-    if(!dstAv.isConnected)return;
-    snd('stamp');vib([60,40,120]);
-    triggerAvHitRecoil(dstAv);
-    const dmg=document.createElement('div');
-    dmg.className='av-dmg';
-    dmg.textContent='-1';
-    dmg.style.left=(dr.left+dr.width/2)+'px';
-    dmg.style.top=(dr.top+dr.height/2)+'px';
-    document.body.appendChild(dmg);
-    setTimeout(()=>dmg.remove(),1250);
-  },3050);
+    setTimeout(()=>{
+      const dstAv=vampIdx===0?av1:av0,dr=vampIdx===0?r1:r0;
+      if(!dstAv.isConnected)return;
+      snd('stamp');vib([60,40,120]);
+      triggerAvHitRecoil(dstAv);
+      const dmg=document.createElement('div');
+      dmg.className='av-dmg';
+      dmg.textContent='-1';
+      dmg.style.left=(dr.left+dr.width/2)+'px';
+      dmg.style.top=(dr.top+dr.height/2)+'px';
+      document.body.appendChild(dmg);
+      setTimeout(()=>dmg.remove(),1150);
+    },Math.round(dur*(0.58-0.26)));
+  });
+  animateAvKeyframes(c1,mkKfs(dx1,dy1,-5,vampIdx===1),dur,()=>bindAvCloneCleanup(c1,av1));
 }
 function endRound(){
   const S=G,a=[total(S,0),total(S,1)],T=tg(S);
@@ -1815,7 +1840,7 @@ function endRound(){
     const won=outc(S,0)>0;
     S.wait=true;S.rev=true;S.winSide=won?1:-1;S.over=true;
     R();snd(won?'win':'lose');lock=true;
-    setTimeout(()=>{if(typeof finishDailyPuzzle==='function')finishDailyPuzzle(won,a[0],a[1],T);},950);
+    setTimeout(()=>{if(typeof finishDailyPuzzle==='function')finishDailyPuzzle(won,a[0],a[1],T);},850);
     return;
   }
   let r=outc(S,0),tankedSide=-1,vampBurn=null;
@@ -1838,21 +1863,22 @@ function endRound(){
   if(S.stats&&S.stats.rounds){if(r>0)S.stats.rounds[0]++;else if(r<0)S.stats.rounds[1]++;else S.stats.rounds[2]++;}
   if(MODE=='bot'){profRec(S,a[0],T);lrnRound(r)}
   S.wait=true;S.rev=true;S.winSide=null;S.vampBurn=vampBurn;
-  R();snd('flip');lock=true; // 1) Kapalı kartlar açılır ve masada açık kalır (düello kutusu henüz yanmaz)
+  R();snd('flip');lock=true; // 1) Kapalı kartlar açılır
   setTimeout(()=>{
     if(S!==G)return;
-    // 2) Kazanan kahraman ikonu kalkıp kaybedenin ikonuna Hearthstone tarzı saldırı vuruşu yapar
+    // 2) Tur sonucu parlaması + kazanan saldırısı / beraberlik çarpışması gecikmesiz başlar
     S.winSide=r;
     if(MODE=='bot'){talk(r==0?'tie':r<0?'win':(a[1]>T&&!lowW(S)?'bust':'lose'),2)}
     snd(r>0?'win':r<0?'lose':'ok');
     R();
-    setTimeout(()=>{if(S===G){if(tankedSide>=0)heroAttack(1-tankedSide,true);else if(r!==0)heroAttack(r>0?0:1);else heroClash();}},1000);
+    setTimeout(()=>{if(S===G){if(tankedSide>=0)heroAttack(1-tankedSide,true);else if(r!==0)heroAttack(r>0?0:1);else heroClash();}},160);
     if(vampBurn){
-      setTimeout(()=>{if(S===G)triggerVampBurnFx(vampBurn);},2400);
+      setTimeout(()=>{if(S===G)triggerVampBurnFx(vampBurn);},1520);
     }
+    const scoreAt=vampBurn?2280:1580;
+    const dustAt=vampBurn?2680:1980;
     setTimeout(()=>{
       if(S!==G)return;
-      // Vuruş animasyonu tamamlandıktan sonra düello kutusu (yeşil/kırmızı/gri) ve puanlar güncellenir
       if(vampBurn&&S.hand[vampBurn.victim]&&S.hand[vampBurn.victim][vampBurn.idx]===vampBurn.jid){
         S.hand[vampBurn.victim].splice(vampBurn.idx,1);
         (S.dj=S.dj||[]).push(vampBurn.jid);
@@ -1867,14 +1893,14 @@ function endRound(){
         [0,1].forEach(p=>S.jdeck.length&&S.hand[p].push(S.jdeck.pop()));
       }
       R();
-    },3300);
+    },scoreAt);
     setTimeout(()=>{
       if(S!==G)return;
-      // 3) Yerdeki bütün sayı kartları tozlaşır gibi yok olur, sonra diğer tura geçilir
+      // 3) Yerdeki bütün sayı kartları tozlaşır, ardından sonraki tura geçilir
       dustTableCards();
-      setTimeout(()=>{if(S!==G)return;lock=false;fin()},820);
-    },4100);
-  },750);
+      setTimeout(()=>{if(S!==G)return;lock=false;fin()},680);
+    },dustAt);
+  },580);
   function fin(){
     S.winSide=null;S.vampBurn=null;
     if(MODE==='tutorial'){
@@ -2599,10 +2625,13 @@ function syncCardsEl(cardsEl,specs,cCnt){
       if(!sp.back&&sp.c.o==null){
         node=document.createElement('img');
         node.className='c n';
-        node.decoding='sync';
-        node.src=IMG.n[sp.c.n];
+        node.decoding='async';
+        const cachedN=HQ['n_'+sp.c.n+'_v3'];
+        node.src=(cachedN&&cachedN.complete&&cachedN.naturalWidth)?cachedN.src:IMG.n[sp.c.n];
         node.alt=String(sp.c.n);
-        numHD(sp.c.n)(u=>{if(node.isConnected&&node.src!==u)node.src=u;});
+        if(!cachedN||!cachedN.complete||!cachedN.naturalWidth){
+          numHD(sp.c.n)(u=>{if(node.isConnected&&node.src!==u)node.src=u;});
+        }
       }else{
         node=document.createElement('div');
         node.className='c'+(sp.back?' bk':'');
@@ -3224,7 +3253,7 @@ function buildEndScreenHtml(S,v,L,roll,th){
 function box(html,close=true){lock=true;$('#mb').classList.remove('end-mode','an-mode','set-mode');$('#mb').innerHTML=html+(close?`<div class="row"><button id="pc" class="btn">${tr('Kapat','Close')}</button></div>`:'');$('#m').hidden=false;if(close)$('#pc').onclick=()=>{$('#m').hidden=true;lock=false;if(G)R()}}
 /* ---------- BÜYÜK GÖRÜNÜM: karakter, sayı kartı, kapalı kart ---------- */
 const HQ={};
-function hq(key,cs,cb){let i=HQ[key];if(!i){i=HQ[key]=new Image();i._i=0;i.onerror=()=>{if(++i._i<cs.length)i.src=cs[i._i];else i._f=1};i.src=cs[0]}
+function hq(key,cs,cb){let i=HQ[key];if(!i){i=HQ[key]=new Image();i.decoding='async';i._i=0;i.onload=()=>{try{i.decode&&i.decode().catch(()=>{})}catch(e){}};i.onerror=()=>{if(++i._i<cs.length)i.src=cs[i._i];else i._f=1};i.src=cs[0]}
   if(i._f)return;if(i.complete&&i.naturalWidth)cb(i.src);else i.addEventListener('load',()=>cb(i.src),{once:true})} // dosya varsa yüksek çözünürlüklüsü yüklenir, yoksa gömülü görsel kalır
 function zoom(o){ // {src, hd:cb=>…, cls, cap, sub, btn, fn}
   const old=document.getElementById('zm');if(old)old.remove();
@@ -4376,10 +4405,10 @@ function onHost(m){ // misafir veya izleyici: host'tan gelen durum/bildirimler
     if(G.rev&&!prevRev)snd('flip');
     if(G.winSide!=null&&prevWin==null){
       snd(G.winSide>0?'win':G.winSide<0?'lose':'ok');
-      const winW=G.winSide;
-      setTimeout(()=>{if(G&&G.winSide===winW){if(winW!==0)heroAttack(winW>0?0:1);else heroClash();}},1000);
-      if(G.vampBurn){const vb=G.vampBurn;setTimeout(()=>{if(G&&G.winSide===winW)triggerVampBurnFx(vb);},2400);}
-      setTimeout(()=>{if(G&&G.winSide===winW)dustTableCards();},3400);
+      const winW=G.winSide,vb=G.vampBurn;
+      setTimeout(()=>{if(G&&G.winSide===winW){if(winW!==0)heroAttack(winW>0?0:1);else heroClash();}},160);
+      if(vb){setTimeout(()=>{if(G&&G.winSide===winW)triggerVampBurnFx(vb);},1520);}
+      setTimeout(()=>{if(G&&G.winSide===winW)dustTableCards();},vb?2680:1980);
     }
     const keepModalOpen=!!(G.over||(G.wait&&document.querySelector('#mb .d20-box,#mb .end-screen,#mb .tie-box')));
     if(waitM&&!keepModalOpen){$('#m').hidden=true;lock=false;waitM=false}
@@ -4942,7 +4971,7 @@ document.addEventListener('keydown',e=>{
   settings();
 });
 try{if(RM)document.body.classList.add('rm');if(CB)document.body.classList.add('cb');if(!CRT)document.documentElement.classList.add('nocrt')}catch(e){}
-try{$('#slogo').src='limbi_favicon.png?v=limbi4'}catch(e){}setTimeout(()=>{const s=$('#splash');s&&s.remove()},3550);
+try{$('#slogo').src='limbi_favicon.png?v=limbi4'}catch(e){}setTimeout(()=>{const s=$('#splash');s&&s.remove()},1400);
 on('#b2',()=>{if(noNet())return;CURSED_RULE=null;VAULT_RUN=null;PUZZLE_ACTIVE=null;IS_QUICK_MATCH=false;hostRoom()});on('#b3',()=>{CURSED_RULE=null;VAULT_RUN=null;PUZZLE_ACTIVE=null;IS_QUICK_MATCH=false;joinRoom()});on('#bqm',()=>{snd('click');CURSED_RULE=null;VAULT_RUN=null;PUZZLE_ACTIVE=null;startQuickMatch()});
 on('#b-cursed',()=>{snd('click');openWeeklyCursedModal()});
 on('#b-puzzle',()=>{snd('click');if(typeof openDailyPuzzleModal==='function')openDailyPuzzleModal()});
@@ -9048,7 +9077,7 @@ function openAuthModal(initialTab='login',isUpgrade=false){
     const hadNewDay=updateDailyStreak(USER_ACC,true);
     if(hadNewDay){
       const stVal=USER_ACC.streak||1;
-      setTimeout(()=>showStreakToast(stVal,stVal>1),sp?2250:400);
+      setTimeout(()=>showStreakToast(stVal,stVal>1),sp?1380:350);
     }
     if(!USER_ACC.isGuest&&USER_ACC.key&&fbDb){
       pullAccountFromCloud(USER_ACC.key).then(()=>{if(isRegisteredMember(USER_ACC))claimActiveSession(USER_ACC);});
@@ -9058,9 +9087,9 @@ function openAuthModal(initialTab='login',isUpgrade=false){
   if(USER_ACC)applyCosmetics(USER_ACC);
   if(fbDb)startLobbyPresence();
   if(USER_ACC&&typeof checkAbandonedOrResumeMatch==='function'){
-    setTimeout(()=>checkAbandonedOrResumeMatch(),sp?2200:250);
+    setTimeout(()=>checkAbandonedOrResumeMatch(),sp?1350:250);
   }
-  if(sp)setTimeout(()=>{if(sp.isConnected)sp.remove()},2350);
+  if(sp)setTimeout(()=>{if(sp.isConnected)sp.remove()},1350);
   // Kahraman portrelerini açılıştan sonra arka planda çöz ki Kahraman Seç modalı 0ms takılmayla açılsın
   setTimeout(()=>{
     try{
@@ -9068,7 +9097,7 @@ function openAuthModal(initialTab='login',isUpgrade=false){
         setTimeout(()=>{
           const im=new Image();im.decoding='async';im.src=avSrc(h.id);
           if(im.decode)im.decode().catch(()=>{});
-          const hi=new Image();hi.decoding='async';hi.src=`hp_icons/${h.id}.jpg?v=20261125_hp_clean5`;
+          const hi=new Image();hi.decoding='async';hi.src=`hp_icons/${h.id}.jpg?v=20261127_hp_e4`;
           if(hi.decode)hi.decode().catch(()=>{});
         },i*90);
       });
