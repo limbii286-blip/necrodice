@@ -8142,6 +8142,13 @@ function renderAuthBar(){
   applyQueueModeUi();
 }
 /* ---------- BAŞARIMLAR, UNVANLAR, GÜNLÜK GÖREVLER, KOZMETİKLER & SEZONLAR ---------- */
+function hasLeagueTier(a,minTier){
+  if(!a||isGuestUser(a))return false;
+  const lg=ensureLeagueState(a);
+  if(lg.unranked)return false;
+  return Math.max(lg.tier|0,lg.peakTier|0)>=minTier;
+}
+const totWins=a=>((a.wins||0)+(a.unrankedWins||0));
 const ACHIEVEMENTS=[
   {id:'first_blood',ic:'◈',trN:'İlk Zafer',enN:'First Victory',trD:'İlk maçını kazan',enD:'Win your first match',trT:'Kan Yemini',enT:'Blood Oath'},
   {id:'nat20',ic:'✦',trN:'Nat 20 Mucizesi',enN:'Nat 20 Miracle',trD:'Ölüm Zarında 20 atarak hayatta kal',enD:'Survive Death Dice with a Natural 20',trT:'Kader Kıran',enT:'Fatebreaker'},
@@ -8150,43 +8157,43 @@ const ACHIEVEMENTS=[
   {id:'survivor',ic:'†',trN:'Ölümsüz İrade',enN:'Undying Will',trD:'Tek maçta 2 kez Ölüm Zarından sağ çık',enD:'Survive Death Dice twice in one match',trT:'Ölümü Aldatan',enT:'Death Defier'},
   {id:'win_streak3',ic:'★',trN:'Durdurulamaz',enN:'Unstoppable',trD:'Üst üste 3 maç kazan',enD:'Win 3 matches in a row',trT:'Kızıl Fırtına',enT:'Crimson Storm'},
   {id:'veteran10',ic:'❖',trN:'Arena Gazisi',enN:'Arena Veteran',trD:'Toplam 10 maç tamamla',enD:'Complete 10 total matches',trT:'Gölge Ustası',enT:'Shadow Master'},
-  {id:'blood_lord',ic:'◈',trN:'Kan Efendisi',enN:'Blood Lord',trD:'1400 ELO puanına ulaş',enD:'Reach 1400 ELO rating',trT:'Kan Efendisi',enT:'Blood Lord'},
-  {id:'necromancer',ic:'✦',trN:'Ölüm Büyücüsü',enN:'Necromancer',trD:'1600 ELO puanına ulaş',enD:'Reach 1600 ELO rating',trT:'Ölüm Büyücüsü',enT:'Necromancer'},
+  {id:'blood_lord',ic:'◈',trN:'Kan Efendisi',enN:'Blood Lord',trD:'Altın Ligine ulaş',enD:'Reach Gold League',trT:'Kan Efendisi',enT:'Blood Lord'},
+  {id:'necromancer',ic:'✦',trN:'Ölüm Büyücüsü',enN:'Necromancer',trD:'Zümrüt Ligine ulaş',enD:'Reach Emerald League',trT:'Ölüm Büyücüsü',enT:'Necromancer'},
   {id:'daily3',ic:'☾',trN:'Sadık Düellocu',enN:'Devoted Duelist',trD:'3 günlük giriş serisine ulaş',enD:'Reach a 3-day login streak',trT:'Ebedi Nöbetçi',enT:'Eternal Sentinel'}
 ];
 const CARD_BACKS=[
   {id:'classic',trN:'Kuzgun Parşömeni',enN:'Raven Parchment',req:()=>true,trR:'Varsayılan',enR:'Default'},
   {id:'bone',trN:'Klasik Kemik',enN:'Classic Bone',req:()=>true,trR:'Ücretsiz Kozmetik',enR:'Free Cosmetic'},
-  {id:'crimson',trN:'Kızıl Mühür',enN:'Crimson Seal',req:a=>((a.wins||0)+(a.unrankedWins||0))>=3||(a.peakElo||1200)>=1250,trR:'3 Zafer veya 1250 ELO',enR:'3 Wins or 1250 ELO'},
-  {id:'ghost',trN:'Hayalet Örtü',enN:'Ghost Shroud',req:a=>(a.achievements||[]).includes('survivor')||((a.wins||0)+(a.unrankedWins||0))>=5,trR:'5 Zafer veya Ölümsüz İrade',enR:'5 Wins or Undying Will'},
-  {id:'obsidian',trN:'Obsidyen Altın',enN:'Obsidian Gold',req:a=>(a.peakElo||1200)>=1400,trR:'1400 ELO (Kan Efendisi)',enR:'1400 ELO (Blood Lord)'},
-  {id:'moonlight',trN:'Ay Işığı Rünü',enN:'Moonlight Rune',req:a=>(a.achievements||[]).includes('imp_slayer')||(a.peakElo||1200)>=1500,trR:'İmkansız Bot Zaferi / 1500 ELO',enR:'Beat Impossible AI / 1500 ELO'},
-  {id:'sovereign',trN:'Ölümsüz Hükümdar',enN:'Undying Sovereign',req:a=>(a.peakElo||1200)>=1600,trR:'1600 ELO (Ölüm Büyücüsü)',enR:'1600 ELO (Necromancer)'}
+  {id:'crimson',trN:'Kızıl Mühür',enN:'Crimson Seal',req:a=>totWins(a)>=3||hasLeagueTier(a,1),trR:'3 Zafer veya Gümüş Ligi',enR:'3 Wins or Silver League'},
+  {id:'ghost',trN:'Hayalet Örtü',enN:'Ghost Shroud',req:a=>totWins(a)>=5||(a.achievements||[]).includes('survivor'),trR:'5 Zafer veya Ölümsüz İrade',enR:'5 Wins or Undying Will'},
+  {id:'obsidian',trN:'Obsidyen Altın',enN:'Obsidian Gold',req:a=>totWins(a)>=10||hasLeagueTier(a,2),trR:'10 Zafer veya Altın Ligi',enR:'10 Wins or Gold League'},
+  {id:'moonlight',trN:'Ay Işığı Rünü',enN:'Moonlight Rune',req:a=>(a.achievements||[]).includes('imp_slayer')||hasLeagueTier(a,3),trR:'İmkansız Bot Zaferi / Zümrüt Ligi',enR:'Beat Impossible AI / Emerald League'},
+  {id:'sovereign',trN:'Ölümsüz Hükümdar',enN:'Undying Sovereign',req:a=>hasLeagueTier(a,4),trR:'Elmas Ligi',enR:'Diamond League'}
 ];
 const DICE_SKINS=[
   {id:'ruby',trN:'Kanlı Yakut',enN:'Blood Ruby',req:()=>true,trR:'Varsayılan',enR:'Default'},
-  {id:'bone',trN:'Antik Kemik',enN:'Ancient Bone',req:a=>((a.wins||0)+(a.unrankedWins||0))>=2||(a.achievements||[]).includes('veteran10'),trR:'2 Zafer',enR:'2 Wins'},
-  {id:'emerald',trN:'Zümrüt Kalp',enN:'Emerald Heart',req:a=>((a.wins||0)+(a.unrankedWins||0))>=4||(a.peakElo||1200)>=1300,trR:'4 Zafer veya 1300 ELO',enR:'4 Wins or 1300 ELO'},
-  {id:'gold',trN:'Altın Rünlü',enN:'Golden Rune',req:a=>(a.peakElo||1200)>=1350||(a.achievements||[]).includes('win_streak3'),trR:'1350 ELO veya 3 Seri',enR:'1350 ELO or 3-Win Streak'},
-  {id:'spectral',trN:'Hayalet Zarı',enN:'Spectral Die',req:a=>(a.achievements||[]).includes('survivor')||(a.achievements||[]).includes('nat20')||(a.peakElo||1200)>=1400,trR:'Ölümsüz İrade / Nat 20 / 1400 ELO',enR:'Undying Will / Nat 20 / 1400 ELO'},
-  {id:'obsidian',trN:'Obsidyen Alev',enN:'Obsidian Ember',req:a=>(a.peakElo||1200)>=1450||(a.achievements||[]).includes('blood_lord'),trR:'1450 ELO veya Kan Efendisi',enR:'1450 ELO or Blood Lord'},
-  {id:'void',trN:'Hiçlik Zarı',enN:'Void Die',req:a=>(a.achievements||[]).includes('imp_slayer')||(a.peakElo||1200)>=1500,trR:'İmkansız Bot Zaferi / 1500 ELO',enR:'Beat Impossible AI / 1500 ELO'}
+  {id:'bone',trN:'Antik Kemik',enN:'Ancient Bone',req:a=>totWins(a)>=2||(a.achievements||[]).includes('veteran10'),trR:'2 Zafer',enR:'2 Wins'},
+  {id:'emerald',trN:'Zümrüt Kalp',enN:'Emerald Heart',req:a=>totWins(a)>=4||hasLeagueTier(a,1),trR:'4 Zafer veya Gümüş Ligi',enR:'4 Wins or Silver League'},
+  {id:'gold',trN:'Altın Rünlü',enN:'Golden Rune',req:a=>totWins(a)>=8||hasLeagueTier(a,2),trR:'8 Zafer veya Altın Ligi',enR:'8 Wins or Gold League'},
+  {id:'spectral',trN:'Hayalet Zarı',enN:'Spectral Die',req:a=>totWins(a)>=10||(a.achievements||[]).includes('survivor')||(a.achievements||[]).includes('nat20'),trR:'10 Zafer / Nat 20 / Ölümsüz İrade',enR:'10 Wins / Nat 20 / Undying Will'},
+  {id:'obsidian',trN:'Obsidyen Alev',enN:'Obsidian Ember',req:a=>totWins(a)>=12||hasLeagueTier(a,3),trR:'12 Zafer veya Zümrüt Ligi',enR:'12 Wins or Emerald League'},
+  {id:'void',trN:'Hiçlik Zarı',enN:'Void Die',req:a=>(a.achievements||[]).includes('imp_slayer')||hasLeagueTier(a,4),trR:'İmkansız Bot Zaferi / Elmas Ligi',enR:'Beat Impossible AI / Diamond League'}
 ];
 const BOARD_THEMES=[
   {id:'classic',trN:'Donmuş Mahzen',enN:'Frozen Vault',req:()=>true,trR:'Varsayılan',enR:'Default'},
   {id:'gothic',trN:'Gotik Masa',enN:'Gothic Table',req:()=>true,trR:'Ücretsiz Kozmetik',enR:'Free Cosmetic'},
-  {id:'emerald',trN:'Zümrüt Mahzen',enN:'Emerald Crypt',req:a=>((a.wins||0)+(a.unrankedWins||0))>=4||(a.peakElo||1200)>=1300,trR:'4 Zafer veya 1300 ELO',enR:'4 Wins or 1300 ELO'},
-  {id:'crimson',trN:'Kanlı Sunak',enN:'Blood Altar',req:a=>(a.peakElo||1200)>=1350||(a.achievements||[]).includes('win_streak3'),trR:'1350 ELO veya 3 Seri',enR:'1350 ELO or 3-Win Streak'},
-  {id:'void',trN:'Hiçlik Tahtı',enN:'Void Throne',req:a=>(a.achievements||[]).includes('imp_slayer')||(a.peakElo||1200)>=1450,trR:'İmkansız Bot Zaferi / 1450 ELO',enR:'Beat Impossible AI / 1450 ELO'},
-  {id:'gold',trN:'Altın Hazine',enN:'Golden Vault',req:a=>(a.achievements||[]).includes('imp_slayer')||(a.peakElo||1200)>=1500,trR:'İmkansız Bot Zaferi / 1500 ELO',enR:'Beat Impossible AI / 1500 ELO'}
+  {id:'emerald',trN:'Zümrüt Mahzen',enN:'Emerald Crypt',req:a=>totWins(a)>=5||hasLeagueTier(a,1),trR:'5 Zafer veya Gümüş Ligi',enR:'5 Wins or Silver League'},
+  {id:'crimson',trN:'Kanlı Sunak',enN:'Blood Altar',req:a=>totWins(a)>=10||hasLeagueTier(a,2),trR:'10 Zafer veya Altın Ligi',enR:'10 Wins or Gold League'},
+  {id:'void',trN:'Hiçlik Tahtı',enN:'Void Throne',req:a=>(a.achievements||[]).includes('imp_slayer')||hasLeagueTier(a,3),trR:'İmkansız Bot Zaferi / Zümrüt Ligi',enR:'Beat Impossible AI / Emerald League'},
+  {id:'gold',trN:'Altın Hazine',enN:'Golden Vault',req:a=>hasLeagueTier(a,4),trR:'Elmas Ligi',enR:'Diamond League'}
 ];
 const D20_EFFECTS=[
   {id:'classic',trN:'Klasik Parıltı',enN:'Classic Glow',req:()=>true,trR:'Varsayılan',enR:'Default'},
-  {id:'sparks',trN:'Kızıl Kıvılcım',enN:'Crimson Sparks',req:a=>((a.wins||0)+(a.unrankedWins||0))>=2,trR:'2 Zafer',enR:'2 Wins'},
-  {id:'frost',trN:'Buzul Halkası',enN:'Frost Ring',req:a=>((a.wins||0)+(a.unrankedWins||0))>=3,trR:'3 Zafer',enR:'3 Wins'},
-  {id:'emerald',trN:'Zümrüt Fırtına',enN:'Emerald Surge',req:a=>(a.peakElo||1200)>=1300||(a.achievements||[]).includes('win_streak3'),trR:'1300 ELO veya 3 Seri',enR:'1300 ELO or 3-Win Streak'},
-  {id:'runes',trN:'Altın Rün Halkası',enN:'Golden Rune Ring',req:a=>(a.peakElo||1200)>=1350,trR:'1350 ELO',enR:'1350 ELO'},
-  {id:'void',trN:'Mor Hiçlik Dumanı',enN:'Void Mist',req:a=>(a.achievements||[]).includes('imp_slayer')||(a.peakElo||1200)>=1450,trR:'İmkansız Bot Zaferi / 1450 ELO',enR:'Beat Impossible AI / 1450 ELO'}
+  {id:'sparks',trN:'Kızıl Kıvılcım',enN:'Crimson Sparks',req:a=>totWins(a)>=2,trR:'2 Zafer',enR:'2 Wins'},
+  {id:'frost',trN:'Buzul Halkası',enN:'Frost Ring',req:a=>totWins(a)>=4,trR:'4 Zafer',enR:'4 Wins'},
+  {id:'emerald',trN:'Zümrüt Fırtına',enN:'Emerald Surge',req:a=>totWins(a)>=6||hasLeagueTier(a,1),trR:'6 Zafer veya Gümüş Ligi',enR:'6 Wins or Silver League'},
+  {id:'runes',trN:'Altın Rün Halkası',enN:'Golden Rune Ring',req:a=>totWins(a)>=10||hasLeagueTier(a,2),trR:'10 Zafer veya Altın Ligi',enR:'10 Wins or Gold League'},
+  {id:'void',trN:'Mor Hiçlik Dumanı',enN:'Void Mist',req:a=>(a.achievements||[]).includes('imp_slayer')||hasLeagueTier(a,3),trR:'İmkansız Bot Zaferi / Zümrüt Ligi',enR:'Beat Impossible AI / Emerald League'}
 ];
 function spawnD20LandingFx(dEl){
   try{
@@ -8223,11 +8230,11 @@ function getHeroMastery(acc,hid){
 }
 const PROFILE_FRAMES=[
   {id:'classic',trN:'Antik Bronz',enN:'Ancient Bronze',req:()=>true,trR:'Varsayılan',enR:'Default'},
-  {id:'crimson',trN:'Kanlı Yakut',enN:'Blood Ruby',req:a=>((a.wins||0)+(a.unrankedWins||0))>=2,trR:'2 Zafer',enR:'2 Wins'},
-  {id:'emerald',trN:'Zümrüt Mühür',enN:'Emerald Seal',req:a=>((a.wins||0)+(a.unrankedWins||0))>=4||(a.peakElo||1200)>=1300,trR:'4 Zafer veya 1300 ELO',enR:'4 Wins or 1300 ELO'},
-  {id:'gold',trN:'Kraliyet Altını',enN:'Royal Gold',req:a=>(a.peakElo||1200)>=1350,trR:'1350 ELO',enR:'1350 ELO'},
-  {id:'frost',trN:'Buzul Taç',enN:'Frost Crown',req:a=>(a.achievements||[]).includes('veteran10')||(a.peakElo||1200)>=1400,trR:'Arena Gazisi / 1400 ELO',enR:'Arena Veteran / 1400 ELO'},
-  {id:'void',trN:'Hiçlik Aurası',enN:'Void Aura',req:a=>(a.achievements||[]).includes('imp_slayer')||(a.peakElo||1200)>=1550,trR:'İmkansız Bot Zaferi / 1550 ELO',enR:'Beat Impossible AI / 1550 ELO'}
+  {id:'crimson',trN:'Kanlı Yakut',enN:'Blood Ruby',req:a=>totWins(a)>=2,trR:'2 Zafer',enR:'2 Wins'},
+  {id:'emerald',trN:'Zümrüt Mühür',enN:'Emerald Seal',req:a=>totWins(a)>=5||hasLeagueTier(a,1),trR:'5 Zafer veya Gümüş Ligi',enR:'5 Wins or Silver League'},
+  {id:'gold',trN:'Kraliyet Altını',enN:'Royal Gold',req:a=>totWins(a)>=10||hasLeagueTier(a,2),trR:'10 Zafer veya Altın Ligi',enR:'10 Wins or Gold League'},
+  {id:'frost',trN:'Buzul Taç',enN:'Frost Crown',req:a=>(a.achievements||[]).includes('veteran10')||hasLeagueTier(a,3),trR:'Arena Gazisi / Zümrüt Ligi',enR:'Arena Veteran / Emerald League'},
+  {id:'void',trN:'Hiçlik Aurası',enN:'Void Aura',req:a=>(a.achievements||[]).includes('imp_slayer')||hasLeagueTier(a,4),trR:'İmkansız Bot Zaferi / Elmas Ligi',enR:'Beat Impossible AI / Diamond League'}
 ];
 const DAILY_QUEST_POOL=[
   {id:'play2',trN:'2 Maç Tamamla',enN:'Complete 2 Matches',goal:2,ic:'❖'},
@@ -8363,8 +8370,8 @@ function evaluateAchievements(acc,ctx={}){
     ['survivor',!!(ctx.myD20Surv>=2)],
     ['win_streak3',(acc.winStreak||0)>=3],
     ['veteran10',totMatches>=10],
-    ['blood_lord',peak>=1400],
-    ['necromancer',peak>=1600],
+    ['blood_lord',hasLeagueTier(acc,2)],
+    ['necromancer',hasLeagueTier(acc,3)],
     ['daily3',(acc.bestStreak||acc.streak||1)>=3]
   ];
   let firstNew=null;
