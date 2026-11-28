@@ -1447,24 +1447,24 @@ html::after {
   transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 #hdr .pip.now {
-  border-color: #cfc0a8;
+  border-color: #fbbf24;
   background: transparent;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.65);
+  box-shadow: 0 0 9px rgba(251, 191, 36, 0.5), inset 0 1px 3px rgba(0, 0, 0, 0.65);
 }
 #hdr .pip.w {
-  border-color: #93c99b;
-  background: #4e8c58;
-  box-shadow: none;
+  border-color: #bbf7d0;
+  background: radial-gradient(circle at 35% 30%, #86efac 0%, #22c55e 45%, #15803d 100%);
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.72);
 }
 #hdr .pip.l {
-  border-color: #dc8686;
-  background: #a63a3a;
-  box-shadow: none;
+  border-color: #fecaca;
+  background: radial-gradient(circle at 35% 30%, #fca5a5 0%, #ef4444 45%, #991b1b 100%);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.72);
 }
 #hdr .pip.d {
-  background: #4e463c;
-  border-color: #9e917c;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45);
+  background: radial-gradient(circle at 35% 30%, #f1f5f9 0%, #94a3b8 52%, #475569 100%);
+  border-color: #e2e8f0;
+  box-shadow: 0 0 8px rgba(148, 163, 184, 0.62);
 }
 
 #hdr .hg .gear {
